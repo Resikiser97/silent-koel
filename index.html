@@ -482,6 +482,17 @@ function drawGame() {
     }
 
     // 9. 繪製玩家角色 (噪鵑)
+    if (gameState.isNight) {
+        ctx.fillStyle = 'rgba(0,255,136,0.9)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius + 3, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius + 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
     ctx.fillStyle = p.color;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
