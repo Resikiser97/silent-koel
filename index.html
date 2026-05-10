@@ -163,7 +163,7 @@ const gameState = {
     canvasHeight: 600,
 
     player: {
-        x: 400, y: 300, radius: 10, speed: 1.5, color: 'black',
+        x: 1200, y: 900, radius: 10, speed: 1.5, color: 'black',
         organs: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5,
         attack: 0, attackSpeed: 1.0, attackRange: 50,
         critChance: 0, critMultiplier: 1.0,
@@ -215,7 +215,8 @@ const gameState = {
     boss: null,
     bossSpawned: false,
     eliteCreature: null,
-    eliteJustKilled: false
+    eliteJustKilled: false,
+    camera: { x: 800, y: 600 }
 };
 
 
@@ -225,7 +226,38 @@ const gameState = {
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// 地圖與視窗尺寸常數
+const MAP_WIDTH  = 2400;
+const MAP_HEIGHT = 1800;
+const VIEW_W     = 800;
+const VIEW_H     = 600;
+
 // ORGANS、SKILLS、EVOLUTION_PATHS、COMBOS、CREATURE_CONFIG 由 gameConfig.js 提供
+
+// 世界座標轉換為螢幕座標
+function worldToScreen(wx, wy) {
+    return { x: wx - gameState.camera.x, y: wy - gameState.camera.y };
+}
+
+// 平滑視角跟隨：玩家進入視窗邊界 20% 才開始移動視角
+function updateCamera() {
+    const p = gameState.player;
+    const cam = gameState.camera;
+    const marginX = VIEW_W * 0.2; // 160px
+    const marginY = VIEW_H * 0.2; // 120px
+    let targetX = cam.x;
+    let targetY = cam.y;
+    const screenX = p.x - cam.x;
+    const screenY = p.y - cam.y;
+    if (screenX < marginX)            targetX = p.x - marginX;
+    else if (screenX > VIEW_W - marginX) targetX = p.x - (VIEW_W - marginX);
+    if (screenY < marginY)            targetY = p.y - marginY;
+    else if (screenY > VIEW_H - marginY) targetY = p.y - (VIEW_H - marginY);
+    targetX = Math.max(0, Math.min(MAP_WIDTH  - VIEW_W, targetX));
+    targetY = Math.max(0, Math.min(MAP_HEIGHT - VIEW_H, targetY));
+    cam.x += (targetX - cam.x) * 0.15;
+    cam.y += (targetY - cam.y) * 0.15;
+}
 
 // =============================================================
 // 初始化遊戲元素 - 果子生成相關
@@ -237,8 +269,8 @@ const ctx = canvas.getContext('2d');
 function generateTrees(count) {
     const trees = [];
     for (let i = 0; i < count; i++) {
-        const x = Math.floor(Math.random() * (gameState.canvasWidth - 100)) + 50;
-        const y = Math.floor(Math.random() * (gameState.canvasHeight - 100)) + 50;
+        const x = Math.floor(Math.random() * (MAP_WIDTH  - 100)) + 50;
+        const y = Math.floor(Math.random() * (MAP_HEIGHT - 100)) + 50;
         const radius = Math.floor(Math.random() * (20 - 10) + 10);
         trees.push({ x: x, y: y, radius: radius, color: 'darkgreen' });
     }
@@ -250,7 +282,7 @@ function generateTrees(count) {
  * 生成隨機果子物件。
  */
 function spawnFruit(isInitial = false) {
-    const MAX_FRUITS = 20;
+    const MAX_FRUITS = 60;
     if (gameState.fruits.length >= MAX_FRUITS) return null;
     if (gameState.trees.length === 0) return null;
 
@@ -261,7 +293,7 @@ function spawnFruit(isInitial = false) {
         const x = tree.x + Math.cos(angle) * dist;
         const y = tree.y + Math.sin(angle) * dist;
 
-        if (x < 10 || x > gameState.canvasWidth - 10 || y < 10 || y > gameState.canvasHeight - 10) continue;
+        if (x < 10 || x > MAP_WIDTH - 10 || y < 10 || y > MAP_HEIGHT - 10) continue;
 
         let tooClose = false;
         for (const fruit of gameState.fruits) {
@@ -319,8 +351,8 @@ function updatePlayerMovement() {
     if (gameState.keys['a'] || gameState.keys['arrowleft'])  dx -= p.speed;
     if (gameState.keys['d'] || gameState.keys['arrowright']) dx += p.speed;
     if (dx === 0 && dy === 0) return;
-    p.x = Math.max(p.radius, Math.min(gameState.canvasWidth - p.radius, p.x + dx));
-    p.y = Math.max(p.radius, Math.min(gameState.canvasHeight - p.radius, p.y + dy));
+    p.x = Math.max(p.radius, Math.min(MAP_WIDTH  - p.radius, p.x + dx));
+    p.y = Math.max(p.radius, Math.min(MAP_HEIGHT - p.radius, p.y + dy));
 }
 
 
@@ -388,14 +420,14 @@ function manageFruitSpawning() {
 /**
  * 生成果子的視覺提示。
  */
-function showXPPopup(x, y, amount) {
+function showXPPopup(wx, wy, amount) {
+    const s = worldToScreen(wx, wy);
+    if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
     const popup = document.createElement('div');
     popup.id = 'xp-popup';
     popup.innerText = `+${amount} XP`;
-    
-    // 將元素放置在畫布上，使用絕對定位
-    popup.style.left = `${x - 15}px`; // x座標減半徑*2 (粗略居中)
-    popup.style.top = `${y - 20}px`;
+    popup.style.left = `${s.x - 15}px`;
+    popup.style.top = `${s.y - 20}px`;
     document.getElementById('ui-overlay').appendChild(popup);
 
     setTimeout(() => {
@@ -415,17 +447,22 @@ function drawGame() {
 
     // 2. 繪製環境 (樹木)
     gameState.trees.forEach(tree => {
+        const s = worldToScreen(tree.x, tree.y);
+        if (s.x < -tree.radius - 50 || s.x > VIEW_W + tree.radius + 50 ||
+            s.y < -tree.radius - 50 || s.y > VIEW_H + tree.radius + 50) return;
         ctx.fillStyle = tree.color;
         ctx.beginPath();
-        ctx.arc(tree.x, tree.y, tree.radius, 0, Math.PI * 2); 
+        ctx.arc(s.x, s.y, tree.radius, 0, Math.PI * 2);
         ctx.fill();
     });
 
-    // 3. 繪製果子 (新增)
+    // 3. 繪製果子
     gameState.fruits.forEach(fruit => {
-        ctx.fillStyle = fruit.color; // 紅色
+        const s = worldToScreen(fruit.x, fruit.y);
+        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) return;
+        ctx.fillStyle = fruit.color;
         ctx.beginPath();
-        ctx.arc(fruit.x, fruit.y, fruit.radius, 0, Math.PI * 2); 
+        ctx.arc(s.x, s.y, fruit.radius, 0, Math.PI * 2);
         ctx.fill();
     });
 
@@ -445,23 +482,26 @@ function drawGame() {
     // 7. 繪製 Boss
     if (gameState.boss && gameState.boss.hp > 0) {
         const boss = gameState.boss;
-        ctx.fillStyle = boss.state === 'chasing' ? '#2A0D00' : '#3B1E08';
-        ctx.beginPath();
-        ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.save();
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('⚠️黑熊', boss.x, boss.y - boss.radius - 12);
-        ctx.restore();
-        const bBarW = 50, bBarH = 6;
-        const bBarX = boss.x - bBarW / 2;
-        const bBarY = boss.y - boss.radius - 24;
-        ctx.fillStyle = '#550000';
-        ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
-        ctx.fillStyle = '#FF4400';
-        ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+        const bs = worldToScreen(boss.x, boss.y);
+        if (bs.x >= -50 && bs.x <= VIEW_W + 50 && bs.y >= -50 && bs.y <= VIEW_H + 50) {
+            ctx.fillStyle = boss.state === 'chasing' ? '#2A0D00' : '#3B1E08';
+            ctx.beginPath();
+            ctx.arc(bs.x, bs.y, boss.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.save();
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚠️黑熊', bs.x, bs.y - boss.radius - 12);
+            ctx.restore();
+            const bBarW = 50, bBarH = 6;
+            const bBarX = bs.x - bBarW / 2;
+            const bBarY = bs.y - boss.radius - 24;
+            ctx.fillStyle = '#550000';
+            ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
+            ctx.fillStyle = '#FF4400';
+            ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+        }
     }
 
     // 7b. 繪製精英怪
@@ -469,13 +509,14 @@ function drawGame() {
 
     // 8. 攻擊範圍視覺圓圈（0.2 秒淡出）
     const p = gameState.player;
+    const ps = worldToScreen(p.x, p.y);
     if (p.attackVisual > 0 && Date.now() - p.attackVisual < 200) {
         const alpha = 1 - (Date.now() - p.attackVisual) / 200;
         ctx.strokeStyle = 'rgba(255,255,255,' + alpha.toFixed(2) + ')';
         ctx.fillStyle   = 'rgba(255,255,255,' + (alpha * 0.12).toFixed(2) + ')';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.attackRange, 0, Math.PI * 2);
+        ctx.arc(ps.x, ps.y, p.attackRange, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.lineWidth = 1;
@@ -485,12 +526,12 @@ function drawGame() {
     if (gameState.isNight) {
         ctx.fillStyle = 'rgba(0,255,136,0.9)';
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius + 3, 0, Math.PI * 2);
+        ctx.arc(ps.x, ps.y, p.radius + 3, 0, Math.PI * 2);
         ctx.fill();
     }
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    ctx.arc(ps.x, ps.y, p.radius, 0, Math.PI * 2);
     ctx.fill();
 
     // 9. 繪製器官清單（左下角）
@@ -502,8 +543,8 @@ function drawGame() {
     ctx.fillStyle = 'white';
     ctx.font = '12px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText('© ' + GAME_INFO.author, 6, gameState.canvasHeight - 20);
-    ctx.fillText(GAME_INFO.version, 6, gameState.canvasHeight - 5);
+    ctx.fillText('© ' + GAME_INFO.author, 6, VIEW_H - 20);
+    ctx.fillText(GAME_INFO.version, 6, VIEW_H - 5);
     ctx.restore();
 
     // 10. 繪製升級提示文字（畫面中央偏上，2 秒淡出）
@@ -516,7 +557,7 @@ function drawGame() {
         ctx.font = 'bold 40px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(lvMsg.text, gameState.canvasWidth / 2, gameState.canvasHeight / 2 - 60);
+        ctx.fillText(lvMsg.text, VIEW_W / 2, VIEW_H / 2 - 60);
         ctx.restore();
     }
 
@@ -530,7 +571,7 @@ function drawGame() {
         ctx.font = 'bold 36px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(msg.text, gameState.canvasWidth / 2, gameState.canvasHeight / 2);
+        ctx.fillText(msg.text, VIEW_W / 2, VIEW_H / 2);
         ctx.restore();
     }
 }
@@ -564,8 +605,8 @@ function updateUI() {
 function spawnNeutralCreatures() {
     gameState.neutralCreatures = [];
     for (let i = 0; i < 3; i++) {
-        const x = Math.random() * (gameState.canvasWidth - 60) + 30;
-        const y = Math.random() * (gameState.canvasHeight - 60) + 30;
+        const x = Math.random() * (MAP_WIDTH  - 60) + 30;
+        const y = Math.random() * (MAP_HEIGHT - 60) + 30;
         const diet = Math.random() < 0.5 ? 'herbivore' : 'omnivore';
         const canFight = Math.random() < 0.5;
         gameState.neutralCreatures.push({
@@ -621,7 +662,7 @@ function updateNeutralCreatures() {
             } else {
                 creature.state = 'wandering';
                 if (!creature.wanderTarget || now - creature.lastWanderTime >= 2000) {
-                    creature.wanderTarget = { x: Math.random() * (gameState.canvasWidth - 60) + 30, y: Math.random() * (gameState.canvasHeight - 60) + 30 };
+                    creature.wanderTarget = { x: Math.random() * (MAP_WIDTH - 60) + 30, y: Math.random() * (MAP_HEIGHT - 60) + 30 };
                     creature.lastWanderTime = now;
                 }
                 if (creature.wanderTarget) {
@@ -710,8 +751,8 @@ function updateNeutralCreatures() {
         // idle/wandering：每 3 秒選新漫遊目標
         if (!creature.wanderTarget || now - creature.lastWanderTime >= 3000) {
             creature.wanderTarget = {
-                x: Math.random() * (gameState.canvasWidth - 60) + 30,
-                y: Math.random() * (gameState.canvasHeight - 60) + 30
+                x: Math.random() * (MAP_WIDTH  - 60) + 30,
+                y: Math.random() * (MAP_HEIGHT - 60) + 30
             };
             creature.lastWanderTime = now;
             creature.state = 'wandering';
@@ -726,8 +767,8 @@ function updateNeutralCreatures() {
                 creature.state = 'idle';
             } else {
                 const angle = Math.atan2(dy, dx);
-                creature.x = Math.max(creature.radius, Math.min(gameState.canvasWidth - creature.radius, creature.x + Math.cos(angle) * creature.speed));
-                creature.y = Math.max(creature.radius, Math.min(gameState.canvasHeight - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+                creature.x = Math.max(creature.radius, Math.min(MAP_WIDTH  - creature.radius, creature.x + Math.cos(angle) * creature.speed));
+                creature.y = Math.max(creature.radius, Math.min(MAP_HEIGHT - creature.radius, creature.y + Math.sin(angle) * creature.speed));
             }
         }
     }
@@ -736,8 +777,9 @@ function updateNeutralCreatures() {
 function drawNeutralCreatures() {
     for (const creature of gameState.neutralCreatures) {
         if (creature.hp <= 0) continue;
+        const s = worldToScreen(creature.x, creature.y);
+        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
 
-        // 顏色：aggressive=深橘紅，fleeing=黃，fighting=深橘，其餘=橘
         let color = 'orange';
         if (creature.diet === 'aggressive') color = '#CC4400';
         else if (creature.state === 'fleeing') color = 'yellow';
@@ -745,17 +787,14 @@ function drawNeutralCreatures() {
 
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(creature.x, creature.y, creature.radius, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // 血條背景（灰）
-        const barW = 20;
-        const barH = 4;
-        const barX = creature.x - barW / 2;
-        const barY = creature.y - creature.radius - 8;
+        const barW = 20, barH = 4;
+        const barX = s.x - barW / 2;
+        const barY = s.y - creature.radius - 8;
         ctx.fillStyle = '#555';
         ctx.fillRect(barX, barY, barW, barH);
-        // 血條前景（綠）
         ctx.fillStyle = '#00CC00';
         ctx.fillRect(barX, barY, barW * (creature.hp / (creature.maxHp || 30)), barH);
     }
@@ -766,8 +805,8 @@ function drawNeutralCreatures() {
 // =============================================================
 
 function moveCreature(entity, newX, newY) {
-    entity.x = Math.max(entity.radius, Math.min(gameState.canvasWidth - entity.radius, newX));
-    entity.y = Math.max(entity.radius, Math.min(gameState.canvasHeight - entity.radius, newY));
+    entity.x = Math.max(entity.radius, Math.min(MAP_WIDTH  - entity.radius, newX));
+    entity.y = Math.max(entity.radius, Math.min(MAP_HEIGHT - entity.radius, newY));
 }
 
 function spawnHostileCreatures() {
@@ -775,8 +814,8 @@ function spawnHostileCreatures() {
     for (let i = 0; i < 3; i++) {
         let x, y, safe = false;
         for (let attempts = 0; attempts < 200; attempts++) {
-            x = Math.random() * (gameState.canvasWidth - 60) + 30;
-            y = Math.random() * (gameState.canvasHeight - 60) + 30;
+            x = Math.random() * (MAP_WIDTH  - 60) + 30;
+            y = Math.random() * (MAP_HEIGHT - 60) + 30;
             const dPlayer = Math.sqrt(Math.pow(x - gameState.player.x, 2) + Math.pow(y - gameState.player.y, 2));
             if (dPlayer < 200) continue;
             break;
@@ -904,8 +943,8 @@ function updateHostileCreatures() {
         // patrolling：每 2 秒換漫遊目標
         if (!creature.wanderTarget || now - creature.lastWanderTime >= 2000) {
             creature.wanderTarget = {
-                x: Math.random() * (gameState.canvasWidth - 60) + 30,
-                y: Math.random() * (gameState.canvasHeight - 60) + 30
+                x: Math.random() * (MAP_WIDTH  - 60) + 30,
+                y: Math.random() * (MAP_HEIGHT - 60) + 30
             };
             creature.lastWanderTime = now;
         }
@@ -926,9 +965,11 @@ function updateHostileCreatures() {
 
 function drawCorpses() {
     for (const corpse of gameState.corpses) {
+        const s = worldToScreen(corpse.x, corpse.y);
+        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
         ctx.fillStyle = '#888';
         ctx.beginPath();
-        ctx.arc(corpse.x, corpse.y, corpse.radius, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, corpse.radius, 0, Math.PI * 2);
         ctx.fill();
     }
 }
@@ -936,17 +977,17 @@ function drawCorpses() {
 function drawHostileCreatures() {
     for (const creature of gameState.hostileCreatures) {
         if (creature.hp <= 0) continue;
+        const s = worldToScreen(creature.x, creature.y);
+        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
 
         ctx.fillStyle = creature.state === 'chasing' ? '#8B0000' : 'red';
         ctx.beginPath();
-        ctx.arc(creature.x, creature.y, creature.radius, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // 血條
-        const barW = 20;
-        const barH = 4;
-        const barX = creature.x - barW / 2;
-        const barY = creature.y - creature.radius - 8;
+        const barW = 20, barH = 4;
+        const barX = s.x - barW / 2;
+        const barY = s.y - creature.radius - 8;
         ctx.fillStyle = '#550000';
         ctx.fillRect(barX, barY, barW, barH);
         ctx.fillStyle = '#00CC00';
@@ -1070,8 +1111,8 @@ function checkOrganUpgrade() {
 
 function spawnTreasure() {
     gameState.treasures.push({
-        x: Math.random() * (gameState.canvasWidth - 60) + 30,
-        y: Math.random() * (gameState.canvasHeight - 60) + 30,
+        x: Math.random() * (MAP_WIDTH  - 60) + 30,
+        y: Math.random() * (MAP_HEIGHT - 60) + 30,
         radius: 8
     });
 }
@@ -1267,9 +1308,11 @@ function showOrganSelection() {
 
 function drawTreasures() {
     for (const t of gameState.treasures) {
+        const s = worldToScreen(t.x, t.y);
+        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
         ctx.fillStyle = 'gold';
         ctx.beginPath();
-        ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, t.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#CC8800';
         ctx.lineWidth = 2;
@@ -1285,7 +1328,7 @@ function drawOrganUI() {
     const lineH = 18;
     const padX = 10;
     const padY = 8;
-    const H = gameState.canvasHeight;
+    const H = VIEW_H;
     const versionAreaH = 46;
 
     // 收集所有已解鎖的進化路線（等級 > 0），依 herbivore→carnivore→omnivore 順序
@@ -1338,12 +1381,14 @@ function drawOrganUI() {
 // 玩家攻擊系統 (Player Attack System)
 // =============================================================
 
-function showFloatingText(x, y, text, color, fontSize) {
+function showFloatingText(wx, wy, text, color, fontSize) {
+    const s = worldToScreen(wx, wy);
+    if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
     const el = document.createElement('div');
     const fz = fontSize || 16;
     el.style.cssText = 'position:absolute;pointer-events:none;font-size:' + fz + 'px;font-weight:bold;animation:fadeOutUp 0.8s forwards;text-shadow:1px 1px 2px black;';
-    el.style.left = (x - 20) + 'px';
-    el.style.top  = (y - 10) + 'px';
+    el.style.left = (s.x - 20) + 'px';
+    el.style.top  = (s.y - 10) + 'px';
     el.style.color = color || 'white';
     el.innerText = text;
     document.getElementById('ui-overlay').appendChild(el);
@@ -1584,14 +1629,14 @@ function updateCorpseEating() {
 function drawCorpseEatingBars() {
     for (const corpse of gameState.corpses) {
         if (corpse.eatProgress == null || corpse.eatProgress <= 0) continue;
+        const s = worldToScreen(corpse.x, corpse.y);
+        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
         const prog = corpse.eatProgress;
-        const barW = 30;
-        const barH = 4;
-        const barX = corpse.x - barW / 2;
-        const barY = corpse.y - (corpse.radius || 8) - 10;
+        const barW = 30, barH = 4;
+        const barX = s.x - barW / 2;
+        const barY = s.y - (corpse.radius || 8) - 10;
         ctx.fillStyle = '#222';
         ctx.fillRect(barX, barY, barW, barH);
-        // 橘色(255,165,0) → 深紅(128,0,0)
         const r = Math.round(255 - 127 * prog);
         const g = Math.round(165 - 165 * prog);
         ctx.fillStyle = 'rgb(' + r + ',' + g + ',0)';
@@ -1876,11 +1921,11 @@ function spawnCreatureAtEdge(type) {
     const bonus = gameState.creatureStrengthMultiplier;
     const edge = Math.floor(Math.random() * 4);
     let x, y;
-    const w = gameState.canvasWidth, h = gameState.canvasHeight, r = 14;
-    if (edge === 0) { x = Math.random() * w; y = r; }
-    else if (edge === 1) { x = Math.random() * w; y = h - r; }
-    else if (edge === 2) { x = r; y = Math.random() * h; }
-    else { x = w - r; y = Math.random() * h; }
+    const r = 14;
+    if (edge === 0) { x = Math.random() * MAP_WIDTH;  y = r; }
+    else if (edge === 1) { x = Math.random() * MAP_WIDTH;  y = MAP_HEIGHT - r; }
+    else if (edge === 2) { x = r;             y = Math.random() * MAP_HEIGHT; }
+    else                 { x = MAP_WIDTH - r; y = Math.random() * MAP_HEIGHT; }
 
     if (type === 'neutral') {
         gameState.neutralCreatures.push({
@@ -1930,13 +1975,13 @@ function updateCreatureSpawning() {
 }
 
 function spawnBoss() {
-    const w = gameState.canvasWidth, h = gameState.canvasHeight, r = 25;
+    const r = 25;
     const edge = Math.floor(Math.random() * 4);
     let x, y;
-    if (edge === 0) { x = Math.random() * w; y = r; }
-    else if (edge === 1) { x = Math.random() * w; y = h - r; }
-    else if (edge === 2) { x = r; y = Math.random() * h; }
-    else { x = w - r; y = Math.random() * h; }
+    if (edge === 0) { x = Math.random() * MAP_WIDTH;  y = r; }
+    else if (edge === 1) { x = Math.random() * MAP_WIDTH;  y = MAP_HEIGHT - r; }
+    else if (edge === 2) { x = r;             y = Math.random() * MAP_HEIGHT; }
+    else                 { x = MAP_WIDTH - r; y = Math.random() * MAP_HEIGHT; }
     gameState.boss = {
         x, y, radius: 25, hp: 500, maxHp: 500,
         speed: 1.0, damage: 15, aggroRange: 200, attackRange: 30,
@@ -1975,8 +2020,8 @@ function updateBoss() {
     } else {
         if (!boss.wanderTarget || now - boss.lastWanderTime >= 3000) {
             boss.wanderTarget = {
-                x: Math.random() * (gameState.canvasWidth - 60) + 30,
-                y: Math.random() * (gameState.canvasHeight - 60) + 30
+                x: Math.random() * (MAP_WIDTH  - 60) + 30,
+                y: Math.random() * (MAP_HEIGHT - 60) + 30
             };
             boss.lastWanderTime = now;
         }
@@ -2041,13 +2086,13 @@ function spawnEliteCreature(nightNum) {
     const tierIndex = nightNum - 1;
     const tier = ELITE_CONFIG.nights[tierIndex];
     const hp = Math.round(ELITE_CONFIG.base.hp * tier.hpMult);
-    const w = gameState.canvasWidth, h = gameState.canvasHeight, r = 18;
+    const r = 18;
     const edge = Math.floor(Math.random() * 4);
     let x, y;
-    if (edge === 0) { x = Math.random() * w; y = r; }
-    else if (edge === 1) { x = Math.random() * w; y = h - r; }
-    else if (edge === 2) { x = r; y = Math.random() * h; }
-    else { x = w - r; y = Math.random() * h; }
+    if (edge === 0) { x = Math.random() * MAP_WIDTH;  y = r; }
+    else if (edge === 1) { x = Math.random() * MAP_WIDTH;  y = MAP_HEIGHT - r; }
+    else if (edge === 2) { x = r;             y = Math.random() * MAP_HEIGHT; }
+    else                 { x = MAP_WIDTH - r; y = Math.random() * MAP_HEIGHT; }
     gameState.eliteCreature = {
         x, y, radius: 18, hp, maxHp: hp,
         speed: tier.speed, damage: tier.damage,
@@ -2088,8 +2133,8 @@ function updateEliteCreature() {
     } else {
         if (!elite.wanderTarget || now - elite.lastWanderTime >= 2500) {
             elite.wanderTarget = {
-                x: Math.random() * (gameState.canvasWidth - 60) + 30,
-                y: Math.random() * (gameState.canvasHeight - 60) + 30
+                x: Math.random() * (MAP_WIDTH  - 60) + 30,
+                y: Math.random() * (MAP_HEIGHT - 60) + 30
             };
             elite.lastWanderTime = now;
         }
@@ -2109,23 +2154,25 @@ function updateEliteCreature() {
 function drawEliteCreature() {
     const elite = gameState.eliteCreature;
     if (!elite || elite.hp <= 0) return;
+    const s = worldToScreen(elite.x, elite.y);
+    if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) return;
     ctx.save();
     ctx.shadowColor = '#FFD700';
     ctx.shadowBlur = 14;
     ctx.fillStyle = elite.color;
     ctx.beginPath();
-    ctx.arc(elite.x, elite.y, elite.radius, 0, Math.PI * 2);
+    ctx.arc(s.x, s.y, elite.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
     ctx.save();
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold 11px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(elite.label, elite.x, elite.y - elite.radius - 12);
+    ctx.fillText(elite.label, s.x, s.y - elite.radius - 12);
     ctx.restore();
     const bW = 46, bH = 5;
-    const bX = elite.x - bW / 2;
-    const bY = elite.y - elite.radius - 24;
+    const bX = s.x - bW / 2;
+    const bY = s.y - elite.radius - 24;
     ctx.fillStyle = '#330033';
     ctx.fillRect(bX, bY, bW, bH);
     ctx.fillStyle = '#CC44FF';
@@ -2157,6 +2204,7 @@ function gameLoop() {
         updateDayNightCycle();
         updateCreatureSpawning();
         updatePlayerMovement();
+        updateCamera();
         checkFruitCollision();
         manageFruitSpawning();
         updateNeutralCreatures();
@@ -2181,7 +2229,7 @@ function initializeGame() {
     console.log("--- 遊戲初始化開始 ---");
 
 // 1. 生成環境
-    generateTrees(20); // 創建 20 棵樹木
+    generateTrees(60); // 2400x1800 地圖需要更多樹木
     
     // 2. 初始化果子：生成最初的 15 顆果子
     gameState.fruits = []; 

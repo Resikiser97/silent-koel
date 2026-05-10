@@ -2,6 +2,24 @@
 
 ---
 
+## v0.9.4 - 2026-05-11
+
+### 新增
+- 大地圖第一階段：地圖實際尺寸從 800×600 擴大至 2400×1800，視窗顯示維持 800×600
+- 新增 `MAP_WIDTH / MAP_HEIGHT / VIEW_W / VIEW_H` 常數，`gameState.camera { x, y }` 視角偏移
+- `worldToScreen(wx, wy)` 函式：繪製時統一換算世界→螢幕座標
+- `updateCamera()` 平滑視角跟隨：玩家進入視窗邊界 20%（160px / 120px）才開始移動，Lerp 係數 0.15，視角夾在地圖邊界內
+- 玩家出生點改為地圖中央 (1200, 900)，初始攝影機對齊玩家 (800, 600)
+
+### 調整
+- 所有 draw 函式（樹木、果子、屍體、生物、寶物、Boss、精英怪、玩家）套用 worldToScreen + culling，螢幕外 ±50px 不繪製
+- `showFloatingText` / `showXPPopup` 改為傳入世界座標，轉換後貼到 DOM
+- 所有生物生成、wander target 改用 MAP_WIDTH/HEIGHT；樹木增至 60 棵，MAX_FRUITS 增至 60
+- `gameLoop` 加入 `updateCamera()` 呼叫（在 `updatePlayerMovement` 之後）
+- UI（HP/XP 列、時間欄、器官清單、訊息提示）固定螢幕座標，不跟隨 camera
+
+---
+
 ## v0.9.3 - 2026-05-10
 
 ### 調整
