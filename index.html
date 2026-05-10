@@ -487,11 +487,6 @@ function drawGame() {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius + 3, 0, Math.PI * 2);
         ctx.fill();
-    } else {
-        ctx.fillStyle = 'rgba(255,255,255,0.8)';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius + 2, 0, Math.PI * 2);
-        ctx.fill();
     }
     ctx.fillStyle = p.color;
     ctx.beginPath();
