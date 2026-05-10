@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>噪鵑的森林冒險</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #222; /* Overall background color */
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 1px solid #333;
+        }
+        canvas {
+            display: block;
+            background-color: #549954; /* Forest Green Background */
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks/interactions to pass through */
+            user-select: none;
+        }
+
+        /* Style for UI elements */
+        .ui-panel {
+            position: absolute;
+            padding: 10px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-size: 18px;
+        }
+
+        #top-left {
+            top: 10px;
+            left: 10px;
+        }
+
+        #top-right {
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        /* XP Popup Animation */
+        #xp-popup {
+            position: absolute;
+            color: #00FF00; /* Green color for XP popup */
+            font-size: 24px;
+            font-weight: bold;
+            animation: fadeOutUp 1s forwards; 
+            pointer-events: none;
+        }
+
+        @keyframes fadeOutUp {
+            0% { opacity: 1; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-20px); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+
+        .status-line {
+             margin-bottom: 5px;
+        }
+
+        #dev-panel {
+            display: none;
+            position: absolute;
+            right: -155px;
+            top: 80px;
+            width: 140px;
+            background: rgba(0, 0, 0, 0.78);
+            border: 1px solid #555;
+            border-radius: 6px;
+            padding: 8px;
+            z-index: 200;
+            pointer-events: all;
+        }
+        #dev-panel-title {
+            color: red;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #555;
+        }
+        #dev-panel button {
+            display: block;
+            width: 100%;
+            margin: 4px 0;
+            padding: 5px 8px;
+            background: transparent;
+            border: 1px solid red;
+            color: white;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+        }
+        #dev-panel button:hover {
+            background: rgba(255, 0, 0, 0.2);
+        }
+    </style>
+<script src="gameConfig.js"></script>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- HTML5 Canvas for drawing the game world -->
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- UI Overlay for displaying scores, time, etc. -->
+    <div id="ui-overlay">
+        <!-- Top Left: HP and XP -->
+        <div class="ui-panel" id="top-left">
+            <div class="status-line">HP: 50/50</div>
+            <div class="status-line">XP: 0</div>
+        </div>
+
+        <!-- Top Right: Time and Day Status -->
+        <div id="top-right">
+            <div class="status-line" id="time-display">時間: 20:00</div>
+            <div class="status-line" id="day-display">現在是「白天」</div>
+            <div id="dev-indicator" style="display:none; color:red; font-size:14px; font-weight:bold; margin-top:4px;">🛠️ 開發者模式</div>
+        </div>
+    </div>
+
+    <!-- Developer Panel -->
+    <div id="dev-panel">
+        <div id="dev-panel-title">🛠️ DEV MODE</div>
+        <button onclick="devAddXP()">+50 XP</button>
+        <button onclick="devAddHP()">+20 HP</button>
+        <button onclick="devFullHP()">滿血</button>
+        <button onclick="devSpawnFruits()">生成果子</button>
+        <button onclick="devKillHostiles()">殺死所有敵意生物</button>
+        <button onclick="devSpawnNeutral()">生成中立生物</button>
+        <button onclick="devSpawnHostile()">生成敵對生物</button>
+        <button onclick="devFastForward()">⏩ 快轉5分鐘</button>
+        <button onclick="devRewind()">⏪ 倒回5分鐘</button>
+        <button onclick="devToggleDayNight()">🌙 切換日夜</button>
+    </div>
+</div>
+
+<script>
+// =============================================================
+// 全局遊戲狀態管理 (gameState)
+// 所有可變的、需要追蹤的數據都放在這裡，方便未來擴充和調試。
+// =============================================================
+const gameState = {
+    canvasWidth: 800,
+    canvasHeight: 600,
+
+    player: {
+        x: 400, y: 300, radius: 10, speed: 1.5, color: 'black',
+        organs: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5,
+        attack: 0, attackSpeed: 1.0, attackRange: 50,
+        critChance: 0, critMultiplier: 1.0,
+        damageReduction: 0, thornDamage: 0, thornPlayerAtkReflect: false,
+        brainActive: false, brainTimer: 0, brainInterval: 5000, brainRange: 100, brainDmg: 8,
+        pickupRange: 0, aggroRangeReduction: 0,
+        naturalRegenHp: 0, naturalRegenInterval: 10000, naturalRegenTimer: 0,
+        comboCrabPoison: false, comboShellArmor: false, comboBrainEye: false,
+        comboSkinRegen: false, comboEyeFang: false,
+        attackTimer: 0, attackVisual: 0,
+        level: 1, levelXP: 0, tenacityUsed: false,
+        evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' }
+    },
+
+    trees: [],
+    fruits: [], // 果子陣列
+    neutralCreatures: [], // 中立生物陣列
+    hostileCreatures: [], // 敵意生物陣列
+    corpses: [], // 屍體陣列
+    
+    stats: {
+        hpMax: 50,
+        hpCurrent: 50,
+        xpCurrent: 0,
+        timeStatus: "20:00",
+        dayCycle: "白天"
+    },
+
+    keys: {
+        w: false, a: false, s: false, d: false
+    },
+    xpThreshold: 100,
+    organSelectionActive: false,
+    pendingOrganSelections: 0,
+    treasures: [],
+    devInput: '',
+    devMode: false,
+    timeRemaining: 1200,
+    lastTimeTick: 0,
+    gameOver: false,
+    spawnTimers: { neutral: 0, hostile: 0 },
+    creatureStrengthMultiplier: 0,
+    isNight: false,
+    currentPhaseIndex: 0,
+    dayNightMessage: { text: '', timer: 0 },
+    levelUpMessage: { text: '', timer: 0 },
+    skillPoints: 0,
+    playerSkills: { vitality: 0, agility: 0, forager: 0, hunter: 0, tenacity: 0, organMemory: 0 },
+    boss: null,
+    bossSpawned: false
+};
+
+
+// =============================================================
+// 畫布及上下文設定 (Canvas Setup)
+// =============================================================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// ORGANS、SKILLS、EVOLUTION_PATHS、COMBOS、CREATURE_CONFIG 由 gameConfig.js 提供
+
+// =============================================================
+// 初始化遊戲元素 - 果子生成相關
+// =============================================================
+
+/**
+ * 生成隨機樹木物件。
+ */
+function generateTrees(count) {
+    const trees = [];
+    for (let i = 0; i < count; i++) {
+        const x = Math.floor(Math.random() * (gameState.canvasWidth - 100)) + 50;
+        const y = Math.floor(Math.random() * (gameState.canvasHeight - 100)) + 50;
+        const radius = Math.floor(Math.random() * (20 - 10) + 10);
+        trees.push({ x: x, y: y, radius: radius, color: 'darkgreen' });
+    }
+    gameState.trees = trees;
+    console.log("--- 初始化完成：共生成 " + gameState.trees.length + " 棵樹木 ---");
+}
+
+/**
+ * 生成隨機果子物件。
+ */
+function spawnFruit(isInitial = false) {
+    const MAX_FRUITS = 20;
+    if (gameState.fruits.length >= MAX_FRUITS) return null;
+    if (gameState.trees.length === 0) return null;
+
+    for (let attempts = 0; attempts < 100; attempts++) {
+        const tree = gameState.trees[Math.floor(Math.random() * gameState.trees.length)];
+        const angle = Math.random() * Math.PI * 2;
+        const dist = tree.radius + 6 + Math.random() * (80 - tree.radius - 6);
+        const x = tree.x + Math.cos(angle) * dist;
+        const y = tree.y + Math.sin(angle) * dist;
+
+        if (x < 10 || x > gameState.canvasWidth - 10 || y < 10 || y > gameState.canvasHeight - 10) continue;
+
+        let tooClose = false;
+        for (const fruit of gameState.fruits) {
+            if (Math.pow(x - fruit.x, 2) + Math.pow(y - fruit.y, 2) < 625) { tooClose = true; break; }
+        }
+        if (tooClose) continue;
+
+        const fruit = { x: x, y: y, radius: 6, color: 'red' };
+        gameState.fruits.push(fruit);
+        return fruit;
+    }
+    return null;
+}
+
+
+// =============================================================
+// 輸入事件處理 (Input Handling)
+// =============================================================
+function handleKeyDown(e) {
+    const key = e.key.toLowerCase();
+    if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+        gameState.keys[key] = true;
+        e.preventDefault();
+    }
+    if (e.key === ' ') {
+        e.preventDefault();
+        if (!gameState.organSelectionActive) playerAttack();
+    }
+    gameState.devInput = (gameState.devInput + e.key).slice(-8);
+    if (gameState.devInput === '77777778') {
+        toggleDevMode();
+    }
+}
+
+function handleKeyUp(e) {
+    const key = e.key.toLowerCase();
+    if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+        gameState.keys[key] = false;
+    }
+}
+
+
+// =============================================================
+// 核心遊戲邏輯函數 (Game Logic)
+// =============================================================
+
+/**
+ * 更新玩家的移動和碰撞檢測。
+ */
+function updatePlayerMovement() {
+    const p = gameState.player;
+    let dx = 0, dy = 0;
+    if (gameState.keys['w'] || gameState.keys['arrowup'])    dy -= p.speed;
+    if (gameState.keys['s'] || gameState.keys['arrowdown'])  dy += p.speed;
+    if (gameState.keys['a'] || gameState.keys['arrowleft'])  dx -= p.speed;
+    if (gameState.keys['d'] || gameState.keys['arrowright']) dx += p.speed;
+    if (dx === 0 && dy === 0) return;
+    p.x = Math.max(p.radius, Math.min(gameState.canvasWidth - p.radius, p.x + dx));
+    p.y = Math.max(p.radius, Math.min(gameState.canvasHeight - p.radius, p.y + dy));
+}
+
+
+/**
+ * 新增功能：檢查玩家與果子是否發生重疊（吃果子）。
+ */
+function checkFruitCollision() {
+    const p = gameState.player;
+    // 拾取範圍包含大腦的吸取加成
+    const collisionRadius = p.radius + 6 + p.pickupRange;
+
+    for (let i = gameState.fruits.length - 1; i >= 0; i--) {
+        const fruit = gameState.fruits[i];
+        const distanceSquared = Math.pow(p.x - fruit.x, 2) + Math.pow(p.y - fruit.y, 2);
+
+        if (distanceSquared < Math.pow(collisionRadius, 2)) {
+            const ev = p.evolution;
+            // 草食Lv2/3 果子XP加成（各等級的最終值）
+            const herbBonus = ev.herbivore >= 2 ? EVOLUTION_PATHS.herbivore.levels[ev.herbivore - 1].fruitXPBonus : 0;
+            // 雜食果子XP加成
+            const omniBonus = ev.omnivore > 0 ? EVOLUTION_PATHS.omnivore.levels[ev.omnivore - 1].fruitXPBonus : 0;
+            const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus + omniBonus;
+            addXP(fruitXP);
+            // 雜食Lv3：10%機率吃東西回血5
+            if (ev.omnivore >= 3 && Math.random() < 0.1) {
+                gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 5);
+                showFloatingText(p.x, p.y - 40, '飽食！HP+5', '#00FF88');
+            }
+
+            // 1. 移除果子
+            gameState.fruits.splice(i, 1);
+
+            // 2. 視覺提示 (新增功能)
+            showXPPopup(p.x, p.y, fruitXP);
+            
+            return true; // 確認發生了碰撞並處理了狀態更新
+        }
+    }
+    return false;
+}
+
+
+/**
+ * 自動生成果子計時器管理函數。
+ */
+function manageFruitSpawning() {
+    const currentTime = Date.now();
+    const fruitEmpty = gameState.fruits.length === 0;
+    let spawnIntervalMs;
+
+    if (gameState.stats.dayCycle === "白天") {
+        spawnIntervalMs = fruitEmpty ? 2400 : 8000;
+    } else if (gameState.stats.dayCycle === "夜晚") {
+        spawnIntervalMs = fruitEmpty ? 4800 : 16000;
+    } else {
+        spawnIntervalMs = fruitEmpty ? 2400 : 8000;
+    }
+
+    if (!gameState.lastFruitSpawnTime || currentTime - gameState.lastFruitSpawnTime >= spawnIntervalMs * 0.9) {
+        spawnFruit();
+        gameState.lastFruitSpawnTime = Date.now();
+    }
+}
+
+/**
+ * 生成果子的視覺提示。
+ */
+function showXPPopup(x, y, amount) {
+    const popup = document.createElement('div');
+    popup.id = 'xp-popup';
+    popup.innerText = `+${amount} XP`;
+    
+    // 將元素放置在畫布上，使用絕對定位
+    popup.style.left = `${x - 15}px`; // x座標減半徑*2 (粗略居中)
+    popup.style.top = `${y - 20}px`;
+    document.getElementById('ui-overlay').appendChild(popup);
+
+    setTimeout(() => {
+        // Animation will handle the fade out, but we must remove the element from DOM after it finishes.
+        popup.remove();
+    }, 1000); 
+}
+
+
+/**
+ * 繪製所有遊戲元素到畫布上。
+*/
+function drawGame() {
+    // 根據日夜狀態設定背景顏色
+    ctx.fillStyle = gameState.isNight ? '#1a2e1a' : '#549954';
+    ctx.fillRect(0, 0, gameState.canvasWidth, gameState.canvasHeight);
+
+    // 2. 繪製環境 (樹木)
+    gameState.trees.forEach(tree => {
+        ctx.fillStyle = tree.color;
+        ctx.beginPath();
+        ctx.arc(tree.x, tree.y, tree.radius, 0, Math.PI * 2); 
+        ctx.fill();
+    });
+
+    // 3. 繪製果子 (新增)
+    gameState.fruits.forEach(fruit => {
+        ctx.fillStyle = fruit.color; // 紅色
+        ctx.beginPath();
+        ctx.arc(fruit.x, fruit.y, fruit.radius, 0, Math.PI * 2); 
+        ctx.fill();
+    });
+
+    // 4. 繪製寶物
+    drawTreasures();
+
+    // 5. 繪製屍體（在生物之下）
+    drawCorpses();
+    drawCorpseEatingBars();
+
+    // 5. 繪製中立生物
+    drawNeutralCreatures();
+
+    // 6. 繪製敵意生物
+    drawHostileCreatures();
+
+    // 7. 繪製 Boss
+    if (gameState.boss && gameState.boss.hp > 0) {
+        const boss = gameState.boss;
+        ctx.fillStyle = boss.state === 'chasing' ? '#2A0D00' : '#3B1E08';
+        ctx.beginPath();
+        ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.save();
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('⚠️黑熊', boss.x, boss.y - boss.radius - 12);
+        ctx.restore();
+        const bBarW = 50, bBarH = 6;
+        const bBarX = boss.x - bBarW / 2;
+        const bBarY = boss.y - boss.radius - 24;
+        ctx.fillStyle = '#550000';
+        ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
+        ctx.fillStyle = '#FF4400';
+        ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+    }
+
+    // 8. 攻擊範圍視覺圓圈（0.2 秒淡出）
+    const p = gameState.player;
+    if (p.attackVisual > 0 && Date.now() - p.attackVisual < 200) {
+        const alpha = 1 - (Date.now() - p.attackVisual) / 200;
+        ctx.strokeStyle = 'rgba(255,255,255,' + alpha.toFixed(2) + ')';
+        ctx.fillStyle   = 'rgba(255,255,255,' + (alpha * 0.12).toFixed(2) + ')';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.attackRange, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.lineWidth = 1;
+    }
+
+    // 9. 繪製玩家角色 (噪鵑)
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 9. 繪製器官清單（左下角）
+    drawOrganUI();
+
+    // 版本資訊（左下角最底部，與器官框不重疊）
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = 'white';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('© ' + GAME_INFO.author, 6, gameState.canvasHeight - 20);
+    ctx.fillText(GAME_INFO.version, 6, gameState.canvasHeight - 5);
+    ctx.restore();
+
+    // 10. 繪製升級提示文字（畫面中央偏上，2 秒淡出）
+    const lvMsg = gameState.levelUpMessage;
+    if (lvMsg.text && Date.now() - lvMsg.timer < 2000) {
+        const lvAlpha = Math.max(0, 1 - (Date.now() - lvMsg.timer) / 2000);
+        ctx.save();
+        ctx.globalAlpha = lvAlpha;
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 40px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(lvMsg.text, gameState.canvasWidth / 2, gameState.canvasHeight / 2 - 60);
+        ctx.restore();
+    }
+
+    // 11. 繪製日夜切換提示文字（畫面中央，2 秒淡出）
+    const msg = gameState.dayNightMessage;
+    if (msg.text && Date.now() - msg.timer < 2000) {
+        const alpha = Math.max(0, 1 - (Date.now() - msg.timer) / 2000);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(msg.text, gameState.canvasWidth / 2, gameState.canvasHeight / 2);
+        ctx.restore();
+    }
+}
+
+/**
+ * 更新遊戲的UI顯示。
+*/
+function updateUI() {
+    const p = gameState.player;
+    const lvThreshold = 100 + (p.level - 1) * 50;
+    const barPct = Math.min(1, p.levelXP / lvThreshold);
+    document.getElementById('top-left').innerHTML =
+        '<div class="status-line">HP: ' + Math.round(gameState.stats.hpCurrent) + '/' + gameState.stats.hpMax + '</div>' +
+        '<div class="status-line">Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold + '</div>' +
+        '<div style="width:120px;height:6px;background:#333;border-radius:3px;margin-top:2px;">' +
+        '<div style="width:' + Math.round(barPct * 100) + '%;height:100%;background:#00CC00;border-radius:3px;"></div>' +
+        '</div>';
+
+    // 右上角：時間和白天/黑夜狀態
+    document.getElementById('time-display').innerText = `時間: ${gameState.stats.timeStatus}`;
+    const dayEl = document.getElementById('day-display');
+    dayEl.innerText = `現在是「${gameState.stats.dayCycle}」`;
+    dayEl.style.color = gameState.isNight ? 'orange' : '';
+}
+
+
+// =============================================================
+// 中立生物系統 (Neutral Creatures)
+// =============================================================
+
+function spawnNeutralCreatures() {
+    gameState.neutralCreatures = [];
+    for (let i = 0; i < 3; i++) {
+        const x = Math.random() * (gameState.canvasWidth - 60) + 30;
+        const y = Math.random() * (gameState.canvasHeight - 60) + 30;
+        const diet = Math.random() < 0.5 ? 'herbivore' : 'omnivore';
+        const canFight = Math.random() < 0.5;
+        gameState.neutralCreatures.push({
+            x: x, y: y, radius: 8, hp: 30, maxHp: 30, speed: 0.8,
+            diet: diet, canFight: canFight, state: 'idle',
+            wanderTarget: null, lastWanderTime: Date.now(), lastDamageTime: 0
+        });
+    }
+    console.log("--- 中立生物生成完成：" + gameState.neutralCreatures.length + " 隻 ---");
+}
+
+function updateNeutralCreatures() {
+    const now = Date.now();
+    const p = gameState.player;
+
+    for (const creature of gameState.neutralCreatures) {
+        if (creature.hp <= 0) continue;
+        if (creature.stunnedUntil && now < creature.stunnedUntil) continue;
+
+        // 激進化生物：行為與敵意生物相同
+        if (creature.diet === 'aggressive') {
+            const aggroRange = creature.aggroRange || 120;
+            let target = null;
+            let bestDist = aggroRange;
+            const dp = Math.sqrt(Math.pow(creature.x - p.x, 2) + Math.pow(creature.y - p.y, 2));
+            if (dp < bestDist) { target = p; bestDist = dp; }
+            for (const h of gameState.hostileCreatures) {
+                if (h.hp <= 0) continue;
+                const d = Math.sqrt(Math.pow(creature.x - h.x, 2) + Math.pow(creature.y - h.y, 2));
+                if (d < bestDist) { target = h; bestDist = d; }
+            }
+            if (target) {
+                creature.state = 'chasing';
+                const dx = target.x - creature.x;
+                const dy = target.y - creature.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const atkRange = creature.radius + (target.radius || 10) + 5;
+                if (dist <= atkRange) {
+                    if (now - (creature.attackCooldown || 0) >= 1000) {
+                        creature.attackCooldown = now;
+                        if (target === p) {
+                            applyDamageToPlayer(creature.damage || 8, creature);
+                        } else {
+                            target.hp -= creature.damage || 8;
+                            if (target.hp <= 0) gameState.corpses.push({ x: target.x, y: target.y, radius: target.radius, spawnTime: now });
+                        }
+                    }
+                } else {
+                    const angle = Math.atan2(dy, dx);
+                    creature.x = Math.max(creature.radius, Math.min(gameState.canvasWidth - creature.radius, creature.x + Math.cos(angle) * creature.speed));
+                    creature.y = Math.max(creature.radius, Math.min(gameState.canvasHeight - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+                }
+            } else {
+                creature.state = 'wandering';
+                if (!creature.wanderTarget || now - creature.lastWanderTime >= 2000) {
+                    creature.wanderTarget = { x: Math.random() * (gameState.canvasWidth - 60) + 30, y: Math.random() * (gameState.canvasHeight - 60) + 30 };
+                    creature.lastWanderTime = now;
+                }
+                if (creature.wanderTarget) {
+                    const dx = creature.wanderTarget.x - creature.x;
+                    const dy = creature.wanderTarget.y - creature.y;
+                    if (Math.sqrt(dx * dx + dy * dy) < 2) { creature.wanderTarget = null; }
+                    else {
+                        const angle = Math.atan2(dy, dx);
+                        creature.x = Math.max(creature.radius, Math.min(gameState.canvasWidth - creature.radius, creature.x + Math.cos(angle) * creature.speed));
+                        creature.y = Math.max(creature.radius, Math.min(gameState.canvasHeight - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+                    }
+                }
+            }
+            continue;
+        }
+
+        const distToPlayer = Math.sqrt(Math.pow(creature.x - p.x, 2) + Math.pow(creature.y - p.y, 2));
+        const touchDist = creature.radius + p.radius;
+
+        // 草食安撫：Lv2=100px 不逃跑，Lv3=150px 完全友善
+        const herbLv = p.evolution.herbivore || 0;
+        const isCalm     = herbLv >= 2 && distToPlayer < 100;
+        const isFriendly = herbLv >= 3 && distToPlayer < 150;
+
+        // 判斷與玩家碰撞狀態
+        if (distToPlayer < touchDist) {
+            if (!isFriendly) {
+                creature.state = (isCalm && !creature.canFight) ? 'idle' : (creature.canFight ? 'fighting' : 'fleeing');
+            }
+        } else if ((creature.state === 'fighting' || creature.state === 'fleeing') && distToPlayer > touchDist + 50) {
+            creature.state = 'idle';
+        } else if (isFriendly && (creature.state === 'fighting' || creature.state === 'fleeing')) {
+            creature.state = 'idle';
+        } else if (isCalm && creature.state === 'fleeing') {
+            creature.state = 'idle';
+        }
+
+        // fighting：每秒扣玩家 3HP，生物原地不動
+        if (creature.state === 'fighting') {
+            if (now - creature.lastDamageTime >= 1000) {
+                applyDamageToPlayer(3, creature);
+                creature.lastDamageTime = now;
+            }
+            continue;
+        }
+
+        // fleeing：逃離玩家
+        if (creature.state === 'fleeing') {
+            const angle = Math.atan2(creature.y - p.y, creature.x - p.x);
+            creature.x = Math.max(creature.radius, Math.min(gameState.canvasWidth - creature.radius, creature.x + Math.cos(angle) * creature.speed));
+            creature.y = Math.max(creature.radius, Math.min(gameState.canvasHeight - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+            continue;
+        }
+
+        // 草食/雜食：吃附近 80px 內的果子
+        if (creature.diet === 'herbivore' || creature.diet === 'omnivore') {
+            let closestIdx = -1;
+            let closestDist = 80;
+            for (let i = 0; i < gameState.fruits.length; i++) {
+                const fruit = gameState.fruits[i];
+                const d = Math.sqrt(Math.pow(creature.x - fruit.x, 2) + Math.pow(creature.y - fruit.y, 2));
+                if (d < closestDist) { closestDist = d; closestIdx = i; }
+            }
+            if (closestIdx !== -1) {
+                const fruit = gameState.fruits[closestIdx];
+                const angle = Math.atan2(fruit.y - creature.y, fruit.x - creature.x);
+                creature.x += Math.cos(angle) * creature.speed;
+                creature.y += Math.sin(angle) * creature.speed;
+                if (closestDist < creature.radius + 6) {
+                    gameState.fruits.splice(closestIdx, 1);
+                    creature.fruitsEaten = (creature.fruitsEaten || 0) + 1;
+                    creature.hp += 3;
+                    creature.maxHp = (creature.maxHp || 30) + 3;
+                    creature.speed += 0.05;
+                    // 超過5顆後變激進
+                    if (creature.fruitsEaten >= 5 && creature.diet !== 'aggressive') {
+                        creature.diet = 'aggressive';
+                        creature.damage = 8;
+                        creature.aggroRange = 120;
+                    }
+                }
+                continue;
+            }
+        }
+
+        // idle/wandering：每 3 秒選新漫遊目標
+        if (!creature.wanderTarget || now - creature.lastWanderTime >= 3000) {
+            creature.wanderTarget = {
+                x: Math.random() * (gameState.canvasWidth - 60) + 30,
+                y: Math.random() * (gameState.canvasHeight - 60) + 30
+            };
+            creature.lastWanderTime = now;
+            creature.state = 'wandering';
+        }
+
+        if (creature.wanderTarget) {
+            const dx = creature.wanderTarget.x - creature.x;
+            const dy = creature.wanderTarget.y - creature.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 2) {
+                creature.wanderTarget = null;
+                creature.state = 'idle';
+            } else {
+                const angle = Math.atan2(dy, dx);
+                creature.x = Math.max(creature.radius, Math.min(gameState.canvasWidth - creature.radius, creature.x + Math.cos(angle) * creature.speed));
+                creature.y = Math.max(creature.radius, Math.min(gameState.canvasHeight - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+            }
+        }
+    }
+}
+
+function drawNeutralCreatures() {
+    for (const creature of gameState.neutralCreatures) {
+        if (creature.hp <= 0) continue;
+
+        // 顏色：aggressive=深橘紅，fleeing=黃，fighting=深橘，其餘=橘
+        let color = 'orange';
+        if (creature.diet === 'aggressive') color = '#CC4400';
+        else if (creature.state === 'fleeing') color = 'yellow';
+        else if (creature.state === 'fighting') color = '#CC5500';
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(creature.x, creature.y, creature.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 血條背景（灰）
+        const barW = 20;
+        const barH = 4;
+        const barX = creature.x - barW / 2;
+        const barY = creature.y - creature.radius - 8;
+        ctx.fillStyle = '#555';
+        ctx.fillRect(barX, barY, barW, barH);
+        // 血條前景（綠）
+        ctx.fillStyle = '#00CC00';
+        ctx.fillRect(barX, barY, barW * (creature.hp / (creature.maxHp || 30)), barH);
+    }
+}
+
+// =============================================================
+// 敵意生物系統 (Hostile Creatures)
+// =============================================================
+
+function moveCreature(entity, newX, newY) {
+    entity.x = Math.max(entity.radius, Math.min(gameState.canvasWidth - entity.radius, newX));
+    entity.y = Math.max(entity.radius, Math.min(gameState.canvasHeight - entity.radius, newY));
+}
+
+function spawnHostileCreatures() {
+    gameState.hostileCreatures = [];
+    for (let i = 0; i < 3; i++) {
+        let x, y, safe = false;
+        for (let attempts = 0; attempts < 200; attempts++) {
+            x = Math.random() * (gameState.canvasWidth - 60) + 30;
+            y = Math.random() * (gameState.canvasHeight - 60) + 30;
+            const dPlayer = Math.sqrt(Math.pow(x - gameState.player.x, 2) + Math.pow(y - gameState.player.y, 2));
+            if (dPlayer < 200) continue;
+            break;
+        }
+        const roll = Math.random();
+        const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
+        const bonus = gameState.creatureStrengthMultiplier;
+        gameState.hostileCreatures.push({
+            x: x, y: y, radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
+            speed: Math.min(2.5, 1.2 + bonus * 0.1),
+            damage: Math.min(20, 5 + bonus), attackCooldown: 0, diet: diet,
+            state: 'patrolling', aggroRange: 150, attackRange: 20,
+            wanderTarget: null, lastWanderTime: Date.now(),
+            target: null, targetType: null
+        });
+    }
+    console.log("--- 敵意生物生成完成：" + gameState.hostileCreatures.length + " 隻 ---");
+}
+
+function updateHostileCreatures() {
+    const now = Date.now();
+    const p = gameState.player;
+
+    // 清除超過 60 秒的屍體
+    gameState.corpses = gameState.corpses.filter(c => now - c.spawnTime < 60000);
+
+    for (const creature of gameState.hostileCreatures) {
+        if (creature.hp <= 0) continue;
+        if (creature.stunnedUntil && now < creature.stunnedUntil) continue;
+
+        // 尋找最近目標（玩家 > 中立生物）
+        let bestTarget = null;
+        let bestDist = Infinity;
+        let bestType = null;
+
+        const effectiveAggroRange = Math.max(60, creature.aggroRange - p.aggroRangeReduction);
+        const distToPlayer = Math.sqrt(Math.pow(creature.x - p.x, 2) + Math.pow(creature.y - p.y, 2));
+        if (distToPlayer < effectiveAggroRange) {
+            bestTarget = p;
+            bestDist = distToPlayer;
+            bestType = 'player';
+        }
+
+        for (const neutral of gameState.neutralCreatures) {
+            if (neutral.hp <= 0) continue;
+            const d = Math.sqrt(Math.pow(creature.x - neutral.x, 2) + Math.pow(creature.y - neutral.y, 2));
+            if (d < effectiveAggroRange && d < bestDist) {
+                bestTarget = neutral;
+                bestDist = d;
+                bestType = 'neutral';
+            }
+        }
+
+        // 狀態切換
+        if (bestTarget !== null) {
+            creature.state = 'chasing';
+            creature.target = bestTarget;
+            creature.targetType = bestType;
+        } else if (creature.state === 'chasing') {
+            const t = creature.target;
+            const d = t ? Math.sqrt(Math.pow(creature.x - t.x, 2) + Math.pow(creature.y - t.y, 2)) : Infinity;
+            if (!t || t.hp <= 0 || d > effectiveAggroRange + 200) {
+                creature.state = 'patrolling';
+                creature.target = null;
+                creature.targetType = null;
+            }
+        }
+
+        // 追擊與攻擊
+        if (creature.state === 'chasing' && creature.target) {
+            const t = creature.target;
+            const dx = t.x - creature.x;
+            const dy = t.y - creature.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist <= creature.attackRange) {
+                if (now - creature.attackCooldown >= 1000) {
+                    if (creature.targetType === 'player') {
+                        applyDamageToPlayer(creature.damage, creature);
+                    } else if (creature.targetType === 'neutral') {
+                        creature.target.hp -= creature.damage;
+                        if (creature.target.hp <= 0) {
+                            gameState.corpses.push({
+                                x: creature.target.x, y: creature.target.y,
+                                radius: creature.target.radius, spawnTime: now
+                            });
+                            // 擊殺後回到巡邏狀態
+                            creature.state = 'patrolling';
+                            creature.target = null;
+                            creature.targetType = null;
+                        }
+                    }
+                    creature.attackCooldown = now;
+                }
+            } else {
+                const angle = Math.atan2(dy, dx);
+                moveCreature(creature, creature.x + Math.cos(angle) * creature.speed, creature.y + Math.sin(angle) * creature.speed);
+            }
+            continue;
+        }
+
+        // carnivore/omnivore 吃附近屍體
+        if (creature.diet === 'carnivore' || creature.diet === 'omnivore') {
+            let closestIdx = -1;
+            let closestDist = creature.aggroRange;
+            for (let i = 0; i < gameState.corpses.length; i++) {
+                const corpse = gameState.corpses[i];
+                const d = Math.sqrt(Math.pow(creature.x - corpse.x, 2) + Math.pow(creature.y - corpse.y, 2));
+                if (d < closestDist) { closestDist = d; closestIdx = i; }
+            }
+            if (closestIdx !== -1) {
+                const corpse = gameState.corpses[closestIdx];
+                if (closestDist < creature.radius + corpse.radius) {
+                    creature.speed = Math.min(2.5, Math.round((creature.speed + 0.1) * 10) / 10);
+                    creature.damage = Math.min(20, creature.damage + 1);
+                    gameState.corpses.splice(closestIdx, 1);
+                } else {
+                    const angle = Math.atan2(corpse.y - creature.y, corpse.x - creature.x);
+                    moveCreature(creature, creature.x + Math.cos(angle) * creature.speed, creature.y + Math.sin(angle) * creature.speed);
+                    continue;
+                }
+            }
+        }
+
+        // patrolling：每 2 秒換漫遊目標
+        if (!creature.wanderTarget || now - creature.lastWanderTime >= 2000) {
+            creature.wanderTarget = {
+                x: Math.random() * (gameState.canvasWidth - 60) + 30,
+                y: Math.random() * (gameState.canvasHeight - 60) + 30
+            };
+            creature.lastWanderTime = now;
+        }
+
+        if (creature.wanderTarget) {
+            const dx = creature.wanderTarget.x - creature.x;
+            const dy = creature.wanderTarget.y - creature.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 2) {
+                creature.wanderTarget = null;
+            } else {
+                const angle = Math.atan2(dy, dx);
+                moveCreature(creature, creature.x + Math.cos(angle) * creature.speed, creature.y + Math.sin(angle) * creature.speed);
+            }
+        }
+    }
+}
+
+function drawCorpses() {
+    for (const corpse of gameState.corpses) {
+        ctx.fillStyle = '#888';
+        ctx.beginPath();
+        ctx.arc(corpse.x, corpse.y, corpse.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawHostileCreatures() {
+    for (const creature of gameState.hostileCreatures) {
+        if (creature.hp <= 0) continue;
+
+        ctx.fillStyle = creature.state === 'chasing' ? '#8B0000' : 'red';
+        ctx.beginPath();
+        ctx.arc(creature.x, creature.y, creature.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 血條
+        const barW = 20;
+        const barH = 4;
+        const barX = creature.x - barW / 2;
+        const barY = creature.y - creature.radius - 8;
+        ctx.fillStyle = '#550000';
+        ctx.fillRect(barX, barY, barW, barH);
+        ctx.fillStyle = '#00CC00';
+        ctx.fillRect(barX, barY, barW * (creature.hp / (creature.maxHp || 50)), barH);
+    }
+}
+
+// =============================================================
+// 器官系統 (Organ System)
+// =============================================================
+
+function applyDamageToPlayer(rawDamage, attacker) {
+    const p = gameState.player;
+    const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
+    gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
+    if (p.thornDamage > 0 && attacker && attacker.hp > 0) {
+        const thornMult = p.comboShellArmor ? 2 : 1; // 龜殼+刺甲組合：反傷翻倍
+        let thornTotal = Math.round(final * p.thornDamage * thornMult);
+        if (p.thornPlayerAtkReflect) thornTotal += Math.round(p.attack * 0.05);
+        attacker.hp -= thornTotal;
+        if (attacker.hp <= 0) {
+            if (attacker === gameState.boss) {
+                showVictory();
+            } else {
+                const isHostile = gameState.hostileCreatures.includes(attacker);
+                handleKill(attacker, isHostile);
+            }
+        }
+    }
+    if (gameState.stats.hpCurrent <= 0) {
+        const tenacityLevel = gameState.playerSkills.tenacity || 0;
+        if (tenacityLevel > 0 && !p.tenacityUsed) {
+            // 頑強意志：每局觸發一次，保留 10%×等級的 HP
+            gameState.stats.hpCurrent = Math.max(1, Math.ceil(gameState.stats.hpMax * 0.1 * tenacityLevel));
+            p.tenacityUsed = true;
+            showFloatingText(p.x, p.y - 40, '頑強意志！', '#FF8800');
+            return;
+        }
+        showSkillTree();
+    }
+}
+
+// 取得玩家裝備的某器官等級（0=未裝備）
+function getOrganLevel(id) {
+    const o = gameState.player.organs.find(o => o.id === id);
+    return o ? o.level : 0;
+}
+
+// 累加某器官從1級到當前等級的指定效果值
+function getOrganCumulative(id, effectKey) {
+    const lv = getOrganLevel(id);
+    if (!lv || !ORGANS[id]) return 0;
+    return ORGANS[id].levels.slice(0, lv).reduce((sum, l) => sum + (l.effects[effectKey] || 0), 0);
+}
+
+// 若玩家持有組合所需的其中一個器官，回傳該組合描述
+function getComboHint(organId) {
+    for (const combo of COMBOS) {
+        if (!combo.ids.includes(organId)) continue;
+        const partner = combo.ids.find(id => id !== organId);
+        if (gameState.player.organs.some(o => o.id === partner)) return combo.desc;
+    }
+    return null;
+}
+
+function checkComboEffects() {
+    const p = gameState.player;
+    const has = id => p.organs.some(o => o.id === id);
+    for (const combo of COMBOS) {
+        p[combo.key] = combo.ids.every(id => has(id));
+    }
+}
+
+// 套用器官第 organ.level 級的增量效果
+function applyOrganEffects(organ) {
+    const p = gameState.player;
+    const def = ORGANS[organ.id];
+    if (!def) return;
+    const lv = def.levels[organ.level - 1];
+    if (!lv) return;
+    const fx = lv.effects;
+
+    if (fx.attackAdd)              p.attack += fx.attackAdd;
+    if (fx.attackSpeedMult)        p.attackSpeed *= fx.attackSpeedMult;
+    if (fx.speedAdd)               p.speed = Math.max(0.3, p.speed + fx.speedAdd);
+    if (fx.damageReductionAdd)     p.damageReduction = Math.min(0.9, p.damageReduction + fx.damageReductionAdd);
+    if (fx.hpMaxAdd) {
+        gameState.stats.hpMax += fx.hpMaxAdd;
+        gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + fx.hpMaxAdd);
+    }
+    if (fx.radiusAdd) {
+        p.radius += fx.radiusAdd;
+        p.attackRange += Math.round(fx.radiusAdd * (p.attackRange / p.radius));
+    }
+    if (fx.thornDamageAdd)         p.thornDamage += fx.thornDamageAdd;
+    if (fx.thornPlayerAtkReflect)  p.thornPlayerAtkReflect = true;
+    if (fx.critChanceAdd)          p.critChance += fx.critChanceAdd;
+    if (fx.critMultiplierAdd)      p.critMultiplier += fx.critMultiplierAdd;
+    if (fx.brainActivate) { p.brainActive = true; p.brainTimer = Date.now(); }
+    if (fx.brainIntervalDelta)     p.brainInterval = Math.max(1000, p.brainInterval + fx.brainIntervalDelta);
+    if (fx.brainRangeDelta)        p.brainRange += fx.brainRangeDelta;
+    if (fx.brainDmgDelta)          p.brainDmg += fx.brainDmgDelta;
+    if (fx.pickupRangeAdd)         p.pickupRange += fx.pickupRangeAdd;
+    if (fx.aggroRangeReductionAdd) p.aggroRangeReduction += fx.aggroRangeReductionAdd;
+    if (fx.regenHpAdd)             p.naturalRegenHp += fx.regenHpAdd;
+    if (fx.regenIntervalDelta)     p.naturalRegenInterval = Math.max(2000, p.naturalRegenInterval + fx.regenIntervalDelta);
+
+    checkComboEffects();
+}
+
+function checkOrganUpgrade() {
+    const p = gameState.player;
+    if (p.organs.length >= p.nextEvolutionAt) {
+        p.organSlots      += 3;
+        p.nextEvolutionAt += 3;
+        console.log('進化！器官槽位增加至 ' + p.organSlots);
+    }
+}
+
+function spawnTreasure() {
+    gameState.treasures.push({
+        x: Math.random() * (gameState.canvasWidth - 60) + 30,
+        y: Math.random() * (gameState.canvasHeight - 60) + 30,
+        radius: 8
+    });
+}
+
+function checkTreasureCollision() {
+    const p = gameState.player;
+    for (let i = gameState.treasures.length - 1; i >= 0; i--) {
+        const t = gameState.treasures[i];
+        const d = Math.sqrt(Math.pow(p.x - t.x, 2) + Math.pow(p.y - t.y, 2));
+        if (d < p.radius + t.radius) {
+            addXP(50);
+            showXPPopup(p.x, p.y, 50);
+            gameState.treasures.splice(i, 1);
+        }
+    }
+}
+
+function updatePassiveOrgans() {
+    const now = Date.now();
+    const p = gameState.player;
+
+    // 大腦：念力波（等級化範圍/間隔/傷害）
+    if (p.brainActive && now - p.brainTimer >= p.brainInterval) {
+        p.brainTimer = now;
+        for (const c of gameState.hostileCreatures) {
+            if (c.hp <= 0) continue;
+            const d = Math.sqrt(Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2));
+            if (d <= p.brainRange) {
+                let dmg = p.brainDmg;
+                let isCrit = false;
+                // 大腦+真視之眼組合：念力波可暴擊
+                if (p.comboBrainEye && p.critChance > 0 && Math.random() < p.critChance) {
+                    dmg = Math.round(dmg * p.critMultiplier);
+                    isCrit = true;
+                }
+                c.hp -= dmg;
+                showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FFAAAA');
+                if (c.hp <= 0) {
+                    gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
+                    addXP(30 + (gameState.playerSkills.hunter || 0) * 10);
+                }
+            }
+        }
+    }
+
+    // 超自然回復
+    if (p.naturalRegenHp > 0) {
+        if (!p.naturalRegenTimer) p.naturalRegenTimer = now;
+        let interval = p.naturalRegenInterval;
+        if (p.comboSkinRegen) interval = Math.max(1000, interval - 1000); // 厚皮+超自然回復：間隔再-1秒
+        if (now - p.naturalRegenTimer >= interval) {
+            p.naturalRegenTimer = now;
+            const amt = p.naturalRegenHp + (p.comboSkinRegen ? 1 : 0);
+            gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + amt);
+            showFloatingText(p.x, p.y - 30, '+' + amt + ' HP', '#00FF88');
+        }
+    }
+}
+
+function checkXPMilestone() {
+    if (gameState.organSelectionActive) return;
+    if (gameState.stats.xpCurrent >= gameState.xpThreshold) {
+        showOrganSelection();
+    }
+}
+
+function showOrganSelection() {
+    if (gameState.organSelectionActive) {
+        gameState.pendingOrganSelections++;
+        return;
+    }
+    const p = gameState.player;
+    gameState.organSelectionActive = true;
+
+    const slotsFull = p.organSlotsUsed >= p.organSlots;
+    const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
+
+    const evoOptions = [];
+    const organOptions = []; // { type:'new'|'upgrade', def, existingOrgan? }
+
+    if (!slotsFull) {
+        // 可升級的器官（已裝備且未滿3級）
+        p.organs
+            .filter(o => ORGANS[o.id] && o.level < ORGANS[o.id].maxLevel)
+            .forEach(o => organOptions.push({ type: 'upgrade', def: ORGANS[o.id], existingOrgan: o }));
+        // 尚未裝備的新器官
+        const equippedIds = p.organs.map(o => o.id);
+        const newPool = Object.values(ORGANS)
+            .filter(def => !equippedIds.includes(def.id))
+            .sort(() => Math.random() - 0.5);
+        newPool.forEach(def => organOptions.push({ type: 'new', def }));
+        // 隨機排序後取前3個
+        organOptions.sort(() => Math.random() - 0.5);
+        organOptions.splice(3);
+
+        // 新手保護：Lv1~3 且完全沒有攻擊器官時，強制至少1個攻擊選項
+        if (p.level <= 3 && !p.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack')) {
+            const hasAttackOpt = organOptions.some(opt => opt.def.type === 'attack');
+            if (!hasAttackOpt) {
+                const equippedIds = p.organs.map(o => o.id);
+                const atkPool = Object.values(ORGANS).filter(def => def.type === 'attack' && !equippedIds.includes(def.id));
+                if (atkPool.length > 0) {
+                    const forced = atkPool[Math.floor(Math.random() * atkPool.length)];
+                    organOptions[0] = { type: 'new', def: forced };
+                }
+            }
+        }
+    } else {
+        evoOptions.push(...checkEvolutionUnlock());
+    }
+
+    if (organOptions.length === 0 && evoOptions.length === 0) {
+        gameState.organSelectionActive = false;
+        return;
+    }
+
+    const closeOverlay = () => {
+        const el = document.getElementById('organ-selection-overlay');
+        if (el) el.remove();
+        gameState.organSelectionActive = false;
+        gameState.lastTimeTick = Date.now();
+        if (gameState.pendingOrganSelections > 0) {
+            gameState.pendingOrganSelections--;
+            showOrganSelection();
+        }
+    };
+
+    const overlay = document.createElement('div');
+    overlay.id = 'organ-selection-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.78);overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 0;z-index:100;pointer-events:all;box-sizing:border-box;';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'color:#FFD700;font-size:22px;font-weight:bold;margin-bottom:6px;text-shadow:1px 1px 4px black;';
+    title.textContent = slotsFull ? '✦ 選擇進化路線 ✦' : '✦ 選擇器官或升級 ✦';
+    overlay.appendChild(title);
+
+    const slotInfo = document.createElement('div');
+    slotInfo.style.cssText = 'color:#aaa;font-size:13px;margin-bottom:14px;';
+    slotInfo.textContent = '槽位：' + p.organSlotsUsed + ' / ' + p.organSlots;
+    overlay.appendChild(slotInfo);
+
+    // ── 器官/升級選項
+    organOptions.forEach(opt => {
+        const { def, type, existingOrgan } = opt;
+        const color = typeColor[def.type] || '#FFD700';
+        const isUpgrade = type === 'upgrade';
+        const targetLevel = isUpgrade ? existingOrgan.level + 1 : 1;
+        const lvDesc = def.levels[targetLevel - 1].desc;
+        const comboHint = getComboHint(def.id);
+
+        const btn = document.createElement('div');
+        btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid ' + (isUpgrade ? '#FFAA44' : '#666') + ';color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
+        btn.innerHTML =
+            '<div style="color:' + color + ';font-weight:bold;font-size:15px;">' +
+                def.name + (isUpgrade ? ' Lv.' + existingOrgan.level + ' → Lv.' + targetLevel : ' Lv.1') +
+            '</div>' +
+            '<div style="font-size:11px;color:#ccc;margin-top:4px;">' + lvDesc + '</div>' +
+            (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">⚡ 組合效果：' + comboHint + '</div>' : '');
+        btn.onmouseenter = () => { btn.style.background = 'rgba(255,255,255,0.2)'; };
+        btn.onmouseleave = () => { btn.style.background = 'rgba(255,255,255,0.08)'; };
+        btn.onclick = () => {
+            if (isUpgrade) {
+                existingOrgan.level = targetLevel;
+                existingOrgan.desc = def.levels[targetLevel - 1].desc;
+            } else {
+                p.organs.push({ id: def.id, name: def.name, type: def.type, level: 1, desc: def.levels[0].desc });
+            }
+            p.organSlotsUsed++;
+            applyOrganEffects(isUpgrade ? existingOrgan : p.organs[p.organs.length - 1]);
+            closeOverlay();
+        };
+        overlay.appendChild(btn);
+    });
+
+    // ── 進化路線
+    evoOptions.forEach(opt => {
+        const path = EVOLUTION_PATHS[opt.type];
+        const lvData = path.levels[opt.nextLevel - 1];
+        const btn = document.createElement('div');
+        btn.style.cssText = 'background:rgba(255,215,0,0.08);border:1px solid #FFD700;color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
+        btn.innerHTML = '<strong style="color:#FFD700;font-size:16px;">' + path.icon + ' ' + path.name + ' Lv.' + opt.nextLevel + '</strong><br><span style="font-size:12px;color:#ccc;">' + lvData.desc + '</span>';
+        btn.onmouseenter = () => { btn.style.background = 'rgba(255,215,0,0.2)'; };
+        btn.onmouseleave = () => { btn.style.background = 'rgba(255,215,0,0.08)'; };
+        btn.onclick = () => {
+            applyEvolutionLevelEffect(opt.type, opt.nextLevel);
+            closeOverlay();
+        };
+        overlay.appendChild(btn);
+    });
+
+    document.getElementById('game-container').appendChild(overlay);
+}
+
+function drawTreasures() {
+    for (const t of gameState.treasures) {
+        ctx.fillStyle = 'gold';
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#CC8800';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+    }
+}
+
+function drawOrganUI() {
+    const organs = gameState.player.organs;
+    const ev = gameState.player.evolution;
+    const lineH = 18;
+    const padX = 10;
+    const padY = 8;
+    const H = gameState.canvasHeight;
+    const versionAreaH = 46;
+
+    // 收集所有已解鎖的進化路線（等級 > 0），依 herbivore→carnivore→omnivore 順序
+    const evoEntries = Object.entries(EVOLUTION_PATHS)
+        .filter(([key]) => (ev[key] || 0) > 0)
+        .map(([key, path]) => path.icon + ' ' + path.name + ' Lv.' + ev[key]);
+
+    const evoCnt = evoEntries.length;
+    const evoBoxH = evoCnt > 0 ? evoCnt * lineH + padY * 2 : 0;
+    const organsBoxH = organs.length > 0 ? organs.length * lineH + padY * 2 : 0;
+
+    // 由底部往上排：版本區 → 器官框 → 4px 間距 → 進化框
+    const boxBottom = H - versionAreaH;
+    const boxY      = boxBottom - organsBoxH;
+    const evoBoxY   = boxY - 4 - evoBoxH;
+
+    // 繪製進化框（多行）
+    if (evoCnt > 0) {
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(padX - 4, evoBoxY, 164, evoBoxH);
+        ctx.font = '13px Arial';
+        ctx.fillStyle = '#88FF88';
+        evoEntries.forEach((text, i) => {
+            ctx.fillText(text, padX, evoBoxY + padY + (i + 1) * lineH - 4);
+        });
+    }
+
+    // 繪製器官框
+    if (organs.length === 0) return;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(padX - 4, boxY, 164, organsBoxH);
+    ctx.font = '13px Arial';
+    const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
+    organs.forEach((organ, i) => {
+        ctx.fillStyle = typeColor[organ.type] || '#FFD700';
+        const label = '▸ ' + organ.name + ' Lv.' + (organ.level || 1) + (organ.inherited ? '（繼承）' : '');
+        ctx.fillText(label, padX, boxY + padY + (i + 1) * lineH - 4);
+    });
+}
+
+// =============================================================
+// 玩家攻擊系統 (Player Attack System)
+// =============================================================
+
+function showFloatingText(x, y, text, color, fontSize) {
+    const el = document.createElement('div');
+    const fz = fontSize || 16;
+    el.style.cssText = 'position:absolute;pointer-events:none;font-size:' + fz + 'px;font-weight:bold;animation:fadeOutUp 0.8s forwards;text-shadow:1px 1px 2px black;';
+    el.style.left = (x - 20) + 'px';
+    el.style.top  = (y - 10) + 'px';
+    el.style.color = color || 'white';
+    el.innerText = text;
+    document.getElementById('ui-overlay').appendChild(el);
+    setTimeout(() => el.remove(), 800);
+}
+
+function handleKill(c, isHostile) {
+    const p = gameState.player;
+    gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: Date.now() });
+    const baseXP = isHostile ? Math.min(80, 30 + Math.round(((c.maxHp || 50) / 50) * 50)) : 20;
+    const xp = baseXP + (gameState.playerSkills.hunter || 0) * 10;
+    addXP(xp);
+    showXPPopup(p.x, p.y, xp);
+}
+
+function playerAttack() {
+    const p = gameState.player;
+    const now = Date.now();
+    const cooldownMs = Math.round(1000 / p.attackSpeed);
+    if (now - p.attackTimer < cooldownMs) return;
+    p.attackTimer = now;
+
+    if (p.attack <= 0) {
+        showFloatingText(p.x, p.y - 30, '沒有攻擊器官！', '#FF8800');
+        return;
+    }
+
+    p.attackVisual = now;
+
+    const targets = [
+        ...gameState.hostileCreatures.map(c => ({ c, hostile: true, isBoss: false })),
+        ...gameState.neutralCreatures.map(c => ({ c, hostile: false, isBoss: false })),
+        ...(gameState.boss && gameState.boss.hp > 0 ? [{ c: gameState.boss, hostile: true, isBoss: true }] : [])
+    ];
+
+    for (const { c, hostile, isBoss } of targets) {
+        if (c.hp <= 0) continue;
+        const d = Math.sqrt(Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2));
+        if (d > p.attackRange) continue;
+
+        let dmg = p.attack;
+        let isCrit = false;
+        if (p.critChance > 0 && Math.random() < p.critChance) {
+            dmg = Math.round(dmg * p.critMultiplier);
+            isCrit = true;
+        }
+
+        const hpBefore = c.hp;
+        c.hp -= dmg;
+        showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FF4444');
+
+        // 蟹鉗：等級化流血
+        const crabLv = getOrganLevel('crabClaw');
+        if (crabLv > 0) {
+            const bleedChance = getOrganCumulative('crabClaw', 'bleedChance');
+            if (Math.random() < bleedChance) {
+                const baseDmg = getOrganCumulative('crabClaw', 'bleedDmg');
+                c.bleedEndTime = now + getOrganCumulative('crabClaw', 'bleedDur');
+                c.bleedDmg = p.comboCrabPoison ? baseDmg * 2 : baseDmg;
+                c.lastBleedTick = now;
+            }
+        }
+
+        // 毒刺：等級化中毒
+        const poisonLv = getOrganLevel('poisonStinger');
+        if (poisonLv > 0) {
+            const basePoisonDmg = getOrganCumulative('poisonStinger', 'poisonDmg');
+            c.poisonEndTime = now + getOrganCumulative('poisonStinger', 'poisonDur');
+            c.poisonDmg = p.comboCrabPoison ? basePoisonDmg * 2 : basePoisonDmg;
+            c.lastPoisonTick = now;
+        }
+
+        // 獠牙：等級化暈眩；真視之眼+獠牙組合：暴擊也觸發暈眩
+        const fangLv = getOrganLevel('fang');
+        if (fangLv > 0) {
+            const stunChance = getOrganCumulative('fang', 'stunChance');
+            if (Math.random() < stunChance || (p.comboEyeFang && isCrit)) {
+                c.stunnedUntil = now + ORGANS.fang.levels[0].effects.stunDur;
+            }
+        }
+
+        if (!hostile) {
+            c.state = c.canFight ? 'fighting' : 'fleeing';
+        }
+
+        if (c.hp <= 0) {
+            if (isBoss) { showVictory(); return; }
+            handleKill(c, hostile);
+        }
+    }
+}
+
+function updateStatusEffects() {
+    const now = Date.now();
+    for (const c of [...gameState.hostileCreatures, ...gameState.neutralCreatures]) {
+        if (c.hp <= 0) continue;
+        const isHostile = gameState.hostileCreatures.includes(c);
+
+        if (c.bleedEndTime && now < c.bleedEndTime && now - (c.lastBleedTick || 0) >= 1000) {
+            const bleedAmt = c.bleedDmg || 1;
+            const hpBefore = c.hp;
+            c.hp -= bleedAmt;
+            c.lastBleedTick = now;
+            showFloatingText(c.x, c.y - 18, '血 -' + bleedAmt, '#880000', 11);
+            if (hpBefore > 0 && c.hp <= 0) handleKill(c, isHostile);
+        }
+
+        if (c.poisonEndTime && now < c.poisonEndTime && now - (c.lastPoisonTick || 0) >= 1000) {
+            const poisonAmt = c.poisonDmg || 2;
+            const hpBefore = c.hp;
+            c.hp -= poisonAmt;
+            c.lastPoisonTick = now;
+            showFloatingText(c.x, c.y - 18, '毒 -' + poisonAmt, '#8800CC', 11);
+            if (hpBefore > 0 && c.hp <= 0) handleKill(c, isHostile);
+        }
+    }
+}
+
+// =============================================================
+// 進化系統
+// =============================================================
+
+function checkEvolutionUnlock() {
+    const ev = gameState.player.evolution;
+    const opts = [];
+    // 草食性：無條件解鎖，未滿級可升
+    if (ev.herbivore < 3) opts.push({ type: 'herbivore', nextLevel: ev.herbivore + 1 });
+    // 肉食性：需草食 >= 1
+    if (ev.herbivore >= 1 && ev.carnivore < 3) opts.push({ type: 'carnivore', nextLevel: ev.carnivore + 1 });
+    // 雜食性：需草食 >= nextLevel 且 肉食 >= nextLevel
+    const omnNext = ev.omnivore + 1;
+    if (omnNext <= 3 && ev.herbivore >= omnNext && ev.carnivore >= omnNext) {
+        opts.push({ type: 'omnivore', nextLevel: omnNext });
+    }
+    return opts;
+}
+
+function applyEvolutionLevelEffect(type, newLevel) {
+    // 套用單次進化升級的增量效果，並擴充器官槽位
+    const p = gameState.player;
+    const lvData = EVOLUTION_PATHS[type].levels[newLevel - 1];
+    if (type === 'herbivore') {
+        gameState.stats.hpMax += lvData.hpBonus;
+        gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + lvData.hpBonus);
+    } else if (type === 'carnivore') {
+        p.attack += lvData.attackBonus;
+    } else if (type === 'omnivore') {
+        p.speed += lvData.speedBonus;
+    }
+    p.organSlots += 3;
+    p.evolution[type] = newLevel;
+    if (p.evolution.omnivore > 0) p.evolution.active = 'omnivore';
+    else if (p.evolution.carnivore > 0) p.evolution.active = 'carnivore';
+    else p.evolution.active = 'herbivore';
+}
+
+function applyEvolutionEffects() {
+    // 遊戲開始時套用當前進化等級的全量效果（初始只有草食 Lv1）
+    const ev = gameState.player.evolution;
+    const p = gameState.player;
+    for (let i = 0; i < ev.herbivore; i++) gameState.stats.hpMax += EVOLUTION_PATHS.herbivore.levels[i].hpBonus;
+    for (let i = 0; i < ev.carnivore; i++) p.attack += EVOLUTION_PATHS.carnivore.levels[i].attackBonus;
+    for (let i = 0; i < ev.omnivore;  i++) p.speed  += EVOLUTION_PATHS.omnivore.levels[i].speedBonus;
+    gameState.stats.hpCurrent = gameState.stats.hpMax;
+    if (ev.omnivore > 0) ev.active = 'omnivore';
+    else if (ev.carnivore > 0) ev.active = 'carnivore';
+    else ev.active = 'herbivore';
+}
+
+function updateCorpseEating() {
+    const p = gameState.player;
+    const ev = p.evolution;
+    if (ev.carnivore === 0) return;
+
+    const lvData = EVOLUTION_PATHS.carnivore.levels[ev.carnivore - 1];
+    const totalTime = lvData.eatTime;
+    const baseXP    = EVOLUTION_PATHS.carnivore.levels[0].eatXP; // 固定Lv1基準，各等級速度不同但總XP相同
+    const bonusXP   = ev.omnivore > 0 ? EVOLUTION_PATHS.omnivore.levels[ev.omnivore - 1].corpseXPBonus : 0;
+    const totalXP   = baseXP + bonusXP;
+    const totalHp   = 3.0; // 固定總回血（與Lv1：6次×0.5一致）
+    const tickInterval = 500;
+    const numTicks     = totalTime / tickInterval;
+    const xpPerTick    = totalXP / numTicks;
+    const hpPerTick    = totalHp / numTicks;
+    const now = Date.now();
+
+    for (let i = gameState.corpses.length - 1; i >= 0; i--) {
+        const corpse = gameState.corpses[i];
+        const dist = Math.sqrt(Math.pow(p.x - corpse.x, 2) + Math.pow(p.y - corpse.y, 2));
+        const inRange = dist < p.radius + (corpse.radius || 8) + 5 + p.pickupRange;
+
+        if (inRange) {
+            if (!corpse.lastEatTick) corpse.lastEatTick = now;
+            if (corpse.eatProgress == null) corpse.eatProgress = 0;
+            if (corpse.xpBuffer == null) corpse.xpBuffer = 0;
+
+            if (now - corpse.lastEatTick >= tickInterval) {
+                corpse.lastEatTick = now;
+                corpse.eatProgress = Math.min(1, corpse.eatProgress + 1 / numTicks);
+                corpse.xpBuffer += xpPerTick;
+
+                const giveXP = corpse.eatProgress >= 1
+                    ? Math.round(corpse.xpBuffer)
+                    : Math.floor(corpse.xpBuffer);
+                if (giveXP > 0) {
+                    corpse.xpBuffer -= giveXP;
+                    addXP(giveXP);
+                    showFloatingText(corpse.x, corpse.y - 15, '+' + giveXP + ' XP', '#00CC44');
+                }
+
+                gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + hpPerTick);
+                showFloatingText(corpse.x, corpse.y - 28, '+' + hpPerTick.toFixed(1) + ' HP', '#FF88AA');
+
+                if (corpse.eatProgress >= 1) {
+                    if (ev.omnivore >= 3 && Math.random() < 0.1) {
+                        gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 5);
+                        showFloatingText(p.x, p.y - 50, '飽食！HP+5', '#00FF88');
+                    }
+                    gameState.corpses.splice(i, 1);
+                }
+            }
+        } else {
+            corpse.lastEatTick = null;
+        }
+    }
+}
+
+function drawCorpseEatingBars() {
+    for (const corpse of gameState.corpses) {
+        if (corpse.eatProgress == null || corpse.eatProgress <= 0) continue;
+        const prog = corpse.eatProgress;
+        const barW = 30;
+        const barH = 4;
+        const barX = corpse.x - barW / 2;
+        const barY = corpse.y - (corpse.radius || 8) - 10;
+        ctx.fillStyle = '#222';
+        ctx.fillRect(barX, barY, barW, barH);
+        // 橘色(255,165,0) → 深紅(128,0,0)
+        const r = Math.round(255 - 127 * prog);
+        const g = Math.round(165 - 165 * prog);
+        ctx.fillStyle = 'rgb(' + r + ',' + g + ',0)';
+        ctx.fillRect(barX, barY, barW * (1 - prog), barH);
+    }
+}
+
+// =============================================================
+// 技能樹系統
+// =============================================================
+
+function applySkillBonuses() {
+    const sk = gameState.playerSkills;
+    const p = gameState.player;
+    // 強壯體魄：起始 HP +20 per level
+    const hpBonus = (sk.vitality || 0) * 20;
+    gameState.stats.hpMax += hpBonus;
+    gameState.stats.hpCurrent = gameState.stats.hpMax;
+    // 敏捷身手：起始速度 +0.2 per level
+    p.speed += (sk.agility || 0) * 0.2;
+    // 記憶器官：載入玩家死亡時手動選擇保留的器官（只用一次）
+    const savedOrgans = localStorage.getItem('savedOrgans');
+    if (savedOrgans) {
+        try {
+            const organs = JSON.parse(savedOrgans);
+            organs.forEach(organ => {
+                const o = Object.assign({}, organ, { inherited: true, level: organ.level || 1 });
+                p.organs.push(o);
+                p.organSlotsUsed++;
+                applyOrganEffects(o);
+            });
+        } catch(e) {}
+        localStorage.removeItem('savedOrgans');
+    }
+}
+
+function showSkillTree(cause) {
+    if (gameState.gameOver) return;
+    gameState.gameOver = true;
+    gameState.skillPoints += 1;
+    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
+    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    localStorage.removeItem('savedOrgans');
+    buildSkillTreeOverlay(cause);
+}
+
+function buildSkillTreeOverlay(cause) {
+    const existing = document.getElementById('skill-tree-overlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'skill-tree-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:20px 0 30px;z-index:150;pointer-events:all;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
+
+    // ── 標題
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:32px;margin-bottom:14px;flex-shrink:0;';
+    title.textContent = cause === 'timeout' ? '⏰ 時間耗盡' : '💀 你死了';
+    overlay.appendChild(title);
+
+    // ── 器官選擇區塊
+    const organsToKeep = Math.min(3, 1 + (gameState.playerSkills.organMemory || 0));
+    const playerOrgans = gameState.player.organs;
+    const selectedOrgans = []; // FIFO 選擇追蹤
+
+    const organSection = document.createElement('div');
+    organSection.style.cssText = 'background:rgba(255,215,0,0.08);border:1px solid #665500;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
+    const organSectionTitle = document.createElement('div');
+    organSectionTitle.style.cssText = 'font-size:15px;color:#FFD700;margin-bottom:10px;';
+    organSectionTitle.textContent = '選擇保留器官（最多 ' + organsToKeep + ' 個，下一局繼承）';
+    organSection.appendChild(organSectionTitle);
+
+    if (playerOrgans.length === 0) {
+        const noOrgan = document.createElement('div');
+        noOrgan.style.cssText = 'color:#888;font-size:13px;';
+        noOrgan.textContent = '本局未獲得任何器官';
+        organSection.appendChild(noOrgan);
+    } else {
+        const organGrid = document.createElement('div');
+        organGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+        const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
+        const cardMap = [];
+        playerOrgans.forEach((organ, idx) => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background:rgba(255,255,255,0.07);border:1px solid #555;border-radius:6px;padding:8px 10px;cursor:pointer;width:130px;box-sizing:border-box;text-align:center;transition:border-color 0.15s;';
+            const nameEl = document.createElement('div');
+            nameEl.style.cssText = 'font-size:12px;font-weight:bold;color:' + (typeColor[organ.type] || '#FFD700') + ';margin-bottom:3px;';
+            nameEl.textContent = organ.name + ' Lv.' + (organ.level || 1) + (organ.level > 1 ? '（→Lv.1）' : '');
+            card.appendChild(nameEl);
+            const descEl = document.createElement('div');
+            descEl.style.cssText = 'font-size:10px;color:#aaa;line-height:1.3;';
+            descEl.textContent = ORGANS[organ.id] ? ORGANS[organ.id].levels[0].desc : organ.desc;
+            card.appendChild(descEl);
+            card.onclick = () => {
+                const sel = selectedOrgans.indexOf(organ);
+                if (sel >= 0) {
+                    selectedOrgans.splice(sel, 1);
+                    card.style.borderColor = '#555';
+                    card.style.background = 'rgba(255,255,255,0.07)';
+                } else {
+                    if (selectedOrgans.length >= organsToKeep) {
+                        const removed = selectedOrgans.shift();
+                        const ri = playerOrgans.indexOf(removed);
+                        if (ri >= 0 && cardMap[ri]) { cardMap[ri].style.borderColor = '#555'; cardMap[ri].style.background = 'rgba(255,255,255,0.07)'; }
+                    }
+                    selectedOrgans.push(organ);
+                    card.style.borderColor = '#FFD700';
+                    card.style.background = 'rgba(255,215,0,0.15)';
+                }
+                // 保存時強制降為 Lv1
+                localStorage.setItem('savedOrgans', JSON.stringify(
+                    selectedOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, level: 1,
+                        desc: ORGANS[o.id] ? ORGANS[o.id].levels[0].desc : o.desc }))
+                ));
+            };
+            cardMap.push(card);
+            organGrid.appendChild(card);
+        });
+        organSection.appendChild(organGrid);
+    }
+    overlay.appendChild(organSection);
+
+    // ── 技能點數
+    const pts = document.createElement('div');
+    pts.style.cssText = 'font-size:20px;color:#FFD700;margin-bottom:14px;';
+    pts.textContent = '技能點數: ' + gameState.skillPoints;
+    overlay.appendChild(pts);
+
+    // ── 技能格
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;max-width:660px;width:90%;';
+    Object.values(SKILLS).forEach(skill => {
+        const level = gameState.playerSkills[skill.id] || 0;
+        const card = document.createElement('div');
+        card.style.cssText = 'background:rgba(255,255,255,0.1);border:1px solid #555;border-radius:6px;padding:10px;text-align:center;';
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-size:14px;font-weight:bold;margin-bottom:4px;';
+        nameEl.textContent = skill.name + '  Lv.' + level + '/' + skill.maxLevel;
+        card.appendChild(nameEl);
+        const descEl = document.createElement('div');
+        descEl.style.cssText = 'font-size:11px;color:#ccc;margin-bottom:8px;min-height:32px;';
+        descEl.textContent = skill.desc;
+        card.appendChild(descEl);
+        const btn = document.createElement('button');
+        const maxed = level >= skill.maxLevel;
+        const canUp = !maxed && gameState.skillPoints > 0;
+        btn.style.cssText = 'padding:5px 0;font-size:12px;width:100%;border-radius:3px;background:transparent;cursor:' + (canUp ? 'pointer' : 'default') + ';border:1px solid ' + (maxed || !canUp ? '#555' : '#FFD700') + ';color:' + (maxed || !canUp ? '#555' : 'white') + ';';
+        btn.textContent = maxed ? '已滿級' : '升級（費1點）';
+        btn.disabled = !canUp;
+        btn.onclick = () => upgradeSkill(skill.id);
+        card.appendChild(btn);
+        grid.appendChild(card);
+    });
+    overlay.appendChild(grid);
+
+    // ── 重新開始
+    const restartBtn = document.createElement('button');
+    restartBtn.style.cssText = 'font-size:18px;padding:10px 32px;cursor:pointer;border:1px solid white;background:rgba(255,255,255,0.15);color:white;border-radius:5px;';
+    restartBtn.textContent = '重新開始';
+    restartBtn.onclick = () => location.reload();
+    overlay.appendChild(restartBtn);
+    document.getElementById('ui-overlay').appendChild(overlay);
+}
+
+function upgradeSkill(id) {
+    if (gameState.skillPoints <= 0) return;
+    const skill = SKILLS[id];
+    if (!skill) return;
+    const current = gameState.playerSkills[id] || 0;
+    if (current >= skill.maxLevel) return;
+    gameState.playerSkills[id] = current + 1;
+    gameState.skillPoints--;
+    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
+    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    buildSkillTreeOverlay();
+}
+
+// =============================================================
+// 等級系統
+// =============================================================
+
+function addXP(amount) {
+    gameState.stats.xpCurrent += amount;
+    gameState.player.levelXP += amount;
+    checkLevelUp();
+}
+
+function checkLevelUp() {
+    const p = gameState.player;
+    const threshold = 100 + (p.level - 1) * 50;
+    if (p.levelXP >= threshold) {
+        p.levelXP = 0;
+        p.level++;
+        gameState.levelUpMessage = { text: '⬆️ 升級！Lv.' + p.level, timer: Date.now() };
+        showOrganSelection();
+    }
+}
+
+// =============================================================
+// 計時器與生物繁殖系統
+// =============================================================
+
+function updateTimer() {
+    const now = Date.now();
+    if (gameState.lastTimeTick === 0) { gameState.lastTimeTick = now; return; }
+    const elapsed = (now - gameState.lastTimeTick) / 1000;
+    gameState.lastTimeTick = now;
+    gameState.timeRemaining = Math.max(0, gameState.timeRemaining - elapsed);
+    const total = Math.ceil(gameState.timeRemaining);
+    const m = Math.floor(total / 60).toString().padStart(2, '0');
+    const s = (total % 60).toString().padStart(2, '0');
+    gameState.stats.timeStatus = m + ':' + s;
+    if (gameState.timeRemaining <= 0) showSkillTree('timeout');
+}
+
+function showGameOver() {
+    gameState.gameOver = true;
+    let overlay = document.getElementById('game-over-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'game-over-overlay';
+        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-size:32px;z-index:100;pointer-events:all;';
+        overlay.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">遊戲結束</div>' +
+            '<div style="font-size:20px;margin-bottom:8px;">時間耗盡！</div>' +
+            '<div style="font-size:18px;margin-bottom:24px;">最終 XP：' + gameState.stats.xpCurrent + '</div>' +
+            '<button onclick="location.reload()" style="font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;">重新開始</button>' +
+            '<div style="font-size:12px;color:#555;margin-top:20px;">© ' + GAME_INFO.author + ' | ' + GAME_INFO.version + '</div>';
+        document.getElementById('game-container').appendChild(overlay);
+    }
+}
+
+// =============================================================
+// 日夜循環系統
+// =============================================================
+
+function getDayNightPhaseIndex() {
+    // 每 150 秒一個時段，共 8 段；偶數=白天，奇數=夜晚
+    return Math.min(7, Math.floor(Math.max(0, 1200 - gameState.timeRemaining) / 150));
+}
+
+function applyNightTransition() {
+    gameState.stats.dayCycle = '夜晚';
+    gameState.isNight = true;
+    gameState.dayNightMessage.text = '🌙 夜晚來臨';
+    gameState.dayNightMessage.timer = Date.now();
+    for (const c of gameState.hostileCreatures) {
+        if (c.hp > 0) { c.speed += 0.2; c.damage += 2; }
+    }
+}
+
+function applyDayTransition() {
+    gameState.stats.dayCycle = '白天';
+    gameState.isNight = false;
+    gameState.dayNightMessage.text = '☀️ 黎明到來';
+    gameState.dayNightMessage.timer = Date.now();
+    for (const c of gameState.hostileCreatures) {
+        if (c.hp > 0) { c.speed = Math.max(0.1, c.speed - 0.2); c.damage = Math.max(1, c.damage - 2); }
+    }
+}
+
+function updateDayNightCycle() {
+    const phaseIndex = getDayNightPhaseIndex();
+    if (phaseIndex === gameState.currentPhaseIndex) return;
+    gameState.currentPhaseIndex = phaseIndex;
+    if (phaseIndex % 2 === 1) {
+        applyNightTransition();
+    } else {
+        applyDayTransition();
+    }
+    if (phaseIndex === 7 && !gameState.bossSpawned) spawnBoss();
+}
+
+function spawnCreatureAtEdge(type) {
+    const bonus = gameState.creatureStrengthMultiplier;
+    const edge = Math.floor(Math.random() * 4);
+    let x, y;
+    const w = gameState.canvasWidth, h = gameState.canvasHeight, r = 14;
+    if (edge === 0) { x = Math.random() * w; y = r; }
+    else if (edge === 1) { x = Math.random() * w; y = h - r; }
+    else if (edge === 2) { x = r; y = Math.random() * h; }
+    else { x = w - r; y = Math.random() * h; }
+
+    if (type === 'neutral') {
+        gameState.neutralCreatures.push({
+            x, y, radius: 12, hp: 30 + bonus * 10, maxHp: 30 + bonus * 10,
+            speed: 0.8 + bonus * 0.1, damage: 3 + bonus,
+            diet: Math.random() < 0.5 ? 'herbivore' : 'omnivore',
+            state: 'wandering', fleeRange: 100, fightBackRange: 40,
+            canFight: Math.random() < 0.5, attackCooldown: 0,
+            wanderTarget: null, lastWanderTime: Date.now()
+        });
+    } else {
+        const roll = Math.random();
+        const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
+        const nightSpd = gameState.isNight ? 0.2 : 0;
+        const nightDmg = gameState.isNight ? 2 : 0;
+        gameState.hostileCreatures.push({
+            x, y, radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
+            speed: Math.min(2.5, 1.2 + bonus * 0.1 + nightSpd),
+            damage: Math.min(20, 5 + bonus + nightDmg),
+            attackCooldown: 0, diet, state: 'patrolling',
+            aggroRange: 150, attackRange: 20,
+            wanderTarget: null, lastWanderTime: Date.now(),
+            target: null, targetType: null
+        });
+    }
+}
+
+function updateCreatureSpawning() {
+    const now = Date.now();
+    const elapsed = (1200 - gameState.timeRemaining);
+    gameState.creatureStrengthMultiplier = Math.floor(elapsed / 300);
+
+    const aliveNeutral = gameState.neutralCreatures.filter(c => c.hp > 0).length;
+    const neutralSpawnInterval = aliveNeutral === 0 ? 9000 : 30000;
+    if (aliveNeutral < 10 && now - gameState.spawnTimers.neutral >= neutralSpawnInterval) {
+        spawnCreatureAtEdge('neutral');
+        gameState.spawnTimers.neutral = now;
+    }
+
+    const maxHostile = 8 + (gameState.isNight ? 2 : 0);
+    const aliveHostile = gameState.hostileCreatures.filter(c => c.hp > 0).length;
+    const hostileSpawnInterval = (aliveHostile === 0 || gameState.fruits.length === 0) ? 13500 : 45000;
+    if (aliveHostile < maxHostile && now - gameState.spawnTimers.hostile >= hostileSpawnInterval) {
+        spawnCreatureAtEdge('hostile');
+        gameState.spawnTimers.hostile = now;
+    }
+}
+
+function spawnBoss() {
+    const w = gameState.canvasWidth, h = gameState.canvasHeight, r = 25;
+    const edge = Math.floor(Math.random() * 4);
+    let x, y;
+    if (edge === 0) { x = Math.random() * w; y = r; }
+    else if (edge === 1) { x = Math.random() * w; y = h - r; }
+    else if (edge === 2) { x = r; y = Math.random() * h; }
+    else { x = w - r; y = Math.random() * h; }
+    gameState.boss = {
+        x, y, radius: 25, hp: 500, maxHp: 500,
+        speed: 1.0, damage: 15, aggroRange: 200, attackRange: 30,
+        attackCooldown: 0, state: 'patrolling',
+        wanderTarget: null, lastWanderTime: Date.now()
+    };
+    gameState.bossSpawned = true;
+    gameState.dayNightMessage.text = '⚠️ 強大的黑熊出現了！';
+    gameState.dayNightMessage.timer = Date.now();
+}
+
+function updateBoss() {
+    const boss = gameState.boss;
+    if (!boss || boss.hp <= 0) return;
+    const now = Date.now();
+    const p = gameState.player;
+    if (boss.stunnedUntil && now < boss.stunnedUntil) return;
+    const dx = p.x - boss.x;
+    const dy = p.y - boss.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < boss.aggroRange) {
+        boss.state = 'chasing';
+    } else if (boss.state === 'chasing' && dist > boss.aggroRange + 150) {
+        boss.state = 'patrolling';
+    }
+    if (boss.state === 'chasing') {
+        if (dist <= boss.attackRange) {
+            if (now - boss.attackCooldown >= 1500) {
+                applyDamageToPlayer(boss.damage, boss);
+                boss.attackCooldown = now;
+            }
+        } else {
+            const angle = Math.atan2(dy, dx);
+            moveCreature(boss, boss.x + Math.cos(angle) * boss.speed, boss.y + Math.sin(angle) * boss.speed);
+        }
+    } else {
+        if (!boss.wanderTarget || now - boss.lastWanderTime >= 3000) {
+            boss.wanderTarget = {
+                x: Math.random() * (gameState.canvasWidth - 60) + 30,
+                y: Math.random() * (gameState.canvasHeight - 60) + 30
+            };
+            boss.lastWanderTime = now;
+        }
+        if (boss.wanderTarget) {
+            const wx = boss.wanderTarget.x - boss.x;
+            const wy = boss.wanderTarget.y - boss.y;
+            const wDist = Math.sqrt(wx * wx + wy * wy);
+            if (wDist < 2) { boss.wanderTarget = null; }
+            else {
+                const angle = Math.atan2(wy, wx);
+                moveCreature(boss, boss.x + Math.cos(angle) * boss.speed, boss.y + Math.sin(angle) * boss.speed);
+            }
+        }
+    }
+}
+
+function showVictory() {
+    if (gameState.gameOver) return;
+    gameState.gameOver = true;
+    addXP(500);
+    gameState.skillPoints += 1;
+    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
+    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    localStorage.removeItem('savedOrgans');
+    const overlay = document.createElement('div');
+    overlay.id = 'victory-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:52px;margin-bottom:16px;';
+    title.textContent = '🏆 勝利！';
+    overlay.appendChild(title);
+    const desc1 = document.createElement('div');
+    desc1.style.cssText = 'font-size:22px;margin-bottom:8px;';
+    desc1.textContent = '黑熊已被消滅！';
+    overlay.appendChild(desc1);
+    const desc2 = document.createElement('div');
+    desc2.style.cssText = 'font-size:18px;margin-bottom:28px;color:#FFD700;';
+    desc2.textContent = '+500 XP，獲得 1 個技能點';
+    overlay.appendChild(desc2);
+    const btnTree = document.createElement('button');
+    btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:10px;';
+    btnTree.textContent = '前往技能樹';
+    btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(); };
+    overlay.appendChild(btnTree);
+    const btnRestart = document.createElement('button');
+    btnRestart.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;pointer-events:all;';
+    btnRestart.textContent = '重新開始';
+    btnRestart.onclick = () => location.reload();
+    overlay.appendChild(btnRestart);
+    const vFooter = document.createElement('div');
+    vFooter.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
+    vFooter.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
+    overlay.appendChild(vFooter);
+    document.getElementById('game-container').appendChild(overlay);
+}
+
+/**
+ * 遊戲循環主函數。使用 requestAnimationFrame 確保平滑的動畫效果。
+ */
+function gameLoop() {
+    if (!gameState.gameOver && !gameState.organSelectionActive) {
+        updateTimer();
+        updateDayNightCycle();
+        updateCreatureSpawning();
+        updatePlayerMovement();
+        checkFruitCollision();
+        manageFruitSpawning();
+        updateNeutralCreatures();
+        updateHostileCreatures();
+        if (gameState.boss && gameState.boss.hp > 0) updateBoss();
+        updatePassiveOrgans();
+        updateStatusEffects();
+        checkTreasureCollision();
+        updateCorpseEating();
+    }
+    drawGame();
+    updateUI();
+    requestAnimationFrame(gameLoop);
+}
+
+
+/**
+ * 初始化遊戲。需要調用一次才能啟動循環。
+ */
+function initializeGame() {
+    console.log("--- 遊戲初始化開始 ---");
+
+// 1. 生成環境
+    generateTrees(20); // 創建 20 棵樹木
+    
+    // 2. 初始化果子：生成最初的 15 顆果子
+    gameState.fruits = []; 
+    for (let i = 0; i < 15; i++) {
+        spawnFruit(true); // 生成初始果子
+    }
+
+    // 3. 生成中立生物
+    spawnNeutralCreatures();
+
+    // 4. 生成敵意生物與初始化屍體、寶物陣列
+    gameState.corpses = [];
+    gameState.treasures = [];
+    spawnHostileCreatures();
+
+    // 5. 設定事件監聽器
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    canvas.addEventListener('click', function() {
+        if (!gameState.organSelectionActive) playerAttack();
+    });
+
+    // 4. 載入技能與進化資料並套用起始加成
+    try {
+        const savedSkills = localStorage.getItem('playerSkills');
+        if (savedSkills) gameState.playerSkills = JSON.parse(savedSkills);
+        const savedPoints = localStorage.getItem('skillPoints');
+        if (savedPoints) gameState.skillPoints = Math.max(0, parseInt(savedPoints, 10) || 0);
+        // 進化不從 localStorage 讀取，每局從草食性 Lv.1 重新開始
+    } catch(e) {}
+    applySkillBonuses();
+    applyEvolutionEffects();
+
+    // 5. 初始化計時狀態，避免遊戲啟動瞬間生成過多或沒有果子。
+    gameState.lastFruitSpawnTime = Date.now() - (8000 * 2);
+    gameState.lastTimeTick = Date.now();
+    gameState.spawnTimers.neutral = Date.now();
+    gameState.spawnTimers.hostile = Date.now();
+
+    updateUI();
+
+    console.log("--- 初始化完成，啟動遊戲循環 ---");
+    
+    // 5. 開始遊戲主循環
+    requestAnimationFrame(gameLoop);
+}
+
+
+// =============================================================
+// 開發者模式 (Developer Mode)
+// =============================================================
+
+function toggleDevMode() {
+    gameState.devMode = !gameState.devMode;
+    document.getElementById('dev-panel').style.display    = gameState.devMode ? 'block' : 'none';
+    document.getElementById('dev-indicator').style.display = gameState.devMode ? 'block' : 'none';
+}
+
+function devAddXP() {
+    addXP(50);
+}
+
+function devAddHP() {
+    gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 20);
+}
+
+function devFullHP() {
+    gameState.stats.hpCurrent = gameState.stats.hpMax;
+}
+
+function devSpawnFruits() {
+    for (let i = 0; i < 5; i++) spawnFruit();
+}
+
+function devKillHostiles() {
+    const now = Date.now();
+    for (const c of gameState.hostileCreatures) {
+        if (c.hp > 0) {
+            c.hp = 0;
+            gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
+        }
+    }
+}
+
+function devSpawnNeutral() {
+    const p = gameState.player;
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 40;
+    const bonus = gameState.creatureStrengthMultiplier;
+    gameState.neutralCreatures.push({
+        x: Math.max(14, Math.min(gameState.canvasWidth - 14, p.x + Math.cos(angle) * dist)),
+        y: Math.max(14, Math.min(gameState.canvasHeight - 14, p.y + Math.sin(angle) * dist)),
+        radius: 12, hp: 30 + bonus * 10, maxHp: 30 + bonus * 10,
+        speed: 0.8 + bonus * 0.1, damage: 3 + bonus,
+        diet: Math.random() < 0.5 ? 'herbivore' : 'omnivore',
+        state: 'wandering', fleeRange: 100, fightBackRange: 40,
+        canFight: Math.random() < 0.5, attackCooldown: 0,
+        wanderTarget: null, lastWanderTime: Date.now()
+    });
+}
+
+function devSpawnHostile() {
+    const p = gameState.player;
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 100 + Math.random() * 50;
+    const bonus = gameState.creatureStrengthMultiplier;
+    const roll = Math.random();
+    const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
+    gameState.hostileCreatures.push({
+        x: Math.max(10, Math.min(gameState.canvasWidth - 10, p.x + Math.cos(angle) * dist)),
+        y: Math.max(10, Math.min(gameState.canvasHeight - 10, p.y + Math.sin(angle) * dist)),
+        radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
+        speed: Math.min(2.5, 1.2 + bonus * 0.1), damage: Math.min(20, 5 + bonus),
+        attackCooldown: 0, diet, state: 'patrolling',
+        aggroRange: 150, attackRange: 20,
+        wanderTarget: null, lastWanderTime: Date.now(),
+        target: null, targetType: null
+    });
+}
+
+function devFastForward() {
+    gameState.timeRemaining = Math.max(0, gameState.timeRemaining - 300);
+    gameState.lastTimeTick = Date.now();
+}
+
+function devRewind() {
+    gameState.timeRemaining = Math.min(1200, gameState.timeRemaining + 300);
+    gameState.lastTimeTick = Date.now();
+}
+
+function devToggleDayNight() {
+    // 將 timeRemaining 跳到下一個時段起點，讓 updateDayNightCycle 自動觸發切換
+    const nextIdx = (getDayNightPhaseIndex() + 1) % 8;
+    gameState.timeRemaining = Math.max(0, 1200 - nextIdx * 150 - 1);
+    gameState.lastTimeTick = Date.now();
+}
+
+// =============================================================
+// 開始畫面
+// =============================================================
+function showStartScreen() {
+    const overlay = document.createElement('div');
+    overlay.id = 'start-screen';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:#0d1a0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;pointer-events:all;color:white;font-family:Arial,sans-serif;';
+
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-size:40px;font-weight:bold;margin-bottom:10px;letter-spacing:2px;';
+    titleEl.textContent = GAME_INFO.title;
+    overlay.appendChild(titleEl);
+
+    const subtitleEl = document.createElement('div');
+    subtitleEl.style.cssText = 'font-size:16px;color:#aaa;letter-spacing:5px;margin-bottom:50px;';
+    subtitleEl.textContent = GAME_INFO.subtitle;
+    overlay.appendChild(subtitleEl);
+
+    const btn = document.createElement('button');
+    btn.style.cssText = 'font-size:20px;padding:12px 42px;cursor:pointer;pointer-events:all;border-radius:4px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;margin-bottom:48px;';
+    btn.textContent = '開始遊戲';
+    overlay.appendChild(btn);
+
+    const footerEl = document.createElement('div');
+    footerEl.style.cssText = 'position:absolute;bottom:16px;font-size:12px;color:#555;';
+    footerEl.textContent = '© 2026 ' + GAME_INFO.author + '  |  ' + GAME_INFO.version;
+    overlay.appendChild(footerEl);
+
+    let started = false;
+    const start = () => {
+        if (started) return;
+        started = true;
+        overlay.remove();
+        document.removeEventListener('keydown', startOnKey);
+        initializeGame();
+    };
+    const startOnKey = () => start();
+    btn.onclick = start;
+    document.addEventListener('keydown', startOnKey);
+
+    document.getElementById('game-container').appendChild(overlay);
+}
+
+// =============================================================
+// 程序入口點 (Entry Point)
+// =============================================================
+window.onload = showStartScreen;
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+

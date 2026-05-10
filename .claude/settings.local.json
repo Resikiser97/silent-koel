@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:PATH)",
+      "PowerShell(& \"C:\\\\AI\\\\Git\\\\bin\\\\git.exe\" --version)"
+    ]
+  }
+}
