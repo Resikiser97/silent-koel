@@ -221,11 +221,35 @@ const ELITE_CONFIG = {
 };
 
 // =============================================================
+// Boss 數值定義（各地形 Boss）
+// =============================================================
+const BOSS_CONFIG = {
+    forest: {
+        name: '黑熊',    label: '⚠️黑熊',
+        radius: 25, hp: 500,  speed: 1.0, damage: 15, aggroRange: 200, attackRange: 30,
+        color: '#3B1E08', colorChasing: '#2A0D00',
+        spawnX: null, spawnY: null  // null = 地圖邊緣隨機生成
+    },
+    ocean: {
+        name: '大白鯊',  label: '🦈大白鯊',
+        radius: 30, hp: 600,  speed: 1.3, damage: 18, aggroRange: 220, attackRange: 35,
+        color: '#003388', colorChasing: '#001A44',
+        spawnX: 6500, spawnY: 6500
+    },
+    desert: {
+        name: '沙漠蠍王', label: '🦂蠍王',
+        radius: 28, hp: 550,  speed: 1.2, damage: 20, aggroRange: 210, attackRange: 32,
+        color: '#8B7355', colorChasing: '#5C4A2A',
+        spawnX: 2000, spawnY: 2000
+    }
+};
+
+// =============================================================
 // 遊戲基本資訊
 // =============================================================
 const GAME_INFO = {
     title:    '只吃不叫的噪鵑',
     subtitle: 'The Silent Koel',
     author:   'Goblinnest',
-    version:  'v0.9.4'
+    version:  'v0.10.0'
 };

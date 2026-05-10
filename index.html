@@ -133,6 +133,7 @@
         <div id="top-right">
             <div class="status-line" id="time-display">時間: 20:00</div>
             <div class="status-line" id="day-display">現在是「白天」</div>
+            <div class="status-line" id="biome-display">🌲 森林</div>
             <div id="dev-indicator" style="display:none; color:red; font-size:14px; font-weight:bold; margin-top:4px;">🛠️ 開發者模式</div>
         </div>
     </div>
@@ -163,7 +164,7 @@ const gameState = {
     canvasHeight: 600,
 
     player: {
-        x: 1200, y: 900, radius: 10, speed: 1.5, color: 'black',
+        x: 4000, y: 4000, radius: 10, speed: 1.5, color: 'black',
         organs: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5,
         attack: 0, attackSpeed: 1.0, attackRange: 50,
         critChance: 0, critMultiplier: 1.0,
@@ -216,7 +217,7 @@ const gameState = {
     bossSpawned: false,
     eliteCreature: null,
     eliteJustKilled: false,
-    camera: { x: 800, y: 600 }
+    camera: { x: 3600, y: 3700 }
 };
 
 
@@ -227,8 +228,8 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // 地圖與視窗尺寸常數
-const MAP_WIDTH  = 2400;
-const MAP_HEIGHT = 1800;
+const MAP_WIDTH  = 8000;
+const MAP_HEIGHT = 8000;
 const VIEW_W     = 800;
 const VIEW_H     = 600;
 
@@ -260,6 +261,65 @@ function updateCamera() {
 }
 
 // =============================================================
+// 地形系統 (Biome System)
+// =============================================================
+
+// 根據世界座標回傳地形：'forest' | 'ocean' | 'desert'
+function getBiome(x, y) {
+    const dist = Math.sqrt((x - 4000) * (x - 4000) + (y - 4000) * (y - 4000));
+    if (dist < 2000) return 'forest';
+    if (x > 5000 || y > 5000) return 'ocean';
+    return 'desert';
+}
+
+// 根據玩家位置計算帶過渡效果的背景顏色
+function getBgColor() {
+    const p = gameState.player;
+    const night = gameState.isNight;
+    const C = {
+        forest: night ? [26,46,26]    : [84,153,84],
+        ocean:  night ? [10,31,48]    : [26,74,107],
+        desert: night ? [92,61,10]    : [196,163,90]
+    };
+    const cx = 4000, cy = 4000;
+    const dx = p.x - cx, dy = p.y - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const TRANS = 200;
+    const mix = (a, b, t) => Math.round(a * (1 - t) + b * t);
+
+    // 森林邊界過渡
+    const toEdge = Math.abs(dist - 2000);
+    if (toEdge < TRANS) {
+        const t = (1 - toEdge / TRANS) * 0.45;
+        const biome = getBiome(p.x, p.y);
+        let other;
+        if (biome === 'forest') {
+            const od = dist > 0 ? 2200 / dist : 0;
+            other = getBiome(cx + dx * od, cy + dy * od);
+        } else {
+            other = 'forest';
+        }
+        const a = C[biome], b = C[other];
+        return 'rgb(' + mix(a[0],b[0],t) + ',' + mix(a[1],b[1],t) + ',' + mix(a[2],b[2],t) + ')';
+    }
+
+    // 海洋/沙漠邊界過渡（僅在森林外）
+    if (dist >= 2000) {
+        const biome = getBiome(p.x, p.y);
+        const minD = Math.min(Math.abs(p.x - 5000), Math.abs(p.y - 5000));
+        if (minD < TRANS) {
+            const t = (1 - minD / TRANS) * 0.45;
+            const other = biome === 'ocean' ? 'desert' : 'ocean';
+            const a = C[biome], b = C[other];
+            return 'rgb(' + mix(a[0],b[0],t) + ',' + mix(a[1],b[1],t) + ',' + mix(a[2],b[2],t) + ')';
+        }
+    }
+
+    const c = C[getBiome(p.x, p.y)];
+    return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+}
+
+// =============================================================
 // 初始化遊戲元素 - 果子生成相關
 // =============================================================
 
@@ -272,7 +332,9 @@ function generateTrees(count) {
         const x = Math.floor(Math.random() * (MAP_WIDTH  - 100)) + 50;
         const y = Math.floor(Math.random() * (MAP_HEIGHT - 100)) + 50;
         const radius = Math.floor(Math.random() * (20 - 10) + 10);
-        trees.push({ x: x, y: y, radius: radius, color: 'darkgreen' });
+        const biome = getBiome(x, y);
+        const treeColor = biome === 'ocean' ? '#005599' : (biome === 'desert' ? '#7B6B00' : 'darkgreen');
+        trees.push({ x: x, y: y, radius: radius, color: treeColor });
     }
     gameState.trees = trees;
     console.log("--- 初始化完成：共生成 " + gameState.trees.length + " 棵樹木 ---");
@@ -282,7 +344,7 @@ function generateTrees(count) {
  * 生成隨機果子物件。
  */
 function spawnFruit(isInitial = false) {
-    const MAX_FRUITS = 60;
+    const MAX_FRUITS = 80;
     if (gameState.fruits.length >= MAX_FRUITS) return null;
     if (gameState.trees.length === 0) return null;
 
@@ -301,7 +363,9 @@ function spawnFruit(isInitial = false) {
         }
         if (tooClose) continue;
 
-        const fruit = { x: x, y: y, radius: 6, color: 'red' };
+        const fruitBiome = getBiome(x, y);
+        const fruitColor = fruitBiome === 'ocean' ? '#0088FF' : (fruitBiome === 'desert' ? '#FF8800' : 'red');
+        const fruit = { x: x, y: y, radius: 6, color: fruitColor };
         gameState.fruits.push(fruit);
         return fruit;
     }
@@ -441,9 +505,9 @@ function showXPPopup(wx, wy, amount) {
  * 繪製所有遊戲元素到畫布上。
 */
 function drawGame() {
-    // 根據日夜狀態設定背景顏色
-    ctx.fillStyle = gameState.isNight ? '#1a2e1a' : '#549954';
-    ctx.fillRect(0, 0, gameState.canvasWidth, gameState.canvasHeight);
+    // 根據玩家地形和日夜狀態設定背景顏色（含過渡）
+    ctx.fillStyle = getBgColor();
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
     // 2. 繪製環境 (樹木)
     gameState.trees.forEach(tree => {
@@ -484,7 +548,7 @@ function drawGame() {
         const boss = gameState.boss;
         const bs = worldToScreen(boss.x, boss.y);
         if (bs.x >= -50 && bs.x <= VIEW_W + 50 && bs.y >= -50 && bs.y <= VIEW_H + 50) {
-            ctx.fillStyle = boss.state === 'chasing' ? '#2A0D00' : '#3B1E08';
+            ctx.fillStyle = boss.state === 'chasing' ? (boss.colorChasing || '#2A0D00') : (boss.color || '#3B1E08');
             ctx.beginPath();
             ctx.arc(bs.x, bs.y, boss.radius, 0, Math.PI * 2);
             ctx.fill();
@@ -492,7 +556,7 @@ function drawGame() {
             ctx.fillStyle = '#FFD700';
             ctx.font = 'bold 12px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('⚠️黑熊', bs.x, bs.y - boss.radius - 12);
+            ctx.fillText(boss.label || '⚠️Boss', bs.x, bs.y - boss.radius - 12);
             ctx.restore();
             const bBarW = 50, bBarH = 6;
             const bBarX = bs.x - bBarW / 2;
@@ -590,11 +654,14 @@ function updateUI() {
         '<div style="width:' + Math.round(barPct * 100) + '%;height:100%;background:#00CC00;border-radius:3px;"></div>' +
         '</div>';
 
-    // 右上角：時間和白天/黑夜狀態
+    // 右上角：時間、日夜狀態、地形
     document.getElementById('time-display').innerText = `時間: ${gameState.stats.timeStatus}`;
     const dayEl = document.getElementById('day-display');
     dayEl.innerText = `現在是「${gameState.stats.dayCycle}」`;
     dayEl.style.color = gameState.isNight ? 'orange' : '';
+    const biomeIcons = { forest: '🌲 森林', ocean: '🌊 海洋', desert: '🏜️ 沙漠' };
+    const biomeEl = document.getElementById('biome-display');
+    if (biomeEl) biomeEl.innerText = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
 }
 
 
@@ -604,7 +671,7 @@ function updateUI() {
 
 function spawnNeutralCreatures() {
     gameState.neutralCreatures = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 8; i++) {
         const x = Math.random() * (MAP_WIDTH  - 60) + 30;
         const y = Math.random() * (MAP_HEIGHT - 60) + 30;
         const diet = Math.random() < 0.5 ? 'herbivore' : 'omnivore';
@@ -656,8 +723,8 @@ function updateNeutralCreatures() {
                     }
                 } else {
                     const angle = Math.atan2(dy, dx);
-                    creature.x = Math.max(creature.radius, Math.min(gameState.canvasWidth - creature.radius, creature.x + Math.cos(angle) * creature.speed));
-                    creature.y = Math.max(creature.radius, Math.min(gameState.canvasHeight - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+                    creature.x = Math.max(creature.radius, Math.min(MAP_WIDTH - creature.radius, creature.x + Math.cos(angle) * creature.speed));
+                    creature.y = Math.max(creature.radius, Math.min(MAP_HEIGHT - creature.radius, creature.y + Math.sin(angle) * creature.speed));
                 }
             } else {
                 creature.state = 'wandering';
@@ -671,8 +738,8 @@ function updateNeutralCreatures() {
                     if (Math.sqrt(dx * dx + dy * dy) < 2) { creature.wanderTarget = null; }
                     else {
                         const angle = Math.atan2(dy, dx);
-                        creature.x = Math.max(creature.radius, Math.min(gameState.canvasWidth - creature.radius, creature.x + Math.cos(angle) * creature.speed));
-                        creature.y = Math.max(creature.radius, Math.min(gameState.canvasHeight - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+                        creature.x = Math.max(creature.radius, Math.min(MAP_WIDTH - creature.radius, creature.x + Math.cos(angle) * creature.speed));
+                        creature.y = Math.max(creature.radius, Math.min(MAP_HEIGHT - creature.radius, creature.y + Math.sin(angle) * creature.speed));
                     }
                 }
             }
@@ -712,8 +779,8 @@ function updateNeutralCreatures() {
         // fleeing：逃離玩家
         if (creature.state === 'fleeing') {
             const angle = Math.atan2(creature.y - p.y, creature.x - p.x);
-            creature.x = Math.max(creature.radius, Math.min(gameState.canvasWidth - creature.radius, creature.x + Math.cos(angle) * creature.speed));
-            creature.y = Math.max(creature.radius, Math.min(gameState.canvasHeight - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+            creature.x = Math.max(creature.radius, Math.min(MAP_WIDTH  - creature.radius, creature.x + Math.cos(angle) * creature.speed));
+            creature.y = Math.max(creature.radius, Math.min(MAP_HEIGHT - creature.radius, creature.y + Math.sin(angle) * creature.speed));
             continue;
         }
 
@@ -780,10 +847,19 @@ function drawNeutralCreatures() {
         const s = worldToScreen(creature.x, creature.y);
         if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
 
-        let color = 'orange';
-        if (creature.diet === 'aggressive') color = '#CC4400';
-        else if (creature.state === 'fleeing') color = 'yellow';
-        else if (creature.state === 'fighting') color = '#CC5500';
+        const nBiome = getBiome(creature.x, creature.y);
+        let baseC, aggrC, fleeC, fightC;
+        if (nBiome === 'ocean') {
+            baseC = '#4499CC'; aggrC = '#224488'; fleeC = '#88CCFF'; fightC = '#336699';
+        } else if (nBiome === 'desert') {
+            baseC = '#CC9944'; aggrC = '#884422'; fleeC = '#FFCC44'; fightC = '#AA6622';
+        } else {
+            baseC = 'orange'; aggrC = '#CC4400'; fleeC = 'yellow'; fightC = '#CC5500';
+        }
+        let color = baseC;
+        if (creature.diet === 'aggressive') color = aggrC;
+        else if (creature.state === 'fleeing') color = fleeC;
+        else if (creature.state === 'fighting') color = fightC;
 
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -811,7 +887,7 @@ function moveCreature(entity, newX, newY) {
 
 function spawnHostileCreatures() {
     gameState.hostileCreatures = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
         let x, y, safe = false;
         for (let attempts = 0; attempts < 200; attempts++) {
             x = Math.random() * (MAP_WIDTH  - 60) + 30;
@@ -980,7 +1056,10 @@ function drawHostileCreatures() {
         const s = worldToScreen(creature.x, creature.y);
         if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
 
-        ctx.fillStyle = creature.state === 'chasing' ? '#8B0000' : 'red';
+        const hBiome = getBiome(creature.x, creature.y);
+        const hNormalC  = hBiome === 'ocean' ? '#0055AA' : (hBiome === 'desert' ? '#CC6600' : 'red');
+        const hChasingC = hBiome === 'ocean' ? '#003366' : (hBiome === 'desert' ? '#884400' : '#8B0000');
+        ctx.fillStyle = creature.state === 'chasing' ? hChasingC : hNormalC;
         ctx.beginPath();
         ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -1960,12 +2039,12 @@ function updateCreatureSpawning() {
 
     const aliveNeutral = gameState.neutralCreatures.filter(c => c.hp > 0).length;
     const neutralSpawnInterval = aliveNeutral === 0 ? 9000 : 30000;
-    if (aliveNeutral < 10 && now - gameState.spawnTimers.neutral >= neutralSpawnInterval) {
+    if (aliveNeutral < 20 && now - gameState.spawnTimers.neutral >= neutralSpawnInterval) {
         spawnCreatureAtEdge('neutral');
         gameState.spawnTimers.neutral = now;
     }
 
-    const maxHostile = 8 + (gameState.isNight ? 2 : 0);
+    const maxHostile = 15;
     const aliveHostile = gameState.hostileCreatures.filter(c => c.hp > 0).length;
     const hostileSpawnInterval = (aliveHostile === 0 || gameState.fruits.length === 0) ? 13500 : 45000;
     if (aliveHostile < maxHostile && now - gameState.spawnTimers.hostile >= hostileSpawnInterval) {
@@ -1975,21 +2054,33 @@ function updateCreatureSpawning() {
 }
 
 function spawnBoss() {
-    const r = 25;
-    const edge = Math.floor(Math.random() * 4);
-    let x, y;
-    if (edge === 0) { x = Math.random() * MAP_WIDTH;  y = r; }
-    else if (edge === 1) { x = Math.random() * MAP_WIDTH;  y = MAP_HEIGHT - r; }
-    else if (edge === 2) { x = r;             y = Math.random() * MAP_HEIGHT; }
-    else                 { x = MAP_WIDTH - r; y = Math.random() * MAP_HEIGHT; }
+    const playerBiome = getBiome(gameState.player.x, gameState.player.y);
+    const cfg = BOSS_CONFIG[playerBiome] || BOSS_CONFIG.forest;
+    let bx, by;
+    if (cfg.spawnX !== null) {
+        bx = cfg.spawnX;
+        by = cfg.spawnY;
+    } else {
+        // 森林 Boss：地圖邊緣隨機生成
+        const r = cfg.radius;
+        const edge = Math.floor(Math.random() * 4);
+        if (edge === 0)      { bx = Math.random() * MAP_WIDTH;  by = r; }
+        else if (edge === 1) { bx = Math.random() * MAP_WIDTH;  by = MAP_HEIGHT - r; }
+        else if (edge === 2) { bx = r;             by = Math.random() * MAP_HEIGHT; }
+        else                 { bx = MAP_WIDTH - r; by = Math.random() * MAP_HEIGHT; }
+    }
     gameState.boss = {
-        x, y, radius: 25, hp: 500, maxHp: 500,
-        speed: 1.0, damage: 15, aggroRange: 200, attackRange: 30,
+        x: bx, y: by,
+        radius: cfg.radius, hp: cfg.hp, maxHp: cfg.hp,
+        speed: cfg.speed, damage: cfg.damage,
+        aggroRange: cfg.aggroRange, attackRange: cfg.attackRange,
         attackCooldown: 0, state: 'patrolling',
-        wanderTarget: null, lastWanderTime: Date.now()
+        wanderTarget: null, lastWanderTime: Date.now(),
+        name: cfg.name, label: cfg.label,
+        color: cfg.color, colorChasing: cfg.colorChasing
     };
     gameState.bossSpawned = true;
-    gameState.dayNightMessage.text = '⚠️ 強大的黑熊出現了！';
+    gameState.dayNightMessage.text = '⚠️ 強大的' + cfg.name + '出現了！';
     gameState.dayNightMessage.timer = Date.now();
 }
 
@@ -2055,7 +2146,7 @@ function showVictory() {
     overlay.appendChild(title);
     const desc1 = document.createElement('div');
     desc1.style.cssText = 'font-size:22px;margin-bottom:8px;';
-    desc1.textContent = '黑熊已被消滅！';
+    desc1.textContent = (gameState.boss && gameState.boss.name ? gameState.boss.name : '黑熊') + '已被消滅！';
     overlay.appendChild(desc1);
     const desc2 = document.createElement('div');
     desc2.style.cssText = 'font-size:18px;margin-bottom:28px;color:#FFD700;';
@@ -2229,11 +2320,11 @@ function initializeGame() {
     console.log("--- 遊戲初始化開始 ---");
 
 // 1. 生成環境
-    generateTrees(60); // 2400x1800 地圖需要更多樹木
-    
-    // 2. 初始化果子：生成最初的 15 顆果子
-    gameState.fruits = []; 
-    for (let i = 0; i < 15; i++) {
+    generateTrees(100); // 8000x8000 地圖
+
+    // 2. 初始化果子：生成最初的 50 顆果子
+    gameState.fruits = [];
+    for (let i = 0; i < 50; i++) {
         spawnFruit(true); // 生成初始果子
     }
 
@@ -2320,8 +2411,8 @@ function devSpawnNeutral() {
     const dist = 60 + Math.random() * 40;
     const bonus = gameState.creatureStrengthMultiplier;
     gameState.neutralCreatures.push({
-        x: Math.max(14, Math.min(gameState.canvasWidth - 14, p.x + Math.cos(angle) * dist)),
-        y: Math.max(14, Math.min(gameState.canvasHeight - 14, p.y + Math.sin(angle) * dist)),
+        x: Math.max(14, Math.min(MAP_WIDTH  - 14, p.x + Math.cos(angle) * dist)),
+        y: Math.max(14, Math.min(MAP_HEIGHT - 14, p.y + Math.sin(angle) * dist)),
         radius: 12, hp: 30 + bonus * 10, maxHp: 30 + bonus * 10,
         speed: 0.8 + bonus * 0.1, damage: 3 + bonus,
         diet: Math.random() < 0.5 ? 'herbivore' : 'omnivore',
@@ -2339,8 +2430,8 @@ function devSpawnHostile() {
     const roll = Math.random();
     const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
     gameState.hostileCreatures.push({
-        x: Math.max(10, Math.min(gameState.canvasWidth - 10, p.x + Math.cos(angle) * dist)),
-        y: Math.max(10, Math.min(gameState.canvasHeight - 10, p.y + Math.sin(angle) * dist)),
+        x: Math.max(10, Math.min(MAP_WIDTH  - 10, p.x + Math.cos(angle) * dist)),
+        y: Math.max(10, Math.min(MAP_HEIGHT - 10, p.y + Math.sin(angle) * dist)),
         radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
         speed: Math.min(2.5, 1.2 + bonus * 0.1), damage: Math.min(20, 5 + bonus),
         attackCooldown: 0, diet, state: 'patrolling',
