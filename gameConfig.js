@@ -209,11 +209,23 @@ const EVOLUTION_PATHS = {
 };
 
 // =============================================================
+// 精英怪數值定義
+// =============================================================
+const ELITE_CONFIG = {
+    base: { hp: 50, speed: 1.0, damage: 8 },
+    nights: [
+        { hpMult: 5,   speed: 1.3, damage: 12, xp: 150, label: '★精英',   color: '#5B0EA6' },
+        { hpMult: 7.5, speed: 1.5, damage: 15, xp: 225, label: '★★精英',  color: '#8B0000' },
+        { hpMult: 10,  speed: 1.7, damage: 18, xp: 300, label: '★★★精英', color: '#1A0A00' }
+    ]
+};
+
+// =============================================================
 // 遊戲基本資訊
 // =============================================================
 const GAME_INFO = {
     title:    '只吃不叫的噪鵑',
     subtitle: 'The Silent Koel',
     author:   'Goblinnest',
-    version:  'v0.8.6'
+    version:  'v0.9.0'
 };

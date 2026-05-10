@@ -213,7 +213,9 @@ const gameState = {
     skillPoints: 0,
     playerSkills: { vitality: 0, agility: 0, forager: 0, hunter: 0, tenacity: 0, organMemory: 0 },
     boss: null,
-    bossSpawned: false
+    bossSpawned: false,
+    eliteCreature: null,
+    eliteJustKilled: false
 };
 
 
@@ -461,6 +463,9 @@ function drawGame() {
         ctx.fillStyle = '#FF4400';
         ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
     }
+
+    // 7b. 繪製精英怪
+    drawEliteCreature();
 
     // 8. 攻擊範圍視覺圓圈（0.2 秒淡出）
     const p = gameState.player;
@@ -959,6 +964,8 @@ function applyDamageToPlayer(rawDamage, attacker) {
         if (attacker.hp <= 0) {
             if (attacker === gameState.boss) {
                 showVictory();
+            } else if (attacker === gameState.eliteCreature) {
+                handleEliteKill(attacker);
             } else {
                 const isHostile = gameState.hostileCreatures.includes(attacker);
                 handleKill(attacker, isHostile);
@@ -1352,12 +1359,13 @@ function playerAttack() {
     p.attackVisual = now;
 
     const targets = [
-        ...gameState.hostileCreatures.map(c => ({ c, hostile: true, isBoss: false })),
-        ...gameState.neutralCreatures.map(c => ({ c, hostile: false, isBoss: false })),
-        ...(gameState.boss && gameState.boss.hp > 0 ? [{ c: gameState.boss, hostile: true, isBoss: true }] : [])
+        ...gameState.hostileCreatures.map(c => ({ c, hostile: true, isBoss: false, isElite: false })),
+        ...gameState.neutralCreatures.map(c => ({ c, hostile: false, isBoss: false, isElite: false })),
+        ...(gameState.boss && gameState.boss.hp > 0 ? [{ c: gameState.boss, hostile: true, isBoss: true, isElite: false }] : []),
+        ...(gameState.eliteCreature && gameState.eliteCreature.hp > 0 ? [{ c: gameState.eliteCreature, hostile: true, isBoss: false, isElite: true }] : [])
     ];
 
-    for (const { c, hostile, isBoss } of targets) {
+    for (const { c, hostile, isBoss, isElite } of targets) {
         if (c.hp <= 0) continue;
         const d = Math.sqrt(Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2));
         if (d > p.attackRange) continue;
@@ -1403,12 +1411,13 @@ function playerAttack() {
             }
         }
 
-        if (!hostile) {
+        if (!hostile && !isElite) {
             c.state = c.canFight ? 'fighting' : 'fleeing';
         }
 
         if (c.hp <= 0) {
             if (isBoss) { showVictory(); return; }
+            if (isElite) { handleEliteKill(c); continue; }
             handleKill(c, hostile);
         }
     }
@@ -1416,8 +1425,10 @@ function playerAttack() {
 
 function updateStatusEffects() {
     const now = Date.now();
-    for (const c of [...gameState.hostileCreatures, ...gameState.neutralCreatures]) {
+    const eliteArr = (gameState.eliteCreature && gameState.eliteCreature.hp > 0) ? [gameState.eliteCreature] : [];
+    for (const c of [...gameState.hostileCreatures, ...gameState.neutralCreatures, ...eliteArr]) {
         if (c.hp <= 0) continue;
+        const isElite = c === gameState.eliteCreature;
         const isHostile = gameState.hostileCreatures.includes(c);
 
         if (c.bleedEndTime && now < c.bleedEndTime && now - (c.lastBleedTick || 0) >= 1000) {
@@ -1426,7 +1437,10 @@ function updateStatusEffects() {
             c.hp -= bleedAmt;
             c.lastBleedTick = now;
             showFloatingText(c.x, c.y - 18, '血 -' + bleedAmt, '#880000', 11);
-            if (hpBefore > 0 && c.hp <= 0) handleKill(c, isHostile);
+            if (hpBefore > 0 && c.hp <= 0) {
+                if (isElite) handleEliteKill(c);
+                else handleKill(c, isHostile);
+            }
         }
 
         if (c.poisonEndTime && now < c.poisonEndTime && now - (c.lastPoisonTick || 0) >= 1000) {
@@ -1435,7 +1449,10 @@ function updateStatusEffects() {
             c.hp -= poisonAmt;
             c.lastPoisonTick = now;
             showFloatingText(c.x, c.y - 18, '毒 -' + poisonAmt, '#8800CC', 11);
-            if (hpBefore > 0 && c.hp <= 0) handleKill(c, isHostile);
+            if (hpBefore > 0 && c.hp <= 0) {
+                if (isElite) handleEliteKill(c);
+                else handleKill(c, isHostile);
+            }
         }
     }
 }
@@ -1807,12 +1824,21 @@ function applyNightTransition() {
     for (const c of gameState.hostileCreatures) {
         if (c.hp > 0) { c.speed += 0.2; c.damage += 2; }
     }
+    const nightNum = (gameState.currentPhaseIndex + 1) / 2;
+    if (nightNum >= 1 && nightNum <= 3 && !gameState.eliteCreature) {
+        spawnEliteCreature(nightNum);
+    }
 }
 
 function applyDayTransition() {
     gameState.stats.dayCycle = '白天';
     gameState.isNight = false;
-    gameState.dayNightMessage.text = '☀️ 黎明到來';
+    if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) {
+        gameState.eliteCreature = null;
+        gameState.dayNightMessage.text = '☀️ 黎明到來，精英怪撤退了';
+    } else {
+        gameState.dayNightMessage.text = '☀️ 黎明到來';
+    }
     gameState.dayNightMessage.timer = Date.now();
     for (const c of gameState.hostileCreatures) {
         if (c.hp > 0) { c.speed = Math.max(0.1, c.speed - 0.2); c.damage = Math.max(1, c.damage - 2); }
@@ -1992,6 +2018,117 @@ function showVictory() {
     document.getElementById('game-container').appendChild(overlay);
 }
 
+// =============================================================
+// 精英怪系統 (Elite Creature System)
+// =============================================================
+
+function spawnEliteCreature(nightNum) {
+    const tierIndex = nightNum - 1;
+    const tier = ELITE_CONFIG.nights[tierIndex];
+    const hp = Math.round(ELITE_CONFIG.base.hp * tier.hpMult);
+    const w = gameState.canvasWidth, h = gameState.canvasHeight, r = 18;
+    const edge = Math.floor(Math.random() * 4);
+    let x, y;
+    if (edge === 0) { x = Math.random() * w; y = r; }
+    else if (edge === 1) { x = Math.random() * w; y = h - r; }
+    else if (edge === 2) { x = r; y = Math.random() * h; }
+    else { x = w - r; y = Math.random() * h; }
+    gameState.eliteCreature = {
+        x, y, radius: 18, hp, maxHp: hp,
+        speed: tier.speed, damage: tier.damage,
+        aggroRange: 250, attackRange: 28,
+        attackCooldown: 0, state: 'patrolling',
+        wanderTarget: null, lastWanderTime: Date.now(),
+        label: tier.label, color: tier.color, xp: tier.xp
+    };
+    gameState.eliteJustKilled = false;
+    gameState.dayNightMessage.text = '🌟 精英怪出現了！';
+    gameState.dayNightMessage.timer = Date.now();
+}
+
+function updateEliteCreature() {
+    const elite = gameState.eliteCreature;
+    if (!elite || elite.hp <= 0) return;
+    const now = Date.now();
+    const p = gameState.player;
+    if (elite.stunnedUntil && now < elite.stunnedUntil) return;
+    const dx = p.x - elite.x;
+    const dy = p.y - elite.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < elite.aggroRange) {
+        elite.state = 'chasing';
+    } else if (elite.state === 'chasing' && dist > elite.aggroRange + 100) {
+        elite.state = 'patrolling';
+    }
+    if (elite.state === 'chasing') {
+        if (dist <= elite.attackRange) {
+            if (now - elite.attackCooldown >= 1200) {
+                applyDamageToPlayer(elite.damage, elite);
+                elite.attackCooldown = now;
+            }
+        } else {
+            const angle = Math.atan2(dy, dx);
+            moveCreature(elite, elite.x + Math.cos(angle) * elite.speed, elite.y + Math.sin(angle) * elite.speed);
+        }
+    } else {
+        if (!elite.wanderTarget || now - elite.lastWanderTime >= 2500) {
+            elite.wanderTarget = {
+                x: Math.random() * (gameState.canvasWidth - 60) + 30,
+                y: Math.random() * (gameState.canvasHeight - 60) + 30
+            };
+            elite.lastWanderTime = now;
+        }
+        if (elite.wanderTarget) {
+            const wx = elite.wanderTarget.x - elite.x;
+            const wy = elite.wanderTarget.y - elite.y;
+            const wDist = Math.sqrt(wx * wx + wy * wy);
+            if (wDist < 2) { elite.wanderTarget = null; }
+            else {
+                const angle = Math.atan2(wy, wx);
+                moveCreature(elite, elite.x + Math.cos(angle) * elite.speed, elite.y + Math.sin(angle) * elite.speed);
+            }
+        }
+    }
+}
+
+function drawEliteCreature() {
+    const elite = gameState.eliteCreature;
+    if (!elite || elite.hp <= 0) return;
+    ctx.save();
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = elite.color;
+    ctx.beginPath();
+    ctx.arc(elite.x, elite.y, elite.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(elite.label, elite.x, elite.y - elite.radius - 12);
+    ctx.restore();
+    const bW = 46, bH = 5;
+    const bX = elite.x - bW / 2;
+    const bY = elite.y - elite.radius - 24;
+    ctx.fillStyle = '#330033';
+    ctx.fillRect(bX, bY, bW, bH);
+    ctx.fillStyle = '#CC44FF';
+    ctx.fillRect(bX, bY, bW * (elite.hp / elite.maxHp), bH);
+}
+
+function handleEliteKill(elite) {
+    const xp = elite.xp;
+    gameState.eliteCreature = null;
+    gameState.eliteJustKilled = true;
+    addXP(xp);
+    showXPPopup(gameState.player.x, gameState.player.y, xp);
+    gameState.skillPoints += 1;
+    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    gameState.dayNightMessage.text = '🌟 精英怪已擊殺！+' + xp + ' XP，獲得技能點';
+    gameState.dayNightMessage.timer = Date.now();
+}
+
 /**
  * 遊戲循環主函數。使用 requestAnimationFrame 確保平滑的動畫效果。
  */
@@ -2006,6 +2143,7 @@ function gameLoop() {
         updateNeutralCreatures();
         updateHostileCreatures();
         if (gameState.boss && gameState.boss.hp > 0) updateBoss();
+        if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) updateEliteCreature();
         updatePassiveOrgans();
         updateStatusEffects();
         checkTreasureCollision();
