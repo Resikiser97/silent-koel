@@ -1275,6 +1275,7 @@ function drawTreasures() {
 function drawOrganUI() {
     const organs = gameState.player.organs;
     const ev = gameState.player.evolution;
+    const p = gameState.player;
     const lineH = 18;
     const padX = 10;
     const padY = 8;
@@ -1288,7 +1289,8 @@ function drawOrganUI() {
 
     const evoCnt = evoEntries.length;
     const evoBoxH = evoCnt > 0 ? evoCnt * lineH + padY * 2 : 0;
-    const organsBoxH = organs.length > 0 ? organs.length * lineH + padY * 2 : 0;
+    // 器官框固定包含槽位行 + 器官清單
+    const organsBoxH = (1 + organs.length) * lineH + padY * 2;
 
     // 由底部往上排：版本區 → 器官框 → 4px 間距 → 進化框
     const boxBottom = H - versionAreaH;
@@ -1306,16 +1308,23 @@ function drawOrganUI() {
         });
     }
 
-    // 繪製器官框
-    if (organs.length === 0) return;
+    // 繪製器官框（槽位行 + 器官清單）
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(padX - 4, boxY, 164, organsBoxH);
     ctx.font = '13px Arial';
+
+    // 第一行：槽位狀態
+    const isFull = organs.length >= p.organSlots;
+    ctx.fillStyle = isFull ? '#FFD700' : '#CCCCCC';
+    const slotText = '器官：' + organs.length + ' / ' + p.organSlots + (isFull ? ' ✨可進化' : '');
+    ctx.fillText(slotText, padX, boxY + padY + lineH - 4);
+
+    // 後續行：器官清單
     const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
     organs.forEach((organ, i) => {
         ctx.fillStyle = typeColor[organ.type] || '#FFD700';
         const label = '▸ ' + organ.name + ' Lv.' + (organ.level || 1) + (organ.inherited ? '（繼承）' : '');
-        ctx.fillText(label, padX, boxY + padY + (i + 1) * lineH - 4);
+        ctx.fillText(label, padX, boxY + padY + (i + 2) * lineH - 4);
     });
 }
 
@@ -2125,7 +2134,11 @@ function handleEliteKill(elite) {
     showXPPopup(gameState.player.x, gameState.player.y, xp);
     gameState.skillPoints += 1;
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
-    gameState.dayNightMessage.text = '🌟 精英怪已擊殺！+' + xp + ' XP，獲得技能點';
+    // 跳到下一個白天：phase 1→900s, phase 3→600s, phase 5→300s
+    const nextDayTime = 1200 - (gameState.currentPhaseIndex + 1) * 150;
+    gameState.timeRemaining = nextDayTime;
+    updateDayNightCycle();
+    gameState.dayNightMessage.text = '☀️ 精英已滅！黎明提前到來！';
     gameState.dayNightMessage.timer = Date.now();
 }
 
