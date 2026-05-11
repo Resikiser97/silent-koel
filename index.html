@@ -616,6 +616,8 @@ function drawGame() {
     ctx.arc(ps.x, ps.y, p.radius, 0, Math.PI * 2);
     ctx.fill();
 
+    drawEliteArrow();
+
     // 9. 繪製器官清單（左下角）
     drawOrganUI();
 
@@ -2228,7 +2230,8 @@ function spawnEliteCreature(nightNum) {
         aggroRange: 250, attackRange: 28,
         attackCooldown: 0, state: 'patrolling',
         wanderTarget: null, lastWanderTime: Date.now(),
-        label: tier.label, color: tier.color, xp: tier.xp
+        label: tier.label, color: tier.color, xp: tier.xp,
+        diet: Math.random() < 0.5 ? 'herbivore' : 'carnivore'
     };
     gameState.eliteJustKilled = false;
     gameState.dayNightMessage.text = '🌟 精英怪出現了！';
@@ -2306,6 +2309,31 @@ function drawEliteCreature() {
     ctx.fillRect(bX, bY, bW, bH);
     ctx.fillStyle = '#CC44FF';
     ctx.fillRect(bX, bY, bW * (elite.hp / elite.maxHp), bH);
+}
+
+function drawEliteArrow() {
+    const elite = gameState.eliteCreature;
+    if (!elite || elite.hp <= 0) return;
+    const es = worldToScreen(elite.x, elite.y);
+    if (es.x >= -20 && es.x <= VIEW_W + 20 && es.y >= -20 && es.y <= VIEW_H + 20) return;
+    const p = gameState.player;
+    const ps = worldToScreen(p.x, p.y);
+    const angle = Math.atan2(elite.y - p.y, elite.x - p.x);
+    const ax = ps.x + Math.cos(angle) * 20;
+    const ay = ps.y + Math.sin(angle) * 20;
+    const alpha = Math.floor(Date.now() / 500) % 2 === 0 ? 0.6 : 1.0;
+    const color = elite.diet === 'herbivore' ? '#FFD700' : '#9B59B6';
+    const cx = Math.cos(angle), cy = Math.sin(angle);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax - cx * 10 - cy * 3, ay - cy * 10 + cx * 3);
+    ctx.lineTo(ax - cx * 10 + cy * 3, ay - cy * 10 - cx * 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
 }
 
 function handleEliteKill(elite) {
