@@ -251,5 +251,5 @@ const GAME_INFO = {
     title:    '只吃不叫的噪鵑',
     subtitle: 'The Silent Koel',
     author:   'Goblinnest',
-    version:  'v0.10.1'
+    version:  'v0.10.2'
 };
