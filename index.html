@@ -331,45 +331,48 @@ function generateTrees(count) {
     for (let i = 0; i < count; i++) {
         const x = Math.floor(Math.random() * (MAP_WIDTH  - 100)) + 50;
         const y = Math.floor(Math.random() * (MAP_HEIGHT - 100)) + 50;
-        const radius = Math.floor(Math.random() * (20 - 10) + 10);
+        const isLarge = Math.random() < 0.4;
+        const radius = isLarge
+            ? Math.floor(Math.random() * 11 + 25)
+            : Math.floor(Math.random() *  9 + 12);
         const biome = getBiome(x, y);
         const treeColor = biome === 'ocean' ? '#005599' : (biome === 'desert' ? '#7B6B00' : 'darkgreen');
-        trees.push({ x: x, y: y, radius: radius, color: treeColor });
+        trees.push({ x, y, radius, color: treeColor, isLarge, fruitCount: 0, fruitTimer: Date.now() });
     }
     gameState.trees = trees;
-    console.log("--- 初始化完成：共生成 " + gameState.trees.length + " 棵樹木 ---");
+    console.log("--- 初始化完成：共生成 " + gameState.trees.length + " 棵樹木（大/小各佔約4/6）---");
 }
 
-/**
- * 生成隨機果子物件。
- */
-function spawnFruit(isInitial = false) {
+// 從指定樹木附近生成一顆果子（半徑+20px 範圍內隨機）
+function spawnFruitFromTree(tree) {
     const MAX_FRUITS = 80;
     if (gameState.fruits.length >= MAX_FRUITS) return null;
-    if (gameState.trees.length === 0) return null;
-
-    for (let attempts = 0; attempts < 100; attempts++) {
-        const tree = gameState.trees[Math.floor(Math.random() * gameState.trees.length)];
+    for (let attempts = 0; attempts < 20; attempts++) {
         const angle = Math.random() * Math.PI * 2;
-        const dist = tree.radius + 6 + Math.random() * (80 - tree.radius - 6);
+        const dist = tree.radius + 5 + Math.random() * 20;
         const x = tree.x + Math.cos(angle) * dist;
         const y = tree.y + Math.sin(angle) * dist;
-
         if (x < 10 || x > MAP_WIDTH - 10 || y < 10 || y > MAP_HEIGHT - 10) continue;
-
         let tooClose = false;
         for (const fruit of gameState.fruits) {
-            if (Math.pow(x - fruit.x, 2) + Math.pow(y - fruit.y, 2) < 625) { tooClose = true; break; }
+            const dx = x - fruit.x, dy = y - fruit.y;
+            if (dx * dx + dy * dy < 400) { tooClose = true; break; }
         }
         if (tooClose) continue;
-
-        const fruitBiome = getBiome(x, y);
-        const fruitColor = fruitBiome === 'ocean' ? '#0088FF' : (fruitBiome === 'desert' ? '#FF8800' : 'red');
-        const fruit = { x: x, y: y, radius: 6, color: fruitColor };
+        const fb = getBiome(x, y);
+        const fc = fb === 'ocean' ? '#0088FF' : (fb === 'desert' ? '#FF8800' : 'red');
+        const fruit = { x, y, radius: 6, color: fc };
         gameState.fruits.push(fruit);
         return fruit;
     }
     return null;
+}
+
+// 從隨機樹木生成果子（供開發者模式使用）
+function spawnFruit() {
+    if (gameState.trees.length === 0) return null;
+    const tree = gameState.trees[Math.floor(Math.random() * gameState.trees.length)];
+    return spawnFruitFromTree(tree);
 }
 
 
@@ -459,25 +462,27 @@ function checkFruitCollision() {
 }
 
 
-/**
- * 自動生成果子計時器管理函數。
- */
-function manageFruitSpawning() {
-    const currentTime = Date.now();
-    const fruitEmpty = gameState.fruits.length === 0;
-    let spawnIntervalMs;
-
-    if (gameState.stats.dayCycle === "白天") {
-        spawnIntervalMs = fruitEmpty ? 2400 : 8000;
-    } else if (gameState.stats.dayCycle === "夜晚") {
-        spawnIntervalMs = fruitEmpty ? 4800 : 16000;
-    } else {
-        spawnIntervalMs = fruitEmpty ? 2400 : 8000;
-    }
-
-    if (!gameState.lastFruitSpawnTime || currentTime - gameState.lastFruitSpawnTime >= spawnIntervalMs * 0.9) {
-        spawnFruit();
-        gameState.lastFruitSpawnTime = Date.now();
+// 每棵樹獨立管理附近果子生產（取代全域 manageFruitSpawning）
+function updateTreeFruitProduction() {
+    const now = Date.now();
+    const MAX_FRUITS = 80;
+    if (gameState.fruits.length >= MAX_FRUITS) return;
+    for (const tree of gameState.trees) {
+        const range     = tree.isLarge ? 80 : 60;
+        const maxNearby = tree.isLarge ?  5 :  3;
+        let nearby = 0;
+        for (const fruit of gameState.fruits) {
+            const dx = fruit.x - tree.x, dy = fruit.y - tree.y;
+            if (dx * dx + dy * dy < range * range) nearby++;
+        }
+        tree.fruitCount = nearby;
+        if (nearby >= maxNearby) continue;
+        const interval = nearby === 0 ? 9000 : (nearby === 1 ? 19500 : 30000);
+        if (now - tree.fruitTimer >= interval) {
+            tree.fruitTimer = now;
+            spawnFruitFromTree(tree);
+            if (gameState.fruits.length >= MAX_FRUITS) return;
+        }
     }
 }
 
@@ -671,18 +676,34 @@ function updateUI() {
 
 function spawnNeutralCreatures() {
     gameState.neutralCreatures = [];
-    for (let i = 0; i < 8; i++) {
-        const x = Math.random() * (MAP_WIDTH  - 60) + 30;
-        const y = Math.random() * (MAP_HEIGHT - 60) + 30;
+    const BLOCK = 2000; // 4x4 格，每格 2000px
+    const positions = [];
+    // Phase 1：每格 1 隻，共 16 個位置
+    for (let gx = 0; gx < 4; gx++) {
+        for (let gy = 0; gy < 4; gy++) {
+            positions.push({
+                x: gx * BLOCK + 100 + Math.random() * (BLOCK - 200),
+                y: gy * BLOCK + 100 + Math.random() * (BLOCK - 200)
+            });
+        }
+    }
+    // Phase 2：隨機補足到 20 隻
+    for (let i = 0; i < 4; i++) {
+        positions.push({
+            x: 100 + Math.random() * (MAP_WIDTH  - 200),
+            y: 100 + Math.random() * (MAP_HEIGHT - 200)
+        });
+    }
+    for (const { x, y } of positions) {
         const diet = Math.random() < 0.5 ? 'herbivore' : 'omnivore';
         const canFight = Math.random() < 0.5;
         gameState.neutralCreatures.push({
-            x: x, y: y, radius: 8, hp: 30, maxHp: 30, speed: 0.8,
-            diet: diet, canFight: canFight, state: 'idle',
+            x, y, radius: 8, hp: 30, maxHp: 30, speed: 0.8,
+            diet, canFight, state: 'idle',
             wanderTarget: null, lastWanderTime: Date.now(), lastDamageTime: 0
         });
     }
-    console.log("--- 中立生物生成完成：" + gameState.neutralCreatures.length + " 隻 ---");
+    console.log("--- 中立生物生成完成：" + gameState.neutralCreatures.length + " 隻（分散於 4x4 格）---");
 }
 
 function updateNeutralCreatures() {
@@ -887,28 +908,33 @@ function moveCreature(entity, newX, newY) {
 
 function spawnHostileCreatures() {
     gameState.hostileCreatures = [];
-    for (let i = 0; i < 5; i++) {
-        let x, y, safe = false;
-        for (let attempts = 0; attempts < 200; attempts++) {
-            x = Math.random() * (MAP_WIDTH  - 60) + 30;
-            y = Math.random() * (MAP_HEIGHT - 60) + 30;
-            const dPlayer = Math.sqrt(Math.pow(x - gameState.player.x, 2) + Math.pow(y - gameState.player.y, 2));
-            if (dPlayer < 200) continue;
-            break;
+    const BLOCK = 2000;
+    const positions = [];
+    // 產生 16 個格位置，洗牌後取 10
+    for (let gx = 0; gx < 4; gx++) {
+        for (let gy = 0; gy < 4; gy++) {
+            positions.push({
+                x: gx * BLOCK + 100 + Math.random() * (BLOCK - 200),
+                y: gy * BLOCK + 100 + Math.random() * (BLOCK - 200)
+            });
         }
+    }
+    positions.sort(() => Math.random() - 0.5);
+    const bonus = gameState.creatureStrengthMultiplier;
+    for (let i = 0; i < 10; i++) {
+        const { x, y } = positions[i];
         const roll = Math.random();
         const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
-        const bonus = gameState.creatureStrengthMultiplier;
         gameState.hostileCreatures.push({
-            x: x, y: y, radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
+            x, y, radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
             speed: Math.min(2.5, 1.2 + bonus * 0.1),
-            damage: Math.min(20, 5 + bonus), attackCooldown: 0, diet: diet,
+            damage: Math.min(20, 5 + bonus), attackCooldown: 0, diet,
             state: 'patrolling', aggroRange: 150, attackRange: 20,
             wanderTarget: null, lastWanderTime: Date.now(),
             target: null, targetType: null
         });
     }
-    console.log("--- 敵意生物生成完成：" + gameState.hostileCreatures.length + " 隻 ---");
+    console.log("--- 敵意生物生成完成：" + gameState.hostileCreatures.length + " 隻（分散於 4x4 格）---");
 }
 
 function updateHostileCreatures() {
@@ -1997,14 +2023,27 @@ function updateDayNightCycle() {
 }
 
 function spawnCreatureAtEdge(type) {
+    const BLOCK = 2000;
     const bonus = gameState.creatureStrengthMultiplier;
-    const edge = Math.floor(Math.random() * 4);
-    let x, y;
-    const r = 14;
-    if (edge === 0) { x = Math.random() * MAP_WIDTH;  y = r; }
-    else if (edge === 1) { x = Math.random() * MAP_WIDTH;  y = MAP_HEIGHT - r; }
-    else if (edge === 2) { x = r;             y = Math.random() * MAP_HEIGHT; }
-    else                 { x = MAP_WIDTH - r; y = Math.random() * MAP_HEIGHT; }
+
+    // 統計各格存活數量
+    const alive = (type === 'neutral'
+        ? gameState.neutralCreatures
+        : gameState.hostileCreatures).filter(c => c.hp > 0);
+    const counts = new Array(16).fill(0);
+    for (const c of alive) {
+        const gi = Math.min(3, Math.floor(c.x / BLOCK)) + Math.min(3, Math.floor(c.y / BLOCK)) * 4;
+        counts[gi]++;
+    }
+    // 加權隨機：存活越少的格子越容易被選到
+    const weights = counts.map(n => 1 / (n + 1));
+    const total = weights.reduce((s, w) => s + w, 0);
+    let r = Math.random() * total, block = 0;
+    for (let i = 0; i < 16; i++) { r -= weights[i]; if (r <= 0) { block = i; break; } }
+    const gx = block % 4;
+    const gy = Math.floor(block / 4);
+    const x = gx * BLOCK + 100 + Math.random() * (BLOCK - 200);
+    const y = gy * BLOCK + 100 + Math.random() * (BLOCK - 200);
 
     if (type === 'neutral') {
         gameState.neutralCreatures.push({
@@ -2039,12 +2078,12 @@ function updateCreatureSpawning() {
 
     const aliveNeutral = gameState.neutralCreatures.filter(c => c.hp > 0).length;
     const neutralSpawnInterval = aliveNeutral === 0 ? 9000 : 30000;
-    if (aliveNeutral < 20 && now - gameState.spawnTimers.neutral >= neutralSpawnInterval) {
+    if (aliveNeutral < 30 && now - gameState.spawnTimers.neutral >= neutralSpawnInterval) {
         spawnCreatureAtEdge('neutral');
         gameState.spawnTimers.neutral = now;
     }
 
-    const maxHostile = 15;
+    const maxHostile = 20;
     const aliveHostile = gameState.hostileCreatures.filter(c => c.hp > 0).length;
     const hostileSpawnInterval = (aliveHostile === 0 || gameState.fruits.length === 0) ? 13500 : 45000;
     if (aliveHostile < maxHostile && now - gameState.spawnTimers.hostile >= hostileSpawnInterval) {
@@ -2297,7 +2336,7 @@ function gameLoop() {
         updatePlayerMovement();
         updateCamera();
         checkFruitCollision();
-        manageFruitSpawning();
+        updateTreeFruitProduction();
         updateNeutralCreatures();
         updateHostileCreatures();
         if (gameState.boss && gameState.boss.hp > 0) updateBoss();
@@ -2320,12 +2359,14 @@ function initializeGame() {
     console.log("--- 遊戲初始化開始 ---");
 
 // 1. 生成環境
-    generateTrees(100); // 8000x8000 地圖
+    generateTrees(150); // 8000x8000 地圖
 
-    // 2. 初始化果子：生成最初的 50 顆果子
+    // 2. 初始化果子：從各棵樹分散生成共 80 顆
     gameState.fruits = [];
-    for (let i = 0; i < 50; i++) {
-        spawnFruit(true); // 生成初始果子
+    const shuffledTrees = gameState.trees.slice().sort(() => Math.random() - 0.5);
+    for (const tree of shuffledTrees) {
+        if (gameState.fruits.length >= 80) break;
+        spawnFruitFromTree(tree);
     }
 
     // 3. 生成中立生物
@@ -2354,8 +2395,7 @@ function initializeGame() {
     applySkillBonuses();
     applyEvolutionEffects();
 
-    // 5. 初始化計時狀態，避免遊戲啟動瞬間生成過多或沒有果子。
-    gameState.lastFruitSpawnTime = Date.now() - (8000 * 2);
+    // 5. 初始化計時狀態
     gameState.lastTimeTick = Date.now();
     gameState.spawnTimers.neutral = Date.now();
     gameState.spawnTimers.hostile = Date.now();
