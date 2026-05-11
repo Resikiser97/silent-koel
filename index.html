@@ -241,29 +241,59 @@ const VIEW_H     = 600;
 
 // ORGANS、SKILLS、EVOLUTION_PATHS、COMBOS、CREATURE_CONFIG 由 gameConfig.js 提供
 
-// 世界座標轉換為螢幕座標
+// 環繞世界距離計算（取最短路徑）
+function wrappedDistance(x1, y1, x2, y2) {
+    let dx = Math.abs(x2 - x1);
+    if (dx > MAP_WIDTH  / 2) dx = MAP_WIDTH  - dx;
+    let dy = Math.abs(y2 - y1);
+    if (dy > MAP_HEIGHT / 2) dy = MAP_HEIGHT - dy;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+// 環繞世界方向向量（從 a 到 b 的最短路徑 dx/dy）
+function wrappedDelta(ax, ay, bx, by) {
+    let dx = bx - ax;
+    let dy = by - ay;
+    if (dx >  MAP_WIDTH  / 2) dx -= MAP_WIDTH;
+    else if (dx < -MAP_WIDTH  / 2) dx += MAP_WIDTH;
+    if (dy >  MAP_HEIGHT / 2) dy -= MAP_HEIGHT;
+    else if (dy < -MAP_HEIGHT / 2) dy += MAP_HEIGHT;
+    return { dx, dy };
+}
+
+// 世界座標轉換為螢幕座標（含環繞修正）
 function worldToScreen(wx, wy) {
-    return { x: wx - gameState.camera.x, y: wy - gameState.camera.y };
+    let sx = wx - gameState.camera.x;
+    let sy = wy - gameState.camera.y;
+    if (sx < -MAP_WIDTH  / 2) sx += MAP_WIDTH;
+    else if (sx >  MAP_WIDTH  / 2) sx -= MAP_WIDTH;
+    if (sy < -MAP_HEIGHT / 2) sy += MAP_HEIGHT;
+    else if (sy >  MAP_HEIGHT / 2) sy -= MAP_HEIGHT;
+    return { x: sx, y: sy };
 }
 
 // 平滑視角跟隨：玩家進入視窗邊界 20% 才開始移動視角
 function updateCamera() {
     const p = gameState.player;
     const cam = gameState.camera;
-    const marginX = VIEW_W * 0.2; // 160px
-    const marginY = VIEW_H * 0.2; // 120px
+    const marginX = VIEW_W * 0.2;
+    const marginY = VIEW_H * 0.2;
+    let screenX = p.x - cam.x;
+    let screenY = p.y - cam.y;
+    if (screenX < -MAP_WIDTH  / 2) screenX += MAP_WIDTH;
+    else if (screenX >  MAP_WIDTH  / 2) screenX -= MAP_WIDTH;
+    if (screenY < -MAP_HEIGHT / 2) screenY += MAP_HEIGHT;
+    else if (screenY >  MAP_HEIGHT / 2) screenY -= MAP_HEIGHT;
     let targetX = cam.x;
     let targetY = cam.y;
-    const screenX = p.x - cam.x;
-    const screenY = p.y - cam.y;
-    if (screenX < marginX)            targetX = p.x - marginX;
-    else if (screenX > VIEW_W - marginX) targetX = p.x - (VIEW_W - marginX);
-    if (screenY < marginY)            targetY = p.y - marginY;
-    else if (screenY > VIEW_H - marginY) targetY = p.y - (VIEW_H - marginY);
-    targetX = Math.max(0, Math.min(MAP_WIDTH  - VIEW_W, targetX));
-    targetY = Math.max(0, Math.min(MAP_HEIGHT - VIEW_H, targetY));
+    if (screenX < marginX)               targetX = cam.x + (screenX - marginX);
+    else if (screenX > VIEW_W - marginX) targetX = cam.x + (screenX - (VIEW_W - marginX));
+    if (screenY < marginY)               targetY = cam.y + (screenY - marginY);
+    else if (screenY > VIEW_H - marginY) targetY = cam.y + (screenY - (VIEW_H - marginY));
     cam.x += (targetX - cam.x) * 0.15;
     cam.y += (targetY - cam.y) * 0.15;
+    cam.x = ((cam.x % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
+    cam.y = ((cam.y % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
 }
 
 // =============================================================
@@ -423,8 +453,8 @@ function updatePlayerMovement() {
     if (gameState.keys['a'] || gameState.keys['arrowleft'])  dx -= p.speed;
     if (gameState.keys['d'] || gameState.keys['arrowright']) dx += p.speed;
     if (dx === 0 && dy === 0) return;
-    p.x = Math.max(p.radius, Math.min(MAP_WIDTH  - p.radius, p.x + dx));
-    p.y = Math.max(p.radius, Math.min(MAP_HEIGHT - p.radius, p.y + dy));
+    p.x = ((p.x + dx) % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH;
+    p.y = ((p.y + dy) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT;
 }
 
 
@@ -438,9 +468,7 @@ function checkFruitCollision() {
 
     for (let i = gameState.fruits.length - 1; i >= 0; i--) {
         const fruit = gameState.fruits[i];
-        const distanceSquared = Math.pow(p.x - fruit.x, 2) + Math.pow(p.y - fruit.y, 2);
-
-        if (distanceSquared < Math.pow(collisionRadius, 2)) {
+        if (wrappedDistance(p.x, p.y, fruit.x, fruit.y) < collisionRadius) {
             const ev = p.evolution;
             // 草食Lv2/3 果子XP加成（各等級的最終值）
             const herbBonus = ev.herbivore >= 2 ? EVOLUTION_PATHS.herbivore.levels[ev.herbivore - 1].fruitXPBonus : 0;
@@ -729,17 +757,16 @@ function updateNeutralCreatures() {
             const aggroRange = creature.aggroRange || 120;
             let target = null;
             let bestDist = aggroRange;
-            const dp = Math.sqrt(Math.pow(creature.x - p.x, 2) + Math.pow(creature.y - p.y, 2));
+            const dp = wrappedDistance(creature.x, creature.y, p.x, p.y);
             if (dp < bestDist) { target = p; bestDist = dp; }
             for (const h of gameState.hostileCreatures) {
                 if (h.hp <= 0) continue;
-                const d = Math.sqrt(Math.pow(creature.x - h.x, 2) + Math.pow(creature.y - h.y, 2));
+                const d = wrappedDistance(creature.x, creature.y, h.x, h.y);
                 if (d < bestDist) { target = h; bestDist = d; }
             }
             if (target) {
                 creature.state = 'chasing';
-                const dx = target.x - creature.x;
-                const dy = target.y - creature.y;
+                const { dx, dy } = wrappedDelta(creature.x, creature.y, target.x, target.y);
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 const atkRange = creature.radius + (target.radius || 10) + 5;
                 if (dist <= atkRange) {
@@ -754,30 +781,27 @@ function updateNeutralCreatures() {
                     }
                 } else {
                     const angle = Math.atan2(dy, dx);
-                    creature.x = Math.max(creature.radius, Math.min(MAP_WIDTH - creature.radius, creature.x + Math.cos(angle) * creature.speed));
-                    creature.y = Math.max(creature.radius, Math.min(MAP_HEIGHT - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+                    moveCreature(creature, creature.x + Math.cos(angle) * creature.speed, creature.y + Math.sin(angle) * creature.speed);
                 }
             } else {
                 creature.state = 'wandering';
                 if (!creature.wanderTarget || now - creature.lastWanderTime >= 2000) {
-                    creature.wanderTarget = { x: Math.random() * (MAP_WIDTH - 60) + 30, y: Math.random() * (MAP_HEIGHT - 60) + 30 };
+                    creature.wanderTarget = { x: Math.random() * MAP_WIDTH, y: Math.random() * MAP_HEIGHT };
                     creature.lastWanderTime = now;
                 }
                 if (creature.wanderTarget) {
-                    const dx = creature.wanderTarget.x - creature.x;
-                    const dy = creature.wanderTarget.y - creature.y;
-                    if (Math.sqrt(dx * dx + dy * dy) < 2) { creature.wanderTarget = null; }
+                    const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, creature.wanderTarget.x, creature.wanderTarget.y);
+                    if (Math.sqrt(wdx * wdx + wdy * wdy) < 2) { creature.wanderTarget = null; }
                     else {
-                        const angle = Math.atan2(dy, dx);
-                        creature.x = Math.max(creature.radius, Math.min(MAP_WIDTH - creature.radius, creature.x + Math.cos(angle) * creature.speed));
-                        creature.y = Math.max(creature.radius, Math.min(MAP_HEIGHT - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+                        const wa = Math.atan2(wdy, wdx);
+                        moveCreature(creature, creature.x + Math.cos(wa) * creature.speed, creature.y + Math.sin(wa) * creature.speed);
                     }
                 }
             }
             continue;
         }
 
-        const distToPlayer = Math.sqrt(Math.pow(creature.x - p.x, 2) + Math.pow(creature.y - p.y, 2));
+        const distToPlayer = wrappedDistance(creature.x, creature.y, p.x, p.y);
         const touchDist = creature.radius + p.radius;
 
         // 草食安撫：Lv2=100px 不逃跑，Lv3=150px 完全友善
@@ -807,11 +831,11 @@ function updateNeutralCreatures() {
             continue;
         }
 
-        // fleeing：逃離玩家
+        // fleeing：逃離玩家（取環繞最短路徑的反方向）
         if (creature.state === 'fleeing') {
-            const angle = Math.atan2(creature.y - p.y, creature.x - p.x);
-            creature.x = Math.max(creature.radius, Math.min(MAP_WIDTH  - creature.radius, creature.x + Math.cos(angle) * creature.speed));
-            creature.y = Math.max(creature.radius, Math.min(MAP_HEIGHT - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+            const { dx: fdx, dy: fdy } = wrappedDelta(p.x, p.y, creature.x, creature.y);
+            const fa = Math.atan2(fdy, fdx);
+            moveCreature(creature, creature.x + Math.cos(fa) * creature.speed, creature.y + Math.sin(fa) * creature.speed);
             continue;
         }
 
@@ -821,14 +845,14 @@ function updateNeutralCreatures() {
             let closestDist = 80;
             for (let i = 0; i < gameState.fruits.length; i++) {
                 const fruit = gameState.fruits[i];
-                const d = Math.sqrt(Math.pow(creature.x - fruit.x, 2) + Math.pow(creature.y - fruit.y, 2));
+                const d = wrappedDistance(creature.x, creature.y, fruit.x, fruit.y);
                 if (d < closestDist) { closestDist = d; closestIdx = i; }
             }
             if (closestIdx !== -1) {
                 const fruit = gameState.fruits[closestIdx];
-                const angle = Math.atan2(fruit.y - creature.y, fruit.x - creature.x);
-                creature.x += Math.cos(angle) * creature.speed;
-                creature.y += Math.sin(angle) * creature.speed;
+                const { dx: fdx, dy: fdy } = wrappedDelta(creature.x, creature.y, fruit.x, fruit.y);
+                const fa = Math.atan2(fdy, fdx);
+                moveCreature(creature, creature.x + Math.cos(fa) * creature.speed, creature.y + Math.sin(fa) * creature.speed);
                 if (closestDist < creature.radius + 6) {
                     gameState.fruits.splice(closestIdx, 1);
                     creature.fruitsEaten = (creature.fruitsEaten || 0) + 1;
@@ -857,16 +881,14 @@ function updateNeutralCreatures() {
         }
 
         if (creature.wanderTarget) {
-            const dx = creature.wanderTarget.x - creature.x;
-            const dy = creature.wanderTarget.y - creature.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, creature.wanderTarget.x, creature.wanderTarget.y);
+            const dist = Math.sqrt(wdx * wdx + wdy * wdy);
             if (dist < 2) {
                 creature.wanderTarget = null;
                 creature.state = 'idle';
             } else {
-                const angle = Math.atan2(dy, dx);
-                creature.x = Math.max(creature.radius, Math.min(MAP_WIDTH  - creature.radius, creature.x + Math.cos(angle) * creature.speed));
-                creature.y = Math.max(creature.radius, Math.min(MAP_HEIGHT - creature.radius, creature.y + Math.sin(angle) * creature.speed));
+                const wa = Math.atan2(wdy, wdx);
+                moveCreature(creature, creature.x + Math.cos(wa) * creature.speed, creature.y + Math.sin(wa) * creature.speed);
             }
         }
     }
@@ -912,8 +934,8 @@ function drawNeutralCreatures() {
 // =============================================================
 
 function moveCreature(entity, newX, newY) {
-    entity.x = Math.max(entity.radius, Math.min(MAP_WIDTH  - entity.radius, newX));
-    entity.y = Math.max(entity.radius, Math.min(MAP_HEIGHT - entity.radius, newY));
+    entity.x = ((newX % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
+    entity.y = ((newY % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
 }
 
 function spawnHostileCreatures() {
@@ -956,7 +978,7 @@ function updateHostileCreatures() {
         let bestType = null;
 
         const effectiveAggroRange = Math.max(60, creature.aggroRange - p.aggroRangeReduction);
-        const distToPlayer = Math.sqrt(Math.pow(creature.x - p.x, 2) + Math.pow(creature.y - p.y, 2));
+        const distToPlayer = wrappedDistance(creature.x, creature.y, p.x, p.y);
         if (distToPlayer < effectiveAggroRange) {
             bestTarget = p;
             bestDist = distToPlayer;
@@ -965,7 +987,7 @@ function updateHostileCreatures() {
 
         for (const neutral of gameState.neutralCreatures) {
             if (neutral.hp <= 0) continue;
-            const d = Math.sqrt(Math.pow(creature.x - neutral.x, 2) + Math.pow(creature.y - neutral.y, 2));
+            const d = wrappedDistance(creature.x, creature.y, neutral.x, neutral.y);
             if (d < effectiveAggroRange && d < bestDist) {
                 bestTarget = neutral;
                 bestDist = d;
@@ -980,7 +1002,7 @@ function updateHostileCreatures() {
             creature.targetType = bestType;
         } else if (creature.state === 'chasing') {
             const t = creature.target;
-            const d = t ? Math.sqrt(Math.pow(creature.x - t.x, 2) + Math.pow(creature.y - t.y, 2)) : Infinity;
+            const d = t ? wrappedDistance(creature.x, creature.y, t.x, t.y) : Infinity;
             if (!t || t.hp <= 0 || d > effectiveAggroRange + 200) {
                 creature.state = 'patrolling';
                 creature.target = null;
@@ -991,8 +1013,7 @@ function updateHostileCreatures() {
         // 追擊與攻擊
         if (creature.state === 'chasing' && creature.target) {
             const t = creature.target;
-            const dx = t.x - creature.x;
-            const dy = t.y - creature.y;
+            const { dx, dy } = wrappedDelta(creature.x, creature.y, t.x, t.y);
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist <= creature.attackRange) {
@@ -1027,7 +1048,7 @@ function updateHostileCreatures() {
             let closestDist = creature.aggroRange;
             for (let i = 0; i < gameState.corpses.length; i++) {
                 const corpse = gameState.corpses[i];
-                const d = Math.sqrt(Math.pow(creature.x - corpse.x, 2) + Math.pow(creature.y - corpse.y, 2));
+                const d = wrappedDistance(creature.x, creature.y, corpse.x, corpse.y);
                 if (d < closestDist) { closestDist = d; closestIdx = i; }
             }
             if (closestIdx !== -1) {
@@ -1037,8 +1058,8 @@ function updateHostileCreatures() {
                     creature.damage = Math.min(20, creature.damage + 1);
                     gameState.corpses.splice(closestIdx, 1);
                 } else {
-                    const angle = Math.atan2(corpse.y - creature.y, corpse.x - creature.x);
-                    moveCreature(creature, creature.x + Math.cos(angle) * creature.speed, creature.y + Math.sin(angle) * creature.speed);
+                    const { dx: cdx, dy: cdy } = wrappedDelta(creature.x, creature.y, corpse.x, corpse.y);
+                    moveCreature(creature, creature.x + Math.cos(Math.atan2(cdy, cdx)) * creature.speed, creature.y + Math.sin(Math.atan2(cdy, cdx)) * creature.speed);
                     continue;
                 }
             }
@@ -1054,14 +1075,13 @@ function updateHostileCreatures() {
         }
 
         if (creature.wanderTarget) {
-            const dx = creature.wanderTarget.x - creature.x;
-            const dy = creature.wanderTarget.y - creature.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, creature.wanderTarget.x, creature.wanderTarget.y);
+            const dist = Math.sqrt(wdx * wdx + wdy * wdy);
             if (dist < 2) {
                 creature.wanderTarget = null;
             } else {
-                const angle = Math.atan2(dy, dx);
-                moveCreature(creature, creature.x + Math.cos(angle) * creature.speed, creature.y + Math.sin(angle) * creature.speed);
+                const wa = Math.atan2(wdy, wdx);
+                moveCreature(creature, creature.x + Math.cos(wa) * creature.speed, creature.y + Math.sin(wa) * creature.speed);
             }
         }
     }
@@ -1228,8 +1248,7 @@ function checkTreasureCollision() {
     const p = gameState.player;
     for (let i = gameState.treasures.length - 1; i >= 0; i--) {
         const t = gameState.treasures[i];
-        const d = Math.sqrt(Math.pow(p.x - t.x, 2) + Math.pow(p.y - t.y, 2));
-        if (d < p.radius + t.radius) {
+        if (wrappedDistance(p.x, p.y, t.x, t.y) < p.radius + t.radius) {
             addXP(50);
             showXPPopup(p.x, p.y, 50);
             gameState.treasures.splice(i, 1);
@@ -1246,8 +1265,7 @@ function updatePassiveOrgans() {
         p.brainTimer = now;
         for (const c of gameState.hostileCreatures) {
             if (c.hp <= 0) continue;
-            const d = Math.sqrt(Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2));
-            if (d <= p.brainRange) {
+            if (wrappedDistance(p.x, p.y, c.x, c.y) <= p.brainRange) {
                 let dmg = p.brainDmg;
                 let isCrit = false;
                 // 大腦+真視之眼組合：念力波可暴擊
@@ -1533,8 +1551,7 @@ function playerAttack() {
 
     for (const { c, hostile, isBoss, isElite } of targets) {
         if (c.hp <= 0) continue;
-        const d = Math.sqrt(Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2));
-        if (d > p.attackRange) continue;
+        if (wrappedDistance(p.x, p.y, c.x, c.y) > p.attackRange) continue;
 
         let dmg = p.attack;
         let isCrit = false;
@@ -1693,8 +1710,7 @@ function updateCorpseEating() {
 
     for (let i = gameState.corpses.length - 1; i >= 0; i--) {
         const corpse = gameState.corpses[i];
-        const dist = Math.sqrt(Math.pow(p.x - corpse.x, 2) + Math.pow(p.y - corpse.y, 2));
-        const inRange = dist < p.radius + (corpse.radius || 8) + 5 + p.pickupRange;
+        const inRange = wrappedDistance(p.x, p.y, corpse.x, corpse.y) < p.radius + (corpse.radius || 8) + 5 + p.pickupRange;
 
         if (inRange) {
             if (!corpse.lastEatTick) corpse.lastEatTick = now;
@@ -2130,8 +2146,7 @@ function updateBoss() {
     const now = Date.now();
     const p = gameState.player;
     if (boss.stunnedUntil && now < boss.stunnedUntil) return;
-    const dx = p.x - boss.x;
-    const dy = p.y - boss.y;
+    const { dx, dy } = wrappedDelta(boss.x, boss.y, p.x, p.y);
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < boss.aggroRange) {
         boss.state = 'chasing';
@@ -2150,15 +2165,11 @@ function updateBoss() {
         }
     } else {
         if (!boss.wanderTarget || now - boss.lastWanderTime >= 3000) {
-            boss.wanderTarget = {
-                x: Math.random() * (MAP_WIDTH  - 60) + 30,
-                y: Math.random() * (MAP_HEIGHT - 60) + 30
-            };
+            boss.wanderTarget = { x: Math.random() * MAP_WIDTH, y: Math.random() * MAP_HEIGHT };
             boss.lastWanderTime = now;
         }
         if (boss.wanderTarget) {
-            const wx = boss.wanderTarget.x - boss.x;
-            const wy = boss.wanderTarget.y - boss.y;
+            const { dx: wx, dy: wy } = wrappedDelta(boss.x, boss.y, boss.wanderTarget.x, boss.wanderTarget.y);
             const wDist = Math.sqrt(wx * wx + wy * wy);
             if (wDist < 2) { boss.wanderTarget = null; }
             else {
@@ -2244,8 +2255,7 @@ function updateEliteCreature() {
     const now = Date.now();
     const p = gameState.player;
     if (elite.stunnedUntil && now < elite.stunnedUntil) return;
-    const dx = p.x - elite.x;
-    const dy = p.y - elite.y;
+    const { dx, dy } = wrappedDelta(elite.x, elite.y, p.x, p.y);
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < elite.aggroRange) {
         elite.state = 'chasing';
@@ -2264,15 +2274,11 @@ function updateEliteCreature() {
         }
     } else {
         if (!elite.wanderTarget || now - elite.lastWanderTime >= 2500) {
-            elite.wanderTarget = {
-                x: Math.random() * (MAP_WIDTH  - 60) + 30,
-                y: Math.random() * (MAP_HEIGHT - 60) + 30
-            };
+            elite.wanderTarget = { x: Math.random() * MAP_WIDTH, y: Math.random() * MAP_HEIGHT };
             elite.lastWanderTime = now;
         }
         if (elite.wanderTarget) {
-            const wx = elite.wanderTarget.x - elite.x;
-            const wy = elite.wanderTarget.y - elite.y;
+            const { dx: wx, dy: wy } = wrappedDelta(elite.x, elite.y, elite.wanderTarget.x, elite.wanderTarget.y);
             const wDist = Math.sqrt(wx * wx + wy * wy);
             if (wDist < 2) { elite.wanderTarget = null; }
             else {
@@ -2318,7 +2324,8 @@ function drawEliteArrow() {
     if (es.x >= -20 && es.x <= VIEW_W + 20 && es.y >= -20 && es.y <= VIEW_H + 20) return;
     const p = gameState.player;
     const ps = worldToScreen(p.x, p.y);
-    const angle = Math.atan2(elite.y - p.y, elite.x - p.x);
+    const { dx: adx, dy: ady } = wrappedDelta(p.x, p.y, elite.x, elite.y);
+    const angle = Math.atan2(ady, adx);
     const ax = ps.x + Math.cos(angle) * 20;
     const ay = ps.y + Math.sin(angle) * 20;
     const alpha = Math.floor(Date.now() / 500) % 2 === 0 ? 0.6 : 1.0;
