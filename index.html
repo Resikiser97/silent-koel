@@ -170,7 +170,7 @@ const gameState = {
 
     player: {
         x: 4000, y: 4000, radius: 10, speed: 1.5, color: 'black',
-        organs: [], hiddenOrgans: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5,
+        organs: [], hiddenOrgans: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5, rerollsRemaining: 0,
         attack: 0, attackSpeed: 1.0, attackRange: 50,
         critChance: 0, critMultiplier: 1.0,
         damageReduction: 0, thornDamage: 0, thornPlayerAtkReflect: false,
@@ -1396,8 +1396,6 @@ function showOrganSelection() {
     optionsContainer.style.cssText = 'display:flex;flex-direction:column;align-items:center;width:100%;';
     overlay.appendChild(optionsContainer);
 
-    let rerollsLeft = !slotsFull ? (gameState.playerSkills.luckyReroll || 0) : 0;
-
     function renderOptions(organOptions) {
         optionsContainer.innerHTML = '';
 
@@ -1449,17 +1447,24 @@ function showOrganSelection() {
             optionsContainer.appendChild(btn);
         });
 
-        // ── 幸運重選按鈕（僅非進化狀態且有剩餘次數）
-        if (!slotsFull && rerollsLeft > 0) {
+        // ── 幸運重選按鈕（非進化狀態且技能等級 > 0 時顯示；次數耗盡變灰）
+        if (!slotsFull && (gameState.playerSkills.luckyReroll || 0) > 0) {
+            const remaining = gameState.player.rerollsRemaining || 0;
+            const canReroll = remaining > 0;
             const rerollBtn = document.createElement('div');
-            rerollBtn.style.cssText = 'background:rgba(100,200,255,0.1);border:1px solid #66CCFF;color:#66CCFF;padding:8px 20px;margin:10px 5px 5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;font-size:13px;';
-            rerollBtn.textContent = '🎲 重新隨機（剩餘 ' + rerollsLeft + ' 次）';
-            rerollBtn.onmouseenter = () => { rerollBtn.style.background = 'rgba(100,200,255,0.25)'; };
-            rerollBtn.onmouseleave = () => { rerollBtn.style.background = 'rgba(100,200,255,0.1)'; };
-            rerollBtn.onclick = () => {
-                rerollsLeft--;
-                renderOptions(generateOrganOptions());
-            };
+            rerollBtn.style.cssText = 'padding:8px 20px;margin:10px 5px 5px;border-radius:6px;width:380px;text-align:center;font-size:13px;' +
+                (canReroll
+                    ? 'background:rgba(100,200,255,0.1);border:1px solid #66CCFF;color:#66CCFF;cursor:pointer;'
+                    : 'background:rgba(80,80,80,0.1);border:1px solid #555;color:#555;cursor:default;');
+            rerollBtn.textContent = '🎲 重新隨機（剩餘 ' + remaining + ' 次）';
+            if (canReroll) {
+                rerollBtn.onmouseenter = () => { rerollBtn.style.background = 'rgba(100,200,255,0.25)'; };
+                rerollBtn.onmouseleave = () => { rerollBtn.style.background = 'rgba(100,200,255,0.1)'; };
+                rerollBtn.onclick = () => {
+                    gameState.player.rerollsRemaining--;
+                    renderOptions(generateOrganOptions());
+                };
+            }
             optionsContainer.appendChild(rerollBtn);
         }
     }
@@ -1832,6 +1837,8 @@ function applySkillBonuses() {
     gameState.stats.hpCurrent = gameState.stats.hpMax;
     // 敏捷身手：起始速度 +0.2 per level
     p.speed += (sk.agility || 0) * 0.2;
+    // 幸運重選：全局重選次數 = 技能等級
+    p.rerollsRemaining = sk.luckyReroll || 0;
     // 收集成癮：收集範圍 +10px per level
     p.pickupRange += (sk.collectionAddiction || 0) * 10;
     // 恐怖之牙：攻擊 +2 per level
@@ -1886,7 +1893,8 @@ function buildSkillTreeOverlay(cause) {
     if (existing) existing.remove();
     const overlay = document.createElement('div');
     overlay.id = 'skill-tree-overlay';
-    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:20px 0 30px;z-index:150;pointer-events:all;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);overflow-y:scroll;display:flex;flex-direction:column;align-items:center;padding:20px 0 30px;z-index:150;pointer-events:all;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
+    overlay.addEventListener('wheel', e => { e.stopPropagation(); }, { passive: true });
 
     // ── 標題
     const title = document.createElement('div');
@@ -1895,7 +1903,7 @@ function buildSkillTreeOverlay(cause) {
     overlay.appendChild(title);
 
     // ── 器官選擇區塊
-    const organsToKeep = Math.min(3, 1 + (gameState.playerSkills.organMemory || 0));
+    const organsToKeep = 1 + (gameState.playerSkills.organMemory || 0);
     const playerOrgans = gameState.player.organs;
     const selectedOrgans = []; // FIFO 選擇追蹤
 
@@ -1955,6 +1963,34 @@ function buildSkillTreeOverlay(cause) {
         organSection.appendChild(organGrid);
     }
     overlay.appendChild(organSection);
+
+    // ── 隱藏器官自動繼承顯示區塊
+    const hiddenOrgans = gameState.player.hiddenOrgans || [];
+    if (hiddenOrgans.length > 0) {
+        const hiddenSection = document.createElement('div');
+        hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
+        const hiddenTitle = document.createElement('div');
+        hiddenTitle.style.cssText = 'font-size:14px;color:#FFD700;margin-bottom:8px;';
+        hiddenTitle.textContent = '✨ 以下隱藏器官將自動繼承（無需選擇）';
+        hiddenSection.appendChild(hiddenTitle);
+        const hiddenGrid = document.createElement('div');
+        hiddenGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+        hiddenOrgans.forEach(organ => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background:rgba(255,215,0,0.1);border:1px solid #FFD700;border-radius:6px;padding:8px 10px;width:150px;box-sizing:border-box;text-align:center;';
+            const nameEl = document.createElement('div');
+            nameEl.style.cssText = 'font-size:12px;font-weight:bold;color:#FFD700;margin-bottom:3px;';
+            nameEl.textContent = '✨ ' + organ.name;
+            card.appendChild(nameEl);
+            const descEl = document.createElement('div');
+            descEl.style.cssText = 'font-size:10px;color:#ccc;line-height:1.3;';
+            descEl.textContent = (HIDDEN_ORGANS[organ.id] || {}).desc || organ.desc || '';
+            card.appendChild(descEl);
+            hiddenGrid.appendChild(card);
+        });
+        hiddenSection.appendChild(hiddenGrid);
+        overlay.appendChild(hiddenSection);
+    }
 
     // ── 技能點數 + 重置按鈕
     const ptsRow = document.createElement('div');
