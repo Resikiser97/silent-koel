@@ -89,10 +89,10 @@ const ORGANS = {
         levels: [
             { desc: 'HP上限+50，當前HP+50',
               effects: { hpMaxAdd: 50 } },
-            { desc: 'HP上限+50，體型+20%（半徑和攻擊範圍+10%）',
-              effects: { hpMaxAdd: 50, radiusAdd: 1 } },
+            { desc: 'HP上限+50，體型+20%（半徑+2，攻擊範圍同比例增加）',
+              effects: { hpMaxAdd: 50, radiusAdd: 2 } },
             { desc: 'HP上限+50，體型再+20%',
-              effects: { hpMaxAdd: 50, radiusAdd: 1 } }
+              effects: { hpMaxAdd: 50, radiusAdd: 2 } }
         ]
     },
     thornArmor: {
@@ -186,8 +186,8 @@ const SKILLS = {
 const HIDDEN_ORGANS = {
     strongHeart: {
         id: 'strongHeart', name: '強大的心臟', type: 'hidden',
-        desc: '移速+0.2，攻擊+5，HP上限+100，體型+20%，攻擊範圍+10%',
-        effects: { speedAdd: 0.2, attackAdd: 5, hpMaxAdd: 100, radiusAdd: 2, attackRangeAdd: 5 }
+        desc: '移速+0.2，攻擊+5，HP上限+100，體型+20%',
+        effects: { speedAdd: 0.2, attackAdd: 5, hpMaxAdd: 100, radiusAdd: 2 }
     },
     strongLegs: {
         id: 'strongLegs', name: '強大的大腿', type: 'hidden',
@@ -196,8 +196,8 @@ const HIDDEN_ORGANS = {
     },
     strongArms: {
         id: 'strongArms', name: '強大的手臂', type: 'hidden',
-        desc: '收集範圍+15px，攻擊範圍+10%，體型+20%',
-        effects: { pickupRangeAdd: 15, attackRangeAdd: 5, radiusAdd: 2 }
+        desc: '收集範圍+15px，體型+20%（攻擊範圍同比例增加）',
+        effects: { pickupRangeAdd: 15, radiusAdd: 2 }
     }
 };
 
@@ -251,19 +251,19 @@ const BOSS_CONFIG = {
     forest: {
         name: '黑熊',    label: '⚠️黑熊',
         radius: 25, hp: 500,  speed: 1.0, damage: 15, aggroRange: 200, attackRange: 30,
-        color: '#3B1E08', colorChasing: '#2A0D00',
+        color: '#3B1E08', colorChasing: '#2A0D00', glowColor: '#8B4513',
         spawnX: null, spawnY: null  // null = 地圖邊緣隨機生成
     },
     ocean: {
         name: '大白鯊',  label: '🦈大白鯊',
         radius: 30, hp: 600,  speed: 1.3, damage: 18, aggroRange: 220, attackRange: 35,
-        color: '#003388', colorChasing: '#001A44',
+        color: '#003388', colorChasing: '#001A44', glowColor: '#1a3a5c',
         spawnX: 6500, spawnY: 6500
     },
     desert: {
         name: '沙漠蠍王', label: '🦂蠍王',
         radius: 28, hp: 550,  speed: 1.2, damage: 20, aggroRange: 210, attackRange: 32,
-        color: '#8B7355', colorChasing: '#5C4A2A',
+        color: '#8B7355', colorChasing: '#5C4A2A', glowColor: '#8B6914',
         spawnX: 2000, spawnY: 2000
     }
 };
@@ -286,5 +286,5 @@ const GAME_INFO = {
     title:    '只吃不叫的噪鵑',
     subtitle: 'The Silent Koel',
     author:   'Goblinnest',
-    version:  'v0.13.1'
+    version:  'v0.13.2'
 };
