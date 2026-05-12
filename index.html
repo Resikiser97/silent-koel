@@ -2512,8 +2512,9 @@ function drawEliteArrow() {
     const ps = worldToScreen(p.x, p.y);
     const { dx: adx, dy: ady } = wrappedDelta(p.x, p.y, elite.x, elite.y);
     const angle = Math.atan2(ady, adx);
-    const ax = ps.x + Math.cos(angle) * 20;
-    const ay = ps.y + Math.sin(angle) * 20;
+    const arrowDist = 50 + Math.max(0, p.radius - 10);
+    const ax = ps.x + Math.cos(angle) * arrowDist;
+    const ay = ps.y + Math.sin(angle) * arrowDist;
     const alpha = Math.floor(Date.now() / 500) % 2 === 0 ? 0.6 : 1.0;
     const color = elite.diet === 'herbivore' ? '#FFD700' : '#9B59B6';
     const cx = Math.cos(angle), cy = Math.sin(angle);
@@ -2658,7 +2659,16 @@ function initializeGame() {
         if (!gameState.organSelectionActive) playerAttack();
     });
 
-    // 4. 載入技能與進化資料並套用起始加成
+    // 4. 存檔版本檢查：版本不一致時清除所有存檔
+    const SAVE_KEYS = ['playerSkills', 'skillPoints', 'savedOrgans', 'savedHiddenOrgans'];
+    const storedSaveVer = localStorage.getItem('saveVersion');
+    if (storedSaveVer !== GAME_INFO.SAVE_VERSION) {
+        SAVE_KEYS.forEach(k => localStorage.removeItem(k));
+        localStorage.setItem('saveVersion', GAME_INFO.SAVE_VERSION);
+        console.log('--- 存檔版本不一致，已清除所有存檔（' + storedSaveVer + ' → ' + GAME_INFO.SAVE_VERSION + '）---');
+    }
+
+    // 5. 載入技能與進化資料並套用起始加成
     try {
         const savedSkills = localStorage.getItem('playerSkills');
         if (savedSkills) gameState.playerSkills = JSON.parse(savedSkills);
@@ -2669,7 +2679,7 @@ function initializeGame() {
     applySkillBonuses();
     applyEvolutionEffects();
 
-    // 5. 初始化計時狀態
+    // 6. 初始化計時狀態
     gameState.lastTimeTick = Date.now();
     gameState.spawnTimers.neutral = Date.now();
     gameState.spawnTimers.hostile = Date.now();
