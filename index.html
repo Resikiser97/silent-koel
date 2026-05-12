@@ -170,7 +170,7 @@ const gameState = {
 
     player: {
         x: 4000, y: 4000, radius: 10, speed: 1.5, color: 'black',
-        organs: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5,
+        organs: [], hiddenOrgans: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5,
         attack: 0, attackSpeed: 1.0, attackRange: 50,
         critChance: 0, critMultiplier: 1.0,
         damageReduction: 0, thornDamage: 0, thornPlayerAtkReflect: false,
@@ -217,7 +217,7 @@ const gameState = {
     dayNightMessage: { text: '', timer: 0 },
     levelUpMessage: { text: '', timer: 0 },
     skillPoints: 0,
-    playerSkills: { vitality: 0, agility: 0, forager: 0, hunter: 0, tenacity: 0, organMemory: 0 },
+    playerSkills: { vitality: 0, agility: 0, forager: 0, hunter: 0, tenacity: 0, organMemory: 0, luckyReroll: 0, collectionAddiction: 0, terribleFang: 0 },
     boss: null,
     bossSpawned: false,
     eliteCreature: null,
@@ -1190,6 +1190,24 @@ function checkComboEffects() {
     }
 }
 
+function getOrganSlotsUsed() {
+    return gameState.player.organs.reduce((sum, o) => sum + (o.level || 1), 0);
+}
+
+function applyHiddenOrganEffects(organ) {
+    const p = gameState.player;
+    const fx = organ.effects || {};
+    if (fx.speedAdd)       p.speed = Math.max(0.3, p.speed + fx.speedAdd);
+    if (fx.attackAdd)      p.attack += fx.attackAdd;
+    if (fx.hpMaxAdd) {
+        gameState.stats.hpMax += fx.hpMaxAdd;
+        gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + fx.hpMaxAdd);
+    }
+    if (fx.radiusAdd)      p.radius += fx.radiusAdd;
+    if (fx.attackRangeAdd) p.attackRange += fx.attackRangeAdd;
+    if (fx.pickupRangeAdd) p.pickupRange += fx.pickupRangeAdd;
+}
+
 // 套用器官第 organ.level 級的增量效果
 function applyOrganEffects(organ) {
     const p = gameState.player;
@@ -1220,6 +1238,7 @@ function applyOrganEffects(organ) {
     if (fx.brainRangeDelta)        p.brainRange += fx.brainRangeDelta;
     if (fx.brainDmgDelta)          p.brainDmg += fx.brainDmgDelta;
     if (fx.pickupRangeAdd)         p.pickupRange += fx.pickupRangeAdd;
+    if (fx.attackRangeAdd)         p.attackRange += fx.attackRangeAdd;
     if (fx.aggroRangeReductionAdd) p.aggroRangeReduction += fx.aggroRangeReductionAdd;
     if (fx.regenHpAdd)             p.naturalRegenHp += fx.regenHpAdd;
     if (fx.regenIntervalDelta)     p.naturalRegenInterval = Math.max(2000, p.naturalRegenInterval + fx.regenIntervalDelta);
@@ -1312,47 +1331,11 @@ function showOrganSelection() {
     const p = gameState.player;
     gameState.organSelectionActive = true;
 
-    const slotsFull = p.organs.length >= p.organSlots;
+    const organSlotsUsed = getOrganSlotsUsed();
+    const slotsFull = organSlotsUsed >= p.organSlots;
     const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
 
-    const evoOptions = [];
-    const organOptions = []; // { type:'new'|'upgrade', def, existingOrgan? }
-
-    if (!slotsFull) {
-        // 可升級的器官（已裝備且未滿3級）
-        p.organs
-            .filter(o => ORGANS[o.id] && o.level < ORGANS[o.id].maxLevel)
-            .forEach(o => organOptions.push({ type: 'upgrade', def: ORGANS[o.id], existingOrgan: o }));
-        // 尚未裝備的新器官
-        const equippedIds = p.organs.map(o => o.id);
-        const newPool = Object.values(ORGANS)
-            .filter(def => !equippedIds.includes(def.id))
-            .sort(() => Math.random() - 0.5);
-        newPool.forEach(def => organOptions.push({ type: 'new', def }));
-        // 隨機排序後取前3個
-        organOptions.sort(() => Math.random() - 0.5);
-        organOptions.splice(3);
-
-        // 新手保護：Lv1~3 且完全沒有攻擊器官時，強制至少1個攻擊選項
-        if (p.level <= 3 && !p.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack')) {
-            const hasAttackOpt = organOptions.some(opt => opt.def.type === 'attack');
-            if (!hasAttackOpt) {
-                const equippedIds = p.organs.map(o => o.id);
-                const atkPool = Object.values(ORGANS).filter(def => def.type === 'attack' && !equippedIds.includes(def.id));
-                if (atkPool.length > 0) {
-                    const forced = atkPool[Math.floor(Math.random() * atkPool.length)];
-                    organOptions[0] = { type: 'new', def: forced };
-                }
-            }
-        }
-    } else {
-        evoOptions.push(...checkEvolutionUnlock());
-    }
-
-    if (organOptions.length === 0 && evoOptions.length === 0) {
-        gameState.organSelectionActive = false;
-        return;
-    }
+    const evoOptions = slotsFull ? checkEvolutionUnlock() : [];
 
     const closeOverlay = () => {
         const el = document.getElementById('organ-selection-overlay');
@@ -1365,6 +1348,35 @@ function showOrganSelection() {
         }
     };
 
+    // 生成一般器官選項（不含隱藏器官）
+    function generateOrganOptions() {
+        const opts = [];
+        p.organs
+            .filter(o => ORGANS[o.id] && o.level < ORGANS[o.id].maxLevel)
+            .forEach(o => opts.push({ type: 'upgrade', def: ORGANS[o.id], existingOrgan: o }));
+        const equippedIds = p.organs.map(o => o.id);
+        Object.values(ORGANS)
+            .filter(def => !equippedIds.includes(def.id))
+            .sort(() => Math.random() - 0.5)
+            .forEach(def => opts.push({ type: 'new', def }));
+        opts.sort(() => Math.random() - 0.5);
+        opts.splice(3);
+        // 新手保護：Lv1~3 且完全沒有攻擊器官時，強制至少1個攻擊選項
+        if (p.level <= 3 && !p.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack')) {
+            if (!opts.some(opt => opt.def.type === 'attack')) {
+                const eIds = p.organs.map(o => o.id);
+                const atkPool = Object.values(ORGANS).filter(def => def.type === 'attack' && !eIds.includes(def.id));
+                if (atkPool.length > 0) opts[0] = { type: 'new', def: atkPool[Math.floor(Math.random() * atkPool.length)] };
+            }
+        }
+        return opts;
+    }
+
+    if (!slotsFull && generateOrganOptions().length === 0 && evoOptions.length === 0) {
+        gameState.organSelectionActive = false;
+        return;
+    }
+
     const overlay = document.createElement('div');
     overlay.id = 'organ-selection-overlay';
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.78);overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 0;z-index:100;pointer-events:all;box-sizing:border-box;';
@@ -1376,57 +1388,83 @@ function showOrganSelection() {
 
     const slotInfo = document.createElement('div');
     slotInfo.style.cssText = 'color:#aaa;font-size:13px;margin-bottom:14px;';
-    slotInfo.textContent = '槽位：' + p.organs.length + ' / ' + p.organSlots;
+    slotInfo.textContent = '槽位：' + organSlotsUsed + ' / ' + p.organSlots;
     overlay.appendChild(slotInfo);
 
-    // ── 器官/升級選項
-    organOptions.forEach(opt => {
-        const { def, type, existingOrgan } = opt;
-        const color = typeColor[def.type] || '#FFD700';
-        const isUpgrade = type === 'upgrade';
-        const targetLevel = isUpgrade ? existingOrgan.level + 1 : 1;
-        const lvDesc = def.levels[targetLevel - 1].desc;
-        const comboHint = getComboHint(def.id);
+    // 選項容器（支援幸運重選動態更新）
+    const optionsContainer = document.createElement('div');
+    optionsContainer.style.cssText = 'display:flex;flex-direction:column;align-items:center;width:100%;';
+    overlay.appendChild(optionsContainer);
 
-        const btn = document.createElement('div');
-        btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid ' + (isUpgrade ? '#FFAA44' : '#666') + ';color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
-        btn.innerHTML =
-            '<div style="color:' + color + ';font-weight:bold;font-size:15px;">' +
-                def.name + (isUpgrade ? ' Lv.' + existingOrgan.level + ' → Lv.' + targetLevel : ' Lv.1') +
-            '</div>' +
-            '<div style="font-size:11px;color:#ccc;margin-top:4px;">' + lvDesc + '</div>' +
-            (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">⚡ 組合效果：' + comboHint + '</div>' : '');
-        btn.onmouseenter = () => { btn.style.background = 'rgba(255,255,255,0.2)'; };
-        btn.onmouseleave = () => { btn.style.background = 'rgba(255,255,255,0.08)'; };
-        btn.onclick = () => {
-            if (isUpgrade) {
-                existingOrgan.level = targetLevel;
-                existingOrgan.desc = def.levels[targetLevel - 1].desc;
-            } else {
-                p.organs.push({ id: def.id, name: def.name, type: def.type, level: 1, desc: def.levels[0].desc });
-            }
-            applyOrganEffects(isUpgrade ? existingOrgan : p.organs[p.organs.length - 1]);
-            closeOverlay();
-        };
-        overlay.appendChild(btn);
-    });
+    let rerollsLeft = !slotsFull ? (gameState.playerSkills.luckyReroll || 0) : 0;
 
-    // ── 進化路線
-    evoOptions.forEach(opt => {
-        const path = EVOLUTION_PATHS[opt.type];
-        const lvData = path.levels[opt.nextLevel - 1];
-        const btn = document.createElement('div');
-        btn.style.cssText = 'background:rgba(255,215,0,0.08);border:1px solid #FFD700;color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
-        btn.innerHTML = '<strong style="color:#FFD700;font-size:16px;">' + path.icon + ' ' + path.name + ' Lv.' + opt.nextLevel + '</strong><br><span style="font-size:12px;color:#ccc;">' + lvData.desc + '</span>';
-        btn.onmouseenter = () => { btn.style.background = 'rgba(255,215,0,0.2)'; };
-        btn.onmouseleave = () => { btn.style.background = 'rgba(255,215,0,0.08)'; };
-        btn.onclick = () => {
-            applyEvolutionLevelEffect(opt.type, opt.nextLevel);
-            closeOverlay();
-        };
-        overlay.appendChild(btn);
-    });
+    function renderOptions(organOptions) {
+        optionsContainer.innerHTML = '';
 
+        // ── 器官/升級選項
+        organOptions.forEach(opt => {
+            const { def, type, existingOrgan } = opt;
+            const color = typeColor[def.type] || '#FFD700';
+            const isUpgrade = type === 'upgrade';
+            const targetLevel = isUpgrade ? existingOrgan.level + 1 : 1;
+            const lvDesc = def.levels[targetLevel - 1].desc;
+            const comboHint = getComboHint(def.id);
+
+            const btn = document.createElement('div');
+            btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid ' + (isUpgrade ? '#FFAA44' : '#666') + ';color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
+            btn.innerHTML =
+                '<div style="color:' + color + ';font-weight:bold;font-size:15px;">' +
+                    def.name + (isUpgrade ? ' Lv.' + existingOrgan.level + ' → Lv.' + targetLevel : ' Lv.1') +
+                '</div>' +
+                '<div style="font-size:11px;color:#ccc;margin-top:4px;">' + lvDesc + '</div>' +
+                (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">⚡ 組合效果：' + comboHint + '</div>' : '');
+            btn.onmouseenter = () => { btn.style.background = 'rgba(255,255,255,0.2)'; };
+            btn.onmouseleave = () => { btn.style.background = 'rgba(255,255,255,0.08)'; };
+            btn.onclick = () => {
+                if (isUpgrade) {
+                    existingOrgan.level = targetLevel;
+                    existingOrgan.desc = def.levels[targetLevel - 1].desc;
+                } else {
+                    p.organs.push({ id: def.id, name: def.name, type: def.type, level: 1, desc: def.levels[0].desc });
+                }
+                applyOrganEffects(isUpgrade ? existingOrgan : p.organs[p.organs.length - 1]);
+                closeOverlay();
+            };
+            optionsContainer.appendChild(btn);
+        });
+
+        // ── 進化路線
+        evoOptions.forEach(opt => {
+            const path = EVOLUTION_PATHS[opt.type];
+            const lvData = path.levels[opt.nextLevel - 1];
+            const btn = document.createElement('div');
+            btn.style.cssText = 'background:rgba(255,215,0,0.08);border:1px solid #FFD700;color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
+            btn.innerHTML = '<strong style="color:#FFD700;font-size:16px;">' + path.icon + ' ' + path.name + ' Lv.' + opt.nextLevel + '</strong><br><span style="font-size:12px;color:#ccc;">' + lvData.desc + '</span>';
+            btn.onmouseenter = () => { btn.style.background = 'rgba(255,215,0,0.2)'; };
+            btn.onmouseleave = () => { btn.style.background = 'rgba(255,215,0,0.08)'; };
+            btn.onclick = () => {
+                applyEvolutionLevelEffect(opt.type, opt.nextLevel);
+                closeOverlay();
+            };
+            optionsContainer.appendChild(btn);
+        });
+
+        // ── 幸運重選按鈕（僅非進化狀態且有剩餘次數）
+        if (!slotsFull && rerollsLeft > 0) {
+            const rerollBtn = document.createElement('div');
+            rerollBtn.style.cssText = 'background:rgba(100,200,255,0.1);border:1px solid #66CCFF;color:#66CCFF;padding:8px 20px;margin:10px 5px 5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;font-size:13px;';
+            rerollBtn.textContent = '🎲 重新隨機（剩餘 ' + rerollsLeft + ' 次）';
+            rerollBtn.onmouseenter = () => { rerollBtn.style.background = 'rgba(100,200,255,0.25)'; };
+            rerollBtn.onmouseleave = () => { rerollBtn.style.background = 'rgba(100,200,255,0.1)'; };
+            rerollBtn.onclick = () => {
+                rerollsLeft--;
+                renderOptions(generateOrganOptions());
+            };
+            optionsContainer.appendChild(rerollBtn);
+        }
+    }
+
+    renderOptions(slotsFull ? [] : generateOrganOptions());
     document.getElementById('game-container').appendChild(overlay);
 }
 
@@ -1447,6 +1485,7 @@ function drawTreasures() {
 
 function drawOrganUI() {
     const organs = gameState.player.organs;
+    const hiddenOrgans = gameState.player.hiddenOrgans || [];
     const ev = gameState.player.evolution;
     const p = gameState.player;
     const lineH = 18;
@@ -1455,6 +1494,8 @@ function drawOrganUI() {
     const H = VIEW_H;
     const versionAreaH = 46;
 
+    const organSlotsUsed = getOrganSlotsUsed();
+
     // 收集所有已解鎖的進化路線（等級 > 0），依 herbivore→carnivore→omnivore 順序
     const evoEntries = Object.entries(EVOLUTION_PATHS)
         .filter(([key]) => (ev[key] || 0) > 0)
@@ -1462,8 +1503,9 @@ function drawOrganUI() {
 
     const evoCnt = evoEntries.length;
     const evoBoxH = evoCnt > 0 ? evoCnt * lineH + padY * 2 : 0;
-    // 器官框固定包含槽位行 + 器官清單
-    const organsBoxH = (1 + organs.length) * lineH + padY * 2;
+    // 器官框：槽位行 + 一般器官 + 分隔（若有隱藏器官）+ 隱藏器官
+    const hiddenRows = hiddenOrgans.length > 0 ? hiddenOrgans.length + 1 : 0;
+    const organsBoxH = (1 + organs.length + hiddenRows) * lineH + padY * 2;
 
     // 由底部往上排：版本區 → 器官框 → 4px 間距 → 進化框
     const boxBottom = H - versionAreaH;
@@ -1481,24 +1523,35 @@ function drawOrganUI() {
         });
     }
 
-    // 繪製器官框（槽位行 + 器官清單）
+    // 繪製器官框（槽位行 + 器官清單 + 隱藏器官）
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(padX - 4, boxY, 164, organsBoxH);
     ctx.font = '13px Arial';
 
-    // 第一行：槽位狀態
-    const isFull = organs.length >= p.organSlots;
+    // 第一行：槽位狀態（用等級總和計算）
+    const isFull = organSlotsUsed >= p.organSlots;
     ctx.fillStyle = isFull ? '#FFD700' : '#CCCCCC';
-    const slotText = '器官：' + organs.length + ' / ' + p.organSlots + (isFull ? ' ✨可進化' : '');
+    const slotText = '器官：' + organSlotsUsed + ' / ' + p.organSlots + (isFull ? ' ✨可進化' : '');
     ctx.fillText(slotText, padX, boxY + padY + lineH - 4);
 
-    // 後續行：器官清單
+    // 後續行：一般器官清單
     const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
     organs.forEach((organ, i) => {
         ctx.fillStyle = typeColor[organ.type] || '#FFD700';
         const label = '▸ ' + organ.name + ' Lv.' + (organ.level || 1) + (organ.inherited ? '（繼承）' : '');
         ctx.fillText(label, padX, boxY + padY + (i + 2) * lineH - 4);
     });
+
+    // 隱藏器官（金色，底部）
+    if (hiddenOrgans.length > 0) {
+        const sepRow = organs.length + 2;
+        ctx.fillStyle = 'rgba(255,215,0,0.5)';
+        ctx.fillRect(padX - 2, boxY + padY + sepRow * lineH - 14, 160, 1);
+        hiddenOrgans.forEach((organ, i) => {
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText('✨ ' + organ.name, padX, boxY + padY + (sepRow + i + 1) * lineH - 4);
+        });
+    }
 }
 
 // =============================================================
@@ -1779,19 +1832,41 @@ function applySkillBonuses() {
     gameState.stats.hpCurrent = gameState.stats.hpMax;
     // 敏捷身手：起始速度 +0.2 per level
     p.speed += (sk.agility || 0) * 0.2;
+    // 收集成癮：收集範圍 +10px per level
+    p.pickupRange += (sk.collectionAddiction || 0) * 10;
+    // 恐怖之牙：攻擊 +2 per level
+    p.attack += (sk.terribleFang || 0) * 2;
+    // 恐怖之牙 Lv5：開局獲得獠牙 Lv1
+    if ((sk.terribleFang || 0) >= 5 && !p.organs.find(o => o.id === 'fang')) {
+        const fangOrgan = { id: 'fang', name: '獠牙', type: 'attack', level: 1, desc: ORGANS.fang.levels[0].desc };
+        p.organs.push(fangOrgan);
+        applyOrganEffects(fangOrgan);
+    }
     // 記憶器官：載入玩家死亡時手動選擇保留的器官（只用一次）
     const savedOrgans = localStorage.getItem('savedOrgans');
     if (savedOrgans) {
         try {
             const organs = JSON.parse(savedOrgans);
             organs.forEach(organ => {
+                if (p.organs.find(o => o.id === organ.id)) return;
                 const o = Object.assign({}, organ, { inherited: true, level: organ.level || 1 });
                 p.organs.push(o);
-                p.organSlotsUsed++;
                 applyOrganEffects(o);
             });
         } catch(e) {}
         localStorage.removeItem('savedOrgans');
+    }
+    // 隱藏器官繼承：永久保留，無數量限制
+    const savedHiddenOrgans = localStorage.getItem('savedHiddenOrgans');
+    if (savedHiddenOrgans) {
+        try {
+            const hOrgans = JSON.parse(savedHiddenOrgans);
+            hOrgans.forEach(organ => {
+                if (p.hiddenOrgans.find(h => h.id === organ.id)) return;
+                p.hiddenOrgans.push(Object.assign({}, organ));
+                applyHiddenOrganEffects(organ);
+            });
+        } catch(e) {}
     }
 }
 
@@ -1802,6 +1877,7 @@ function showSkillTree(cause) {
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     localStorage.removeItem('savedOrgans');
+    localStorage.setItem('savedHiddenOrgans', JSON.stringify(gameState.player.hiddenOrgans || []));
     buildSkillTreeOverlay(cause);
 }
 
@@ -1880,11 +1956,28 @@ function buildSkillTreeOverlay(cause) {
     }
     overlay.appendChild(organSection);
 
-    // ── 技能點數
+    // ── 技能點數 + 重置按鈕
+    const ptsRow = document.createElement('div');
+    ptsRow.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:14px;';
     const pts = document.createElement('div');
-    pts.style.cssText = 'font-size:20px;color:#FFD700;margin-bottom:14px;';
+    pts.style.cssText = 'font-size:20px;color:#FFD700;';
     pts.textContent = '技能點數: ' + gameState.skillPoints;
-    overlay.appendChild(pts);
+    ptsRow.appendChild(pts);
+    const resetBtn = document.createElement('button');
+    resetBtn.style.cssText = 'font-size:13px;padding:5px 14px;cursor:pointer;border:1px solid #AA4444;background:rgba(170,0,0,0.25);color:white;border-radius:4px;';
+    resetBtn.textContent = '重置技能點';
+    resetBtn.onclick = () => {
+        if (!confirm('確定要重置所有技能點嗎？')) return;
+        let spent = 0;
+        for (const id in gameState.playerSkills) spent += gameState.playerSkills[id] || 0;
+        for (const id in gameState.playerSkills) gameState.playerSkills[id] = 0;
+        gameState.skillPoints += spent;
+        localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
+        localStorage.setItem('skillPoints', String(gameState.skillPoints));
+        buildSkillTreeOverlay();
+    };
+    ptsRow.appendChild(resetBtn);
+    overlay.appendChild(ptsRow);
 
     // ── 技能格
     const grid = document.createElement('div');
@@ -2188,6 +2281,7 @@ function showVictory() {
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     localStorage.removeItem('savedOrgans');
+    localStorage.setItem('savedHiddenOrgans', JSON.stringify(gameState.player.hiddenOrgans || []));
     const overlay = document.createElement('div');
     overlay.id = 'victory-overlay';
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
@@ -2357,6 +2451,57 @@ function handleEliteKill(elite) {
     updateDayNightCycle();
     gameState.dayNightMessage.text = '☀️ 精英已滅！黎明提前到來！';
     gameState.dayNightMessage.timer = Date.now();
+    // 隱藏器官掉落：每個有50%機率，已擁有的不重複掉落
+    if (!gameState.gameOver) {
+        const ownedIds = (gameState.player.hiddenOrgans || []).map(h => h.id);
+        const drops = Object.values(HIDDEN_ORGANS).filter(h => !ownedIds.includes(h.id) && Math.random() < 0.5);
+        if (drops.length > 0) showHiddenOrganSelection(drops);
+    }
+}
+
+function showHiddenOrganSelection(drops) {
+    if (gameState.gameOver || drops.length === 0) return;
+    gameState.organSelectionActive = true;
+
+    const closeOverlay = () => {
+        const el = document.getElementById('hidden-organ-overlay');
+        if (el) el.remove();
+        gameState.organSelectionActive = false;
+        gameState.lastTimeTick = Date.now();
+    };
+
+    const overlay = document.createElement('div');
+    overlay.id = 'hidden-organ-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 0;z-index:110;pointer-events:all;box-sizing:border-box;';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'color:#FFD700;font-size:24px;font-weight:bold;margin-bottom:6px;text-shadow:2px 2px 6px black;';
+    title.textContent = '✨ 隱藏器官掉落！';
+    overlay.appendChild(title);
+
+    const sub = document.createElement('div');
+    sub.style.cssText = 'color:#aaa;font-size:13px;margin-bottom:18px;';
+    sub.textContent = drops.length > 1 ? '選擇1個獲得（隱藏器官不佔普通槽位）' : '點擊獲得（隱藏器官不佔普通槽位）';
+    overlay.appendChild(sub);
+
+    drops.forEach(organ => {
+        const btn = document.createElement('div');
+        btn.style.cssText = 'background:rgba(255,215,0,0.08);border:2px solid #FFD700;color:white;padding:14px 24px;margin:6px;cursor:pointer;border-radius:8px;width:400px;text-align:center;';
+        btn.innerHTML = '<div style="color:#FFD700;font-weight:bold;font-size:16px;margin-bottom:5px;">✨ ' + organ.name + '</div>' +
+            '<div style="font-size:12px;color:#ddd;">' + organ.desc + '</div>';
+        btn.onmouseenter = () => { btn.style.background = 'rgba(255,215,0,0.22)'; };
+        btn.onmouseleave = () => { btn.style.background = 'rgba(255,215,0,0.08)'; };
+        btn.onclick = () => {
+            const p = gameState.player;
+            if (!p.hiddenOrgans) p.hiddenOrgans = [];
+            p.hiddenOrgans.push(Object.assign({}, organ));
+            applyHiddenOrganEffects(organ);
+            closeOverlay();
+        };
+        overlay.appendChild(btn);
+    });
+
+    document.getElementById('game-container').appendChild(overlay);
 }
 
 /**

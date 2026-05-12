@@ -44,8 +44,8 @@ const ORGANS = {
     poisonStinger: {
         id: 'poisonStinger', name: '毒刺', type: 'attack', maxLevel: 3,
         levels: [
-            { desc: '中毒每秒2傷，持續5秒',
-              effects: { poisonDmg: 2, poisonDur: 5000 } },
+            { desc: '攻擊+1，攻擊時附加中毒每秒2傷持續5秒',
+              effects: { attackAdd: 1, poisonDmg: 2, poisonDur: 5000 } },
             { desc: '每秒傷+1，持續+1秒',
               effects: { poisonDmg: 1, poisonDur: 1000 } },
             { desc: '每秒傷+2，持續+1秒',
@@ -169,12 +169,36 @@ const COMBOS = [
 // 技能資料定義
 // =============================================================
 const SKILLS = {
-    vitality:    { id: 'vitality',    name: '強壯體魄', maxLevel: 3, desc: '起始 HP +20（每級）' },
-    agility:     { id: 'agility',     name: '敏捷身手', maxLevel: 3, desc: '起始速度 +0.2（每級）' },
-    forager:     { id: 'forager',     name: '採集專家', maxLevel: 3, desc: '果子 XP +3（每級）' },
-    hunter:      { id: 'hunter',      name: '獵人本能', maxLevel: 3, desc: '擊殺 XP +10（每級）' },
-    tenacity:    { id: 'tenacity',    name: '頑強意志', maxLevel: 3, desc: '死亡時 HP 保留 10%（每級，每局一次）' },
-    organMemory: { id: 'organMemory', name: '記憶器官', maxLevel: 3, desc: '死亡保留器官數 +1（預設1個，最多3個）' }
+    vitality:            { id: 'vitality',            name: '強壯體魄', maxLevel: 3, desc: '起始 HP +20（每級）' },
+    agility:             { id: 'agility',             name: '敏捷身手', maxLevel: 3, desc: '起始速度 +0.2（每級）' },
+    forager:             { id: 'forager',             name: '採集專家', maxLevel: 3, desc: '果子 XP +3（每級）' },
+    hunter:              { id: 'hunter',              name: '獵人本能', maxLevel: 3, desc: '擊殺 XP +10（每級）' },
+    tenacity:            { id: 'tenacity',            name: '頑強意志', maxLevel: 3, desc: '死亡時 HP 保留 10%（每級，每局一次）' },
+    organMemory:         { id: 'organMemory',         name: '記憶器官', maxLevel: 3, desc: '死亡保留器官數 +1（預設1個，最多3個）' },
+    luckyReroll:         { id: 'luckyReroll',         name: '幸運重選', maxLevel: 3, desc: '器官選擇時可重新隨機（每級1次）' },
+    collectionAddiction: { id: 'collectionAddiction', name: '收集成癮', maxLevel: 3, desc: '收集範圍+10px（果子和屍體，每級）' },
+    terribleFang:        { id: 'terribleFang',        name: '恐怖之牙', maxLevel: 5, desc: '攻擊+2（每級）；Lv5開局獲得獠牙Lv1' }
+};
+
+// =============================================================
+// 隱藏器官資料定義（只能透過擊敗精英怪獲得，不可升級，不佔普通槽位）
+// =============================================================
+const HIDDEN_ORGANS = {
+    strongHeart: {
+        id: 'strongHeart', name: '強大的心臟', type: 'hidden',
+        desc: '移速+0.2，攻擊+5，HP上限+100，體型+20%，攻擊範圍+10%',
+        effects: { speedAdd: 0.2, attackAdd: 5, hpMaxAdd: 100, radiusAdd: 2, attackRangeAdd: 5 }
+    },
+    strongLegs: {
+        id: 'strongLegs', name: '強大的大腿', type: 'hidden',
+        desc: '移速+1，體型+20%',
+        effects: { speedAdd: 1, radiusAdd: 2 }
+    },
+    strongArms: {
+        id: 'strongArms', name: '強大的手臂', type: 'hidden',
+        desc: '收集範圍+15px，攻擊範圍+10%，體型+20%',
+        effects: { pickupRangeAdd: 15, attackRangeAdd: 5, radiusAdd: 2 }
+    }
 };
 
 // =============================================================
@@ -262,5 +286,5 @@ const GAME_INFO = {
     title:    '只吃不叫的噪鵑',
     subtitle: 'The Silent Koel',
     author:   'Goblinnest',
-    version:  'v0.12.0'
+    version:  'v0.13.0'
 };
