@@ -2,6 +2,15 @@
 
 ---
 
+## v0.13.5 - 2026-05-14
+
+### 修復
+- **Bug 1 — 設定介面開啟期間時間繼續倒數**：`hideSettings()` 關閉設定時重置 `gameState.lastTimeTick`，防止關閉後補算暫停期間的時間
+- **Bug 2 — 按鍵重新綁定無反應**：完全重寫綁定系統：handler 以全域變數（`_settingsKeyHandler`、`_settingsMouseHandler`）儲存確保可清除；捕獲階段攔截 Esc 以取消綁定而非關閉設定；新增 350ms 閃爍動畫（`_rebindBlink`）；5 秒無操作自動取消（`_rebindTimeout`）；成功綁定播放確認音效
+- **Bug 3 — 選擇畫面開啟時遊戲未完全暫停**：新增 `isGamePaused()` 統一暫停判斷，`gameLoop` 改用此函式；`showSkillTree()` 設定 `gameState.skillTreeOpen = true`，`showVictory()` 設定 `gameState.victory = true`，確保技能樹與勝利畫面開啟時遊戲邏輯完全停止
+
+---
+
 ## v0.13.4 - 2026-05-14
 
 ### 新增
