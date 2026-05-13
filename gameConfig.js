@@ -282,10 +282,26 @@ const GAME_TIMING = {
 };
 
 // =============================================================
+// 音效檔案路徑定義
+// =============================================================
+const AUDIO_FILES = {
+    attackNormal: ['Sound MP3/Koel_Normal1.mp3', 'Sound MP3/Koel_Normal2.mp3'],
+    attackCrit:   'Sound MP3/Koel_Crit1.mp3',
+    hurt:         'Sound MP3/Koel_Hurt1.mp3',
+    death:        'Sound MP3/Death1.mp3',
+    levelUp:      'Sound MP3/Levelup.mp3',
+    morningTheme: 'Sound MP3/Morning Theme.mp3',
+    bossTheme:    'Sound MP3/Boss Theme.mp3',
+    victory:      'Sound MP3/Victory.mp3',
+    eatFruit:     'Sound MP3/apple_bite.mp3',
+    bossBell:     'Sound MP3/Boss_bell1.mp3'
+};
+
+// =============================================================
 const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
-    version:      'v0.13.3',
+    version:      'v0.13.4',
     SAVE_VERSION: '1.0'
 };

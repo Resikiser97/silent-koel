@@ -161,6 +161,110 @@
 
 <script>
 // =============================================================
+// 預設設定值
+// =============================================================
+const DEFAULT_SETTINGS = {
+    volume: { master: 80, music: 70, sfx: 80, masterOn: true, musicOn: true, sfxOn: true },
+    keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ' }
+};
+
+// =============================================================
+// 音效管理器
+// =============================================================
+const AudioManager = {
+    _sounds: {},
+    _music:  null,
+    _currentMusicKey: null,
+
+    init() {
+        Object.entries(AUDIO_FILES).forEach(([key, src]) => {
+            if (Array.isArray(src)) {
+                this._sounds[key] = src.map(s => { const a = new Audio(s); a.preload = 'auto'; return a; });
+            } else {
+                const a = new Audio(src); a.preload = 'auto';
+                this._sounds[key] = a;
+            }
+        });
+    },
+
+    _sfxVol() {
+        const v = gameState.settings.volume;
+        if (!v.masterOn || !v.sfxOn) return 0;
+        return (v.master / 100) * (v.sfx / 100);
+    },
+
+    _musicVol() {
+        const v = gameState.settings.volume;
+        if (!v.masterOn || !v.musicOn) return 0;
+        return (v.master / 100) * (v.music / 100);
+    },
+
+    play(key) {
+        const src = this._sounds[key];
+        if (!src) return;
+        const vol = this._sfxVol();
+        let audio;
+        if (Array.isArray(src)) {
+            audio = src[Math.floor(Math.random() * src.length)].cloneNode();
+        } else {
+            audio = src.cloneNode();
+        }
+        audio.volume = vol;
+        audio.play().catch(() => {});
+    },
+
+    playMusic(key) {
+        if (this._currentMusicKey === key) {
+            if (this._music) { try { this._music.volume = this._musicVol(); } catch(e) {} }
+            return;
+        }
+        const srcEntry = this._sounds[key];
+        if (!srcEntry) return;
+        const newAudio = Array.isArray(srcEntry) ? srcEntry[0] : srcEntry;
+
+        const oldMusic = this._music;
+        if (oldMusic && !oldMusic.paused) {
+            let ov = oldMusic.volume;
+            const step = Math.max(0.02, ov / 10);
+            const fadeOut = setInterval(() => {
+                ov = Math.max(0, ov - step);
+                try { oldMusic.volume = ov; } catch(e) {}
+                if (ov <= 0) { clearInterval(fadeOut); oldMusic.pause(); oldMusic.currentTime = 0; }
+            }, 50);
+        }
+
+        this._currentMusicKey = key;
+        newAudio.loop = true;
+        newAudio.currentTime = 0;
+        newAudio.volume = 0;
+        newAudio.play().catch(() => {});
+        this._music = newAudio;
+
+        const target = this._musicVol();
+        let fv = 0;
+        const step = Math.max(0.02, target / 10);
+        const fadeIn = setInterval(() => {
+            fv = Math.min(target, fv + step);
+            try { newAudio.volume = fv; } catch(e) {}
+            if (fv >= target) clearInterval(fadeIn);
+        }, 50);
+    },
+
+    stopMusic() {
+        if (this._music) {
+            this._music.pause();
+            this._music.currentTime = 0;
+            this._music = null;
+        }
+        this._currentMusicKey = null;
+    },
+
+    refreshMusicVolume() {
+        if (this._music) { try { this._music.volume = this._musicVol(); } catch(e) {} }
+    }
+};
+
+// =============================================================
 // 全局遊戲狀態管理 (gameState)
 // 所有可變的、需要追蹤的數據都放在這裡，方便未來擴充和調試。
 // =============================================================
@@ -220,10 +324,14 @@ const gameState = {
     playerSkills: { vitality: 0, agility: 0, forager: 0, hunter: 0, tenacity: 0, organMemory: 0, luckyReroll: 0, collectionAddiction: 0, terribleFang: 0 },
     boss: null,
     bossSpawned: false,
+    bossBellPlayed: false,
     eliteCreature: null,
     eliteJustKilled: false,
     camera: { x: 3600, y: 3700 },
-    lastLoopTime: 0
+    lastLoopTime: 0,
+    settingsOpen: false,
+    _rebindTarget: null,
+    settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 
 
@@ -415,26 +523,32 @@ function spawnFruit() {
 // 輸入事件處理 (Input Handling)
 // =============================================================
 function handleKeyDown(e) {
+    if (e.key === 'Escape') {
+        if (gameState.settingsOpen) { hideSettings(); } else if (!gameState.gameOver) { showSettings(); }
+        return;
+    }
+    if (gameState._rebindTarget) { e.preventDefault(); return; }
+
     const key = e.key.toLowerCase();
-    if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+    const sk = gameState.settings.keys;
+    const moveKeys = [sk.up, sk.down, sk.left, sk.right, 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+    if (moveKeys.includes(key)) {
         gameState.keys[key] = true;
         e.preventDefault();
     }
-    if (e.key === ' ') {
+    if (key === sk.attack || e.key === ' ') {
         e.preventDefault();
-        if (!gameState.organSelectionActive) playerAttack();
+        if (!gameState.organSelectionActive && !gameState.settingsOpen) playerAttack();
     }
     gameState.devInput = (gameState.devInput + e.key).slice(-8);
-    if (gameState.devInput === '77777778') {
-        toggleDevMode();
-    }
+    if (gameState.devInput === '77777778') toggleDevMode();
 }
 
 function handleKeyUp(e) {
     const key = e.key.toLowerCase();
-    if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
-        gameState.keys[key] = false;
-    }
+    const sk = gameState.settings.keys;
+    const moveKeys = [sk.up, sk.down, sk.left, sk.right, 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+    if (moveKeys.includes(key)) gameState.keys[key] = false;
 }
 
 
@@ -447,11 +561,12 @@ function handleKeyUp(e) {
  */
 function updatePlayerMovement() {
     const p = gameState.player;
+    const sk = gameState.settings.keys;
     let dx = 0, dy = 0;
-    if (gameState.keys['w'] || gameState.keys['arrowup'])    dy -= p.speed;
-    if (gameState.keys['s'] || gameState.keys['arrowdown'])  dy += p.speed;
-    if (gameState.keys['a'] || gameState.keys['arrowleft'])  dx -= p.speed;
-    if (gameState.keys['d'] || gameState.keys['arrowright']) dx += p.speed;
+    if (gameState.keys[sk.up]   || gameState.keys['arrowup'])    dy -= p.speed;
+    if (gameState.keys[sk.down] || gameState.keys['arrowdown'])  dy += p.speed;
+    if (gameState.keys[sk.left] || gameState.keys['arrowleft'])  dx -= p.speed;
+    if (gameState.keys[sk.right]|| gameState.keys['arrowright']) dx += p.speed;
     if (dx === 0 && dy === 0) return;
     p.x = ((p.x + dx) % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH;
     p.y = ((p.y + dy) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT;
@@ -476,6 +591,7 @@ function checkFruitCollision() {
             const omniBonus = ev.omnivore > 0 ? EVOLUTION_PATHS.omnivore.levels[ev.omnivore - 1].fruitXPBonus : 0;
             const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus + omniBonus;
             addXP(fruitXP);
+            AudioManager.play('eatFruit');
             // 雜食Lv3：10%機率吃東西回血5
             if (ev.omnivore >= 3 && Math.random() < 0.1) {
                 gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 5);
@@ -1155,6 +1271,7 @@ function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
     const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
     gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
+    AudioManager.play('hurt');
     if (p.thornDamage > 0 && attacker && attacker.hp > 0) {
         const thornMult = p.comboShellArmor ? 2 : 1; // 龜殼+刺甲組合：反傷翻倍
         let thornTotal = Math.round(final * p.thornDamage * thornMult);
@@ -1636,6 +1753,8 @@ function playerAttack() {
         ...(gameState.eliteCreature && gameState.eliteCreature.hp > 0 ? [{ c: gameState.eliteCreature, hostile: true, isBoss: false, isElite: true }] : [])
     ];
 
+    let anyHit = false, anyCrit = false, bossDied = false;
+
     for (const { c, hostile, isBoss, isElite } of targets) {
         if (c.hp <= 0) continue;
         if (wrappedDistance(p.x, p.y, c.x, c.y) > p.attackRange) continue;
@@ -1646,6 +1765,8 @@ function playerAttack() {
             dmg = Math.round(dmg * p.critMultiplier);
             isCrit = true;
         }
+        anyHit = true;
+        if (isCrit) anyCrit = true;
 
         const hpBefore = c.hp;
         c.hp -= dmg;
@@ -1686,11 +1807,14 @@ function playerAttack() {
         }
 
         if (c.hp <= 0) {
-            if (isBoss) { showVictory(); return; }
+            if (isBoss) { bossDied = true; continue; }
             if (isElite) { handleEliteKill(c); continue; }
             handleKill(c, hostile);
         }
     }
+
+    if (anyHit) AudioManager.play(anyCrit ? 'attackCrit' : 'attackNormal');
+    if (bossDied) showVictory();
 }
 
 function updateStatusEffects() {
@@ -1854,6 +1978,228 @@ function drawCorpseEatingBars() {
 }
 
 // =============================================================
+// 音效與設定系統
+// =============================================================
+
+function initAudio() {
+    AudioManager.init();
+    AudioManager.playMusic('morningTheme');
+}
+
+function loadSettings() {
+    try {
+        const saved = localStorage.getItem('gameSettings');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.volume) Object.assign(gameState.settings.volume, parsed.volume);
+            if (parsed.keys)   Object.assign(gameState.settings.keys,   parsed.keys);
+        }
+    } catch(e) {}
+}
+
+function saveSettings() {
+    localStorage.setItem('gameSettings', JSON.stringify(gameState.settings));
+}
+
+function _keyDisplay(k) {
+    if (k === ' ') return 'Space';
+    if (k === 'mouseleft') return '滑鼠左鍵';
+    return k.length === 1 ? k.toUpperCase() : k.charAt(0).toUpperCase() + k.slice(1);
+}
+
+function _buildSettingsSection(title) {
+    const sec = document.createElement('div');
+    sec.style.cssText = 'border:1px solid #333;border-radius:6px;padding:12px 16px;margin-bottom:14px;';
+    const h = document.createElement('div');
+    h.style.cssText = 'font-size:14px;font-weight:bold;color:#FFD700;margin-bottom:10px;';
+    h.textContent = title;
+    sec.appendChild(h);
+    return sec;
+}
+
+function showSettings() {
+    if (document.getElementById('settings-overlay')) return;
+    gameState.settingsOpen = true;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'settings-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;z-index:150;pointer-events:all;';
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:#1c1c1c;border:1px solid #444;border-radius:10px;padding:24px 28px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
+
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-size:22px;font-weight:bold;text-align:center;margin-bottom:18px;';
+    titleEl.textContent = '⚙️ 設定';
+    panel.appendChild(titleEl);
+
+    // ─── 音量設定 ───
+    const volSec = _buildSettingsSection('音量設定');
+    [{ label: '總音量', vk: 'master', ok: 'masterOn' },
+     { label: '音樂音量', vk: 'music',  ok: 'musicOn'  },
+     { label: '音效音量', vk: 'sfx',    ok: 'sfxOn'    }].forEach(({ label, vk, ok }) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+
+        const tog = document.createElement('button');
+        tog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+        const refreshTog = () => {
+            const on = gameState.settings.volume[ok];
+            tog.textContent = on ? '開' : '關';
+            tog.style.background = on ? '#2a8a2a' : '#555';
+        };
+        refreshTog();
+        tog.onclick = () => {
+            gameState.settings.volume[ok] = !gameState.settings.volume[ok];
+            refreshTog();
+            AudioManager.refreshMusicVolume();
+            saveSettings();
+        };
+        row.appendChild(tog);
+
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'min-width:68px;font-size:13px;';
+        lbl.textContent = label;
+        row.appendChild(lbl);
+
+        const slider = document.createElement('input');
+        slider.type = 'range'; slider.min = 0; slider.max = 100; slider.step = 10;
+        slider.value = gameState.settings.volume[vk];
+        slider.style.cssText = 'flex:1;cursor:pointer;';
+
+        const valLbl = document.createElement('div');
+        valLbl.style.cssText = 'min-width:36px;text-align:right;font-size:13px;';
+        valLbl.textContent = slider.value + '%';
+
+        slider.oninput = () => {
+            gameState.settings.volume[vk] = parseInt(slider.value);
+            valLbl.textContent = slider.value + '%';
+            AudioManager.refreshMusicVolume();
+            saveSettings();
+        };
+        row.appendChild(slider);
+        row.appendChild(valLbl);
+        volSec.appendChild(row);
+    });
+    panel.appendChild(volSec);
+
+    // ─── 按鍵設定 ───
+    const keySec = _buildSettingsSection('按鍵設定');
+    const keyDefs = [
+        { label: '移動上', sk: 'up',     fallback: '↑ ArrowUp'  },
+        { label: '移動下', sk: 'down',   fallback: '↓ ArrowDown' },
+        { label: '移動左', sk: 'left',   fallback: '← ArrowLeft' },
+        { label: '移動右', sk: 'right',  fallback: '→ ArrowRight'},
+        { label: '攻擊鍵', sk: 'attack', fallback: '滑鼠左鍵'  }
+    ];
+    const rebindBtns = {};
+
+    const rebindKeyHandler = (e) => {
+        const tgt = gameState._rebindTarget;
+        if (!tgt) return;
+        e.preventDefault(); e.stopPropagation();
+        const newKey = e.key.toLowerCase();
+        gameState.settings.keys[tgt] = newKey;
+        gameState._rebindTarget = null;
+        const btn = rebindBtns[tgt];
+        const def = keyDefs.find(x => x.sk === tgt);
+        if (btn && def) { btn.textContent = _keyDisplay(newKey) + '  /  ' + def.fallback; btn.style.cssText = btn._baseStyle; }
+        saveSettings();
+    };
+    const rebindMouseHandler = (e) => {
+        const tgt = gameState._rebindTarget;
+        if (!tgt) return;
+        e.stopPropagation();
+        gameState.settings.keys[tgt] = 'mouseleft';
+        gameState._rebindTarget = null;
+        const btn = rebindBtns[tgt];
+        const def = keyDefs.find(x => x.sk === tgt);
+        if (btn && def) { btn.textContent = '滑鼠左鍵  /  ' + def.fallback; btn.style.cssText = btn._baseStyle; }
+        saveSettings();
+    };
+    document.addEventListener('keydown', rebindKeyHandler, true);
+
+    keyDefs.forEach(({ label, sk, fallback }) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
+
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'min-width:68px;font-size:13px;';
+        lbl.textContent = label;
+        row.appendChild(lbl);
+
+        const btn = document.createElement('button');
+        btn._baseStyle = 'flex:1;padding:6px 10px;cursor:pointer;background:#2a2a2a;color:white;border:1px solid #666;border-radius:4px;font-size:13px;text-align:left;';
+        btn.style.cssText = btn._baseStyle;
+        btn.textContent = _keyDisplay(gameState.settings.keys[sk]) + '  /  ' + fallback;
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            if (gameState._rebindTarget === sk) { gameState._rebindTarget = null; btn.style.cssText = btn._baseStyle; btn.textContent = _keyDisplay(gameState.settings.keys[sk]) + '  /  ' + fallback; return; }
+            if (gameState._rebindTarget) { const pb = rebindBtns[gameState._rebindTarget]; if (pb) { pb.style.cssText = pb._baseStyle; const pd = keyDefs.find(x => x.sk === gameState._rebindTarget); pb.textContent = _keyDisplay(gameState.settings.keys[gameState._rebindTarget]) + '  /  ' + (pd ? pd.fallback : ''); } }
+            gameState._rebindTarget = sk;
+            btn.textContent = '請按下新按鍵...';
+            btn.style.cssText = btn._baseStyle + 'border-color:#FFD700;color:#FFD700;';
+        };
+        btn.addEventListener('mousedown', rebindMouseHandler, true);
+        rebindBtns[sk] = btn;
+        row.appendChild(btn);
+        keySec.appendChild(row);
+    });
+    panel.appendChild(keySec);
+
+    // ─── 其他設定 ───
+    const otherSec = _buildSettingsSection('其他設定');
+
+    const restartBtn = document.createElement('button');
+    restartBtn.style.cssText = 'width:100%;padding:8px;cursor:pointer;border:1px solid #884444;background:rgba(136,0,0,0.3);color:white;border-radius:4px;font-size:13px;margin-bottom:8px;';
+    restartBtn.textContent = '重啟遊戲';
+    restartBtn.onclick = () => {
+        if (confirm('確定重啟？本局進度將消失，不給予技能點（除非已擊殺精英怪）')) window.location.reload();
+    };
+    otherSec.appendChild(restartBtn);
+
+    const resetBtn = document.createElement('button');
+    resetBtn.style.cssText = 'width:100%;padding:8px;cursor:pointer;border:1px solid #555;background:rgba(80,80,80,0.3);color:white;border-radius:4px;font-size:13px;';
+    resetBtn.textContent = '恢復原廠設定';
+    resetBtn.onclick = () => {
+        if (!confirm('確定要恢復所有音量和按鍵設定為預設值？')) return;
+        gameState.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+        saveSettings();
+        AudioManager.refreshMusicVolume();
+        document.removeEventListener('keydown', rebindKeyHandler, true);
+        gameState._rebindTarget = null;
+        overlay.remove();
+        gameState.settingsOpen = false;
+        showSettings();
+    };
+    otherSec.appendChild(resetBtn);
+    panel.appendChild(otherSec);
+
+    // ─── 底部按鈕 ───
+    const saveBtn = document.createElement('button');
+    saveBtn.style.cssText = 'width:100%;margin-top:14px;padding:10px;cursor:pointer;border:1px solid #4a8a4a;background:#2a5a2a;color:white;border-radius:4px;font-size:15px;';
+    saveBtn.textContent = '儲存並返回';
+    saveBtn.onclick = () => {
+        saveSettings();
+        document.removeEventListener('keydown', rebindKeyHandler, true);
+        gameState._rebindTarget = null;
+        overlay.remove();
+        gameState.settingsOpen = false;
+    };
+    panel.appendChild(saveBtn);
+
+    overlay.appendChild(panel);
+    document.getElementById('game-container').appendChild(overlay);
+}
+
+function hideSettings() {
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) overlay.remove();
+    gameState._rebindTarget = null;
+    gameState.settingsOpen = false;
+}
+
+// =============================================================
 // 技能樹系統
 // =============================================================
 
@@ -1910,6 +2256,8 @@ function applySkillBonuses() {
 function showSkillTree(cause) {
     if (gameState.gameOver) return;
     gameState.gameOver = true;
+    AudioManager.play('death');
+    AudioManager.stopMusic();
     gameState.skillPoints += 1;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
@@ -2136,6 +2484,7 @@ function checkLevelUp() {
         p.levelXP = 0;
         p.level++;
         gameState.levelUpMessage = { text: '⬆️ 升級！Lv.' + p.level, timer: Date.now() };
+        AudioManager.play('levelUp');
         showOrganSelection();
     }
 }
@@ -2154,6 +2503,10 @@ function updateTimer() {
     const m = Math.floor(total / 60).toString().padStart(2, '0');
     const s = (total % 60).toString().padStart(2, '0');
     gameState.stats.timeStatus = m + ':' + s;
+    if (gameState.timeRemaining <= 80 && !gameState.bossSpawned && !gameState.bossBellPlayed) {
+        gameState.bossBellPlayed = true;
+        AudioManager.play('bossBell');
+    }
     if (gameState.timeRemaining <= 0) showSkillTree('timeout');
 }
 
@@ -2193,6 +2546,9 @@ function applyNightTransition() {
     const nightNum = (gameState.currentPhaseIndex + 1) / 2;
     if (nightNum >= 1 && nightNum <= 3 && !gameState.eliteCreature) {
         spawnEliteCreature(nightNum);
+        AudioManager.playMusic('bossTheme');
+    } else {
+        AudioManager.playMusic('morningTheme');
     }
 }
 
@@ -2209,6 +2565,7 @@ function applyDayTransition() {
     for (const c of gameState.hostileCreatures) {
         if (c.hp > 0) { c.speed = Math.max(0.1, c.speed - 0.2); c.damage = Math.max(1, c.damage - 2); }
     }
+    AudioManager.playMusic('morningTheme');
 }
 
 function updateDayNightCycle() {
@@ -2323,6 +2680,7 @@ function spawnBoss() {
     gameState.bossSpawned = true;
     gameState.dayNightMessage.text = '⚠️ 強大的' + cfg.name + '出現了！';
     gameState.dayNightMessage.timer = Date.now();
+    AudioManager.playMusic('bossTheme');
 }
 
 function updateBoss() {
@@ -2368,6 +2726,8 @@ function updateBoss() {
 function showVictory() {
     if (gameState.gameOver) return;
     gameState.gameOver = true;
+    AudioManager.stopMusic();
+    AudioManager.play('victory');
     addXP(500);
     gameState.skillPoints += 1;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
@@ -2604,7 +2964,7 @@ function gameLoop() {
     const loopNow = Date.now();
     const dt = gameState.lastLoopTime > 0 ? loopNow - gameState.lastLoopTime : 16;
     gameState.lastLoopTime = loopNow;
-    if (!gameState.gameOver && !gameState.organSelectionActive) {
+    if (!gameState.gameOver && !gameState.organSelectionActive && !gameState.settingsOpen) {
         updateTimer();
         updateDayNightCycle();
         updateCreatureSpawning();
@@ -2656,7 +3016,7 @@ function initializeGame() {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     canvas.addEventListener('click', function() {
-        if (!gameState.organSelectionActive) playerAttack();
+        if (!gameState.organSelectionActive && !gameState.settingsOpen) playerAttack();
     });
 
     // 4. 存檔版本檢查：版本不一致時清除所有存檔
@@ -2668,7 +3028,10 @@ function initializeGame() {
         console.log('--- 存檔版本不一致，已清除所有存檔（' + storedSaveVer + ' → ' + GAME_INFO.SAVE_VERSION + '）---');
     }
 
-    // 5. 載入技能與進化資料並套用起始加成
+    // 6. 載入設定（音量、按鍵）
+    loadSettings();
+
+    // 7. 載入技能與進化資料並套用起始加成
     try {
         const savedSkills = localStorage.getItem('playerSkills');
         if (savedSkills) gameState.playerSkills = JSON.parse(savedSkills);
@@ -2679,16 +3042,19 @@ function initializeGame() {
     applySkillBonuses();
     applyEvolutionEffects();
 
-    // 6. 初始化計時狀態
+    // 8. 初始化計時狀態
     gameState.lastTimeTick = Date.now();
     gameState.spawnTimers.neutral = Date.now();
     gameState.spawnTimers.hostile = Date.now();
 
+    // 9. 初始化音效系統並播放背景音樂
+    initAudio();
+
     updateUI();
 
     console.log("--- 初始化完成，啟動遊戲循環 ---");
-    
-    // 5. 開始遊戲主循環
+
+    // 10. 開始遊戲主循環
     requestAnimationFrame(gameLoop);
 }
 
