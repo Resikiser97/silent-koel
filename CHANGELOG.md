@@ -2,6 +2,13 @@
 
 ---
 
+## v0.13.7 - 2026-05-14
+
+### 修復
+- **隱藏器官選擇後遊戲未暫停**：`showHiddenOrganSelection` 的 `closeOverlay` 補上 `pendingOrganSelections` 檢查——關閉隱藏器官畫面後若有待處理的升級選擇，立刻呼叫 `showOrganSelection()`（同步執行，不會有任何一幀讓遊戲繼續運行）
+
+---
+
 ## v0.13.6 - 2026-05-14
 
 ### 調整

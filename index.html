@@ -2938,6 +2938,10 @@ function showHiddenOrganSelection(drops) {
         if (el) el.remove();
         gameState.organSelectionActive = false;
         gameState.lastTimeTick = Date.now();
+        if (gameState.pendingOrganSelections > 0) {
+            gameState.pendingOrganSelections--;
+            showOrganSelection();
+        }
     };
 
     const overlay = document.createElement('div');
