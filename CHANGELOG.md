@@ -2,6 +2,13 @@
 
 ---
 
+## v0.15.1 - 2026-05-14
+
+### 修復
+- **隱藏器官選擇後遊戲短暫恢復**：`showHiddenOrganSelection` 的 `closeOverlay` 原本先將 `organSelectionActive = false` 再檢查 `pendingOrganSelections`，導致有一幀空隙讓遊戲繼續運行。修正為：有 pending 時直接 `pendingOrganSelections--` 並呼叫 `showOrganSelection()`，保持 `organSelectionActive = true` 不中斷；無 pending 時才設 `organSelectionActive = false` 並重置 `lastTimeTick`
+
+---
+
 ## v0.15.0 - 2026-05-14
 
 ### 新增

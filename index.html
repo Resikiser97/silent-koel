@@ -3273,11 +3273,12 @@ function showHiddenOrganSelection(drops) {
         hideTooltip();
         const el = document.getElementById('hidden-organ-overlay');
         if (el) el.remove();
-        gameState.organSelectionActive = false;
-        gameState.lastTimeTick = Date.now();
         if (gameState.pendingOrganSelections > 0) {
             gameState.pendingOrganSelections--;
             showOrganSelection();
+        } else {
+            gameState.organSelectionActive = false;
+            gameState.lastTimeTick = Date.now();
         }
     };
 
