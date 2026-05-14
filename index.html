@@ -2180,7 +2180,12 @@ function showSettings(fromHome) {
     const restartBtn = document.createElement('button');
     restartBtn.style.cssText = 'width:100%;padding:8px;cursor:pointer;border:1px solid #884444;background:rgba(136,0,0,0.3);color:white;border-radius:4px;font-size:13px;margin-bottom:8px;';
     restartBtn.textContent = '重啟遊戲';
-    restartBtn.onclick = () => { if (confirm('確定重啟？本局進度將消失，不給予技能點（除非已擊殺精英怪）')) window.location.reload(); };
+    restartBtn.onclick = () => {
+        if (!confirm('確定重啟？本局進度將消失，不給予技能點（除非已擊殺精英怪）')) return;
+        saveLastRunOrgans();
+        localStorage.setItem('skillPoints', String(gameState.skillPoints));
+        window.location.reload();
+    };
     otherSec.appendChild(restartBtn);
     const resetBtn = document.createElement('button');
     resetBtn.style.cssText = 'width:100%;padding:8px;cursor:pointer;border:1px solid #555;background:rgba(80,80,80,0.3);color:white;border-radius:4px;font-size:13px;';
@@ -2297,6 +2302,14 @@ function showSkillTree(cause) {
 
 function buildSkillTreeOverlay(cause, fromHome) {
     _skillTreeFromHome = !!fromHome;
+    if (fromHome) {
+        try {
+            const ss = localStorage.getItem('playerSkills');
+            if (ss) gameState.playerSkills = JSON.parse(ss);
+            const sp = localStorage.getItem('skillPoints');
+            if (sp) gameState.skillPoints = Math.max(0, parseInt(sp, 10) || 0);
+        } catch(e) {}
+    }
     const existing = document.getElementById('skill-tree-overlay');
     if (existing) existing.remove();
     const overlay = document.createElement('div');
@@ -2476,30 +2489,140 @@ function buildSkillTreeOverlay(cause, fromHome) {
     });
     overlay.appendChild(grid);
 
-    // ── 上局遺留器官
-    const lastRunSec = document.createElement('div');
-    lastRunSec.style.cssText = 'max-width:660px;width:90%;margin-bottom:18px;border:1px solid #333;border-radius:6px;padding:12px 16px;';
-    const lastRunTitle = document.createElement('div');
-    lastRunTitle.style.cssText = 'font-size:14px;color:#888;font-weight:bold;margin-bottom:8px;';
-    lastRunTitle.textContent = '📦 上局遺留器官';
-    lastRunSec.appendChild(lastRunTitle);
-    const lastRunRaw = localStorage.getItem('lastRunOrgans');
-    let lastRunItems = [];
-    try { if (lastRunRaw) { const d = JSON.parse(lastRunRaw); lastRunItems = [...(d.organs || []), ...(d.hiddenOrgans || [])]; } } catch(e) {}
-    if (lastRunItems.length === 0) {
-        const noneEl = document.createElement('div');
-        noneEl.style.cssText = 'font-size:13px;color:#555;';
-        noneEl.textContent = '尚無記錄';
-        lastRunSec.appendChild(noneEl);
+    // ── 上局器官（首頁：互動選擇；死亡：純參考）
+    const _lrRaw = localStorage.getItem('lastRunOrgans');
+    let _lrData = null;
+    try { if (_lrRaw) _lrData = JSON.parse(_lrRaw); } catch(e) {}
+
+    if (fromHome) {
+        // 首頁：可選擇要繼承的器官
+        const inheritSec = document.createElement('div');
+        inheritSec.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #665500;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
+        const homeOrgansToKeep = 1 + (gameState.playerSkills.organMemory || 0);
+        const inheritTitle = document.createElement('div');
+        inheritTitle.style.cssText = 'font-size:15px;color:#FFD700;margin-bottom:10px;';
+        inheritTitle.textContent = '📦 選擇繼承上局器官（最多 ' + homeOrgansToKeep + ' 個）';
+        inheritSec.appendChild(inheritTitle);
+        const _lrOrgans = _lrData ? (_lrData.organs || []) : [];
+        const _lrHidden = _lrData ? (_lrData.hiddenOrgans || []) : [];
+        if (_lrOrgans.length === 0 && _lrHidden.length === 0) {
+            const noneEl = document.createElement('div');
+            noneEl.style.cssText = 'font-size:13px;color:#555;';
+            noneEl.textContent = '尚無記錄';
+            inheritSec.appendChild(noneEl);
+        } else {
+            if (_lrOrgans.length > 0) {
+                const homeSelOrgans = [];
+                const homeOrganGrid = document.createElement('div');
+                homeOrganGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;';
+                const tColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
+                const homeCardMap = [];
+                _lrOrgans.forEach((organ) => {
+                    const card = document.createElement('div');
+                    card.style.cssText = 'background:rgba(255,255,255,0.07);border:1px solid #555;border-radius:6px;padding:8px 10px;cursor:pointer;width:130px;box-sizing:border-box;text-align:center;';
+                    const nEl = document.createElement('div');
+                    nEl.style.cssText = 'font-size:12px;font-weight:bold;color:' + (tColor[organ.type] || '#FFD700') + ';margin-bottom:3px;';
+                    nEl.textContent = organ.name + ' Lv.' + (organ.level || 1);
+                    card.appendChild(nEl);
+                    const dEl = document.createElement('div');
+                    dEl.style.cssText = 'font-size:10px;color:#aaa;line-height:1.3;';
+                    dEl.textContent = organ.desc || '';
+                    card.appendChild(dEl);
+                    card.onclick = () => {
+                        const si = homeSelOrgans.indexOf(organ);
+                        if (si >= 0) {
+                            homeSelOrgans.splice(si, 1);
+                            card.style.borderColor = '#555';
+                            card.style.background = 'rgba(255,255,255,0.07)';
+                        } else {
+                            if (homeSelOrgans.length >= homeOrgansToKeep) {
+                                const rm = homeSelOrgans.shift();
+                                const ri = _lrOrgans.indexOf(rm);
+                                if (ri >= 0 && homeCardMap[ri]) { homeCardMap[ri].style.borderColor = '#555'; homeCardMap[ri].style.background = 'rgba(255,255,255,0.07)'; }
+                            }
+                            homeSelOrgans.push(organ);
+                            card.style.borderColor = '#FFD700';
+                            card.style.background = 'rgba(255,215,0,0.15)';
+                        }
+                        if (homeSelOrgans.length > 0) {
+                            localStorage.setItem('savedOrgans', JSON.stringify(homeSelOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, level: 1, desc: ORGANS[o.id] ? ORGANS[o.id].levels[0].desc : o.desc }))));
+                        } else {
+                            localStorage.removeItem('savedOrgans');
+                        }
+                    };
+                    homeCardMap.push(card);
+                    homeOrganGrid.appendChild(card);
+                });
+                inheritSec.appendChild(homeOrganGrid);
+            }
+            if (_lrHidden.length > 0) {
+                const hTitle = document.createElement('div');
+                hTitle.style.cssText = 'font-size:14px;color:#FFD700;margin-bottom:8px;margin-top:6px;';
+                hTitle.textContent = '✨ 選擇繼承一個隱藏器官（可不選）';
+                inheritSec.appendChild(hTitle);
+                const homeHidGrid = document.createElement('div');
+                homeHidGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+                let homeSelHidden = null;
+                const homeHidCardMap = [];
+                _lrHidden.forEach((organ) => {
+                    const card = document.createElement('div');
+                    card.style.cssText = 'background:rgba(255,215,0,0.08);border:2px solid #887700;border-radius:6px;padding:8px 10px;width:150px;box-sizing:border-box;text-align:center;cursor:pointer;';
+                    const nEl = document.createElement('div');
+                    nEl.style.cssText = 'font-size:12px;font-weight:bold;color:#FFD700;margin-bottom:3px;';
+                    nEl.textContent = '✨ ' + organ.name;
+                    card.appendChild(nEl);
+                    const dEl = document.createElement('div');
+                    dEl.style.cssText = 'font-size:10px;color:#ccc;line-height:1.3;';
+                    dEl.textContent = organ.desc || '';
+                    card.appendChild(dEl);
+                    card.onclick = () => {
+                        if (homeSelHidden && homeSelHidden.id === organ.id) {
+                            homeSelHidden = null;
+                            card.style.borderColor = '#887700';
+                            card.style.background = 'rgba(255,215,0,0.08)';
+                            localStorage.removeItem('savedHiddenOrgans');
+                        } else {
+                            if (homeSelHidden) {
+                                const pi = _lrHidden.findIndex(o => o.id === homeSelHidden.id);
+                                if (pi >= 0 && homeHidCardMap[pi]) { homeHidCardMap[pi].style.borderColor = '#887700'; homeHidCardMap[pi].style.background = 'rgba(255,215,0,0.08)'; }
+                            }
+                            homeSelHidden = organ;
+                            card.style.borderColor = '#FFD700';
+                            card.style.background = 'rgba(255,215,0,0.22)';
+                            localStorage.setItem('savedHiddenOrgans', JSON.stringify([{ id: organ.id, name: organ.name, type: organ.type, desc: organ.desc }]));
+                        }
+                    };
+                    homeHidCardMap.push(card);
+                    homeHidGrid.appendChild(card);
+                });
+                inheritSec.appendChild(homeHidGrid);
+            }
+        }
+        overlay.appendChild(inheritSec);
     } else {
-        lastRunItems.forEach(o => {
-            const item = document.createElement('div');
-            item.style.cssText = 'font-size:13px;color:#999;margin-bottom:4px;';
-            item.textContent = (o.level ? 'Lv.' + o.level + ' ' : '✨ ') + o.name + (o.desc ? '　' + o.desc : '');
-            lastRunSec.appendChild(item);
-        });
+        // 死亡後：純參考顯示
+        const lastRunSec = document.createElement('div');
+        lastRunSec.style.cssText = 'max-width:660px;width:90%;margin-bottom:18px;border:1px solid #333;border-radius:6px;padding:12px 16px;';
+        const lastRunTitle = document.createElement('div');
+        lastRunTitle.style.cssText = 'font-size:14px;color:#888;font-weight:bold;margin-bottom:8px;';
+        lastRunTitle.textContent = '📦 上局遺留器官';
+        lastRunSec.appendChild(lastRunTitle);
+        const lrItems = _lrData ? [...(_lrData.organs || []), ...(_lrData.hiddenOrgans || [])] : [];
+        if (lrItems.length === 0) {
+            const noneEl = document.createElement('div');
+            noneEl.style.cssText = 'font-size:13px;color:#555;';
+            noneEl.textContent = '尚無記錄';
+            lastRunSec.appendChild(noneEl);
+        } else {
+            lrItems.forEach(o => {
+                const item = document.createElement('div');
+                item.style.cssText = 'font-size:13px;color:#999;margin-bottom:4px;';
+                item.textContent = (o.level ? 'Lv.' + o.level + ' ' : '✨ ') + o.name + (o.desc ? '　' + o.desc : '');
+                lastRunSec.appendChild(item);
+            });
+        }
+        overlay.appendChild(lastRunSec);
     }
-    overlay.appendChild(lastRunSec);
 
     // ── 底部按鈕列
     const btnRow = document.createElement('div');

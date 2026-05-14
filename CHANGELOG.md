@@ -2,6 +2,14 @@
 
 ---
 
+## v0.14.1 - 2026-05-14
+
+### 調整
+- **首頁技能樹上局器官區塊**：由純參考顯示改為完整互動選擇介面；從 `lastRunOrgans` 載入上局器官，普通器官依 `organMemory` 技能等級限制可選數量，隱藏器官最多選1個；選中顯示金色高亮，即時寫入 `savedOrgans`/`savedHiddenOrgans`；標題改為「📦 選擇繼承上局器官（最多 N 個）」；首頁開啟技能樹時同步從 localStorage 載入正確的技能等級與技能點數
+- **設定「重啟遊戲」保留器官記錄**：中途重啟前呼叫 `saveLastRunOrgans()` 存入 `lastRunOrgans`，並確保 `skillPoints` 已寫入 localStorage，防止中途結束損失記錄
+
+---
+
 ## v0.14.0 - 2026-05-14
 
 ### 調整
