@@ -3247,6 +3247,13 @@ function handleEliteKill(elite) {
     const xp = elite.xp;
     gameState.eliteCreature = null;
     gameState.eliteJustKilled = true;
+    // 先計算隱藏器官掉落並開啟選擇畫面，確保 organSelectionActive=true
+    // 這樣後續 addXP 若觸發升級選器官，會走 pendingOrganSelections++ 排隊而非直接疊層
+    if (!gameState.gameOver) {
+        const ownedIds = (gameState.player.hiddenOrgans || []).map(h => h.id);
+        const drops = Object.values(HIDDEN_ORGANS).filter(h => !ownedIds.includes(h.id) && Math.random() < 0.5);
+        if (drops.length > 0) showHiddenOrganSelection(drops);
+    }
     addXP(xp);
     showXPPopup(gameState.player.x, gameState.player.y, xp);
     gameState.skillPoints += 1;
@@ -3257,12 +3264,6 @@ function handleEliteKill(elite) {
     updateDayNightCycle();
     gameState.dayNightMessage.text = '☀️ 精英已滅！黎明提前到來！';
     gameState.dayNightMessage.timer = Date.now();
-    // 隱藏器官掉落：每個有50%機率，已擁有的不重複掉落
-    if (!gameState.gameOver) {
-        const ownedIds = (gameState.player.hiddenOrgans || []).map(h => h.id);
-        const drops = Object.values(HIDDEN_ORGANS).filter(h => !ownedIds.includes(h.id) && Math.random() < 0.5);
-        if (drops.length > 0) showHiddenOrganSelection(drops);
-    }
 }
 
 function showHiddenOrganSelection(drops) {

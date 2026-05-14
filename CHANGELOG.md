@@ -2,6 +2,13 @@
 
 ---
 
+## v0.15.2 - 2026-05-14
+
+### 修復
+- **精英擊殺時隱藏器官與升級選擇疊層**：`handleEliteKill` 原本先呼叫 `addXP()`，若此時觸發升級會直接開啟器官選擇畫面（`organSelectionActive` 此時為 false），再呼叫 `showHiddenOrganSelection()` 便造成兩個 overlay 同時存在、`pendingOrganSelections` 未正確遞增的問題。修正為：先計算並呼叫 `showHiddenOrganSelection()`（設 `organSelectionActive = true`），之後 `addXP()` 若觸發升級會正確走 `pendingOrganSelections++` 排隊，確保兩者依序顯示而非疊層
+
+---
+
 ## v0.15.1 - 2026-05-14
 
 ### 修復
