@@ -3274,12 +3274,15 @@ function showHiddenOrganSelection(drops) {
         hideTooltip();
         const el = document.getElementById('hidden-organ-overlay');
         if (el) el.remove();
+        // 先釋放 organSelectionActive，再呼叫 showOrganSelection，
+        // 否則 showOrganSelection 入口會再次 pending++ 並直接 return，
+        // 導致 active=true 但無 overlay 而卡死。
+        // 整段為同步執行，不會有畫面幀空隙讓遊戲恢復跑。
+        gameState.organSelectionActive = false;
+        gameState.lastTimeTick = Date.now();
         if (gameState.pendingOrganSelections > 0) {
             gameState.pendingOrganSelections--;
             showOrganSelection();
-        } else {
-            gameState.organSelectionActive = false;
-            gameState.lastTimeTick = Date.now();
         }
     };
 

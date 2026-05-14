@@ -2,6 +2,13 @@
 
 ---
 
+## v0.15.3 - 2026-05-14
+
+### 修復
+- **隱藏器官選完後遊戲卡死、未跳出排隊中的普通器官選擇**：v0.15.1 將 `showHiddenOrganSelection` 的 `closeOverlay` 改為在 `pending > 0` 時保留 `organSelectionActive = true` 並直接呼叫 `showOrganSelection()`，但 `showOrganSelection` 入口會檢查 `organSelectionActive`，看到 true 便再次 `pendingOrganSelections++` 並 return，導致 active=true 但無 overlay 而卡死。修正為先設 `organSelectionActive = false` 並重置 `lastTimeTick`，再呼叫 `showOrganSelection()` 開啟下一個 overlay（整段同步執行，無畫面幀空隙讓遊戲意外恢復跑）
+
+---
+
 ## v0.15.2 - 2026-05-14
 
 ### 修復
