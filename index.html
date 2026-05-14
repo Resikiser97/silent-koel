@@ -167,6 +167,7 @@ let _settingsKeyHandler   = null;
 let _settingsMouseHandler = null;
 let _rebindBlink          = null;
 let _rebindTimeout        = null;
+let _skillTreeFromHome    = false;
 
 // =============================================================
 // 預設設定值
@@ -2028,13 +2029,14 @@ function _buildSettingsSection(title) {
     return sec;
 }
 
-function showSettings() {
+function showSettings(fromHome) {
     if (document.getElementById('settings-overlay')) return;
     gameState.settingsOpen = true;
 
     const overlay = document.createElement('div');
     overlay.id = 'settings-overlay';
-    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;z-index:150;pointer-events:all;';
+    const sZIdx = fromHome ? 210 : 150;
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;z-index:' + sZIdx + ';pointer-events:all;';
 
     const panel = document.createElement('div');
     panel.style.cssText = 'background:#1c1c1c;border:1px solid #444;border-radius:10px;padding:24px 28px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
@@ -2195,7 +2197,7 @@ function showSettings() {
     // ─── 底部按鈕 ───
     const saveBtn = document.createElement('button');
     saveBtn.style.cssText = 'width:100%;margin-top:14px;padding:10px;cursor:pointer;border:1px solid #4a8a4a;background:#2a5a2a;color:white;border-radius:4px;font-size:15px;';
-    saveBtn.textContent = '儲存並返回';
+    saveBtn.textContent = fromHome ? '關閉' : '儲存並返回';
     saveBtn.onclick = () => { saveSettings(); hideSettings(); };
     panel.appendChild(saveBtn);
 
@@ -2293,18 +2295,20 @@ function showSkillTree(cause) {
     buildSkillTreeOverlay(cause);
 }
 
-function buildSkillTreeOverlay(cause) {
+function buildSkillTreeOverlay(cause, fromHome) {
+    _skillTreeFromHome = !!fromHome;
     const existing = document.getElementById('skill-tree-overlay');
     if (existing) existing.remove();
     const overlay = document.createElement('div');
     overlay.id = 'skill-tree-overlay';
-    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);overflow-y:scroll;display:flex;flex-direction:column;align-items:center;padding:20px 0 30px;z-index:150;pointer-events:all;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
+    const zIdx = fromHome ? 210 : 150;
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);overflow-y:scroll;display:flex;flex-direction:column;align-items:center;padding:20px 0 30px;z-index:' + zIdx + ';pointer-events:all;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
     overlay.addEventListener('wheel', e => { e.stopPropagation(); }, { passive: true });
 
     // ── 標題
     const title = document.createElement('div');
     title.style.cssText = 'font-size:32px;margin-bottom:14px;flex-shrink:0;';
-    title.textContent = cause === 'timeout' ? '⏰ 時間耗盡' : '💀 你死了';
+    title.textContent = fromHome ? '🌿 技能樹' : (cause === 'timeout' ? '⏰ 時間耗盡' : '💀 你死了');
     overlay.appendChild(title);
 
     // ── 器官選擇區塊
@@ -2367,11 +2371,11 @@ function buildSkillTreeOverlay(cause) {
         });
         organSection.appendChild(organGrid);
     }
-    overlay.appendChild(organSection);
+    if (!fromHome) overlay.appendChild(organSection);
 
     // ── 隱藏器官選擇區塊（最多選1個，可不選）
     const hiddenOrgans = gameState.player.hiddenOrgans || [];
-    if (hiddenOrgans.length > 0) {
+    if (!fromHome && hiddenOrgans.length > 0) {
         const hiddenSection = document.createElement('div');
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const hiddenTitle = document.createElement('div');
@@ -2440,7 +2444,7 @@ function buildSkillTreeOverlay(cause) {
         gameState.skillPoints += spent;
         localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
         localStorage.setItem('skillPoints', String(gameState.skillPoints));
-        buildSkillTreeOverlay();
+        buildSkillTreeOverlay(null, _skillTreeFromHome);
     };
     ptsRow.appendChild(resetBtn);
     overlay.appendChild(ptsRow);
@@ -2500,18 +2504,26 @@ function buildSkillTreeOverlay(cause) {
     // ── 底部按鈕列
     const btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex;gap:12px;margin-bottom:16px;';
-    const homeBtn = document.createElement('button');
-    homeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-    homeBtn.textContent = '🏠 回到首頁';
-    homeBtn.onclick = () => location.reload();
-    btnRow.appendChild(homeBtn);
-    const playAgainBtn = document.createElement('button');
-    playAgainBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-    playAgainBtn.textContent = '⚔️ 再來一場';
-    playAgainBtn.onclick = () => { sessionStorage.setItem('autostart', '1'); location.reload(); };
-    btnRow.appendChild(playAgainBtn);
+    if (fromHome) {
+        const closeBtn = document.createElement('button');
+        closeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
+        closeBtn.textContent = '關閉';
+        closeBtn.onclick = () => overlay.remove();
+        btnRow.appendChild(closeBtn);
+    } else {
+        const homeBtn = document.createElement('button');
+        homeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
+        homeBtn.textContent = '🏠 回到首頁';
+        homeBtn.onclick = () => location.reload();
+        btnRow.appendChild(homeBtn);
+        const playAgainBtn = document.createElement('button');
+        playAgainBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
+        playAgainBtn.textContent = '⚔️ 再來一場';
+        playAgainBtn.onclick = () => { sessionStorage.setItem('autostart', '1'); location.reload(); };
+        btnRow.appendChild(playAgainBtn);
+    }
     overlay.appendChild(btnRow);
-    document.getElementById('ui-overlay').appendChild(overlay);
+    (fromHome ? document.getElementById('game-container') : document.getElementById('ui-overlay')).appendChild(overlay);
 }
 
 function upgradeSkill(id) {
@@ -2524,7 +2536,7 @@ function upgradeSkill(id) {
     gameState.skillPoints--;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
-    buildSkillTreeOverlay();
+    buildSkillTreeOverlay(null, _skillTreeFromHome);
 }
 
 // =============================================================
@@ -3272,31 +3284,34 @@ function showStartScreen() {
     overlay.appendChild(titleEl);
 
     const subtitleEl = document.createElement('div');
-    subtitleEl.style.cssText = 'font-size:16px;color:#aaa;letter-spacing:5px;margin-bottom:50px;';
+    subtitleEl.style.cssText = 'font-size:16px;color:#aaa;letter-spacing:5px;margin-bottom:40px;';
     subtitleEl.textContent = GAME_INFO.subtitle;
     overlay.appendChild(subtitleEl);
 
-    const btn = document.createElement('button');
-    btn.style.cssText = 'font-size:20px;padding:12px 42px;cursor:pointer;pointer-events:all;border-radius:4px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;margin-bottom:48px;';
-    btn.textContent = '開始遊戲';
-    overlay.appendChild(btn);
+    const menuBtnStyle = 'font-size:18px;padding:10px 0;cursor:pointer;pointer-events:all;border-radius:4px;color:white;width:220px;margin-bottom:12px;';
+
+    const startBtn = document.createElement('button');
+    startBtn.style.cssText = menuBtnStyle + 'background:#2a5a2a;border:1px solid #4a8a4a;';
+    startBtn.textContent = '▶ 開始遊戲';
+    startBtn.onclick = () => { overlay.remove(); initializeGame(); };
+    overlay.appendChild(startBtn);
+
+    const skillBtn = document.createElement('button');
+    skillBtn.style.cssText = menuBtnStyle + 'background:rgba(60,100,60,0.3);border:1px solid #4a7a4a;';
+    skillBtn.textContent = '🌿 技能樹';
+    skillBtn.onclick = () => buildSkillTreeOverlay(null, true);
+    overlay.appendChild(skillBtn);
+
+    const settingsBtn = document.createElement('button');
+    settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
+    settingsBtn.textContent = '⚙️ 設定';
+    settingsBtn.onclick = () => showSettings(true);
+    overlay.appendChild(settingsBtn);
 
     const footerEl = document.createElement('div');
     footerEl.style.cssText = 'position:absolute;bottom:16px;font-size:12px;color:#555;';
     footerEl.textContent = '© 2026 ' + GAME_INFO.author + '  |  ' + GAME_INFO.version;
     overlay.appendChild(footerEl);
-
-    let started = false;
-    const start = () => {
-        if (started) return;
-        started = true;
-        overlay.remove();
-        document.removeEventListener('keydown', startOnKey);
-        initializeGame();
-    };
-    const startOnKey = () => start();
-    btn.onclick = start;
-    document.addEventListener('keydown', startOnKey);
 
     document.getElementById('game-container').appendChild(overlay);
 }
