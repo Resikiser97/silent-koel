@@ -2269,12 +2269,22 @@ function applySkillBonuses() {
     }
 }
 
+function saveLastRunOrgans() {
+    const p = gameState.player;
+    const data = {
+        organs: (p.organs || []).map(o => ({ id: o.id, name: o.name, type: o.type, level: o.level || 1, desc: o.desc })),
+        hiddenOrgans: (p.hiddenOrgans || []).map(h => ({ id: h.id, name: h.name, desc: h.desc }))
+    };
+    localStorage.setItem('lastRunOrgans', JSON.stringify(data));
+}
+
 function showSkillTree(cause) {
     if (gameState.gameOver) return;
     gameState.gameOver = true;
     gameState.skillTreeOpen = true;
     AudioManager.play('death');
     AudioManager.stopMusic();
+    saveLastRunOrgans();
     gameState.skillPoints += 1;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
@@ -2462,12 +2472,45 @@ function buildSkillTreeOverlay(cause) {
     });
     overlay.appendChild(grid);
 
-    // ── 重新開始
-    const restartBtn = document.createElement('button');
-    restartBtn.style.cssText = 'font-size:18px;padding:10px 32px;cursor:pointer;border:1px solid white;background:rgba(255,255,255,0.15);color:white;border-radius:5px;';
-    restartBtn.textContent = '重新開始';
-    restartBtn.onclick = () => location.reload();
-    overlay.appendChild(restartBtn);
+    // ── 上局遺留器官
+    const lastRunSec = document.createElement('div');
+    lastRunSec.style.cssText = 'max-width:660px;width:90%;margin-bottom:18px;border:1px solid #333;border-radius:6px;padding:12px 16px;';
+    const lastRunTitle = document.createElement('div');
+    lastRunTitle.style.cssText = 'font-size:14px;color:#888;font-weight:bold;margin-bottom:8px;';
+    lastRunTitle.textContent = '📦 上局遺留器官';
+    lastRunSec.appendChild(lastRunTitle);
+    const lastRunRaw = localStorage.getItem('lastRunOrgans');
+    let lastRunItems = [];
+    try { if (lastRunRaw) { const d = JSON.parse(lastRunRaw); lastRunItems = [...(d.organs || []), ...(d.hiddenOrgans || [])]; } } catch(e) {}
+    if (lastRunItems.length === 0) {
+        const noneEl = document.createElement('div');
+        noneEl.style.cssText = 'font-size:13px;color:#555;';
+        noneEl.textContent = '尚無記錄';
+        lastRunSec.appendChild(noneEl);
+    } else {
+        lastRunItems.forEach(o => {
+            const item = document.createElement('div');
+            item.style.cssText = 'font-size:13px;color:#999;margin-bottom:4px;';
+            item.textContent = (o.level ? 'Lv.' + o.level + ' ' : '✨ ') + o.name + (o.desc ? '　' + o.desc : '');
+            lastRunSec.appendChild(item);
+        });
+    }
+    overlay.appendChild(lastRunSec);
+
+    // ── 底部按鈕列
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:12px;margin-bottom:16px;';
+    const homeBtn = document.createElement('button');
+    homeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
+    homeBtn.textContent = '🏠 回到首頁';
+    homeBtn.onclick = () => location.reload();
+    btnRow.appendChild(homeBtn);
+    const playAgainBtn = document.createElement('button');
+    playAgainBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
+    playAgainBtn.textContent = '⚔️ 再來一場';
+    playAgainBtn.onclick = () => { sessionStorage.setItem('autostart', '1'); location.reload(); };
+    btnRow.appendChild(playAgainBtn);
+    overlay.appendChild(btnRow);
     document.getElementById('ui-overlay').appendChild(overlay);
 }
 
@@ -2747,6 +2790,7 @@ function showVictory() {
     AudioManager.stopMusic();
     AudioManager.play('victory');
     addXP(500);
+    saveLastRunOrgans();
     gameState.skillPoints += 1;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
@@ -2772,11 +2816,19 @@ function showVictory() {
     btnTree.textContent = '前往技能樹';
     btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(); };
     overlay.appendChild(btnTree);
-    const btnRestart = document.createElement('button');
-    btnRestart.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;pointer-events:all;';
-    btnRestart.textContent = '重新開始';
-    btnRestart.onclick = () => location.reload();
-    overlay.appendChild(btnRestart);
+    const vBtnRow = document.createElement('div');
+    vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;';
+    const vHomeBtn = document.createElement('button');
+    vHomeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
+    vHomeBtn.textContent = '🏠 回到首頁';
+    vHomeBtn.onclick = () => location.reload();
+    vBtnRow.appendChild(vHomeBtn);
+    const vPlayAgainBtn = document.createElement('button');
+    vPlayAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
+    vPlayAgainBtn.textContent = '⚔️ 再來一場';
+    vPlayAgainBtn.onclick = () => { sessionStorage.setItem('autostart', '1'); location.reload(); };
+    vBtnRow.appendChild(vPlayAgainBtn);
+    overlay.appendChild(vBtnRow);
     const vFooter = document.createElement('div');
     vFooter.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
     vFooter.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
@@ -3205,6 +3257,11 @@ function devToggleDayNight() {
 // 開始畫面
 // =============================================================
 function showStartScreen() {
+    if (sessionStorage.getItem('autostart')) {
+        sessionStorage.removeItem('autostart');
+        initializeGame();
+        return;
+    }
     const overlay = document.createElement('div');
     overlay.id = 'start-screen';
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:#0d1a0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;pointer-events:all;color:white;font-family:Arial,sans-serif;';
