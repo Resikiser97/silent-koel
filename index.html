@@ -112,6 +112,25 @@
         #dev-panel button:hover {
             background: rgba(255, 0, 0, 0.2);
         }
+        #game-tooltip {
+            display: none;
+            position: fixed;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            border: 1px solid #555;
+            border-radius: 6px;
+            padding: 8px 12px;
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.5;
+            pointer-events: none;
+            z-index: 9999;
+            word-wrap: break-word;
+        }
+        #game-tooltip .tt-name { font-size:15px; font-weight:bold; margin-bottom:4px; }
+        #game-tooltip .tt-hidden { font-size:11px; color:#FFD700; margin-bottom:3px; }
+        #game-tooltip .tt-desc { font-size:12px; color:#ccc; }
+        #game-tooltip .tt-combo { font-size:11px; color:#FFD700; margin-top:5px; }
     </style>
 <script src="gameConfig.js"></script>
 </head>
@@ -158,6 +177,7 @@
         <button onclick="devToggleDayNight()">🌙 切換日夜</button>
     </div>
 </div>
+<div id="game-tooltip"></div>
 
 <script>
 // =============================================================
@@ -168,6 +188,51 @@ let _settingsMouseHandler = null;
 let _rebindBlink          = null;
 let _rebindTimeout        = null;
 let _skillTreeFromHome    = false;
+
+// =============================================================
+// Tooltip 工具提示系統
+// =============================================================
+let _organHitRegions = [];
+const _ttEl = document.getElementById('game-tooltip');
+
+function showTooltip(data, cx, cy) {
+    if (!_ttEl) return;
+    let html = '<div class="tt-name">' + _escH(data.name || '');
+    if (data.level != null) {
+        html += ' <span style="font-weight:normal;font-size:12px;color:#aaa;">Lv.' + data.level + (data.maxLevel ? '/' + data.maxLevel : '') + '</span>';
+    }
+    html += '</div>';
+    if (data.isHidden) html += '<div class="tt-hidden">✨ 隱藏器官</div>';
+    html += '<div class="tt-desc">' + _escH(data.desc || '') + '</div>';
+    if (data.combo) html += '<div class="tt-combo">⚡ 組合效果：' + _escH(data.combo) + '</div>';
+    _ttEl.innerHTML = html;
+    _ttEl.style.display = 'block';
+    _moveTooltip(cx, cy);
+}
+
+function hideTooltip() {
+    if (_ttEl) _ttEl.style.display = 'none';
+}
+
+function _moveTooltip(cx, cy) {
+    if (!_ttEl) return;
+    const tw = _ttEl.offsetWidth || 250;
+    const th = _ttEl.offsetHeight || 80;
+    let tx = cx + 14;
+    let ty = cy + 14;
+    if (tx + tw > window.innerWidth  - 10) tx = cx - tw - 14;
+    if (ty + th > window.innerHeight - 10) ty = cy - th - 14;
+    _ttEl.style.left = tx + 'px';
+    _ttEl.style.top  = ty + 'px';
+}
+
+function _escH(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+document.addEventListener('mousemove', function(e) {
+    if (_ttEl && _ttEl.style.display !== 'none') _moveTooltip(e.clientX, e.clientY);
+});
 
 // =============================================================
 // 預設設定值
@@ -1496,6 +1561,7 @@ function showOrganSelection() {
     const evoOptions = slotsFull ? checkEvolutionUnlock() : [];
 
     const closeOverlay = () => {
+        hideTooltip();
         const el = document.getElementById('organ-selection-overlay');
         if (el) el.remove();
         gameState.organSelectionActive = false;
@@ -1574,8 +1640,11 @@ function showOrganSelection() {
                 '</div>' +
                 '<div style="font-size:11px;color:#ccc;margin-top:4px;">' + lvDesc + '</div>' +
                 (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">⚡ 組合效果：' + comboHint + '</div>' : '');
-            btn.onmouseenter = () => { btn.style.background = 'rgba(255,255,255,0.2)'; };
-            btn.onmouseleave = () => { btn.style.background = 'rgba(255,255,255,0.08)'; };
+            btn.onmouseenter = (e) => {
+                btn.style.background = 'rgba(255,255,255,0.2)';
+                showTooltip({ name: def.name, level: targetLevel, maxLevel: def.maxLevel, desc: def.levels[targetLevel - 1].desc, combo: comboHint }, e.clientX, e.clientY);
+            };
+            btn.onmouseleave = () => { btn.style.background = 'rgba(255,255,255,0.08)'; hideTooltip(); };
             btn.onclick = () => {
                 if (isUpgrade) {
                     existingOrgan.level = targetLevel;
@@ -1596,8 +1665,11 @@ function showOrganSelection() {
             const btn = document.createElement('div');
             btn.style.cssText = 'background:rgba(255,215,0,0.08);border:1px solid #FFD700;color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
             btn.innerHTML = '<strong style="color:#FFD700;font-size:16px;">' + path.icon + ' ' + path.name + ' Lv.' + opt.nextLevel + '</strong><br><span style="font-size:12px;color:#ccc;">' + lvData.desc + '</span>';
-            btn.onmouseenter = () => { btn.style.background = 'rgba(255,215,0,0.2)'; };
-            btn.onmouseleave = () => { btn.style.background = 'rgba(255,215,0,0.08)'; };
+            btn.onmouseenter = (e) => {
+                btn.style.background = 'rgba(255,215,0,0.2)';
+                showTooltip({ name: path.icon + ' ' + path.name, level: opt.nextLevel, maxLevel: path.maxLevel, desc: lvData.desc }, e.clientX, e.clientY);
+            };
+            btn.onmouseleave = () => { btn.style.background = 'rgba(255,215,0,0.08)'; hideTooltip(); };
             btn.onclick = () => {
                 applyEvolutionLevelEffect(opt.type, opt.nextLevel);
                 closeOverlay();
@@ -1674,6 +1746,45 @@ function drawOrganUI() {
     const boxBottom = H - versionAreaH;
     const boxY      = boxBottom - organsBoxH;
     const evoBoxY   = boxY - 4 - evoBoxH;
+
+    // 更新 HUD 器官 / 進化路線 hit regions（供 canvas mousemove tooltip 用）
+    _organHitRegions = [];
+    const _hrX = padX - 4;
+    const _hrW = 164;
+    if (evoCnt > 0) {
+        const _evoKeys = Object.entries(EVOLUTION_PATHS).filter(([key]) => (ev[key] || 0) > 0);
+        _evoKeys.forEach(([key, path], i) => {
+            const lv = ev[key];
+            _organHitRegions.push({
+                x: _hrX, y: evoBoxY + padY + i * lineH, w: _hrW, h: lineH,
+                data: { name: path.icon + ' ' + path.name, level: lv, maxLevel: path.maxLevel, desc: path.levels[lv - 1].desc }
+            });
+        });
+    }
+    organs.forEach((organ, i) => {
+        _organHitRegions.push({
+            x: _hrX, y: boxY + padY + (i + 1) * lineH, w: _hrW, h: lineH,
+            data: {
+                name: organ.name,
+                level: organ.level || 1,
+                maxLevel: ORGANS[organ.id] ? ORGANS[organ.id].maxLevel : null,
+                desc: ORGANS[organ.id] ? ORGANS[organ.id].levels[0].desc : (organ.desc || ''),
+                organId: organ.id
+            }
+        });
+    });
+    if (hiddenOrgans.length > 0) {
+        hiddenOrgans.forEach((organ, j) => {
+            _organHitRegions.push({
+                x: _hrX, y: boxY + padY + (organs.length + 2 + j) * lineH, w: _hrW, h: lineH,
+                data: {
+                    name: organ.name,
+                    desc: HIDDEN_ORGANS[organ.id] ? HIDDEN_ORGANS[organ.id].desc : (organ.desc || ''),
+                    isHidden: true
+                }
+            });
+        });
+    }
 
     // 繪製進化框（多行）
     if (evoCnt > 0) {
@@ -2349,6 +2460,8 @@ function buildSkillTreeOverlay(cause, fromHome) {
         playerOrgans.forEach((organ, idx) => {
             const card = document.createElement('div');
             card.style.cssText = 'background:rgba(255,255,255,0.07);border:1px solid #555;border-radius:6px;padding:8px 10px;cursor:pointer;width:130px;box-sizing:border-box;text-align:center;transition:border-color 0.15s;';
+            card.onmouseenter = (e) => showTooltip({ name: organ.name, level: organ.level || 1, maxLevel: ORGANS[organ.id] ? ORGANS[organ.id].maxLevel : null, desc: ORGANS[organ.id] ? ORGANS[organ.id].levels[0].desc : (organ.desc || '') }, e.clientX, e.clientY);
+            card.onmouseleave = hideTooltip;
             const nameEl = document.createElement('div');
             nameEl.style.cssText = 'font-size:12px;font-weight:bold;color:' + (typeColor[organ.type] || '#FFD700') + ';margin-bottom:3px;';
             nameEl.textContent = organ.name + ' Lv.' + (organ.level || 1) + (organ.level > 1 ? '（→Lv.1）' : '');
@@ -2402,6 +2515,8 @@ function buildSkillTreeOverlay(cause, fromHome) {
         hiddenOrgans.forEach((organ, idx) => {
             const card = document.createElement('div');
             card.style.cssText = 'background:rgba(255,215,0,0.08);border:2px solid #887700;border-radius:6px;padding:8px 10px;width:150px;box-sizing:border-box;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;';
+            card.onmouseenter = (e) => showTooltip({ name: organ.name, desc: (HIDDEN_ORGANS[organ.id] || {}).desc || organ.desc || '', isHidden: true }, e.clientX, e.clientY);
+            card.onmouseleave = hideTooltip;
             const nameEl = document.createElement('div');
             nameEl.style.cssText = 'font-size:12px;font-weight:bold;color:#FFD700;margin-bottom:3px;';
             nameEl.textContent = '✨ ' + organ.name;
@@ -2469,6 +2584,8 @@ function buildSkillTreeOverlay(cause, fromHome) {
         const level = gameState.playerSkills[skill.id] || 0;
         const card = document.createElement('div');
         card.style.cssText = 'background:rgba(255,255,255,0.1);border:1px solid #555;border-radius:6px;padding:10px;text-align:center;';
+        card.onmouseenter = (e) => showTooltip({ name: skill.name, level: level, maxLevel: skill.maxLevel, desc: skill.desc }, e.clientX, e.clientY);
+        card.onmouseleave = hideTooltip;
         const nameEl = document.createElement('div');
         nameEl.style.cssText = 'font-size:14px;font-weight:bold;margin-bottom:4px;';
         nameEl.textContent = skill.name + '  Lv.' + level + '/' + skill.maxLevel;
@@ -2520,6 +2637,8 @@ function buildSkillTreeOverlay(cause, fromHome) {
                 _lrOrgans.forEach((organ) => {
                     const card = document.createElement('div');
                     card.style.cssText = 'background:rgba(255,255,255,0.07);border:1px solid #555;border-radius:6px;padding:8px 10px;cursor:pointer;width:130px;box-sizing:border-box;text-align:center;';
+                    card.onmouseenter = (e) => showTooltip({ name: organ.name, level: organ.level || 1, maxLevel: ORGANS[organ.id] ? ORGANS[organ.id].maxLevel : null, desc: ORGANS[organ.id] ? ORGANS[organ.id].levels[0].desc : (organ.desc || '') }, e.clientX, e.clientY);
+                    card.onmouseleave = hideTooltip;
                     const nEl = document.createElement('div');
                     nEl.style.cssText = 'font-size:12px;font-weight:bold;color:' + (tColor[organ.type] || '#FFD700') + ';margin-bottom:3px;';
                     nEl.textContent = organ.name + ' Lv.' + (organ.level || 1);
@@ -2567,6 +2686,8 @@ function buildSkillTreeOverlay(cause, fromHome) {
                 _lrHidden.forEach((organ) => {
                     const card = document.createElement('div');
                     card.style.cssText = 'background:rgba(255,215,0,0.08);border:2px solid #887700;border-radius:6px;padding:8px 10px;width:150px;box-sizing:border-box;text-align:center;cursor:pointer;';
+                    card.onmouseenter = (e) => showTooltip({ name: organ.name, desc: organ.desc || '', isHidden: true }, e.clientX, e.clientY);
+                    card.onmouseleave = hideTooltip;
                     const nEl = document.createElement('div');
                     nEl.style.cssText = 'font-size:12px;font-weight:bold;color:#FFD700;margin-bottom:3px;';
                     nEl.textContent = '✨ ' + organ.name;
@@ -2631,7 +2752,7 @@ function buildSkillTreeOverlay(cause, fromHome) {
         const closeBtn = document.createElement('button');
         closeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
         closeBtn.textContent = '關閉';
-        closeBtn.onclick = () => overlay.remove();
+        closeBtn.onclick = () => { hideTooltip(); overlay.remove(); };
         btnRow.appendChild(closeBtn);
     } else {
         const homeBtn = document.createElement('button');
@@ -3149,6 +3270,7 @@ function showHiddenOrganSelection(drops) {
     gameState.organSelectionActive = true;
 
     const closeOverlay = () => {
+        hideTooltip();
         const el = document.getElementById('hidden-organ-overlay');
         if (el) el.remove();
         gameState.organSelectionActive = false;
@@ -3178,8 +3300,11 @@ function showHiddenOrganSelection(drops) {
         btn.style.cssText = 'background:rgba(255,215,0,0.08);border:2px solid #FFD700;color:white;padding:14px 24px;margin:6px;cursor:pointer;border-radius:8px;width:400px;text-align:center;';
         btn.innerHTML = '<div style="color:#FFD700;font-weight:bold;font-size:16px;margin-bottom:5px;">✨ ' + organ.name + '</div>' +
             '<div style="font-size:12px;color:#ddd;">' + organ.desc + '</div>';
-        btn.onmouseenter = () => { btn.style.background = 'rgba(255,215,0,0.22)'; };
-        btn.onmouseleave = () => { btn.style.background = 'rgba(255,215,0,0.08)'; };
+        btn.onmouseenter = (e) => {
+            btn.style.background = 'rgba(255,215,0,0.22)';
+            showTooltip({ name: organ.name, desc: organ.desc || '', isHidden: true }, e.clientX, e.clientY);
+        };
+        btn.onmouseleave = () => { btn.style.background = 'rgba(255,215,0,0.08)'; hideTooltip(); };
         btn.onclick = () => {
             const p = gameState.player;
             if (!p.hiddenOrgans) p.hiddenOrgans = [];
@@ -3258,6 +3383,23 @@ function initializeGame() {
     canvas.addEventListener('click', function() {
         if (!gameState.organSelectionActive && !gameState.settingsOpen) playerAttack();
     });
+    canvas.addEventListener('mousemove', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top)  * scaleY;
+        for (const r of _organHitRegions) {
+            if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) {
+                const d = Object.assign({}, r.data);
+                if (d.organId) d.combo = getComboHint(d.organId);
+                showTooltip(d, e.clientX, e.clientY);
+                return;
+            }
+        }
+        hideTooltip();
+    });
+    canvas.addEventListener('mouseleave', hideTooltip);
 
     // 4. 存檔版本檢查：版本不一致時清除所有存檔
     const SAVE_KEYS = ['playerSkills', 'skillPoints', 'savedOrgans', 'savedHiddenOrgans'];
