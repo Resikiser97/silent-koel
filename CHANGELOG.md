@@ -2,6 +2,35 @@
 
 ---
 
+## v0.16.0 - 2026-05-15
+
+### 新增
+- **多語系系統**：新增繁體中文 / English 切換，所有 UI、器官、技能、進化、組合、Boss、精英、Guide 內容皆支援雙語
+  - 新增 `lang.js` 獨立檔案，集中收納 `LANG_LIST`、`LANG` 字典與 `applyLanguage()`、`t(key, params?)` 工具；可外包給譯者直接編輯
+  - `applyLanguage(lang)` 把當前語言寫回 `ORGANS / HIDDEN_ORGANS / SKILLS / EVOLUTION_PATHS / COMBOS / ELITE_CONFIG / BOSS_CONFIG`，既有 `.name`/`.desc` 讀取自動跟著切換
+  - `t(key, params?)` 提供 UI 字串查找，支援 `{token}` 替換（如 `bossAppeared` 的 `{name}`、`rerollBtn` 的 `{n}`）
+  - 缺鍵時自動 fallback 回 zh-TW，避免新增 key 卻忘記翻其他語言時整段空白
+- **語言設定**：設定面板最上方新增「語言設定」區塊，提供「繁體中文 / English」按鈕；當前語言以金色高亮
+  - 切換後即時刷新所有開啟中的介面（首頁 / 設定 / Guide / 技能樹），無需重整
+  - 語言寫入 `gameSettings.language`，下次啟動自動載入
+- **遊戲說明 (Guide) 介面**：首頁「📖 遊戲說明」按鈕進入，半透明黑色遮罩、3 頁分頁
+  - 上方顯示「{cur} / {total}」頁碼與頁面副標題；左右箭頭切換頁面（首尾自動禁用）；底部「關閉」回首頁
+  - 第 1 頁「基本操作」、第 2 頁「器官系統」、第 3 頁「進化系統」內容雙語
+
+### 調整
+- **首頁按鈕順序**：開始遊戲 → 技能樹 → 遊戲說明 → 設定（新增 Guide 入口）
+- **`gameState`** 新增 `language` 欄位，預設 `zh-TW`；`DEFAULT_SETTINGS` 同步加入 `language`
+- **`loadSettings()`** 載入語言並呼叫 `applyLanguage()`，確保資料表初始化即為使用者選的語言
+- **`updateUI()` HUD 文字**改用 `t()`：時間、日夜狀態、地形、開發者統計
+- **設定 / 技能樹 / 器官選擇 / 隱藏器官選擇 / 勝利 / 死亡 / 時間耗盡 / Day-Night 切換 / 精英 / Boss / 升級 / 重選 / Tooltip / HUD 器官框** 等所有可見文字全面改用 `t()` 與 `LANG` 字典
+- **`_keyDisplay()`** 「滑鼠左鍵」改用 `t('mouseLeft')`，跟隨語言顯示
+
+### 文件
+- **`lang.js` 開頭加入翻譯外包說明**：步驟、{token} 規則、必須維持 key 結構、不可改動底部工具函式
+- **`gameConfig.js` 開頭加入多語系說明**：資料表保留中文預設值，切換語言時由 `applyLanguage()` 覆寫
+
+---
+
 ## v0.15.3 - 2026-05-14
 
 ### 修復

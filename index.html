@@ -133,6 +133,7 @@
         #game-tooltip .tt-combo { font-size:11px; color:#FFD700; margin-top:5px; }
     </style>
 <script src="gameConfig.js"></script>
+<script src="lang.js"></script>
 </head>
 <body>
 
@@ -202,9 +203,9 @@ function showTooltip(data, cx, cy) {
         html += ' <span style="font-weight:normal;font-size:12px;color:#aaa;">Lv.' + data.level + (data.maxLevel ? '/' + data.maxLevel : '') + '</span>';
     }
     html += '</div>';
-    if (data.isHidden) html += '<div class="tt-hidden">✨ 隱藏器官</div>';
+    if (data.isHidden) html += '<div class="tt-hidden">' + t('hiddenOrganTag') + '</div>';
     html += '<div class="tt-desc">' + _escH(data.desc || '') + '</div>';
-    if (data.combo) html += '<div class="tt-combo">⚡ 組合效果：' + _escH(data.combo) + '</div>';
+    if (data.combo) html += '<div class="tt-combo">' + t('comboHintLabel') + _escH(data.combo) + '</div>';
     _ttEl.innerHTML = html;
     _ttEl.style.display = 'block';
     _moveTooltip(cx, cy);
@@ -238,6 +239,7 @@ document.addEventListener('mousemove', function(e) {
 // 預設設定值
 // =============================================================
 const DEFAULT_SETTINGS = {
+    language: 'zh-TW',
     volume: { master: 80, music: 70, sfx: 80, masterOn: true, musicOn: true, sfxOn: true },
     keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ' }
 };
@@ -407,6 +409,7 @@ const gameState = {
     skillTreeOpen: false,
     victory: false,
     _rebindTarget: null,
+    language: 'zh-TW',
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 
@@ -671,7 +674,7 @@ function checkFruitCollision() {
             // 雜食Lv3：10%機率吃東西回血5
             if (ev.omnivore >= 3 && Math.random() < 0.1) {
                 gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 5);
-                showFloatingText(p.x, p.y - 40, '飽食！HP+5', '#00FF88');
+                showFloatingText(p.x, p.y - 40, t('fullText'), '#00FF88');
             }
 
             // 1. 移除果子
@@ -903,18 +906,19 @@ function updateUI() {
         '</div>';
 
     // 右上角：時間、日夜狀態、地形
-    document.getElementById('time-display').innerText = `時間: ${gameState.stats.timeStatus}`;
+    document.getElementById('time-display').innerText = t('timeLabel') + ': ' + gameState.stats.timeStatus;
     const dayEl = document.getElementById('day-display');
-    dayEl.innerText = `現在是「${gameState.stats.dayCycle}」`;
+    const phaseLabel = gameState.isNight ? t('phaseNight') : t('phaseDay');
+    dayEl.innerText = t('dayCycleFormat', { phase: phaseLabel });
     dayEl.style.color = gameState.isNight ? 'orange' : '';
-    const biomeIcons = { forest: '🌲 森林', ocean: '🌊 海洋', desert: '🏜️ 沙漠' };
+    const biomeIcons = { forest: t('biomeForest'), ocean: t('biomeOcean'), desert: t('biomeDesert') };
     const biomeEl = document.getElementById('biome-display');
     if (biomeEl) biomeEl.innerText = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
 
     if (gameState.devMode) {
-        document.getElementById('dev-stat-fruits').textContent = '🍎 果子總數：' + gameState.fruits.length;
-        document.getElementById('dev-stat-neutral').textContent = '🟠 中立生物：' + gameState.neutralCreatures.filter(c => c.hp > 0).length + ' / 50';
-        document.getElementById('dev-stat-hostile').textContent = '🔴 敵意生物：' + gameState.hostileCreatures.filter(c => c.hp > 0).length + ' / 35';
+        document.getElementById('dev-stat-fruits').textContent = t('devFruits') + '：' + gameState.fruits.length;
+        document.getElementById('dev-stat-neutral').textContent = t('devNeutral') + '：' + gameState.neutralCreatures.filter(c => c.hp > 0).length + ' / 50';
+        document.getElementById('dev-stat-hostile').textContent = t('devHostile') + '：' + gameState.hostileCreatures.filter(c => c.hp > 0).length + ' / 35';
     }
 }
 
@@ -1371,7 +1375,7 @@ function applyDamageToPlayer(rawDamage, attacker) {
             // 頑強意志：每局觸發一次，保留 10%×等級的 HP
             gameState.stats.hpCurrent = Math.max(1, Math.ceil(gameState.stats.hpMax * 0.1 * tenacityLevel));
             p.tenacityUsed = true;
-            showFloatingText(p.x, p.y - 40, '頑強意志！', '#FF8800');
+            showFloatingText(p.x, p.y - 40, t('tenacityFloat'), '#FF8800');
             return;
         }
         showSkillTree();
@@ -1607,12 +1611,12 @@ function showOrganSelection() {
 
     const title = document.createElement('div');
     title.style.cssText = 'color:#FFD700;font-size:22px;font-weight:bold;margin-bottom:6px;text-shadow:1px 1px 4px black;';
-    title.textContent = slotsFull ? '✦ 選擇進化路線 ✦' : '✦ 選擇器官或升級 ✦';
+    title.textContent = slotsFull ? t('chooseEvo') : t('chooseOrgan');
     overlay.appendChild(title);
 
     const slotInfo = document.createElement('div');
     slotInfo.style.cssText = 'color:#aaa;font-size:13px;margin-bottom:14px;';
-    slotInfo.textContent = '槽位：' + organSlotsUsed + ' / ' + p.organSlots;
+    slotInfo.textContent = t('slotLabel') + '：' + organSlotsUsed + ' / ' + p.organSlots;
     overlay.appendChild(slotInfo);
 
     // 選項容器（支援幸運重選動態更新）
@@ -1639,7 +1643,7 @@ function showOrganSelection() {
                     def.name + (isUpgrade ? ' Lv.' + existingOrgan.level + ' → Lv.' + targetLevel : ' Lv.1') +
                 '</div>' +
                 '<div style="font-size:11px;color:#ccc;margin-top:4px;">' + lvDesc + '</div>' +
-                (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">⚡ 組合效果：' + comboHint + '</div>' : '');
+                (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">' + t('comboHintLabel') + comboHint + '</div>' : '');
             btn.onmouseenter = (e) => {
                 btn.style.background = 'rgba(255,255,255,0.2)';
                 showTooltip({ name: def.name, level: targetLevel, maxLevel: def.maxLevel, desc: def.levels[targetLevel - 1].desc, combo: comboHint }, e.clientX, e.clientY);
@@ -1686,7 +1690,7 @@ function showOrganSelection() {
                 (canReroll
                     ? 'background:rgba(100,200,255,0.1);border:1px solid #66CCFF;color:#66CCFF;cursor:pointer;'
                     : 'background:rgba(80,80,80,0.1);border:1px solid #555;color:#555;cursor:default;');
-            rerollBtn.textContent = '🎲 重新隨機（剩餘 ' + remaining + ' 次）';
+            rerollBtn.textContent = t('rerollBtn', { n: remaining });
             if (canReroll) {
                 rerollBtn.onmouseenter = () => { rerollBtn.style.background = 'rgba(100,200,255,0.25)'; };
                 rerollBtn.onmouseleave = () => { rerollBtn.style.background = 'rgba(100,200,255,0.1)'; };
@@ -1805,14 +1809,14 @@ function drawOrganUI() {
     // 第一行：槽位狀態（用等級總和計算）
     const isFull = organSlotsUsed >= p.organSlots;
     ctx.fillStyle = isFull ? '#FFD700' : '#CCCCCC';
-    const slotText = '器官：' + organSlotsUsed + ' / ' + p.organSlots + (isFull ? ' ✨可進化' : '');
+    const slotText = t('organLabel') + '：' + organSlotsUsed + ' / ' + p.organSlots + (isFull ? t('canEvolve') : '');
     ctx.fillText(slotText, padX, boxY + padY + lineH - 4);
 
     // 後續行：一般器官清單
     const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
     organs.forEach((organ, i) => {
         ctx.fillStyle = typeColor[organ.type] || '#FFD700';
-        const label = '▸ ' + organ.name + ' Lv.' + (organ.level || 1) + (organ.inherited ? '（繼承）' : '');
+        const label = '▸ ' + organ.name + ' Lv.' + (organ.level || 1) + (organ.inherited ? t('inheritedSuffix') : '');
         ctx.fillText(label, padX, boxY + padY + (i + 2) * lineH - 4);
     });
 
@@ -1863,7 +1867,7 @@ function playerAttack() {
     p.attackTimer = now;
 
     if (p.attack <= 0) {
-        showFloatingText(p.x, p.y - 30, '沒有攻擊器官！', '#FF8800');
+        showFloatingText(p.x, p.y - 30, t('noAttackOrgan'), '#FF8800');
         return;
     }
 
@@ -1953,7 +1957,7 @@ function updateStatusEffects() {
             const hpBefore = c.hp;
             c.hp -= bleedAmt;
             c.lastBleedTick = now;
-            showFloatingText(c.x, c.y - 18, '血 -' + bleedAmt, '#880000', 11);
+            showFloatingText(c.x, c.y - 18, t('bleedFloat', { n: bleedAmt }), '#880000', 11);
             if (hpBefore > 0 && c.hp <= 0) {
                 if (isElite) handleEliteKill(c);
                 else handleKill(c, isHostile);
@@ -1965,7 +1969,7 @@ function updateStatusEffects() {
             const hpBefore = c.hp;
             c.hp -= poisonAmt;
             c.lastPoisonTick = now;
-            showFloatingText(c.x, c.y - 18, '毒 -' + poisonAmt, '#8800CC', 11);
+            showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: poisonAmt }), '#8800CC', 11);
             if (hpBefore > 0 && c.hp <= 0) {
                 if (isElite) handleEliteKill(c);
                 else handleKill(c, isHostile);
@@ -2071,7 +2075,7 @@ function updateCorpseEating() {
                 if (corpse.eatProgress >= 1) {
                     if (ev.omnivore >= 3 && Math.random() < 0.1) {
                         gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 5);
-                        showFloatingText(p.x, p.y - 50, '飽食！HP+5', '#00FF88');
+                        showFloatingText(p.x, p.y - 50, t('fullText'), '#00FF88');
                     }
                     gameState.corpses.splice(i, 1);
                 }
@@ -2116,8 +2120,43 @@ function loadSettings() {
             const parsed = JSON.parse(saved);
             if (parsed.volume) Object.assign(gameState.settings.volume, parsed.volume);
             if (parsed.keys)   Object.assign(gameState.settings.keys,   parsed.keys);
+            if (parsed.language && LANG[parsed.language]) {
+                gameState.settings.language = parsed.language;
+                gameState.language = parsed.language;
+            }
         }
     } catch(e) {}
+    applyLanguage(gameState.language);
+}
+
+// 切換語言：寫入 settings、重新套用 LANG 資料表、即時刷新開啟中的介面
+function switchLanguage(lang) {
+    if (!LANG[lang]) return;
+    if (gameState.language === lang) return;
+    gameState.language = lang;
+    gameState.settings.language = lang;
+    applyLanguage(lang);
+    saveSettings();
+
+    const settingsOpen = !!document.getElementById('settings-overlay');
+    const homeOpen     = !!document.getElementById('start-screen');
+    const guideOpen    = !!document.getElementById('guide-overlay');
+    const treeOpen     = !!document.getElementById('skill-tree-overlay');
+    const guidePage    = guideOpen ? parseInt(document.getElementById('guide-overlay').dataset.page || '0', 10) : 0;
+    const treeCause    = treeOpen ? document.getElementById('skill-tree-overlay').dataset.cause || null : null;
+    const treeFromHome = !!_skillTreeFromHome;
+
+    // 先把所有 overlay 拆掉，順序按 z 由下到上
+    if (homeOpen)     { const e = document.getElementById('start-screen');       if (e) e.remove(); }
+    if (treeOpen)     { const e = document.getElementById('skill-tree-overlay'); if (e) e.remove(); gameState.skillTreeOpen = false; }
+    if (guideOpen)    { hideGuide(); }
+    if (settingsOpen) { hideSettings(); }
+
+    // 再依底→頂重建
+    if (homeOpen)     showStartScreen();
+    if (treeOpen)     buildSkillTreeOverlay(treeCause, treeFromHome);
+    if (guideOpen)    showGuide(guidePage);
+    if (settingsOpen) showSettings(homeOpen);
 }
 
 function saveSettings() {
@@ -2126,7 +2165,7 @@ function saveSettings() {
 
 function _keyDisplay(k) {
     if (k === ' ') return 'Space';
-    if (k === 'mouseleft') return '滑鼠左鍵';
+    if (k === 'mouseleft') return t('mouseLeft');
     return k.length === 1 ? k.toUpperCase() : k.charAt(0).toUpperCase() + k.slice(1);
 }
 
@@ -2154,21 +2193,39 @@ function showSettings(fromHome) {
 
     const titleEl = document.createElement('div');
     titleEl.style.cssText = 'font-size:22px;font-weight:bold;text-align:center;margin-bottom:18px;';
-    titleEl.textContent = '⚙️ 設定';
+    titleEl.textContent = t('settingsTitle');
     panel.appendChild(titleEl);
 
+    // ─── 語言設定 ───
+    const langSec = _buildSettingsSection(t('sectionLanguage'));
+    const langRow = document.createElement('div');
+    langRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+    LANG_LIST.forEach(({ code, label }) => {
+        const btn = document.createElement('button');
+        const isCur = (gameState.language === code);
+        btn.style.cssText = 'flex:1;min-width:120px;padding:8px 12px;cursor:pointer;border-radius:4px;font-size:14px;' +
+            (isCur
+                ? 'background:#2a5a2a;color:#FFD700;border:1px solid #FFD700;font-weight:bold;'
+                : 'background:#2a2a2a;color:white;border:1px solid #555;');
+        btn.textContent = label;
+        btn.onclick = () => { if (!isCur) switchLanguage(code); };
+        langRow.appendChild(btn);
+    });
+    langSec.appendChild(langRow);
+    panel.appendChild(langSec);
+
     // ─── 音量設定 ───
-    const volSec = _buildSettingsSection('音量設定');
-    [{ label: '總音量', vk: 'master', ok: 'masterOn' },
-     { label: '音樂音量', vk: 'music',  ok: 'musicOn'  },
-     { label: '音效音量', vk: 'sfx',    ok: 'sfxOn'    }].forEach(({ label, vk, ok }) => {
+    const volSec = _buildSettingsSection(t('sectionVolume'));
+    [{ label: t('volMaster'), vk: 'master', ok: 'masterOn' },
+     { label: t('volMusic'),  vk: 'music',  ok: 'musicOn'  },
+     { label: t('volSfx'),    vk: 'sfx',    ok: 'sfxOn'    }].forEach(({ label, vk, ok }) => {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
         const tog = document.createElement('button');
         tog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
         const refreshTog = () => {
             const on = gameState.settings.volume[ok];
-            tog.textContent = on ? '開' : '關';
+            tog.textContent = on ? t('on') : t('off');
             tog.style.background = on ? '#2a8a2a' : '#555';
         };
         refreshTog();
@@ -2191,13 +2248,13 @@ function showSettings(fromHome) {
     panel.appendChild(volSec);
 
     // ─── 按鍵設定 ───
-    const keySec = _buildSettingsSection('按鍵設定');
+    const keySec = _buildSettingsSection(t('sectionKeys'));
     const keyDefs = [
-        { label: '移動上', sk: 'up',     fallback: '↑ ArrowUp'   },
-        { label: '移動下', sk: 'down',   fallback: '↓ ArrowDown'  },
-        { label: '移動左', sk: 'left',   fallback: '← ArrowLeft'  },
-        { label: '移動右', sk: 'right',  fallback: '→ ArrowRight' },
-        { label: '攻擊鍵', sk: 'attack', fallback: '滑鼠左鍵'   }
+        { label: t('keyUp'),     sk: 'up',     fallback: '↑ ArrowUp'    },
+        { label: t('keyDown'),   sk: 'down',   fallback: '↓ ArrowDown'  },
+        { label: t('keyLeft'),   sk: 'left',   fallback: '← ArrowLeft'  },
+        { label: t('keyRight'),  sk: 'right',  fallback: '→ ArrowRight' },
+        { label: t('keyAttack'), sk: 'attack', fallback: t('mouseLeft') }
     ];
     const rebindBtns = {};
 
@@ -2232,7 +2289,7 @@ function showSettings(fromHome) {
         gameState._rebindTarget = sk;
         const btn = rebindBtns[sk];
         if (!btn) return;
-        btn.textContent = '請按下新按鍵...';
+        btn.textContent = t('pressNewKey');
         btn.style.cssText = btn._baseStyle + 'border-color:#FFD700;color:#FFD700;';
         let blinkOn = true;
         _rebindBlink = setInterval(() => {
@@ -2287,12 +2344,12 @@ function showSettings(fromHome) {
     panel.appendChild(keySec);
 
     // ─── 其他設定 ───
-    const otherSec = _buildSettingsSection('其他設定');
+    const otherSec = _buildSettingsSection(t('sectionOther'));
     const restartBtn = document.createElement('button');
     restartBtn.style.cssText = 'width:100%;padding:8px;cursor:pointer;border:1px solid #884444;background:rgba(136,0,0,0.3);color:white;border-radius:4px;font-size:13px;margin-bottom:8px;';
-    restartBtn.textContent = '重啟遊戲';
+    restartBtn.textContent = t('restartGame');
     restartBtn.onclick = () => {
-        if (!confirm('確定重啟？本局進度將消失，不給予技能點（除非已擊殺精英怪）')) return;
+        if (!confirm(t('confirmRestart'))) return;
         saveLastRunOrgans();
         localStorage.setItem('skillPoints', String(gameState.skillPoints));
         window.location.reload();
@@ -2300,10 +2357,12 @@ function showSettings(fromHome) {
     otherSec.appendChild(restartBtn);
     const resetBtn = document.createElement('button');
     resetBtn.style.cssText = 'width:100%;padding:8px;cursor:pointer;border:1px solid #555;background:rgba(80,80,80,0.3);color:white;border-radius:4px;font-size:13px;';
-    resetBtn.textContent = '恢復原廠設定';
+    resetBtn.textContent = t('resetDefault');
     resetBtn.onclick = () => {
-        if (!confirm('確定要恢復所有音量和按鍵設定為預設值？')) return;
+        if (!confirm(t('confirmResetSettings'))) return;
+        const keepLang = gameState.settings.language;
         gameState.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+        gameState.settings.language = keepLang;
         saveSettings(); AudioManager.refreshMusicVolume();
         hideSettings(); showSettings();
     };
@@ -2313,7 +2372,7 @@ function showSettings(fromHome) {
     // ─── 底部按鈕 ───
     const saveBtn = document.createElement('button');
     saveBtn.style.cssText = 'width:100%;margin-top:14px;padding:10px;cursor:pointer;border:1px solid #4a8a4a;background:#2a5a2a;color:white;border-radius:4px;font-size:15px;';
-    saveBtn.textContent = fromHome ? '關閉' : '儲存並返回';
+    saveBtn.textContent = fromHome ? t('close') : t('saveAndBack');
     saveBtn.onclick = () => { saveSettings(); hideSettings(); };
     panel.appendChild(saveBtn);
 
@@ -2425,6 +2484,7 @@ function buildSkillTreeOverlay(cause, fromHome) {
     if (existing) existing.remove();
     const overlay = document.createElement('div');
     overlay.id = 'skill-tree-overlay';
+    overlay.dataset.cause = cause == null ? '' : String(cause);
     const zIdx = fromHome ? 210 : 150;
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);overflow-y:scroll;display:flex;flex-direction:column;align-items:center;padding:20px 0 30px;z-index:' + zIdx + ';pointer-events:all;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
     overlay.addEventListener('wheel', e => { e.stopPropagation(); }, { passive: true });
@@ -2432,7 +2492,7 @@ function buildSkillTreeOverlay(cause, fromHome) {
     // ── 標題
     const title = document.createElement('div');
     title.style.cssText = 'font-size:32px;margin-bottom:14px;flex-shrink:0;';
-    title.textContent = fromHome ? '🌿 技能樹' : (cause === 'timeout' ? '⏰ 時間耗盡' : '💀 你死了');
+    title.textContent = fromHome ? t('skillTreeTitle') : (cause === 'timeout' ? t('timeoutTitle') : t('youDied'));
     overlay.appendChild(title);
 
     // ── 器官選擇區塊
@@ -2444,13 +2504,13 @@ function buildSkillTreeOverlay(cause, fromHome) {
     organSection.style.cssText = 'background:rgba(255,215,0,0.08);border:1px solid #665500;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
     const organSectionTitle = document.createElement('div');
     organSectionTitle.style.cssText = 'font-size:15px;color:#FFD700;margin-bottom:10px;';
-    organSectionTitle.textContent = '選擇保留器官（最多 ' + organsToKeep + ' 個，下一局繼承）';
+    organSectionTitle.textContent = t('keepOrgans', { n: organsToKeep });
     organSection.appendChild(organSectionTitle);
 
     if (playerOrgans.length === 0) {
         const noOrgan = document.createElement('div');
         noOrgan.style.cssText = 'color:#888;font-size:13px;';
-        noOrgan.textContent = '本局未獲得任何器官';
+        noOrgan.textContent = t('noOrganThisRun');
         organSection.appendChild(noOrgan);
     } else {
         const organGrid = document.createElement('div');
@@ -2506,7 +2566,7 @@ function buildSkillTreeOverlay(cause, fromHome) {
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const hiddenTitle = document.createElement('div');
         hiddenTitle.style.cssText = 'font-size:14px;color:#FFD700;margin-bottom:8px;';
-        hiddenTitle.textContent = '✨ 選擇保留一個隱藏器官（可不選）';
+        hiddenTitle.textContent = t('keepHiddenOne');
         hiddenSection.appendChild(hiddenTitle);
         const hiddenGrid = document.createElement('div');
         hiddenGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
@@ -2559,13 +2619,13 @@ function buildSkillTreeOverlay(cause, fromHome) {
     ptsRow.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:14px;';
     const pts = document.createElement('div');
     pts.style.cssText = 'font-size:20px;color:#FFD700;';
-    pts.textContent = '技能點數: ' + gameState.skillPoints;
+    pts.textContent = t('skillPoints') + ': ' + gameState.skillPoints;
     ptsRow.appendChild(pts);
     const resetBtn = document.createElement('button');
     resetBtn.style.cssText = 'font-size:13px;padding:5px 14px;cursor:pointer;border:1px solid #AA4444;background:rgba(170,0,0,0.25);color:white;border-radius:4px;';
-    resetBtn.textContent = '重置技能點';
+    resetBtn.textContent = t('resetSkills');
     resetBtn.onclick = () => {
-        if (!confirm('確定要重置所有技能點嗎？')) return;
+        if (!confirm(t('confirmResetSkills'))) return;
         let spent = 0;
         for (const id in gameState.playerSkills) spent += gameState.playerSkills[id] || 0;
         for (const id in gameState.playerSkills) gameState.playerSkills[id] = 0;
@@ -2598,7 +2658,7 @@ function buildSkillTreeOverlay(cause, fromHome) {
         const maxed = level >= skill.maxLevel;
         const canUp = !maxed && gameState.skillPoints > 0;
         btn.style.cssText = 'padding:5px 0;font-size:12px;width:100%;border-radius:3px;background:transparent;cursor:' + (canUp ? 'pointer' : 'default') + ';border:1px solid ' + (maxed || !canUp ? '#555' : '#FFD700') + ';color:' + (maxed || !canUp ? '#555' : 'white') + ';';
-        btn.textContent = maxed ? '已滿級' : '升級（費1點）';
+        btn.textContent = maxed ? t('maxed') : t('upgradeCost1');
         btn.disabled = !canUp;
         btn.onclick = () => upgradeSkill(skill.id);
         card.appendChild(btn);
@@ -2618,14 +2678,14 @@ function buildSkillTreeOverlay(cause, fromHome) {
         const homeOrgansToKeep = 1 + (gameState.playerSkills.organMemory || 0);
         const inheritTitle = document.createElement('div');
         inheritTitle.style.cssText = 'font-size:15px;color:#FFD700;margin-bottom:10px;';
-        inheritTitle.textContent = '📦 選擇繼承上局器官（最多 ' + homeOrgansToKeep + ' 個）';
+        inheritTitle.textContent = t('inheritOrgansHome', { n: homeOrgansToKeep });
         inheritSec.appendChild(inheritTitle);
         const _lrOrgans = _lrData ? (_lrData.organs || []) : [];
         const _lrHidden = _lrData ? (_lrData.hiddenOrgans || []) : [];
         if (_lrOrgans.length === 0 && _lrHidden.length === 0) {
             const noneEl = document.createElement('div');
             noneEl.style.cssText = 'font-size:13px;color:#555;';
-            noneEl.textContent = '尚無記錄';
+            noneEl.textContent = t('noRecord');
             inheritSec.appendChild(noneEl);
         } else {
             if (_lrOrgans.length > 0) {
@@ -2677,7 +2737,7 @@ function buildSkillTreeOverlay(cause, fromHome) {
             if (_lrHidden.length > 0) {
                 const hTitle = document.createElement('div');
                 hTitle.style.cssText = 'font-size:14px;color:#FFD700;margin-bottom:8px;margin-top:6px;';
-                hTitle.textContent = '✨ 選擇繼承一個隱藏器官（可不選）';
+                hTitle.textContent = t('inheritHiddenHome');
                 inheritSec.appendChild(hTitle);
                 const homeHidGrid = document.createElement('div');
                 homeHidGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
@@ -2726,13 +2786,13 @@ function buildSkillTreeOverlay(cause, fromHome) {
         lastRunSec.style.cssText = 'max-width:660px;width:90%;margin-bottom:18px;border:1px solid #333;border-radius:6px;padding:12px 16px;';
         const lastRunTitle = document.createElement('div');
         lastRunTitle.style.cssText = 'font-size:14px;color:#888;font-weight:bold;margin-bottom:8px;';
-        lastRunTitle.textContent = '📦 上局遺留器官';
+        lastRunTitle.textContent = t('lastRunOrgansTitle');
         lastRunSec.appendChild(lastRunTitle);
         const lrItems = _lrData ? [...(_lrData.organs || []), ...(_lrData.hiddenOrgans || [])] : [];
         if (lrItems.length === 0) {
             const noneEl = document.createElement('div');
             noneEl.style.cssText = 'font-size:13px;color:#555;';
-            noneEl.textContent = '尚無記錄';
+            noneEl.textContent = t('noRecord');
             lastRunSec.appendChild(noneEl);
         } else {
             lrItems.forEach(o => {
@@ -2751,18 +2811,18 @@ function buildSkillTreeOverlay(cause, fromHome) {
     if (fromHome) {
         const closeBtn = document.createElement('button');
         closeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        closeBtn.textContent = '關閉';
+        closeBtn.textContent = t('close');
         closeBtn.onclick = () => { hideTooltip(); overlay.remove(); };
         btnRow.appendChild(closeBtn);
     } else {
         const homeBtn = document.createElement('button');
         homeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        homeBtn.textContent = '🏠 回到首頁';
+        homeBtn.textContent = t('backHome');
         homeBtn.onclick = () => location.reload();
         btnRow.appendChild(homeBtn);
         const playAgainBtn = document.createElement('button');
         playAgainBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-        playAgainBtn.textContent = '⚔️ 再來一場';
+        playAgainBtn.textContent = t('playAgain');
         playAgainBtn.onclick = () => { sessionStorage.setItem('autostart', '1'); location.reload(); };
         btnRow.appendChild(playAgainBtn);
     }
@@ -2799,7 +2859,7 @@ function checkLevelUp() {
     if (p.levelXP >= threshold) {
         p.levelXP = 0;
         p.level++;
-        gameState.levelUpMessage = { text: '⬆️ 升級！Lv.' + p.level, timer: Date.now() };
+        gameState.levelUpMessage = { text: t('levelUpFloat', { lv: p.level }), timer: Date.now() };
         AudioManager.play('levelUp');
         showOrganSelection();
     }
@@ -2833,10 +2893,10 @@ function showGameOver() {
         overlay = document.createElement('div');
         overlay.id = 'game-over-overlay';
         overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-size:32px;z-index:100;pointer-events:all;';
-        overlay.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">遊戲結束</div>' +
-            '<div style="font-size:20px;margin-bottom:8px;">時間耗盡！</div>' +
-            '<div style="font-size:18px;margin-bottom:24px;">最終 XP：' + gameState.stats.xpCurrent + '</div>' +
-            '<button onclick="location.reload()" style="font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;">重新開始</button>' +
+        overlay.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">' + t('gameOverTitle') + '</div>' +
+            '<div style="font-size:20px;margin-bottom:8px;">' + t('timeUp') + '</div>' +
+            '<div style="font-size:18px;margin-bottom:24px;">' + t('finalXP', { xp: gameState.stats.xpCurrent }) + '</div>' +
+            '<button onclick="location.reload()" style="font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;">' + t('restart') + '</button>' +
             '<div style="font-size:12px;color:#555;margin-top:20px;">© ' + GAME_INFO.author + ' | ' + GAME_INFO.version + '</div>';
         document.getElementById('game-container').appendChild(overlay);
     }
@@ -2852,9 +2912,9 @@ function getDayNightPhaseIndex() {
 }
 
 function applyNightTransition() {
-    gameState.stats.dayCycle = '夜晚';
+    gameState.stats.dayCycle = t('phaseNight');
     gameState.isNight = true;
-    gameState.dayNightMessage.text = '🌙 夜晚來臨';
+    gameState.dayNightMessage.text = t('nightCome');
     gameState.dayNightMessage.timer = Date.now();
     for (const c of gameState.hostileCreatures) {
         if (c.hp > 0) { c.speed += 0.2; c.damage += 2; }
@@ -2869,13 +2929,13 @@ function applyNightTransition() {
 }
 
 function applyDayTransition() {
-    gameState.stats.dayCycle = '白天';
+    gameState.stats.dayCycle = t('phaseDay');
     gameState.isNight = false;
     if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) {
         gameState.eliteCreature = null;
-        gameState.dayNightMessage.text = '☀️ 黎明到來，精英怪撤退了';
+        gameState.dayNightMessage.text = t('morningEliteGone');
     } else {
-        gameState.dayNightMessage.text = '☀️ 黎明到來';
+        gameState.dayNightMessage.text = t('morningCome');
     }
     gameState.dayNightMessage.timer = Date.now();
     for (const c of gameState.hostileCreatures) {
@@ -2994,7 +3054,7 @@ function spawnBoss() {
         glowColor: cfg.glowColor
     };
     gameState.bossSpawned = true;
-    gameState.dayNightMessage.text = '⚠️ 強大的' + cfg.name + '出現了！';
+    gameState.dayNightMessage.text = t('bossAppeared', { name: cfg.name });
     gameState.dayNightMessage.timer = Date.now();
     AudioManager.playMusic('bossTheme');
 }
@@ -3057,31 +3117,32 @@ function showVictory() {
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
     const title = document.createElement('div');
     title.style.cssText = 'font-size:52px;margin-bottom:16px;';
-    title.textContent = '🏆 勝利！';
+    title.textContent = t('victoryTitle');
     overlay.appendChild(title);
     const desc1 = document.createElement('div');
     desc1.style.cssText = 'font-size:22px;margin-bottom:8px;';
-    desc1.textContent = (gameState.boss && gameState.boss.name ? gameState.boss.name : '黑熊') + '已被消滅！';
+    const bossName = gameState.boss && gameState.boss.name ? gameState.boss.name : (BOSS_CONFIG.forest.name);
+    desc1.textContent = t('victoryDesc', { boss: bossName });
     overlay.appendChild(desc1);
     const desc2 = document.createElement('div');
     desc2.style.cssText = 'font-size:18px;margin-bottom:28px;color:#FFD700;';
-    desc2.textContent = '+500 XP，獲得 1 個技能點';
+    desc2.textContent = t('victoryReward');
     overlay.appendChild(desc2);
     const btnTree = document.createElement('button');
     btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:10px;';
-    btnTree.textContent = '前往技能樹';
+    btnTree.textContent = t('goSkillTree');
     btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(); };
     overlay.appendChild(btnTree);
     const vBtnRow = document.createElement('div');
     vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;';
     const vHomeBtn = document.createElement('button');
     vHomeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-    vHomeBtn.textContent = '🏠 回到首頁';
+    vHomeBtn.textContent = t('backHome');
     vHomeBtn.onclick = () => location.reload();
     vBtnRow.appendChild(vHomeBtn);
     const vPlayAgainBtn = document.createElement('button');
     vPlayAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-    vPlayAgainBtn.textContent = '⚔️ 再來一場';
+    vPlayAgainBtn.textContent = t('playAgain');
     vPlayAgainBtn.onclick = () => { sessionStorage.setItem('autostart', '1'); location.reload(); };
     vBtnRow.appendChild(vPlayAgainBtn);
     overlay.appendChild(vBtnRow);
@@ -3117,7 +3178,7 @@ function spawnEliteCreature(nightNum) {
         diet: Math.random() < 0.5 ? 'herbivore' : 'carnivore'
     };
     gameState.eliteJustKilled = false;
-    gameState.dayNightMessage.text = '🌟 精英怪出現了！';
+    gameState.dayNightMessage.text = t('eliteAppeared');
     gameState.dayNightMessage.timer = Date.now();
 }
 
@@ -3262,7 +3323,7 @@ function handleEliteKill(elite) {
     const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
     gameState.timeRemaining = nextDayTime;
     updateDayNightCycle();
-    gameState.dayNightMessage.text = '☀️ 精英已滅！黎明提前到來！';
+    gameState.dayNightMessage.text = t('morningEliteKilled');
     gameState.dayNightMessage.timer = Date.now();
 }
 
@@ -3292,12 +3353,12 @@ function showHiddenOrganSelection(drops) {
 
     const title = document.createElement('div');
     title.style.cssText = 'color:#FFD700;font-size:24px;font-weight:bold;margin-bottom:6px;text-shadow:2px 2px 6px black;';
-    title.textContent = '✨ 隱藏器官掉落！';
+    title.textContent = t('hiddenOrganDrop');
     overlay.appendChild(title);
 
     const sub = document.createElement('div');
     sub.style.cssText = 'color:#aaa;font-size:13px;margin-bottom:18px;';
-    sub.textContent = drops.length > 1 ? '選擇1個獲得（隱藏器官不佔普通槽位）' : '點擊獲得（隱藏器官不佔普通槽位）';
+    sub.textContent = drops.length > 1 ? t('hiddenOrganPickOne') : t('hiddenOrganClickOne');
     overlay.appendChild(sub);
 
     drops.forEach(organ => {
@@ -3536,6 +3597,89 @@ function devToggleDayNight() {
 }
 
 // =============================================================
+// 遊戲說明 (Guide)
+// =============================================================
+function showGuide(startPage) {
+    if (document.getElementById('guide-overlay')) return;
+    const pages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
+    let cur = Math.min(Math.max(0, startPage || 0), pages.length - 1);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'guide-overlay';
+    overlay.dataset.page = String(cur);
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;align-items:center;justify-content:center;z-index:215;pointer-events:all;color:white;font-family:Arial,sans-serif;';
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:24px 28px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto;box-sizing:border-box;text-align:center;';
+
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;';
+    const pageLbl = document.createElement('div');
+    pageLbl.style.cssText = 'font-size:13px;color:#999;';
+    const headerTitle = document.createElement('div');
+    headerTitle.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;';
+    const spacer = document.createElement('div');
+    spacer.style.cssText = 'min-width:60px;';
+    titleBar.appendChild(spacer); titleBar.appendChild(headerTitle); titleBar.appendChild(pageLbl);
+    panel.appendChild(titleBar);
+
+    const subTitle = document.createElement('div');
+    subTitle.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:14px;';
+    panel.appendChild(subTitle);
+
+    // 內容
+    const content = document.createElement('div');
+    content.style.cssText = 'text-align:left;font-size:15px;line-height:1.9;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:18px 22px;margin-bottom:18px;';
+    panel.appendChild(content);
+
+    // 導覽
+    const navRow = document.createElement('div');
+    navRow.style.cssText = 'display:flex;gap:10px;align-items:center;justify-content:space-between;';
+    const prevBtn = document.createElement('button');
+    prevBtn.style.cssText = 'padding:8px 18px;font-size:18px;background:#2a2a2a;color:white;border:1px solid #555;border-radius:4px;cursor:pointer;';
+    const nextBtn = document.createElement('button');
+    nextBtn.style.cssText = prevBtn.style.cssText;
+    navRow.appendChild(prevBtn);
+    const closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'padding:8px 24px;font-size:14px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;';
+    navRow.appendChild(closeBtn);
+    navRow.appendChild(nextBtn);
+    panel.appendChild(navRow);
+
+    function render() {
+        const allPages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
+        const p = allPages[cur];
+        headerTitle.textContent = t('guideTitle');
+        pageLbl.textContent = t('guidePageFmt', { cur: cur + 1, total: allPages.length });
+        subTitle.textContent = p.title;
+        content.innerHTML = p.lines.map(l => '<div style="margin-bottom:6px;">' + l.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</div>').join('');
+        prevBtn.textContent = t('guidePrev');
+        nextBtn.textContent = t('guideNext');
+        closeBtn.textContent = t('close');
+        prevBtn.disabled = (cur === 0);
+        nextBtn.disabled = (cur === allPages.length - 1);
+        prevBtn.style.opacity = prevBtn.disabled ? '0.35' : '1';
+        nextBtn.style.opacity = nextBtn.disabled ? '0.35' : '1';
+        overlay.dataset.page = String(cur);
+    }
+    prevBtn.onclick = () => { if (cur > 0) { cur--; render(); } };
+    nextBtn.onclick = () => {
+        const allPages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
+        if (cur < allPages.length - 1) { cur++; render(); }
+    };
+    closeBtn.onclick = hideGuide;
+
+    overlay.appendChild(panel);
+    document.getElementById('game-container').appendChild(overlay);
+    render();
+}
+
+function hideGuide() {
+    const el = document.getElementById('guide-overlay');
+    if (el) el.remove();
+}
+
+// =============================================================
 // 開始畫面
 // =============================================================
 function showStartScreen() {
@@ -3562,19 +3706,25 @@ function showStartScreen() {
 
     const startBtn = document.createElement('button');
     startBtn.style.cssText = menuBtnStyle + 'background:#2a5a2a;border:1px solid #4a8a4a;';
-    startBtn.textContent = '▶ 開始遊戲';
+    startBtn.textContent = t('startGame');
     startBtn.onclick = () => { overlay.remove(); initializeGame(); };
     overlay.appendChild(startBtn);
 
     const skillBtn = document.createElement('button');
     skillBtn.style.cssText = menuBtnStyle + 'background:rgba(60,100,60,0.3);border:1px solid #4a7a4a;';
-    skillBtn.textContent = '🌿 技能樹';
+    skillBtn.textContent = t('skillTree');
     skillBtn.onclick = () => buildSkillTreeOverlay(null, true);
     overlay.appendChild(skillBtn);
 
+    const guideBtn = document.createElement('button');
+    guideBtn.style.cssText = menuBtnStyle + 'background:rgba(90,80,40,0.3);border:1px solid #8a7a4a;';
+    guideBtn.textContent = t('guide');
+    guideBtn.onclick = () => showGuide(0);
+    overlay.appendChild(guideBtn);
+
     const settingsBtn = document.createElement('button');
     settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
-    settingsBtn.textContent = '⚙️ 設定';
+    settingsBtn.textContent = t('settings');
     settingsBtn.onclick = () => showSettings(true);
     overlay.appendChild(settingsBtn);
 

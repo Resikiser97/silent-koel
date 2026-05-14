@@ -1,6 +1,11 @@
 // =============================================================
 // 遊戲配置文件 - 手動修改數值請改這裡
 // =============================================================
+// ✦ 多語系說明：本檔保留資料表的「中文預設」內容，
+//   切換語言時由 lang.js 的 applyLanguage() 把對應翻譯
+//   寫回 ORGANS / SKILLS / EVOLUTION_PATHS / COMBOS / ELITE_CONFIG / BOSS_CONFIG。
+//   新增遊戲內容時，請同步在 lang.js 補上每個語言的翻譯。
+// =============================================================
 
 // 生物基礎設定
 const CREATURE_CONFIG = {
@@ -302,6 +307,6 @@ const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
-    version:      'v0.15.3',
+    version:      'v0.16.0',
     SAVE_VERSION: '1.0'
 };
