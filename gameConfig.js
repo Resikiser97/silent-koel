@@ -250,19 +250,19 @@ const ELITE_CONFIG = {
 const BOSS_CONFIG = {
     forest: {
         name: '黑熊',    label: '⚠️黑熊',
-        radius: 25, hp: 500,  speed: 1.0, damage: 15, aggroRange: 200, attackRange: 30,
+        radius: 25, hp: 500,  speed: 1.0, damage: 15, aggroRange: 99999, attackRange: 30,
         color: '#3B1E08', colorChasing: '#2A0D00', glowColor: '#8B4513',
         spawnX: null, spawnY: null  // null = 地圖邊緣隨機生成
     },
     ocean: {
         name: '大白鯊',  label: '🦈大白鯊',
-        radius: 30, hp: 600,  speed: 1.3, damage: 18, aggroRange: 220, attackRange: 35,
+        radius: 30, hp: 600,  speed: 1.3, damage: 18, aggroRange: 99999, attackRange: 35,
         color: '#003388', colorChasing: '#001A44', glowColor: '#1a3a5c',
         spawnX: 6500, spawnY: 6500
     },
     desert: {
         name: '沙漠蠍王', label: '🦂蠍王',
-        radius: 28, hp: 550,  speed: 1.2, damage: 20, aggroRange: 210, attackRange: 32,
+        radius: 28, hp: 550,  speed: 1.2, damage: 20, aggroRange: 99999, attackRange: 32,
         color: '#8B7355', colorChasing: '#5C4A2A', glowColor: '#8B6914',
         spawnX: 2000, spawnY: 2000
     }
@@ -302,6 +302,6 @@ const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
-    version:      'v0.13.7',
+    version:      'v0.13.8',
     SAVE_VERSION: '1.0'
 };
