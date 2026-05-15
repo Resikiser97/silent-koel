@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\\\AI\\\\Git\\\\bin\\\\git.exe\" diff *)",
+      "Bash('C:\\\\AI\\\\Git\\\\bin\\\\git.exe' commit -m ' *)",
+      "Bash(grep -n \"\\\\\\\\\\\\\\\\n\" \"c:\\\\AI\\\\VS CODE\\\\index.html\")"
+    ]
+  }
+}
