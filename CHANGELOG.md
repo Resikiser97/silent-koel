@@ -2,6 +2,18 @@
 
 ---
 
+## v0.17.0 - 2026-05-16
+
+### 重構
+- **完整模組化**：將 `index.html` 內嵌的 ~4000 行 JavaScript 全數拆分為 19 個獨立 JS 模組，index.html 精簡至純 HTML + CSS + `<script>` 標籤（205 行）
+  - `config/`：`gameConfig.js` / `organs.js` / `creatures.js` / `evolution.js`（靜態資料常數）
+  - `lang.js` + `lang/zh-TW.js` + `lang/en.js`（多語系）
+  - `systems/`：`gameState` / `audio` / `camera` / `input` / `spawning` / `player` / `combat` / `organs` / `evolution` / `creatures` / `elite` / `boss` / `daynight` / `ui`（共 14 個系統模組）
+  - `main.js`：`isGamePaused` / `gameLoop` / `initializeGame` / `window.onload`
+- **新增 `MAIN.md`**：記錄完整模組架構、載入順序、跨模組依賴關係與重要設計注意事項
+
+---
+
 ## v0.16.0 - 2026-05-15
 
 ### 新增
