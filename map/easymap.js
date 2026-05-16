@@ -12,6 +12,8 @@ const EASY_MAP = {
         forestCenterRadius:  600,  // 中心森林保護區半徑（px）
         forestThreshold:     0.2,
         oceanThreshold:     -0.2,
+        minBiomeTiles:       250,
+        requiredBiomes:      ['forest', 'ocean', 'desert'],
     },
 
     // 生物強度倍率

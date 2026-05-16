@@ -2,6 +2,24 @@
 
 ---
 
+## v0.20.0 - 2026-05-16
+
+### 新增
+- **地形生成規則文件**（`map/map.md`）：新增地形生成規則三條（Tileable Noise、MIN_BIOME_TILES 同化算法、REQUIRED_BIOMES 完整性）、保護區規則、變量位置規範
+- **4D Tileable Noise**（`systems/map.js`）：
+  - `_SimplexNoise` 新增 `grad4`（32個4D梯度向量）、`dot4`、`noise4d`、`tileableNoise`
+  - `tileableNoise(perm, x, y, W, H)`：把格子座標投影到 4D 圓柱面（cos/sin），使地圖左右、上下邊界 Noise 值完全連續
+  - `generateTerrain()` 改用 `tileableNoise` 取代原本 `noise2d`
+- **孤島同化算法**（`systems/map.js`）：
+  - `MAP_RULES = { MIN_BIOME_TILES: 250 }`：全域預設最小生態格數
+  - `labelBiomeRegions(terrainMap, gridW, gridH)`：flood fill（DFS + stack），回傳 `regionId` 二維陣列和 `regions` 陣列，每個 region 含 `{ id, biome, cells, size, minRow, minCol }`
+  - `mergeSmallRegions(terrainMap, gridW, gridH, minTiles)`：建立鄰接圖後逐一同化 `size < minTiles` 的孤島，valid 選項選最小、tie 選最靠左上；無 valid 時合併最大相鄰孤島後重新判斷
+  - `ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes)`：確認所有必要生態存在，回傳 bool
+- **`generateTerrain()` 完整流程更新**：Tileable Noise → 保護區 → `mergeSmallRegions` → `ensureRequiredBiomes`（最多 10 次新 seed 重試；超過則 minTiles/2 再試一次）
+- **`map/easymap.js`**：`terrain` 區塊新增 `minBiomeTiles: 250` 和 `requiredBiomes: ['forest', 'ocean', 'desert']`
+
+---
+
 ## v0.19.0 - 2026-05-16
 
 ### 新增

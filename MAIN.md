@@ -13,8 +13,11 @@ lang/zh-TW.js             LANG['zh-TW']
 lang/en.js                LANG['en']
 
 systems/gameState.js      DEFAULT_SETTINGS, gameState, canvas, ctx, MAP 常數
-systems/map.js            MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H, TILE_SIZE, NOISE_SCALE, BIOME_COLOR
-                          getBiome, getBgColor, generateTerrain, buildTerrainCanvas, drawTerrain
+systems/map.js            MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H, TILE_SIZE, NOISE_SCALE, MAP_RULES
+                          BIOME_COLOR
+                          getBiome, getBgColor
+                          labelBiomeRegions, mergeSmallRegions, ensureRequiredBiomes
+                          generateTerrain, buildTerrainCanvas, drawTerrain
                           generateTrees
 systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
 systems/audio.js          AudioManager, initAudio
@@ -90,7 +93,11 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 | `map.md` | 地圖設計文件，記錄地形規格與新增難度步驟 |
 | `easymap.js` | 簡單難度（`EASY_MAP`）：地形參數、生物倍率、精英怪配置、Boss 預留結構 |
 
-`generateTerrain()` 讀取 `gameState.currentMap.terrain` 參數（noiseScale / forestCenterRadius / forestThreshold / oceanThreshold），`currentMap` 由 `showMapSelect()` 在開始遊戲時寫入。
+`generateTerrain()` 讀取 `gameState.currentMap.terrain` 參數（forestCenterRadius / forestThreshold / oceanThreshold / minBiomeTiles / requiredBiomes），`currentMap` 由 `showMapSelect()` 在開始遊戲時寫入。
+
+地形生成流程：4D Tileable Noise → 保護區強制森林 → `mergeSmallRegions`（同化小於 `minBiomeTiles` 的孤島）→ `ensureRequiredBiomes`（最多 10 次重試，超過則 minBiomeTiles 減半）→ `buildTerrainCanvas`。
+
+全域預設值 `MAP_RULES.MIN_BIOME_TILES = 250`；各地圖可在 `terrain.minBiomeTiles` 覆蓋。
 
 ---
 
