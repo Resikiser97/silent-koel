@@ -34,8 +34,10 @@ systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, apply
                           buildSkillTreeOverlay, upgradeSkill
 systems/creatures.js      updateNeutralCreatures, drawNeutralCreatures
                           updateHostileCreatures, drawCorpses, drawHostileCreatures
-systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCreature, drawEliteArrow
-systems/boss.js           spawnBoss, updateBoss, showVictory, drawBossArrow
+systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCreature
+                          （箭頭繪製改用 systems/utils.js 的 drawArrow）
+systems/boss.js           spawnBoss, updateBoss, showVictory
+                          （箭頭繪製改用 systems/utils.js 的 drawArrow）
 systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayTransition
                           updateDayNightCycle, showGameOver
 systems/ui.js             showTooltip, hideTooltip, drawGame, updateUI, drawTreasures
@@ -45,6 +47,35 @@ systems/ui.js             showTooltip, hideTooltip, drawGame, updateUI, drawTrea
 
 main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ```
+
+## systems/utils.js
+
+所有模組共用的工具函式，在 `gameState.js` 之後、`audio.js` 之前載入。
+
+### 函式列表
+
+- `drawArrow(playerScreenX, playerScreenY, targetWorldX, targetWorldY, color, playerRadius)`
+  → 在玩家身上繪製指向目標的箭頭
+  → 距離：`playerRadius + 20px`
+  → 有閃爍效果（每 0.5 秒透明度 0.6↔1.0）
+  → 精英怪和 Boss 同時在螢幕外時只顯示 Boss 箭頭（優先權邏輯在 `drawEliteArrow` 內判斷）
+  → 被 `elite.js` 和 `boss.js` 共用
+
+- `drawHealthBar(screenX, screenY, hp, maxHp, width, fillColor, bgColor, height)`
+  → 繪製生物血條，`bgColor` 為底色，當前血量用 `fillColor` 顯示
+
+- `drawNameTag(screenX, screenY, name, color, font)`
+  → 繪製生物名字標籤，`screenY` 為文字基線位置
+
+- `drawGlowEffect(screenX, screenY, radius, fillColor, glowColor, glowBlur)`
+  → 繪製帶光暈的填色圓形，精英怪和 Boss 專用
+
+### 繪製順序規範（所有生物統一）
+
+由上到下：名字 → 血條 → 本體（含光暈）
+名字和血條間距 4px，血條和本體上緣間距 4px
+
+---
 
 ## 重要設計注意事項
 

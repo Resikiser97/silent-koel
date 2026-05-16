@@ -2,6 +2,17 @@
 
 ---
 
+## v0.18.1 - 2026-05-16
+
+### 文件
+- **新增 `.claude/instructions.md`**：每次對話前自動讀取的開發規則，包含 MAIN.md / CHANGELOG.md / VERSION_RULES.md 讀取順序、必守開發規則（`gameLoop` 禁止字面 `\n`、模組化規範等）與修改完成後的固定流程
+- **更新 `MAIN.md`**：
+  - `systems/elite.js` 區塊移除 `drawEliteArrow`（已合併至 utils.js），新增備註說明
+  - `systems/boss.js` 區塊移除 `drawBossArrow`（已合併至 utils.js），新增備註說明
+  - 新增 `systems/utils.js` 完整函式說明區塊，含各函式參數與用途、繪製順序規範（名字→血條→本體，各層 4px 間距）
+
+---
+
 ## v0.18.0 - 2026-05-16
 
 ### 新增
