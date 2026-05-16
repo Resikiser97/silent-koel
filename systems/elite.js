@@ -73,27 +73,12 @@ function drawEliteCreature() {
     if (!elite || elite.hp <= 0) return;
     const s = worldToScreen(elite.x, elite.y);
     if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) return;
-    ctx.save();
-    ctx.shadowColor = '#FFD700';
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = elite.color;
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, elite.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold 11px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(elite.label, s.x, s.y - elite.radius - 12);
-    ctx.restore();
-    const bW = 46, bH = 5;
-    const bX = s.x - bW / 2;
-    const bY = s.y - elite.radius - 24;
-    ctx.fillStyle = '#330033';
-    ctx.fillRect(bX, bY, bW, bH);
-    ctx.fillStyle = '#CC44FF';
-    ctx.fillRect(bX, bY, bW * (elite.hp / elite.maxHp), bH);
+    // 繪製順序（由下至上）：本體 → 血條 → 名字，各層間距 4px
+    drawGlowEffect(s.x, s.y, elite.radius, elite.color, '#FFD700', 14);
+    const bH = 5, bW = 46;
+    const bY = s.y - elite.radius - 4 - bH;
+    drawHealthBar(s.x, bY, elite.hp, elite.maxHp, bW, '#CC44FF', '#330033', bH);
+    drawNameTag(s.x, bY - 4, elite.label, '#FFD700', 'bold 11px Arial');
 }
 
 function drawEliteArrow() {
@@ -101,24 +86,13 @@ function drawEliteArrow() {
     if (!elite || elite.hp <= 0) return;
     const es = worldToScreen(elite.x, elite.y);
     if (es.x >= -20 && es.x <= VIEW_W + 20 && es.y >= -20 && es.y <= VIEW_H + 20) return;
+    // Boss 也在螢幕外時只顯示 Boss 箭頭
+    if (gameState.boss && gameState.boss.hp > 0) {
+        const bs = worldToScreen(gameState.boss.x, gameState.boss.y);
+        if (bs.x < -20 || bs.x > VIEW_W + 20 || bs.y < -20 || bs.y > VIEW_H + 20) return;
+    }
     const p = gameState.player;
     const ps = worldToScreen(p.x, p.y);
-    const { dx: adx, dy: ady } = wrappedDelta(p.x, p.y, elite.x, elite.y);
-    const angle = Math.atan2(ady, adx);
-    const arrowDist = 50 + Math.max(0, p.radius - 10);
-    const ax = ps.x + Math.cos(angle) * arrowDist;
-    const ay = ps.y + Math.sin(angle) * arrowDist;
-    const alpha = Math.floor(Date.now() / 500) % 2 === 0 ? 0.6 : 1.0;
     const color = elite.diet === 'herbivore' ? '#FFD700' : '#9B59B6';
-    const cx = Math.cos(angle), cy = Math.sin(angle);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(ax, ay);
-    ctx.lineTo(ax - cx * 10 - cy * 3, ay - cy * 10 + cx * 3);
-    ctx.lineTo(ax - cx * 10 + cy * 3, ay - cy * 10 - cx * 3);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    drawArrow(ps.x, ps.y, elite.x, elite.y, color, p.radius);
 }

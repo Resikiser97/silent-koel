@@ -2,6 +2,23 @@
 
 ---
 
+## v0.18.0 - 2026-05-16
+
+### 新增
+- **`systems/utils.js`**：新增 4 個共用繪圖工具函式，供精英怪與 Boss 系統共享
+  - `drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius)`：統一箭頭繪製，距離固定為 `playerRadius + 20px`，每 0.5 秒在透明度 0.6↔1.0 之間閃爍
+  - `drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height)`：血條繪製
+  - `drawNameTag(sx, sy, name, color, font)`：名字標籤繪製
+  - `drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur)`：帶光暈的圓形繪製
+
+### 修復
+- **精英怪繪製順序**（`systems/elite.js`）：修正顯示層次為「名字在上、血條在中、本體在下」，各層間距 4px；改用 `drawGlowEffect`、`drawHealthBar`、`drawNameTag`
+- **精英怪箭頭優先權**（`systems/elite.js`）：當精英怪與 Boss 同時在螢幕外時，只顯示 Boss 箭頭；改用 `drawArrow`
+- **箭頭距離統一**：精英怪與 Boss 箭頭距離統一為 `playerRadius + 20px`（原精英怪為固定偏移、原 Boss 為 `30px`）
+- **`systems/boss.js`**：`drawBossArrow` 改用 `drawArrow`
+
+---
+
 ## v0.17.0 - 2026-05-16
 
 ### 重構

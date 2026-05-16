@@ -13,6 +13,7 @@ lang/zh-TW.js             LANG['zh-TW']
 lang/en.js                LANG['en']
 
 systems/gameState.js      DEFAULT_SETTINGS, gameState, canvas, ctx, MAP 常數
+systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
 systems/audio.js          AudioManager, initAudio
 systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera, getBiome, getBgColor
 systems/input.js          handleKeyDown, handleKeyUp（含設定介面按鍵 handler refs）

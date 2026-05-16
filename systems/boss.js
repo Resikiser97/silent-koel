@@ -136,22 +136,5 @@ function drawBossArrow() {
     if (bs.x >= -20 && bs.x <= VIEW_W + 20 && bs.y >= -20 && bs.y <= VIEW_H + 20) return;
     const p = gameState.player;
     const ps = worldToScreen(p.x, p.y);
-    const { dx: adx, dy: ady } = wrappedDelta(p.x, p.y, boss.x, boss.y);
-    const angle = Math.atan2(ady, adx);
-    const arrowDist = 30;
-    const ax = ps.x + Math.cos(angle) * arrowDist;
-    const ay = ps.y + Math.sin(angle) * arrowDist;
-    const alpha = Math.floor(Date.now() / 500) % 2 === 0 ? 0.6 : 1.0;
-    const color = boss.glowColor || '#8B4513';
-    const cx = Math.cos(angle), cy = Math.sin(angle);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(ax, ay);
-    ctx.lineTo(ax - cx * 10 - cy * 3, ay - cy * 10 + cx * 3);
-    ctx.lineTo(ax - cx * 10 + cy * 3, ay - cy * 10 - cx * 3);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    drawArrow(ps.x, ps.y, boss.x, boss.y, boss.glowColor || '#8B4513', p.radius);
 }
