@@ -64,6 +64,7 @@ const gameState = {
     playerSkills: { vitality: 0, agility: 0, forager: 0, hunter: 0, tenacity: 0, organMemory: 0, luckyReroll: 0, collectionAddiction: 0, terribleFang: 0 },
     mapSeed: 0,
     terrainMap: null,
+    currentMap: null,
     boss: null,
     bossSpawned: false,
     bossBellPlayed: false,

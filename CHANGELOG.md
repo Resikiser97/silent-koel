@@ -2,6 +2,36 @@
 
 ---
 
+## v0.19.0 - 2026-05-16
+
+### 新增
+- **地圖系統重構**（`systems/map.js`）：
+  - 從 `camera.js` 移入 `getBiome`、`getBgColor`；從 `spawning.js` 移入 `generateTrees`；從 `gameState.js` 移入 `MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H`
+  - 新增 `TILE_SIZE = 20`、`NOISE_SCALE = 0.003`、`BIOME_COLOR`
+  - 新增純 JS Simplex Noise 實作（`_SimplexNoise.buildPerm` + `noise2d`，不依賴外部函式庫）
+  - 新增 `generateTerrain()`：每局隨機 seed，生成 400×400 格 terrainMap（中心 400px 強制森林，noise > 0.2 森林，< -0.2 海洋，其餘沙漠）
+  - 新增 `buildTerrainCanvas()`：把 terrainMap 預渲染至 8000×8000 離屏 Canvas，含地形邊界線（相鄰格不同時畫 2px 半透明白線）
+  - 新增 `drawTerrain()`：支援地圖環繞的離屏 Canvas blit（最多 4 次 drawImage），夜晚疊加 `rgba(0,0,0,0.4)` 遮罩；取代原本 `getBgColor` 純色背景
+  - `getBiome(x, y)` 改為讀取 `gameState.terrainMap`，未就緒時 fallback 舊公式
+  - `generateTerrain()` 讀取 `gameState.currentMap.terrain` 參數，fallback 至常數預設值
+- **`map/` 資料夾**：
+  - `map/map.md`：地圖設計文件
+  - `map/easymap.js`（`EASY_MAP`）：簡單難度配置（地形參數、生物倍率、精英怪 3 夜配置、Boss 預留結構）
+- **難度與角色選擇介面**（`systems/ui.js`）：
+  - 新增 `showMapSelect()`：點「開始遊戲」後顯示選擇頁，難度（簡單可選 / 普通困難地獄🔒）+ 角色（噪鵑可選 / 即將推出🔒）雙欄佈局，選中高亮金框，支援中英雙語
+  - 選擇後 `gameState.currentMap = EASY_MAP`，回首頁按鈕恢復 `showStartScreen`
+  - `showStartScreen` 的「開始遊戲」改為呼叫 `showMapSelect()`
+- **語言鍵**（`zh-TW.js` / `en.js`）：新增 `selectTitle` / `difficultyLabel` / `characterLabel` / `diffEasy~Hell` / `charKoel` / `charSoon` / `btnBack` / `btnStart`
+- **`gameState`**：新增 `currentMap: null`、`terrainMap: null`、`mapSeed: 0`
+
+### 調整
+- `systems/camera.js`：移除 `getBiome`、`getBgColor`（已移至 `map.js`）
+- `systems/spawning.js`：移除 `generateTrees`（已移至 `map.js`）
+- `systems/gameState.js`：移除 `MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H`（已移至 `map.js`）
+- `systems/ui.js`：`drawGame()` 背景改為 `drawTerrain()` 取代舊 `getBgColor` 填色
+
+---
+
 ## v0.18.1 - 2026-05-16
 
 ### 文件

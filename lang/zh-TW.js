@@ -12,6 +12,18 @@ LANG['zh-TW'] = {
         skillTree: '🌿 技能樹',
         guide:     '📖 遊戲說明',
         settings:  '⚙️ 設定',
+        // ── 難度與角色選擇
+        selectTitle:     '難度與角色選擇',
+        difficultyLabel: '選擇難度',
+        characterLabel:  '選擇角色',
+        diffEasy:   '🌿 簡單',
+        diffNormal: '⚔️ 普通',
+        diffHard:   '💀 困難',
+        diffHell:   '🔥 地獄',
+        charKoel:   '🐦 噪鵑（The Koel）',
+        charSoon:   '❓ 即將推出',
+        btnBack:    '← 返回',
+        btnStart:   '開始遊戲 →',
         // ── 設定面板
         settingsTitle: '⚙️ 設定',
         sectionLanguage: '語言設定',

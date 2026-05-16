@@ -93,6 +93,12 @@ function getBgColor() {
 }
 
 function generateTerrain() {
+    const cfg          = (gameState.currentMap && gameState.currentMap.terrain) || {};
+    const noiseScale   = cfg.noiseScale         || NOISE_SCALE;
+    const centerRadius = cfg.forestCenterRadius  || 400;
+    const forestThr    = cfg.forestThreshold     || 0.2;
+    const oceanThr     = cfg.oceanThreshold      || -0.2;
+
     const perm = _SimplexNoise.buildPerm(gameState.mapSeed | 0);
     const cols = MAP_WIDTH  / TILE_SIZE; // 400
     const rows = MAP_HEIGHT / TILE_SIZE; // 400
@@ -106,13 +112,13 @@ function generateTerrain() {
             const wy = (gy + 0.5) * TILE_SIZE;
             const dist = Math.sqrt((wx - cx) * (wx - cx) + (wy - cy) * (wy - cy));
             let biome;
-            if (dist < 400) {
+            if (dist < centerRadius) {
                 biome = 'forest';
             } else {
-                const n = _SimplexNoise.noise2d(perm, wx * NOISE_SCALE, wy * NOISE_SCALE);
-                if (n > 0.2)       biome = 'forest';
-                else if (n < -0.2) biome = 'ocean';
-                else               biome = 'desert';
+                const n = _SimplexNoise.noise2d(perm, wx * noiseScale, wy * noiseScale);
+                if (n > forestThr)      biome = 'forest';
+                else if (n < oceanThr)  biome = 'ocean';
+                else                    biome = 'desert';
             }
             row.push(biome);
         }

@@ -13,11 +13,14 @@ lang/zh-TW.js             LANG['zh-TW']
 lang/en.js                LANG['en']
 
 systems/gameState.js      DEFAULT_SETTINGS, gameState, canvas, ctx, MAP 常數
+systems/map.js            MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H, TILE_SIZE, NOISE_SCALE, BIOME_COLOR
+                          getBiome, getBgColor, generateTerrain, buildTerrainCanvas, drawTerrain
+                          generateTrees
 systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
 systems/audio.js          AudioManager, initAudio
-systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera, getBiome, getBgColor
+systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera
 systems/input.js          handleKeyDown, handleKeyUp（含設定介面按鍵 handler refs）
-systems/spawning.js       generateTrees, spawnFruitFromTree, spawnFruit, spawnNeutralCreatures
+systems/spawning.js       spawnFruitFromTree, spawnFruit, spawnNeutralCreatures
                           moveCreature, spawnHostileCreatures, spawnTreasure
                           spawnCreatureAtEdge, updateCreatureSpawning
 systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction
@@ -41,6 +44,7 @@ systems/boss.js           spawnBoss, updateBoss, showVictory
 systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayTransition
                           updateDayNightCycle, showGameOver
 systems/ui.js             showTooltip, hideTooltip, drawGame, updateUI, drawTreasures
+                          showMapSelect
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式
                           showGuide, hideGuide, showStartScreen
@@ -74,6 +78,19 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 由上到下：名字 → 血條 → 本體（含光暈）
 名字和血條間距 4px，血條和本體上緣間距 4px
+
+---
+
+## map/ 資料夾
+
+難度地圖配置資料，各檔案定義一個全域常數（如 `EASY_MAP`），在 `config/evolution.js` 之後、`lang.js` 之前載入。
+
+| 檔案 | 說明 |
+|------|------|
+| `map.md` | 地圖設計文件，記錄地形規格與新增難度步驟 |
+| `easymap.js` | 簡單難度（`EASY_MAP`）：地形參數、生物倍率、精英怪配置、Boss 預留結構 |
+
+`generateTerrain()` 讀取 `gameState.currentMap.terrain` 參數（noiseScale / forestCenterRadius / forestThreshold / oceanThreshold），`currentMap` 由 `showMapSelect()` 在開始遊戲時寫入。
 
 ---
 

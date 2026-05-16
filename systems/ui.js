@@ -730,6 +730,117 @@ function hideGuide() {
 // 開始畫面
 // =============================================================
 
+function showMapSelect() {
+    const prev = document.getElementById('start-screen');
+    if (prev) prev.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'map-select';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:#0d1a0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;pointer-events:all;color:white;font-family:Arial,sans-serif;';
+
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-size:22px;font-weight:bold;margin-bottom:32px;letter-spacing:1px;color:#ccc;';
+    titleEl.textContent = t('selectTitle');
+    overlay.appendChild(titleEl);
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:48px;align-items:flex-start;';
+
+    const btnBase   = 'display:block;width:200px;margin-bottom:8px;padding:11px 14px;border-radius:4px;font-size:15px;font-family:Arial,sans-serif;text-align:left;';
+    const btnActive = btnBase + 'background:rgba(60,120,60,0.6);border:2px solid #FFD700;color:white;cursor:pointer;';
+    const btnNormal = btnBase + 'background:rgba(40,60,40,0.4);border:1px solid #4a7a4a;color:white;cursor:pointer;';
+    const btnLocked = btnBase + 'background:rgba(30,30,30,0.3);border:1px solid #444;color:#555;cursor:default;';
+
+    // ── 難度選擇
+    const diffSection = document.createElement('div');
+    diffSection.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+    const diffLabel = document.createElement('div');
+    diffLabel.style.cssText = 'font-size:13px;color:#aaa;margin-bottom:10px;letter-spacing:1px;';
+    diffLabel.textContent = t('difficultyLabel');
+    diffSection.appendChild(diffLabel);
+
+    let selectedDiff = 'easy';
+    const diffs = [
+        { id: 'easy',   key: 'diffEasy',   map: typeof EASY_MAP !== 'undefined' ? EASY_MAP : null, locked: false },
+        { id: 'normal', key: 'diffNormal',  map: null, locked: true },
+        { id: 'hard',   key: 'diffHard',    map: null, locked: true },
+        { id: 'hell',   key: 'diffHell',    map: null, locked: true },
+    ];
+    const diffBtnEls = {};
+
+    function refreshDiffBtns() {
+        for (const d of diffs) {
+            diffBtnEls[d.id].style.cssText = d.locked ? btnLocked : (d.id === selectedDiff ? btnActive : btnNormal);
+        }
+    }
+
+    for (const d of diffs) {
+        const btn = document.createElement('button');
+        btn.textContent = t(d.key) + (d.locked ? '  🔒' : '');
+        btn.style.cssText = d.locked ? btnLocked : (d.id === selectedDiff ? btnActive : btnNormal);
+        if (!d.locked) { btn.onclick = () => { selectedDiff = d.id; refreshDiffBtns(); }; }
+        diffBtnEls[d.id] = btn;
+        diffSection.appendChild(btn);
+    }
+    row.appendChild(diffSection);
+
+    // ── 角色選擇
+    const charSection = document.createElement('div');
+    charSection.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+    const charLabel = document.createElement('div');
+    charLabel.style.cssText = 'font-size:13px;color:#aaa;margin-bottom:10px;letter-spacing:1px;';
+    charLabel.textContent = t('characterLabel');
+    charSection.appendChild(charLabel);
+
+    let selectedChar = 'koel';
+    const chars = [
+        { id: 'koel', key: 'charKoel', locked: false },
+        { id: 'soon', key: 'charSoon', locked: true  },
+    ];
+    const charBtnEls = {};
+
+    function refreshCharBtns() {
+        for (const c of chars) {
+            charBtnEls[c.id].style.cssText = c.locked ? btnLocked : (c.id === selectedChar ? btnActive : btnNormal);
+        }
+    }
+
+    for (const c of chars) {
+        const btn = document.createElement('button');
+        btn.textContent = t(c.key) + (c.locked ? '  🔒' : '');
+        btn.style.cssText = c.locked ? btnLocked : (c.id === selectedChar ? btnActive : btnNormal);
+        if (!c.locked) { btn.onclick = () => { selectedChar = c.id; refreshCharBtns(); }; }
+        charBtnEls[c.id] = btn;
+        charSection.appendChild(btn);
+    }
+    row.appendChild(charSection);
+    overlay.appendChild(row);
+
+    // ── 底部按鈕
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:16px;margin-top:36px;';
+
+    const backBtn = document.createElement('button');
+    backBtn.style.cssText = 'font-size:16px;padding:10px 28px;cursor:pointer;border-radius:4px;background:rgba(50,50,50,0.5);border:1px solid #666;color:#ccc;pointer-events:all;font-family:Arial,sans-serif;';
+    backBtn.textContent = t('btnBack');
+    backBtn.onclick = () => { overlay.remove(); showStartScreen(); };
+    btnRow.appendChild(backBtn);
+
+    const startBtn = document.createElement('button');
+    startBtn.style.cssText = 'font-size:16px;padding:10px 28px;cursor:pointer;border-radius:4px;background:#2a5a2a;border:2px solid #FFD700;color:white;font-weight:bold;pointer-events:all;font-family:Arial,sans-serif;';
+    startBtn.textContent = t('btnStart');
+    startBtn.onclick = () => {
+        const selDiff = diffs.find(d => d.id === selectedDiff);
+        gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
+        overlay.remove();
+        initializeGame();
+    };
+    btnRow.appendChild(startBtn);
+    overlay.appendChild(btnRow);
+
+    document.getElementById('game-container').appendChild(overlay);
+}
+
 function showStartScreen() {
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
@@ -755,7 +866,7 @@ function showStartScreen() {
     const startBtn = document.createElement('button');
     startBtn.style.cssText = menuBtnStyle + 'background:#2a5a2a;border:1px solid #4a8a4a;';
     startBtn.textContent = t('startGame');
-    startBtn.onclick = () => { overlay.remove(); initializeGame(); };
+    startBtn.onclick = () => showMapSelect();
     overlay.appendChild(startBtn);
 
     const skillBtn = document.createElement('button');
