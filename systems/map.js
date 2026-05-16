@@ -61,6 +61,10 @@ const _SimplexNoise = (function() {
     return { buildPerm, noise2d };
 })();
 
+const BIOME_COLOR = { forest: '#549954', ocean: '#1a4a6b', desert: '#c4a35a' };
+
+let _terrainCanvas = null;
+
 // terrainMap 未就緒前 fallback 到舊公式，確保載入順序安全
 function getBiome(x, y) {
     if (!gameState.terrainMap) {
@@ -115,6 +119,82 @@ function generateTerrain() {
         gameState.terrainMap.push(row);
     }
     console.log("--- 地形生成完成（seed=" + (gameState.mapSeed | 0) + "，" + cols + "x" + rows + " 格）---");
+    buildTerrainCanvas();
+}
+
+// 將整張 terrainMap 預渲染到離屏 Canvas（8000x8000）
+function buildTerrainCanvas() {
+    const tc = document.createElement('canvas');
+    tc.width  = MAP_WIDTH;
+    tc.height = MAP_HEIGHT;
+    const tctx = tc.getContext('2d');
+    const cols = MAP_WIDTH  / TILE_SIZE; // 400
+    const rows = MAP_HEIGHT / TILE_SIZE; // 400
+
+    // 第一遍：填入各格地形顏色
+    for (let gy = 0; gy < rows; gy++) {
+        for (let gx = 0; gx < cols; gx++) {
+            tctx.fillStyle = BIOME_COLOR[gameState.terrainMap[gy][gx]] || '#549954';
+            tctx.fillRect(gx * TILE_SIZE, gy * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        }
+    }
+
+    // 第二遍：相鄰格地形不同時畫 2px 半透明白色邊界線
+    tctx.fillStyle = 'rgba(255,255,255,0.3)';
+    for (let gy = 0; gy < rows; gy++) {
+        for (let gx = 0; gx < cols; gx++) {
+            const cur = gameState.terrainMap[gy][gx];
+            if (gx + 1 < cols && gameState.terrainMap[gy][gx + 1] !== cur) {
+                tctx.fillRect((gx + 1) * TILE_SIZE - 1, gy * TILE_SIZE, 2, TILE_SIZE);
+            }
+            if (gy + 1 < rows && gameState.terrainMap[gy + 1][gx] !== cur) {
+                tctx.fillRect(gx * TILE_SIZE, (gy + 1) * TILE_SIZE - 1, TILE_SIZE, 2);
+            }
+        }
+    }
+
+    _terrainCanvas = tc;
+    console.log("--- 地形預渲染完成（" + MAP_WIDTH + "x" + MAP_HEIGHT + " px）---");
+}
+
+// 把離屏 Canvas 對應視窗的區域貼到主 Canvas，支援地圖環繞
+function drawTerrain() {
+    if (!_terrainCanvas) {
+        ctx.fillStyle = getBgColor();
+        ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+        return;
+    }
+    const camX = gameState.camera.x;
+    const camY = gameState.camera.y;
+    ctx.imageSmoothingEnabled = false;
+
+    const wrapX = camX + VIEW_W > MAP_WIDTH;
+    const wrapY = camY + VIEW_H > MAP_HEIGHT;
+
+    if (!wrapX && !wrapY) {
+        ctx.drawImage(_terrainCanvas, camX, camY, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
+    } else if (wrapX && !wrapY) {
+        const w1 = MAP_WIDTH - camX;
+        ctx.drawImage(_terrainCanvas, camX, camY, w1,          VIEW_H, 0,  0, w1,          VIEW_H);
+        ctx.drawImage(_terrainCanvas, 0,    camY, VIEW_W - w1, VIEW_H, w1, 0, VIEW_W - w1, VIEW_H);
+    } else if (!wrapX && wrapY) {
+        const h1 = MAP_HEIGHT - camY;
+        ctx.drawImage(_terrainCanvas, camX, camY, VIEW_W, h1,          0, 0,  VIEW_W, h1);
+        ctx.drawImage(_terrainCanvas, camX, 0,    VIEW_W, VIEW_H - h1, 0, h1, VIEW_W, VIEW_H - h1);
+    } else {
+        const w1 = MAP_WIDTH  - camX, w2 = VIEW_W  - w1;
+        const h1 = MAP_HEIGHT - camY, h2 = VIEW_H - h1;
+        ctx.drawImage(_terrainCanvas, camX, camY, w1, h1, 0,  0,  w1, h1);
+        ctx.drawImage(_terrainCanvas, 0,    camY, w2, h1, w1, 0,  w2, h1);
+        ctx.drawImage(_terrainCanvas, camX, 0,    w1, h2, 0,  h1, w1, h2);
+        ctx.drawImage(_terrainCanvas, 0,    0,    w2, h2, w1, h1, w2, h2);
+    }
+
+    // 夜晚遮罩
+    if (gameState.isNight) {
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    }
 }
 
 function generateTrees(count) {

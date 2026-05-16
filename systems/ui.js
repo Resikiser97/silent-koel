@@ -51,9 +51,8 @@ function _escH(s) {
 // =============================================================
 
 function drawGame() {
-    // 根據玩家地形和日夜狀態設定背景顏色（含過渡）
-    ctx.fillStyle = getBgColor();
-    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    // 1. 貼上地形預渲染底圖（離屏 Canvas），夜晚遮罩在 drawTerrain 內疊加
+    drawTerrain();
 
     // 2. 繪製環境 (樹木)
     gameState.trees.forEach(tree => {
