@@ -1,6 +1,5 @@
 // =============================================================
-// 鏡頭與地形系統 - wrappedDistance / wrappedDelta / worldToScreen
-//                  updateCamera / getBiome / getBgColor
+// 鏡頭系統 - wrappedDistance / wrappedDelta / worldToScreen / updateCamera
 // =============================================================
 
 function wrappedDistance(x1, y1, x2, y2) {
@@ -54,53 +53,3 @@ function updateCamera() {
     cam.y = ((cam.y % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
 }
 
-function getBiome(x, y) {
-    const dist = Math.sqrt((x - 4000) * (x - 4000) + (y - 4000) * (y - 4000));
-    if (dist < 2000) return 'forest';
-    if (x > 5000 || y > 5000) return 'ocean';
-    return 'desert';
-}
-
-function getBgColor() {
-    const p = gameState.player;
-    const night = gameState.isNight;
-    const C = {
-        forest: night ? [26,46,26]    : [84,153,84],
-        ocean:  night ? [10,31,48]    : [26,74,107],
-        desert: night ? [92,61,10]    : [196,163,90]
-    };
-    const cx = 4000, cy = 4000;
-    const dx = p.x - cx, dy = p.y - cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const TRANS = 200;
-    const mix = (a, b, t) => Math.round(a * (1 - t) + b * t);
-
-    const toEdge = Math.abs(dist - 2000);
-    if (toEdge < TRANS) {
-        const t = (1 - toEdge / TRANS) * 0.45;
-        const biome = getBiome(p.x, p.y);
-        let other;
-        if (biome === 'forest') {
-            const od = dist > 0 ? 2200 / dist : 0;
-            other = getBiome(cx + dx * od, cy + dy * od);
-        } else {
-            other = 'forest';
-        }
-        const a = C[biome], b = C[other];
-        return 'rgb(' + mix(a[0],b[0],t) + ',' + mix(a[1],b[1],t) + ',' + mix(a[2],b[2],t) + ')';
-    }
-
-    if (dist >= 2000) {
-        const biome = getBiome(p.x, p.y);
-        const minD = Math.min(Math.abs(p.x - 5000), Math.abs(p.y - 5000));
-        if (minD < TRANS) {
-            const t = (1 - minD / TRANS) * 0.45;
-            const other = biome === 'ocean' ? 'desert' : 'ocean';
-            const a = C[biome], b = C[other];
-            return 'rgb(' + mix(a[0],b[0],t) + ',' + mix(a[1],b[1],t) + ',' + mix(a[2],b[2],t) + ')';
-        }
-    }
-
-    const c = C[getBiome(p.x, p.y)];
-    return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
-}

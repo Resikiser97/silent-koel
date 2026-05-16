@@ -78,12 +78,7 @@ const gameState = {
 };
 
 // =============================================================
-// 畫布與地圖常數
+// 畫布
 // =============================================================
-const canvas  = document.getElementById('gameCanvas');
-const ctx     = canvas.getContext('2d');
-
-const MAP_WIDTH  = 8000;
-const MAP_HEIGHT = 8000;
-const VIEW_W     = 1600;
-const VIEW_H     = 900;
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');

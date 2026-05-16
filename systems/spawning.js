@@ -1,27 +1,10 @@
 // =============================================================
-// 生成系統 - generateTrees / spawnFruitFromTree / spawnFruit
+// 生成系統 - spawnFruitFromTree / spawnFruit
 //            spawnNeutralCreatures / moveCreature
 //            spawnHostileCreatures / spawnTreasure
 //            spawnCreatureAtEdge / updateCreatureSpawning
+// （generateTrees 已移至 systems/map.js）
 // =============================================================
-
-function generateTrees(count) {
-    const trees = [];
-    for (let i = 0; i < count; i++) {
-        const x = Math.floor(Math.random() * (MAP_WIDTH  - 100)) + 50;
-        const y = Math.floor(Math.random() * (MAP_HEIGHT - 100)) + 50;
-        const isLarge = Math.random() < 0.4;
-        const radius = isLarge
-            ? Math.floor(Math.random() * 11 + 25)
-            : Math.floor(Math.random() *  9 + 12);
-        const biome = getBiome(x, y);
-        const treeColor = biome === 'ocean' ? '#005599' : (biome === 'desert' ? '#7B6B00' : 'darkgreen');
-        const treeSize = isLarge ? 'large' : 'small';
-        trees.push({ x, y, radius, color: treeColor, isLarge, treeSize, fruitCount: 0, fruitTimer: 0 });
-    }
-    gameState.trees = trees;
-    console.log("--- 初始化完成：共生成 " + gameState.trees.length + " 棵樹木（大/小各佔約4/6）---");
-}
 
 function spawnFruitFromTree(tree) {
     for (let attempts = 0; attempts < 20; attempts++) {
