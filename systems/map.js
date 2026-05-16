@@ -1,5 +1,6 @@
 // =============================================================
-// 地圖系統 - MAP 常數 / getBiome / getBgColor / generateTrees
+// 地圖系統 - MAP 常數 / Simplex Noise / getBiome / getBgColor
+//            generateTerrain / generateTrees
 // =============================================================
 
 const MAP_WIDTH  = 8000;
@@ -10,55 +11,110 @@ const VIEW_H     = 900;
 const TILE_SIZE   = 20;    // 地形格子大小，改這個數字可以調整解析度
 const NOISE_SCALE = 0.003; // Noise 縮放比例，影響地形大小
 
+// ---- Simplex Noise（純 JS，不依賴外部函式庫）----
+const _SimplexNoise = (function() {
+    const grad3 = [
+        [1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],
+        [1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],
+        [0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]
+    ];
+
+    function buildPerm(seed) {
+        let s = seed | 0;
+        const p = Array.from({length: 256}, (_, i) => i);
+        for (let i = 255; i > 0; i--) {
+            s = (s * 1664525 + 1013904223) | 0;
+            const j = (s >>> 0) % (i + 1);
+            const tmp = p[i]; p[i] = p[j]; p[j] = tmp;
+        }
+        const perm = new Uint8Array(512);
+        for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+        return perm;
+    }
+
+    function dot(g, x, y) { return g[0] * x + g[1] * y; }
+
+    function noise2d(perm, xin, yin) {
+        const F2 = 0.5 * (Math.sqrt(3) - 1);
+        const G2 = (3 - Math.sqrt(3)) / 6;
+        const s = (xin + yin) * F2;
+        const i = Math.floor(xin + s);
+        const j = Math.floor(yin + s);
+        const t = (i + j) * G2;
+        const x0 = xin - (i - t), y0 = yin - (j - t);
+        const i1 = x0 > y0 ? 1 : 0, j1 = x0 > y0 ? 0 : 1;
+        const x1 = x0 - i1 + G2, y1 = y0 - j1 + G2;
+        const x2 = x0 - 1 + 2 * G2, y2 = y0 - 1 + 2 * G2;
+        const ii = i & 255, jj = j & 255;
+        const gi0 = perm[ii + perm[jj]] % 12;
+        const gi1 = perm[ii + i1 + perm[jj + j1]] % 12;
+        const gi2 = perm[ii + 1 + perm[jj + 1]] % 12;
+        let t0 = 0.5 - x0 * x0 - y0 * y0;
+        const n0 = t0 < 0 ? 0 : (t0 *= t0, t0 * t0 * dot(grad3[gi0], x0, y0));
+        let t1 = 0.5 - x1 * x1 - y1 * y1;
+        const n1 = t1 < 0 ? 0 : (t1 *= t1, t1 * t1 * dot(grad3[gi1], x1, y1));
+        let t2 = 0.5 - x2 * x2 - y2 * y2;
+        const n2 = t2 < 0 ? 0 : (t2 *= t2, t2 * t2 * dot(grad3[gi2], x2, y2));
+        return 70 * (n0 + n1 + n2);
+    }
+
+    return { buildPerm, noise2d };
+})();
+
+// terrainMap 未就緒前 fallback 到舊公式，確保載入順序安全
 function getBiome(x, y) {
-    const dist = Math.sqrt((x - 4000) * (x - 4000) + (y - 4000) * (y - 4000));
-    if (dist < 2000) return 'forest';
-    if (x > 5000 || y > 5000) return 'ocean';
-    return 'desert';
+    if (!gameState.terrainMap) {
+        const dist = Math.sqrt((x - 4000) * (x - 4000) + (y - 4000) * (y - 4000));
+        if (dist < 2000) return 'forest';
+        if (x > 5000 || y > 5000) return 'ocean';
+        return 'desert';
+    }
+    const cols = MAP_WIDTH  / TILE_SIZE;
+    const rows = MAP_HEIGHT / TILE_SIZE;
+    const gx = Math.max(0, Math.min(cols - 1, Math.floor(x / TILE_SIZE)));
+    const gy = Math.max(0, Math.min(rows - 1, Math.floor(y / TILE_SIZE)));
+    return gameState.terrainMap[gy][gx];
 }
 
 function getBgColor() {
     const p = gameState.player;
     const night = gameState.isNight;
     const C = {
-        forest: night ? [26,46,26]    : [84,153,84],
-        ocean:  night ? [10,31,48]    : [26,74,107],
-        desert: night ? [92,61,10]    : [196,163,90]
+        forest: night ? [26,46,26]  : [84,153,84],
+        ocean:  night ? [10,31,48]  : [26,74,107],
+        desert: night ? [92,61,10]  : [196,163,90]
     };
-    const cx = 4000, cy = 4000;
-    const dx = p.x - cx, dy = p.y - cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const TRANS = 200;
-    const mix = (a, b, t) => Math.round(a * (1 - t) + b * t);
-
-    const toEdge = Math.abs(dist - 2000);
-    if (toEdge < TRANS) {
-        const t = (1 - toEdge / TRANS) * 0.45;
-        const biome = getBiome(p.x, p.y);
-        let other;
-        if (biome === 'forest') {
-            const od = dist > 0 ? 2200 / dist : 0;
-            other = getBiome(cx + dx * od, cy + dy * od);
-        } else {
-            other = 'forest';
-        }
-        const a = C[biome], b = C[other];
-        return 'rgb(' + mix(a[0],b[0],t) + ',' + mix(a[1],b[1],t) + ',' + mix(a[2],b[2],t) + ')';
-    }
-
-    if (dist >= 2000) {
-        const biome = getBiome(p.x, p.y);
-        const minD = Math.min(Math.abs(p.x - 5000), Math.abs(p.y - 5000));
-        if (minD < TRANS) {
-            const t = (1 - minD / TRANS) * 0.45;
-            const other = biome === 'ocean' ? 'desert' : 'ocean';
-            const a = C[biome], b = C[other];
-            return 'rgb(' + mix(a[0],b[0],t) + ',' + mix(a[1],b[1],t) + ',' + mix(a[2],b[2],t) + ')';
-        }
-    }
-
     const c = C[getBiome(p.x, p.y)];
     return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+}
+
+function generateTerrain() {
+    const perm = _SimplexNoise.buildPerm(gameState.mapSeed | 0);
+    const cols = MAP_WIDTH  / TILE_SIZE; // 400
+    const rows = MAP_HEIGHT / TILE_SIZE; // 400
+    const cx   = MAP_WIDTH  / 2;        // 4000
+    const cy   = MAP_HEIGHT / 2;        // 4000
+    gameState.terrainMap = [];
+    for (let gy = 0; gy < rows; gy++) {
+        const row = [];
+        for (let gx = 0; gx < cols; gx++) {
+            const wx = (gx + 0.5) * TILE_SIZE;
+            const wy = (gy + 0.5) * TILE_SIZE;
+            const dist = Math.sqrt((wx - cx) * (wx - cx) + (wy - cy) * (wy - cy));
+            let biome;
+            if (dist < 400) {
+                biome = 'forest';
+            } else {
+                const n = _SimplexNoise.noise2d(perm, wx * NOISE_SCALE, wy * NOISE_SCALE);
+                if (n > 0.2)       biome = 'forest';
+                else if (n < -0.2) biome = 'ocean';
+                else               biome = 'desert';
+            }
+            row.push(biome);
+        }
+        gameState.terrainMap.push(row);
+    }
+    console.log("--- 地形生成完成（seed=" + (gameState.mapSeed | 0) + "，" + cols + "x" + rows + " 格）---");
 }
 
 function generateTrees(count) {

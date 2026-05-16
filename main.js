@@ -35,10 +35,14 @@ function gameLoop() {
 function initializeGame() {
     console.log("--- 遊戲初始化開始 ---");
 
-    // 1. 生成環境
+    // 1. 設定地圖種子並生成 Noise 地形
+    gameState.mapSeed = Math.random() * 65536;
+    generateTerrain();
+
+    // 2. 生成環境
     generateTrees(150);
 
-    // 2. 初始化果子：從各棵樹分散生成共 80 顆
+    // 3. 初始化果子：從各棵樹分散生成共 80 顆
     gameState.fruits = [];
     const shuffledTrees = gameState.trees.slice().sort(() => Math.random() - 0.5);
     for (const tree of shuffledTrees) {
@@ -46,15 +50,15 @@ function initializeGame() {
         spawnFruitFromTree(tree);
     }
 
-    // 3. 生成中立生物
+    // 4. 生成中立生物
     spawnNeutralCreatures();
 
-    // 4. 生成敵意生物與初始化屍體、寶物陣列
+    // 5. 生成敵意生物與初始化屍體、寶物陣列
     gameState.corpses = [];
     gameState.treasures = [];
     spawnHostileCreatures();
 
-    // 5. 設定事件監聽器
+    // 6. 設定事件監聽器
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     canvas.addEventListener('click', function() {
@@ -87,10 +91,10 @@ function initializeGame() {
         console.log('--- 存檔版本不一致，已清除所有存檔（' + storedSaveVer + ' → ' + GAME_INFO.SAVE_VERSION + '）---');
     }
 
-    // 6. 載入設定（音量、按鍵）
+    // 7. 載入設定（音量、按鍵）
     loadSettings();
 
-    // 7. 載入技能與進化資料並套用起始加成
+    // 8. 載入技能與進化資料並套用起始加成
     try {
         const savedSkills = localStorage.getItem('playerSkills');
         if (savedSkills) gameState.playerSkills = JSON.parse(savedSkills);
@@ -100,19 +104,19 @@ function initializeGame() {
     applySkillBonuses();
     applyEvolutionEffects();
 
-    // 8. 初始化計時狀態
+    // 9. 初始化計時狀態
     gameState.lastTimeTick = Date.now();
     gameState.spawnTimers.neutral = Date.now();
     gameState.spawnTimers.hostile = Date.now();
 
-    // 9. 初始化音效系統並播放背景音樂
+    // 10. 初始化音效系統並播放背景音樂
     initAudio();
 
     updateUI();
 
     console.log("--- 初始化完成，啟動遊戲循環 ---");
 
-    // 10. 開始遊戲主循環
+    // 11. 開始遊戲主循環
     requestAnimationFrame(gameLoop);
 }
 
