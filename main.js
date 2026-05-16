@@ -26,6 +26,7 @@ function gameLoop() {
         updateStatusEffects();
         checkTreasureCollision();
         updateCorpseEating();
+        updateMinimapFog();
     }
     drawGame();
     updateUI();
@@ -38,6 +39,11 @@ function initializeGame() {
     // 1. 設定地圖種子並生成 Noise 地形
     gameState.mapSeed = Math.random() * 65536;
     generateTerrain();
+
+    // 1b. 初始化迷霧地圖（400×400，全部遮蓋）
+    const _fogCols = MAP_WIDTH  / TILE_SIZE;
+    const _fogRows = MAP_HEIGHT / TILE_SIZE;
+    gameState.fogMap = Array.from({length: _fogRows}, () => new Array(_fogCols).fill(true));
 
     // 2. 生成環境
     generateTrees(150);

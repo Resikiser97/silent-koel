@@ -4,6 +4,20 @@
 //           showGuide / hideGuide / showStartScreen
 // =============================================================
 
+// ── 小地圖全域變數
+let _minimapTerrainCanvas  = null;
+let _minimapTerrainSeed    = -1;
+let _minimapCanvas         = null;
+let _minimapCtx            = null;
+let _sunmoonCanvas         = null;
+let _sunmoonCtx            = null;
+let _minimapFogCanvas      = null;
+let _minimapFogCtx         = null;
+let _minimapFogImageData   = null;
+let _minimapFogRenderCanvas = null;
+let _minimapFogRenderCtx    = null;
+let _fogCloudCanvas         = null;
+
 // ── Tooltip 全域變數
 let _organHitRegions = [];
 const _ttEl = document.getElementById('game-tooltip');
@@ -44,6 +58,261 @@ function _moveTooltip(cx, cy) {
 
 function _escH(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// =============================================================
+// 小地圖系統
+// =============================================================
+
+function _buildFogCloudTexture() {
+    const size = 300;
+    const tc   = document.createElement('canvas');
+    tc.width   = tc.height = size;
+    const tctx = tc.getContext('2d');
+    let seed = 73856;
+    const rng = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967295; };
+    for (let i = 0; i < 70; i++) {
+        const x = rng() * size;
+        const y = rng() * size;
+        const r = 15 + rng() * 60;
+        const v = Math.floor(190 + rng() * 65);
+        const a = 0.25 + rng() * 0.65;
+        const g = tctx.createRadialGradient(x, y, r * 0.1, x, y, r);
+        g.addColorStop(0,   'rgba(' + v + ',' + v + ',' + v + ',' + a.toFixed(2) + ')');
+        g.addColorStop(0.5, 'rgba(255,255,255,' + (a * 0.4).toFixed(2) + ')');
+        g.addColorStop(1,   'rgba(255,255,255,0)');
+        tctx.fillStyle = g;
+        tctx.beginPath();
+        tctx.arc(x, y, r, 0, Math.PI * 2);
+        tctx.fill();
+    }
+    return tc;
+}
+
+function updateMinimapFog() {
+    if (!gameState.fogMap) return;
+    const COLS = MAP_WIDTH  / TILE_SIZE; // 400
+    const ROWS = MAP_HEIGHT / TILE_SIZE; // 400
+    const cam  = gameState.camera;
+    const gx0  = Math.floor(cam.x / TILE_SIZE);
+    const gy0  = Math.floor(cam.y / TILE_SIZE);
+    const gxW  = Math.ceil(VIEW_W / TILE_SIZE) + 1; // 81
+    const gyW  = Math.ceil(VIEW_H / TILE_SIZE) + 1; // 46
+    for (let dy = 0; dy < gyW; dy++) {
+        for (let dx = 0; dx < gxW; dx++) {
+            const gx = ((gx0 + dx) % COLS + COLS) % COLS;
+            const gy = ((gy0 + dy) % ROWS + ROWS) % ROWS;
+            gameState.fogMap[gy][gx] = false;
+        }
+    }
+}
+
+function _drawMinimapFog(mctx) {
+    if (!gameState.fogMap) return;
+    if (!_minimapFogCanvas) {
+        _minimapFogCanvas        = document.createElement('canvas');
+        _minimapFogCanvas.width  = 400;
+        _minimapFogCanvas.height = 400;
+        _minimapFogCtx           = _minimapFogCanvas.getContext('2d');
+        _minimapFogImageData     = _minimapFogCtx.createImageData(400, 400);
+    }
+    const MARGIN = 15;
+    const RC     = 300 + MARGIN * 2; // 330
+    if (!_minimapFogRenderCanvas || _minimapFogRenderCanvas.width !== RC) {
+        _minimapFogRenderCanvas        = document.createElement('canvas');
+        _minimapFogRenderCanvas.width  = RC;
+        _minimapFogRenderCanvas.height = RC;
+        _minimapFogRenderCtx           = _minimapFogRenderCanvas.getContext('2d');
+    }
+    if (!_fogCloudCanvas) _fogCloudCanvas = _buildFogCloudTexture();
+
+    // 寫入硬邊迷霧像素（白天白色 / 夜晚黑色）
+    const d      = _minimapFogImageData.data;
+    const fogMap = gameState.fogMap;
+    const v      = gameState.isNight ? 0 : 255;
+    for (let gy = 0; gy < 400; gy++) {
+        const row = fogMap[gy];
+        for (let gx = 0; gx < 400; gx++) {
+            const i = (gy * 400 + gx) * 4;
+            if (row[gx]) { d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255; }
+            else          { d[i + 3] = 0; }
+        }
+    }
+    _minimapFogCtx.putImageData(_minimapFogImageData, 0, 0);
+
+    // 渲染到 330×330 暫存畫布，使 blur kernel 在可視邊緣（距邊 15px）有足夠霧像素可採樣
+    const rc = _minimapFogRenderCtx;
+    rc.clearRect(0, 0, RC, RC);
+    rc.filter = 'blur(8px)';
+    rc.drawImage(_minimapFogCanvas, 0, 0, 400, 400, 0, 0, RC, RC);
+    rc.filter = 'none';
+
+    // 白天：用 source-atop 把雲霧材質貼在迷霧形狀內
+    if (!gameState.isNight) {
+        rc.globalCompositeOperation = 'source-atop';
+        rc.drawImage(_fogCloudCanvas, 0, 0, 300, 300, 0, 0, RC, RC);
+        rc.globalCompositeOperation = 'source-over';
+    }
+
+    // 只取中央 300×300，兩側各 15px 的邊緣失真區不顯示
+    mctx.drawImage(_minimapFogRenderCanvas, MARGIN, MARGIN, 300, 300, 0, 0, 300, 300);
+}
+
+function _buildMinimapTerrainCanvas() {
+    const mc   = document.createElement('canvas');
+    mc.width   = 400;
+    mc.height  = 400;
+    const mctx = mc.getContext('2d');
+    const cols = MAP_WIDTH  / TILE_SIZE;
+    const rows = MAP_HEIGHT / TILE_SIZE;
+    for (let gy = 0; gy < rows; gy++) {
+        for (let gx = 0; gx < cols; gx++) {
+            mctx.fillStyle = BIOME_COLOR[gameState.terrainMap[gy][gx]] || '#549954';
+            mctx.fillRect(gx, gy, 1, 1);
+        }
+    }
+    _minimapTerrainCanvas = mc;
+    _minimapTerrainSeed   = gameState.mapSeed;
+}
+
+function _drawMinimapEntities(mctx) {
+    if (!gameState.fogMap) return;
+    const scale = 300 / MAP_WIDTH;
+    const COLS  = MAP_WIDTH  / TILE_SIZE;
+    const ROWS  = MAP_HEIGHT / TILE_SIZE;
+
+    const toMM = (wx, wy) => ({
+        x: ((wx % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH)  * scale,
+        y: ((wy % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT) * scale
+    });
+
+    const isRevealed = (wx, wy) => {
+        const gx = Math.floor(((wx % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH)  / TILE_SIZE);
+        const gy = Math.floor(((wy % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT) / TILE_SIZE);
+        if (gy < 0 || gy >= ROWS || gx < 0 || gx >= COLS) return false;
+        return !gameState.fogMap[gy][gx];
+    };
+
+    // 中立生物（橘色）
+    mctx.fillStyle = '#FFA040';
+    for (const c of gameState.neutralCreatures) {
+        if (c.hp <= 0 || !isRevealed(c.x, c.y)) continue;
+        const m = toMM(c.x, c.y);
+        mctx.beginPath(); mctx.arc(m.x, m.y, 1.5, 0, Math.PI * 2); mctx.fill();
+    }
+
+    // 敵意生物（紅色）
+    mctx.fillStyle = '#FF4040';
+    for (const c of gameState.hostileCreatures) {
+        if (c.hp <= 0 || !isRevealed(c.x, c.y)) continue;
+        const m = toMM(c.x, c.y);
+        mctx.beginPath(); mctx.arc(m.x, m.y, 1.5, 0, Math.PI * 2); mctx.fill();
+    }
+
+    // 精英怪（金色，較大）
+    if (gameState.eliteCreature && gameState.eliteCreature.hp > 0 && isRevealed(gameState.eliteCreature.x, gameState.eliteCreature.y)) {
+        const m = toMM(gameState.eliteCreature.x, gameState.eliteCreature.y);
+        mctx.fillStyle = '#FFD700';
+        mctx.beginPath(); mctx.arc(m.x, m.y, 3, 0, Math.PI * 2); mctx.fill();
+    }
+
+    // Boss（深紅帶描邊）
+    if (gameState.boss && gameState.boss.hp > 0 && isRevealed(gameState.boss.x, gameState.boss.y)) {
+        const m = toMM(gameState.boss.x, gameState.boss.y);
+        mctx.fillStyle = '#CC0000';
+        mctx.strokeStyle = '#FF6600'; mctx.lineWidth = 1.5;
+        mctx.beginPath(); mctx.arc(m.x, m.y, 4, 0, Math.PI * 2);
+        mctx.fill(); mctx.stroke();
+        mctx.lineWidth = 1;
+    }
+
+    // 玩家（白/綠交替閃爍，帶黑色描邊）
+    const pm   = toMM(gameState.player.x, gameState.player.y);
+    const blink = Math.floor(Date.now() / 500) % 2 === 0;
+    mctx.fillStyle   = blink ? '#FFFFFF' : '#00FF88';
+    mctx.strokeStyle = 'rgba(0,0,0,0.8)'; mctx.lineWidth = 1.5;
+    mctx.beginPath(); mctx.arc(pm.x, pm.y, 3.5, 0, Math.PI * 2);
+    mctx.fill(); mctx.stroke();
+    mctx.lineWidth = 1;
+}
+
+function drawMinimap() {
+    if (!_minimapCanvas) {
+        _minimapCanvas = document.getElementById('minimapCanvas');
+        if (!_minimapCanvas) return;
+        _minimapCtx = _minimapCanvas.getContext('2d');
+    }
+    if (!gameState.terrainMap) {
+        _minimapCtx.fillStyle = '#222';
+        _minimapCtx.fillRect(0, 0, 300, 300);
+    } else {
+        if (!_minimapTerrainCanvas || _minimapTerrainSeed !== gameState.mapSeed) {
+            _buildMinimapTerrainCanvas();
+        }
+        _minimapCtx.imageSmoothingEnabled = false;
+        _minimapCtx.drawImage(_minimapTerrainCanvas, 0, 0, 400, 400, 0, 0, 300, 300);
+        _drawMinimapFog(_minimapCtx);
+        _drawMinimapEntities(_minimapCtx);
+    }
+    _drawSunMoonIndicator();
+}
+
+function _drawSunMoonIndicator() {
+    if (!_sunmoonCanvas) {
+        _sunmoonCanvas = document.getElementById('sunmoonCanvas');
+        if (!_sunmoonCanvas) return;
+        _sunmoonCtx = _sunmoonCanvas.getContext('2d');
+    }
+    const mctx = _sunmoonCtx;
+    const W = 24, H = 24;
+    mctx.clearRect(0, 0, W, H);
+    mctx.fillStyle = 'rgba(0,0,0,0.7)';
+    mctx.fillRect(0, 0, W, H);
+
+    const timeElapsed   = Math.max(0, 600 - gameState.timeRemaining);
+    const phaseIndex    = Math.min(7, Math.floor(timeElapsed / 75));
+    const phaseProgress = (timeElapsed % 75) / 75;
+    const isDay         = phaseIndex % 2 === 0;
+    const progress      = phaseProgress;
+
+    const icx = W / 2, icy = H / 2;
+    const sR  = 11;
+
+    const sunColor   = '#FFB300';
+    const moonColor  = '#1a3060';
+    const frontColor = isDay ? sunColor : moonColor;
+    const backColor  = isDay ? moonColor : sunColor;
+
+    // 裁切到球體範圍
+    mctx.save();
+    mctx.beginPath();
+    mctx.arc(icx, icy, sR, 0, Math.PI * 2);
+    mctx.clip();
+
+    // 後半球
+    mctx.fillStyle = backColor;
+    mctx.beginPath();
+    mctx.arc(icx, icy, sR, 0, Math.PI * 2);
+    mctx.fill();
+
+    // 前半球（橢圓邊界）
+    const ex    = Math.cos(progress * Math.PI) * sR;
+    const absEx = Math.abs(ex);
+    mctx.fillStyle = frontColor;
+    mctx.beginPath();
+    mctx.arc(icx, icy, sR, -Math.PI / 2, Math.PI / 2, true);
+    if (absEx > 0.5) {
+        if (ex >= 0) {
+            mctx.ellipse(icx, icy, absEx, sR, 0, Math.PI / 2, -Math.PI / 2, true);
+        } else {
+            mctx.ellipse(icx, icy, absEx, sR, 0, Math.PI / 2, -Math.PI / 2, false);
+        }
+    } else {
+        mctx.lineTo(icx, icy - sR);
+    }
+    mctx.fill();
+
+    mctx.restore();
 }
 
 // =============================================================
@@ -204,6 +473,9 @@ function drawGame() {
         ctx.fillText(msg.text, VIEW_W / 2, VIEW_H / 2);
         ctx.restore();
     }
+
+    // 12. 繪製小地圖
+    drawMinimap();
 }
 
 function updateUI() {
@@ -217,15 +489,14 @@ function updateUI() {
         '<div style="width:' + Math.round(barPct * 100) + '%;height:100%;background:#00CC00;border-radius:3px;"></div>' +
         '</div>';
 
-    // 右上角：時間、日夜狀態、地形
-    document.getElementById('time-display').innerText = t('timeLabel') + ': ' + gameState.stats.timeStatus;
-    const dayEl = document.getElementById('day-display');
-    const phaseLabel = gameState.isNight ? t('phaseNight') : t('phaseDay');
-    dayEl.innerText = t('dayCycleFormat', { phase: phaseLabel });
-    dayEl.style.color = gameState.isNight ? 'orange' : '';
-    const biomeIcons = { forest: t('biomeForest'), ocean: t('biomeOcean'), desert: t('biomeDesert') };
-    const biomeEl = document.getElementById('biome-display');
-    if (biomeEl) biomeEl.innerText = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
+    // 小地圖資訊列：地形圖示 + 時間
+    const mmBiomeEl = document.getElementById('minimap-biome');
+    const mmTimeEl  = document.getElementById('minimap-time');
+    if (mmBiomeEl) {
+        const biomeIcons = { forest: t('biomeForest'), ocean: t('biomeOcean'), desert: t('biomeDesert') };
+        mmBiomeEl.innerText = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
+    }
+    if (mmTimeEl) mmTimeEl.innerText = gameState.stats.timeStatus;
 
     if (gameState.devMode) {
         document.getElementById('dev-stat-fruits').textContent = t('devFruits') + '：' + gameState.fruits.length;

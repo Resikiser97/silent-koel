@@ -46,12 +46,30 @@
             left: 10px;
         }
 
-        #top-right {
+        #minimap-container {
+            position: absolute;
             top: 10px;
             right: 10px;
+            pointer-events: none;
+            user-select: none;
+        }
+        #minimapCanvas {
+            display: block;
+            border: 3px solid #8B6914;
+            border-radius: 4px;
+        }
+        #minimap-info {
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.7);
+            border-radius: 4px;
+            padding: 6px 8px;
+            margin-top: 2px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
         }
         
         /* XP Popup Animation */
@@ -147,12 +165,17 @@
             <div class="status-line">XP: 0</div>
         </div>
 
-        <!-- Top Right: Time and Day Status -->
-        <div id="top-right">
-            <div class="status-line" id="time-display">時間: 20:00</div>
-            <div class="status-line" id="day-display">現在是「白天」</div>
-            <div class="status-line" id="biome-display">🌲 森林</div>
-            <div id="dev-indicator" style="display:none; color:red; font-size:14px; font-weight:bold; margin-top:4px;">🛠️ 開發者模式</div>
+        <!-- 右上角小地圖 -->
+        <div id="minimap-container">
+            <canvas id="minimapCanvas" width="300" height="300"></canvas>
+            <div id="minimap-info">
+                <span id="minimap-biome">🌲 森林</span>
+                <span style="display:flex;align-items:center;gap:4px;">
+                    <canvas id="sunmoonCanvas" width="24" height="24"></canvas>
+                    <span id="minimap-time">00:00</span>
+                </span>
+            </div>
+            <div id="dev-indicator" style="display:none; color:red; font-size:14px; font-weight:bold; margin-top:4px; text-align:center;">🛠️ 開發者模式</div>
         </div>
     </div>
 
