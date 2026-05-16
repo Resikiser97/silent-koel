@@ -194,8 +194,8 @@ function labelBiomeRegions(terrainMap, gridW, gridH) {
                 const [cr, cc] = stack.pop();
                 cells.push({row: cr, col: cc});
                 for (const [dr, dc] of DIRS) {
-                    const nr = cr + dr, nc = cc + dc;
-                    if (nr < 0 || nr >= gridH || nc < 0 || nc >= gridW) continue;
+                    const nr = ((cr + dr) + gridH) % gridH;
+                    const nc = ((cc + dc) + gridW) % gridW;
                     if (regionId[nr][nc] !== -1) continue;
                     if (terrainMap[nr][nc] !== biome) continue;
                     regionId[nr][nc] = id;
@@ -213,17 +213,16 @@ function labelBiomeRegions(terrainMap, gridW, gridH) {
 function mergeSmallRegions(terrainMap, gridW, gridH, minTiles) {
     const {regionId, regions} = labelBiomeRegions(terrainMap, gridW, gridH);
 
-    // 建立區塊鄰接圖
+    // 建立區塊鄰接圖（環形：四方向皆考慮邊界環繞）
     const adj = regions.map(() => new Set());
+    const ADJ_DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
     for (let r = 0; r < gridH; r++) {
         for (let c = 0; c < gridW; c++) {
             const id = regionId[r][c];
-            if (r + 1 < gridH) {
-                const nid = regionId[r + 1][c];
-                if (nid !== id) { adj[id].add(nid); adj[nid].add(id); }
-            }
-            if (c + 1 < gridW) {
-                const nid = regionId[r][c + 1];
+            for (const [dr, dc] of ADJ_DIRS) {
+                const nr = ((r + dr) + gridH) % gridH;
+                const nc = ((c + dc) + gridW) % gridW;
+                const nid = regionId[nr][nc];
                 if (nid !== id) { adj[id].add(nid); adj[nid].add(id); }
             }
         }
@@ -378,10 +377,12 @@ function buildTerrainCanvas() {
     for (let gy = 0; gy < rows; gy++) {
         for (let gx = 0; gx < cols; gx++) {
             const cur = gameState.terrainMap[gy][gx];
-            if (gx + 1 < cols && gameState.terrainMap[gy][gx + 1] !== cur) {
+            const nextGx = (gx + 1) % cols;
+            const nextGy = (gy + 1) % rows;
+            if (gameState.terrainMap[gy][nextGx] !== cur) {
                 tctx.fillRect((gx + 1) * TILE_SIZE - 1, gy * TILE_SIZE, 2, TILE_SIZE);
             }
-            if (gy + 1 < rows && gameState.terrainMap[gy + 1][gx] !== cur) {
+            if (gameState.terrainMap[nextGy][gx] !== cur) {
                 tctx.fillRect(gx * TILE_SIZE, (gy + 1) * TILE_SIZE - 1, TILE_SIZE, 2);
             }
         }

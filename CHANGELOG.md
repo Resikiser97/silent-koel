@@ -2,6 +2,16 @@
 
 ---
 
+## v0.21.0 - 2026-05-16
+
+### 修復
+- **地圖邊界地形不連續**（`systems/map.js`）：
+  - `labelBiomeRegions` flood fill 改為環形：`nr/nc` 改用模運算（`% gridH / % gridW`）取代邊界排除，使上下左右邊界的同生態格正確連通成同一 region
+  - `mergeSmallRegions` 鄰接圖建立改為環形：以 `ADJ_DIRS` 四方向 + 模運算取代只往右往下的雙向掃描，確保左右邊界/上下邊界的不同 region 正確建立鄰接關係
+  - `buildTerrainCanvas` 邊界白線改為環形：以 `(gx+1)%cols`、`(gy+1)%rows` 取代 `gx+1 < cols`、`gy+1 < rows`，使最後一欄/最後一列與第一欄/第一列在地形不同時也能畫出邊界線
+
+---
+
 ## v0.20.0 - 2026-05-16
 
 ### 新增
