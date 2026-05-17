@@ -2,32 +2,47 @@
 // 主程式入口 - isGamePaused / gameLoop / initializeGame
 // =============================================================
 
+const FIXED_FPS = 60;
+const FIXED_DELTA = 1000 / FIXED_FPS;
+let accumulator = 0;
+let lastTimestamp = 0;
+
 function isGamePaused() {
     return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen || gameState.gameOver || gameState.victory;
 }
 
-function gameLoop() {
-    const loopNow = Date.now();
-    const dt = gameState.lastLoopTime > 0 ? loopNow - gameState.lastLoopTime : 16;
-    gameState.lastLoopTime = loopNow;
-    if (!isGamePaused()) {
-        updateTimer();
-        updateDayNightCycle();
-        updateCreatureSpawning();
-        updatePlayerMovement();
-        updateCamera();
-        checkFruitCollision();
-        updateTreeFruitProduction(dt);
-        updateNeutralCreatures();
-        updateHostileCreatures();
-        if (gameState.boss && gameState.boss.hp > 0) updateBoss();
-        if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) updateEliteCreature();
-        updatePassiveOrgans();
-        updateStatusEffects();
-        checkTreasureCollision();
-        updateCorpseEating();
-        updateMinimapFog();
+function updateGameLogic() {
+    updateTimer();
+    updateDayNightCycle();
+    updateCreatureSpawning();
+    updatePlayerMovement();
+    updateCamera();
+    checkFruitCollision();
+    updateTreeFruitProduction(FIXED_DELTA);
+    updateNeutralCreatures();
+    updateHostileCreatures();
+    if (gameState.boss && gameState.boss.hp > 0) updateBoss();
+    if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) updateEliteCreature();
+    updatePassiveOrgans();
+    updateStatusEffects();
+    checkTreasureCollision();
+    updateCorpseEating();
+    updateMinimapFog();
+}
+
+function gameLoop(timestamp) {
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    const elapsed = Math.min(timestamp - lastTimestamp, 100); // 最大100ms防止跳幀
+    lastTimestamp = timestamp;
+    accumulator += elapsed;
+
+    while (accumulator >= FIXED_DELTA) {
+        if (!isGamePaused()) {
+            updateGameLogic();
+        }
+        accumulator -= FIXED_DELTA;
     }
+
     drawGame();
     updateUI();
     requestAnimationFrame(gameLoop);
