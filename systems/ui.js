@@ -1464,6 +1464,8 @@ function showGuide(startPage) {
                 + _ln(t('guideMobileMove'))
                 + _ln(t('guideMobileAttack'))
                 + _ln(t('guideMobileSettings'))
+                + _ln(t('guideFruit'))
+                + _ln(t('guideGoal'))
                 + '</div>';
             const landscapeDiagram =
                 '<div style="position:relative;width:144px;height:80px;background:#1a1a2e;border:1px solid #555;border-radius:4px;overflow:hidden;margin:5px 0 10px 0;">'
