@@ -14,7 +14,7 @@ const gameState = {
     canvasHeight: 900,
 
     player: {
-        x: 4000, y: 4000, radius: 10, speed: 1.5, color: 'black',
+        x: 4000, y: 4000, radius: 10, speed: 4.5, color: 'black',
         organs: [], hiddenOrgans: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5, rerollsRemaining: 0,
         attack: 0, attackSpeed: 1.0, attackRange: 50,
         critChance: 0, critMultiplier: 1.0,

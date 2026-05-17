@@ -54,20 +54,20 @@ const ORGANS = {
     longLegs: {
         id: 'longLegs', name: '大長腿', type: 'defense', maxLevel: 3,
         levels: [
-            { desc: '移動速度+0.5', effects: { speedAdd: 0.5 } },
-            { desc: '移動速度+0.5', effects: { speedAdd: 0.5 } },
-            { desc: '移動速度+0.5', effects: { speedAdd: 0.5 } }
+            { desc: '移動速度+1.5', effects: { speedAdd: 1.5 } },
+            { desc: '移動速度+1.5', effects: { speedAdd: 1.5 } },
+            { desc: '移動速度+1.5', effects: { speedAdd: 1.5 } }
         ]
     },
     turtleShell: {
         id: 'turtleShell', name: '龜殼', type: 'defense', maxLevel: 3,
         levels: [
-            { desc: '受傷-30%，速度-0.2',
-              effects: { damageReductionAdd: 0.30, speedAdd: -0.2 } },
-            { desc: '受傷額外-3%，速度回復+0.1',
-              effects: { damageReductionAdd: 0.03, speedAdd: 0.1 } },
-            { desc: '受傷額外-7%，速度回復+0.1',
-              effects: { damageReductionAdd: 0.07, speedAdd: 0.1 } }
+            { desc: '受傷-30%，速度-0.6',
+              effects: { damageReductionAdd: 0.30, speedAdd: -0.6 } },
+            { desc: '受傷額外-3%，速度回復+0.3',
+              effects: { damageReductionAdd: 0.03, speedAdd: 0.3 } },
+            { desc: '受傷額外-7%，速度回復+0.3',
+              effects: { damageReductionAdd: 0.07, speedAdd: 0.3 } }
         ]
     },
     thickSkin: {
@@ -143,13 +143,13 @@ const ORGANS = {
 const HIDDEN_ORGANS = {
     strongHeart: {
         id: 'strongHeart', name: '強大的心臟', type: 'hidden',
-        desc: '移速+0.2，攻擊+5，HP上限+100，體型+20%',
-        effects: { speedAdd: 0.2, attackAdd: 5, hpMaxAdd: 100, radiusAdd: 2 }
+        desc: '移速+0.6，攻擊+5，HP上限+100，體型+20%',
+        effects: { speedAdd: 0.6, attackAdd: 5, hpMaxAdd: 100, radiusAdd: 2 }
     },
     strongLegs: {
         id: 'strongLegs', name: '強大的大腿', type: 'hidden',
-        desc: '移速+1，體型+20%',
-        effects: { speedAdd: 1, radiusAdd: 2 }
+        desc: '移速+3，體型+20%',
+        effects: { speedAdd: 3, radiusAdd: 2 }
     },
     strongArms: {
         id: 'strongArms', name: '強大的手臂', type: 'hidden',

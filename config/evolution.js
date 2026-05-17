@@ -23,9 +23,9 @@ const EVOLUTION_PATHS = {
     omnivore: {
         id: 'omnivore', name: '雜食性', icon: '⚖️', maxLevel: 3,
         levels: [
-            { level: 1, speedBonus: 0.3, fruitXPBonus: 2, corpseXPBonus: 5,  desc: '果子XP+2，屍體XP+5，速度+0.3' },
-            { level: 2, speedBonus: 0.3, fruitXPBonus: 3, corpseXPBonus: 10, desc: '果子XP+3，屍體XP+10，速度+0.3' },
-            { level: 3, speedBonus: 0.4, fruitXPBonus: 4, corpseXPBonus: 15, desc: '果子XP+4，屍體XP+15，速度+0.4，10%機率吃東西回血5' }
+            { level: 1, speedBonus: 0.9, fruitXPBonus: 2, corpseXPBonus: 5,  desc: '果子XP+2，屍體XP+5，速度+0.9' },
+            { level: 2, speedBonus: 0.9, fruitXPBonus: 3, corpseXPBonus: 10, desc: '果子XP+3，屍體XP+10，速度+0.9' },
+            { level: 3, speedBonus: 1.2, fruitXPBonus: 4, corpseXPBonus: 15, desc: '果子XP+4，屍體XP+15，速度+1.2，10%機率吃東西回血5' }
         ]
     }
 };

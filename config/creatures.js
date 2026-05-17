@@ -5,7 +5,7 @@
 
 const CREATURE_CONFIG = {
     hostile: {
-        maxSpeed:  2.5,
+        maxSpeed:  7.5,
         maxDamage: 20,
     },
     spawnInterval: {
@@ -17,28 +17,28 @@ const CREATURE_CONFIG = {
 const ELITE_CONFIG = {
     base: { hp: 50, speed: 1.0, damage: 8 },
     nights: [
-        { hpMult: 5,   speed: 1.3, damage: 12, xp: 150, label: '★精英',   color: '#5B0EA6' },
-        { hpMult: 7.5, speed: 1.5, damage: 15, xp: 225, label: '★★精英',  color: '#8B0000' },
-        { hpMult: 10,  speed: 1.7, damage: 18, xp: 300, label: '★★★精英', color: '#1A0A00' }
+        { hpMult: 5,   speed: 3.9, damage: 12, xp: 150, label: '★精英',   color: '#5B0EA6' },
+        { hpMult: 7.5, speed: 4.5, damage: 15, xp: 225, label: '★★精英',  color: '#8B0000' },
+        { hpMult: 10,  speed: 5.1, damage: 18, xp: 300, label: '★★★精英', color: '#1A0A00' }
     ]
 };
 
 const BOSS_CONFIG = {
     forest: {
         name: '黑熊',    label: '⚠️黑熊',
-        radius: 25, hp: 500,  speed: 1.0, damage: 15, aggroRange: 99999, attackRange: 30,
+        radius: 25, hp: 500,  speed: 3.0, damage: 15, aggroRange: 99999, attackRange: 30,
         color: '#3B1E08', colorChasing: '#2A0D00', glowColor: '#8B4513',
         spawnX: null, spawnY: null
     },
     ocean: {
         name: '大白鯊',  label: '🦈大白鯊',
-        radius: 30, hp: 600,  speed: 1.3, damage: 18, aggroRange: 99999, attackRange: 35,
+        radius: 30, hp: 600,  speed: 3.9, damage: 18, aggroRange: 99999, attackRange: 35,
         color: '#003388', colorChasing: '#001A44', glowColor: '#1a3a5c',
         spawnX: 6500, spawnY: 6500
     },
     desert: {
         name: '沙漠蠍王', label: '🦂蠍王',
-        radius: 28, hp: 550,  speed: 1.2, damage: 20, aggroRange: 99999, attackRange: 32,
+        radius: 28, hp: 550,  speed: 3.6, damage: 20, aggroRange: 99999, attackRange: 32,
         color: '#8B7355', colorChasing: '#5C4A2A', glowColor: '#8B6914',
         spawnX: 2000, spawnY: 2000
     }

@@ -45,7 +45,7 @@ function spawnNeutralCreatures() {
                 const diet = Math.random() < 0.5 ? 'herbivore' : 'omnivore';
                 const canFight = Math.random() < 0.5;
                 gameState.neutralCreatures.push({
-                    x, y, radius: 8, hp: 30, maxHp: 30, speed: 0.8,
+                    x, y, radius: 8, hp: 30, maxHp: 30, speed: 2.4,
                     diet, canFight, state: 'idle',
                     wanderTarget: null, lastWanderTime: Date.now(), lastDamageTime: 0
                 });
@@ -72,7 +72,7 @@ function spawnHostileCreatures() {
             const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
             gameState.hostileCreatures.push({
                 x, y, radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
-                speed: Math.min(2.5, 1.2 + bonus * 0.1),
+                speed: Math.min(7.5, 3.6 + bonus * 0.3),
                 damage: Math.min(20, 5 + bonus), attackCooldown: 0, diet,
                 state: 'patrolling', aggroRange: 150, attackRange: 20,
                 wanderTarget: null, lastWanderTime: Date.now(),
@@ -117,7 +117,7 @@ function spawnCreatureAtEdge(type) {
     if (type === 'neutral') {
         gameState.neutralCreatures.push({
             x, y, radius: 12, hp: 30 + bonus * 10, maxHp: 30 + bonus * 10,
-            speed: 0.8 + bonus * 0.1, damage: 3 + bonus,
+            speed: 2.4 + bonus * 0.3, damage: 3 + bonus,
             diet: Math.random() < 0.5 ? 'herbivore' : 'omnivore',
             state: 'wandering', fleeRange: 100, fightBackRange: 40,
             canFight: Math.random() < 0.5, attackCooldown: 0,
@@ -126,11 +126,11 @@ function spawnCreatureAtEdge(type) {
     } else {
         const roll = Math.random();
         const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
-        const nightSpd = gameState.isNight ? 0.2 : 0;
+        const nightSpd = gameState.isNight ? 0.6 : 0;
         const nightDmg = gameState.isNight ? 2 : 0;
         gameState.hostileCreatures.push({
             x, y, radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
-            speed: Math.min(2.5, 1.2 + bonus * 0.1 + nightSpd),
+            speed: Math.min(7.5, 3.6 + bonus * 0.3 + nightSpd),
             damage: Math.min(20, 5 + bonus + nightDmg),
             attackCooldown: 0, diet, state: 'patrolling',
             aggroRange: 150, attackRange: 20,

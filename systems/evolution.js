@@ -53,7 +53,7 @@ function applySkillBonuses() {
     const hpBonus = (sk.vitality || 0) * 20;
     gameState.stats.hpMax += hpBonus;
     gameState.stats.hpCurrent = gameState.stats.hpMax;
-    p.speed += (sk.agility || 0) * 0.2;
+    p.speed += (sk.agility || 0) * 0.6;
     p.rerollsRemaining = sk.luckyReroll || 0;
     p.pickupRange += (sk.collectionAddiction || 0) * 10;
     p.attack += (sk.terribleFang || 0) * 2;

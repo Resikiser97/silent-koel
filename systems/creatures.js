@@ -117,7 +117,7 @@ function updateNeutralCreatures() {
                     creature.fruitsEaten = (creature.fruitsEaten || 0) + 1;
                     creature.hp += 3;
                     creature.maxHp = (creature.maxHp || 30) + 3;
-                    creature.speed += 0.05;
+                    creature.speed += 0.15;
                     // 超過5顆後變激進
                     if (creature.fruitsEaten >= 5 && creature.diet !== 'aggressive') {
                         creature.diet = 'aggressive';
@@ -290,7 +290,7 @@ function updateHostileCreatures() {
             if (closestIdx !== -1) {
                 const corpse = gameState.corpses[closestIdx];
                 if (closestDist < creature.radius + corpse.radius) {
-                    creature.speed = Math.min(2.5, Math.round((creature.speed + 0.1) * 10) / 10);
+                    creature.speed = Math.min(7.5, Math.round((creature.speed + 0.3) * 10) / 10);
                     creature.damage = Math.min(20, creature.damage + 1);
                     gameState.corpses.splice(closestIdx, 1);
                 } else {
