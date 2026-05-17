@@ -2,6 +2,14 @@
 
 ---
 
+## v0.24.1 - 2026-05-17
+
+### 修復
+- **手機小地圖縮小至 200×200**（`systems/ui.js`）：新增 `_mmSize()` 回傳 `isMobile ? 200 : 300`；`drawMinimap()` 每幀比對並動態調整 `minimapCanvas.width/height`；`_drawMinimapFog()` 的暫存畫布 RC 改為 `mm+30`，最終 drawImage 輸出至 mm×mm；`_drawMinimapEntities()` scale 改為 `mm/MAP_WIDTH`（手機 1/40，桌機 1/26.7）；`#minimap-info` 資訊列寬度跟隨 canvas 自動縮小；桌機維持 300×300 不受影響
+- **設定按鈕每幀重建 DOM 導致 click 失效**（`systems/ui.js`）：左上角 UI 改為 `_initTopLeftUI()` 一次建立穩定結構，`addEventListener` 綁定設定按鈕，`updateUI()` 僅更新 `#tl-xp-text`、`#tl-xp-bar` 數值及 hearts canvas
+
+---
+
 ## v0.24.0 - 2026-05-17
 
 ### 新增

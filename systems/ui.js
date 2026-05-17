@@ -419,6 +419,8 @@ function updateMinimapFog() {
     }
 }
 
+function _mmSize() { return gameState.isMobile ? 200 : 300; }
+
 function _drawMinimapFog(mctx) {
     if (!gameState.fogMap) return;
     if (!_minimapFogCanvas) {
@@ -429,7 +431,8 @@ function _drawMinimapFog(mctx) {
         _minimapFogImageData     = _minimapFogCtx.createImageData(400, 400);
     }
     const MARGIN = 15;
-    const RC     = 300 + MARGIN * 2; // 330
+    const mm     = _mmSize();
+    const RC     = mm + MARGIN * 2;
     if (!_minimapFogRenderCanvas || _minimapFogRenderCanvas.width !== RC) {
         _minimapFogRenderCanvas        = document.createElement('canvas');
         _minimapFogRenderCanvas.width  = RC;
@@ -466,8 +469,8 @@ function _drawMinimapFog(mctx) {
         rc.globalCompositeOperation = 'source-over';
     }
 
-    // 只取中央 300×300，兩側各 15px 的邊緣失真區不顯示
-    mctx.drawImage(_minimapFogRenderCanvas, MARGIN, MARGIN, 300, 300, 0, 0, 300, 300);
+    // 只取中央 mm×mm，兩側各 15px 的邊緣失真區不顯示
+    mctx.drawImage(_minimapFogRenderCanvas, MARGIN, MARGIN, mm, mm, 0, 0, mm, mm);
 }
 
 function _buildMinimapTerrainCanvas() {
@@ -489,7 +492,7 @@ function _buildMinimapTerrainCanvas() {
 
 function _drawMinimapEntities(mctx) {
     if (!gameState.fogMap) return;
-    const scale = 300 / MAP_WIDTH;
+    const scale = _mmSize() / MAP_WIDTH;
     const COLS  = MAP_WIDTH  / TILE_SIZE;
     const ROWS  = MAP_HEIGHT / TILE_SIZE;
 
@@ -554,15 +557,20 @@ function drawMinimap() {
         if (!_minimapCanvas) return;
         _minimapCtx = _minimapCanvas.getContext('2d');
     }
+    const mm = _mmSize();
+    if (_minimapCanvas.width !== mm) {
+        _minimapCanvas.width  = mm;
+        _minimapCanvas.height = mm;
+    }
     if (!gameState.terrainMap) {
         _minimapCtx.fillStyle = '#222';
-        _minimapCtx.fillRect(0, 0, 300, 300);
+        _minimapCtx.fillRect(0, 0, mm, mm);
     } else {
         if (!_minimapTerrainCanvas || _minimapTerrainSeed !== gameState.mapSeed) {
             _buildMinimapTerrainCanvas();
         }
         _minimapCtx.imageSmoothingEnabled = false;
-        _minimapCtx.drawImage(_minimapTerrainCanvas, 0, 0, 400, 400, 0, 0, 300, 300);
+        _minimapCtx.drawImage(_minimapTerrainCanvas, 0, 0, 400, 400, 0, 0, mm, mm);
         _drawMinimapFog(_minimapCtx);
         _drawMinimapEntities(_minimapCtx);
     }
