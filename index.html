@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>噪鵑的森林冒險</title>
     <style>
         body {
@@ -9,6 +10,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
             background-color: #222; /* Overall background color */
             font-family: Arial, sans-serif;
         }
@@ -20,6 +23,8 @@
         }
         canvas {
             display: block;
+        }
+        #gameCanvas {
             background-color: #549954; /* Forest Green Background */
         }
         #ui-overlay {
@@ -199,6 +204,7 @@
         <button onclick="devToggleDayNight()">🌙 切換日夜</button>
     </div>
 </div>
+<canvas id="joystick-canvas" style="display:none;position:fixed;top:0;left:0;pointer-events:none;z-index:400;touch-action:none;"></canvas>
 <div id="game-tooltip"></div>
 
 <script src="config/gameConfig.js"></script>

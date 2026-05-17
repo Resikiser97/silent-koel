@@ -13,6 +13,11 @@ function updatePlayerMovement() {
     if (gameState.keys[sk.down] || gameState.keys['arrowdown'])  dy += p.speed;
     if (gameState.keys[sk.left] || gameState.keys['arrowleft'])  dx -= p.speed;
     if (gameState.keys[sk.right]|| gameState.keys['arrowright']) dx += p.speed;
+    const mi = gameState.mobileInput;
+    if (mi.dx !== 0 || mi.dy !== 0) {
+        dx += mi.dx * p.speed;
+        dy += mi.dy * p.speed;
+    }
     if (dx === 0 && dy === 0) return;
     p.x = ((p.x + dx) % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH;
     p.y = ((p.y + dy) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT;

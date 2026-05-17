@@ -61,6 +61,299 @@ function _escH(s) {
 }
 
 // =============================================================
+// 裝置偵測與方向控制
+// =============================================================
+
+let _orientationBarDismissed = false;
+
+function detectMobile() {
+    return ('ontouchstart' in window) || window.innerWidth <= 768;
+}
+
+function getOrientation() {
+    return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+}
+
+function _effectiveMobile() {
+    if (gameState.forceMode === 'mobile')  return true;
+    if (gameState.forceMode === 'desktop') return false;
+    return detectMobile();
+}
+
+function _applyMobileScale() {
+    const container = document.getElementById('game-container');
+    if (!container) return;
+    const W = 1600, H = 900;
+
+    if (!gameState.isMobile) {
+        container.style.transform = '';
+        container.style.transformOrigin = '';
+        container.style.position = '';
+        container.style.left = '';
+        container.style.top = '';
+        document.body.style.display = '';
+        document.body.style.height = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        return;
+    }
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    document.body.style.display = 'block';
+    document.body.style.width  = vw + 'px';
+    document.body.style.height = vh + 'px';
+    document.body.style.overflow = 'hidden';
+
+    let scale, offsetX;
+    if (gameState.orientation === 'landscape') {
+        scale   = vw / W;
+        offsetX = 0;
+    } else {
+        const scaleW = vw / W;
+        const scaleH = (vh * 0.6) / H;
+        scale   = Math.min(scaleW, scaleH);
+        offsetX = Math.max(0, (vw - W * scale) / 2);
+    }
+
+    container.style.position       = 'absolute';
+    container.style.left           = offsetX + 'px';
+    container.style.top            = '0px';
+    container.style.transformOrigin = 'top left';
+    container.style.transform      = 'scale(' + scale + ')';
+}
+
+function applyDeviceMode() {
+    gameState.forceMode  = gameState.settings.deviceMode !== undefined ? gameState.settings.deviceMode : null;
+    gameState.isMobile   = _effectiveMobile();
+    gameState.orientation = getOrientation();
+    _applyMobileScale();
+    _updateJoystickCanvas();
+    _updateOrientationBar();
+}
+
+function _updateOrientationBar() {
+    const show = gameState.isMobile && gameState.orientation === 'portrait' && !_orientationBarDismissed;
+    let bar = document.getElementById('orientation-bar');
+    if (show) {
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'orientation-bar';
+            bar.style.cssText = 'position:absolute;top:0;left:0;width:100%;background:rgba(255,200,0,0.75);color:#222;font-size:14px;font-family:Arial,sans-serif;padding:6px 36px 6px 12px;box-sizing:border-box;z-index:300;text-align:center;pointer-events:all;';
+            bar.textContent = t('orientationTip');
+            const closeBtn = document.createElement('button');
+            closeBtn.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#222;font-size:16px;cursor:pointer;line-height:1;padding:2px 4px;';
+            closeBtn.textContent = '✕';
+            closeBtn.onclick = () => { _orientationBarDismissed = true; bar.remove(); };
+            bar.appendChild(closeBtn);
+            const container = document.getElementById('game-container');
+            if (container) container.insertBefore(bar, container.firstChild);
+        }
+    } else if (bar) {
+        bar.remove();
+    }
+}
+
+(function _initOrientationWatcher() {
+    function onOrientationChange() {
+        const newOri = getOrientation();
+        if (newOri === 'landscape') _orientationBarDismissed = false;
+        gameState.orientation = newOri;
+        gameState.isMobile    = _effectiveMobile();
+        _applyMobileScale();
+        _updateJoystickCanvas();
+        _updateOrientationBar();
+    }
+    window.addEventListener('resize', onOrientationChange);
+    window.addEventListener('orientationchange', onOrientationChange);
+}());
+
+// =============================================================
+// 虛擬搖桿 + 攻擊區域系統
+// =============================================================
+
+let _joyActive  = false;
+let _joyTouchId = null;
+let _joyBaseX   = 0;
+let _joyBaseY   = 0;
+let _joyKnobX   = 0;
+let _joyKnobY   = 0;
+const JOY_OUTER  = 60;
+const JOY_INNER  = 25;
+const ATK_RADIUS = 40;
+
+function _joyZone(x, y) {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (gameState.orientation === 'landscape') return x > vw / 2;
+    return x > vw / 2 && y > vh * 0.6;
+}
+
+function _getAttackBtnPos() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    return { x: vw / 4, y: vh * 0.6 + (vh * 0.4) / 2 };
+}
+
+function _attackZone(x, y) {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (gameState.orientation === 'landscape') return x < vw / 2;
+    const btn = _getAttackBtnPos();
+    const dx = x - btn.x, dy = y - btn.y;
+    return Math.sqrt(dx * dx + dy * dy) < ATK_RADIUS + 10;
+}
+
+function _renderMobileOverlay() {
+    const jc = document.getElementById('joystick-canvas');
+    if (!jc) return;
+    const jctx = jc.getContext('2d');
+    jctx.clearRect(0, 0, jc.width, jc.height);
+
+    // ── 攻擊區域提示
+    if (gameState.orientation === 'landscape') {
+        const vw = window.innerWidth, vh = window.innerHeight;
+        jctx.save();
+        jctx.globalAlpha = 0.2;
+        jctx.font = '60px Arial';
+        jctx.textAlign = 'center';
+        jctx.textBaseline = 'middle';
+        jctx.fillStyle = 'white';
+        jctx.fillText('⚔️', vw / 4, vh / 2);
+        jctx.restore();
+    } else {
+        const btn = _getAttackBtnPos();
+        jctx.save();
+        jctx.beginPath();
+        jctx.arc(btn.x, btn.y, ATK_RADIUS, 0, Math.PI * 2);
+        jctx.fillStyle = 'rgba(255,255,255,0.18)';
+        jctx.fill();
+        jctx.strokeStyle = 'rgba(255,255,255,0.45)';
+        jctx.lineWidth = 2;
+        jctx.stroke();
+        jctx.font = '26px Arial';
+        jctx.textAlign = 'center';
+        jctx.textBaseline = 'middle';
+        jctx.fillStyle = 'white';
+        jctx.fillText('⚔️', btn.x, btn.y);
+        jctx.restore();
+    }
+
+    // ── 搖桿
+    if (!_joyActive) return;
+    jctx.beginPath();
+    jctx.arc(_joyBaseX, _joyBaseY, JOY_OUTER, 0, Math.PI * 2);
+    jctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    jctx.lineWidth = 3;
+    jctx.stroke();
+    jctx.beginPath();
+    jctx.arc(_joyKnobX, _joyKnobY, JOY_INNER, 0, Math.PI * 2);
+    jctx.fillStyle = 'rgba(255,255,255,0.55)';
+    jctx.fill();
+}
+
+let _joyDocListeners = null;
+
+function _joyPaused() {
+    return gameState.organSelectionActive || gameState.settingsOpen ||
+           gameState.skillTreeOpen || gameState.gameOver || gameState.victory;
+}
+
+function _attachJoystickListeners() {
+    if (_joyDocListeners) return;
+
+    const onStart = (e) => {
+        if (_joyPaused()) return;
+        let handled = false;
+        for (const touch of e.changedTouches) {
+            const x = touch.clientX, y = touch.clientY;
+
+            // 攻擊區
+            if (_attackZone(x, y)) {
+                handled = true;
+                playerAttack();
+                continue;
+            }
+
+            // 搖桿區
+            if (_joyTouchId !== null) continue;
+            if (!_joyZone(x, y)) continue;
+            handled = true;
+            _joyActive  = true;
+            _joyTouchId = touch.identifier;
+            _joyBaseX   = x;  _joyBaseY   = y;
+            _joyKnobX   = x;  _joyKnobY   = y;
+            gameState.mobileInput = { dx: 0, dy: 0 };
+            _renderMobileOverlay();
+        }
+        if (handled) e.preventDefault();
+    };
+
+    const onMove = (e) => {
+        if (_joyTouchId === null) return;
+        for (const touch of e.changedTouches) {
+            if (touch.identifier !== _joyTouchId) continue;
+            e.preventDefault();
+            const ddx  = touch.clientX - _joyBaseX;
+            const ddy  = touch.clientY - _joyBaseY;
+            const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+            const clamp  = Math.min(dist, JOY_OUTER);
+            const factor = dist > 0 ? clamp / dist : 0;
+            _joyKnobX = _joyBaseX + ddx * factor;
+            _joyKnobY = _joyBaseY + ddy * factor;
+            const spd = clamp / JOY_OUTER;
+            gameState.mobileInput = {
+                dx: dist > 0 ? (ddx / dist) * spd : 0,
+                dy: dist > 0 ? (ddy / dist) * spd : 0
+            };
+            _renderMobileOverlay();
+        }
+    };
+
+    const onEnd = (e) => {
+        for (const touch of e.changedTouches) {
+            if (touch.identifier !== _joyTouchId) continue;
+            _joyActive  = false;
+            _joyTouchId = null;
+            gameState.mobileInput = { dx: 0, dy: 0 };
+            _renderMobileOverlay();
+        }
+    };
+
+    document.addEventListener('touchstart',  onStart, { passive: false });
+    document.addEventListener('touchmove',   onMove,  { passive: false });
+    document.addEventListener('touchend',    onEnd,   { passive: false });
+    document.addEventListener('touchcancel', onEnd,   { passive: false });
+    _joyDocListeners = { onStart, onMove, onEnd };
+}
+
+function _detachJoystickListeners() {
+    if (!_joyDocListeners) return;
+    const { onStart, onMove, onEnd } = _joyDocListeners;
+    document.removeEventListener('touchstart',  onStart, { passive: false });
+    document.removeEventListener('touchmove',   onMove,  { passive: false });
+    document.removeEventListener('touchend',    onEnd,   { passive: false });
+    document.removeEventListener('touchcancel', onEnd,   { passive: false });
+    _joyDocListeners = null;
+}
+
+function _updateJoystickCanvas() {
+    const jc = document.getElementById('joystick-canvas');
+    if (!jc) return;
+    if (gameState.isMobile) {
+        jc.style.display       = 'block';
+        jc.style.pointerEvents = 'none';
+        jc.width  = window.innerWidth;
+        jc.height = window.innerHeight;
+        _attachJoystickListeners();
+        _renderMobileOverlay();
+    } else {
+        jc.style.display = 'none';
+        _joyActive  = false;
+        _joyTouchId = null;
+        gameState.mobileInput = { dx: 0, dy: 0 };
+        _detachJoystickListeners();
+    }
+}
+
+// =============================================================
 // 小地圖系統
 // =============================================================
 
@@ -535,9 +828,13 @@ function loadSettings() {
                 gameState.settings.language = parsed.language;
                 gameState.language = parsed.language;
             }
+            if (parsed.deviceMode !== undefined) {
+                gameState.settings.deviceMode = parsed.deviceMode;
+            }
         }
     } catch(e) {}
     applyLanguage(gameState.language);
+    applyDeviceMode();
 }
 
 // 切換語言：寫入 settings、重新套用 LANG 資料表、即時刷新開啟中的介面
@@ -754,6 +1051,34 @@ function showSettings(fromHome) {
     });
     panel.appendChild(keySec);
 
+    // ─── 裝置模式 ───
+    const deviceSec = _buildSettingsSection(t('sectionDevice'));
+    const deviceRow = document.createElement('div');
+    deviceRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+    const deviceModes = [
+        { label: t('deviceAuto'),    value: null       },
+        { label: t('deviceMobile'),  value: 'mobile'   },
+        { label: t('deviceDesktop'), value: 'desktop'  }
+    ];
+    const deviceBtns = [];
+    const _deviceBtnStyle = (sel) => 'flex:1;min-width:90px;padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;' +
+        (sel ? 'background:#2a5a2a;color:#FFD700;border:1px solid #FFD700;font-weight:bold;' : 'background:#2a2a2a;color:white;border:1px solid #555;');
+    deviceModes.forEach(({ label, value }) => {
+        const btn = document.createElement('button');
+        btn.style.cssText = _deviceBtnStyle(gameState.settings.deviceMode === value);
+        btn.textContent = label;
+        btn.onclick = () => {
+            gameState.settings.deviceMode = value;
+            applyDeviceMode();
+            saveSettings();
+            deviceBtns.forEach((b, i) => { b.style.cssText = _deviceBtnStyle(deviceModes[i].value === value); });
+        };
+        deviceBtns.push(btn);
+        deviceRow.appendChild(btn);
+    });
+    deviceSec.appendChild(deviceRow);
+    panel.appendChild(deviceSec);
+
     // ─── 其他設定 ───
     const otherSec = _buildSettingsSection(t('sectionOther'));
     const restartBtn = document.createElement('button');
@@ -775,6 +1100,7 @@ function showSettings(fromHome) {
         gameState.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
         gameState.settings.language = keepLang;
         saveSettings(); AudioManager.refreshMusicVolume();
+        applyDeviceMode();
         hideSettings(); showSettings();
     };
     otherSec.appendChild(resetBtn);

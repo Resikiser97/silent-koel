@@ -2,6 +2,23 @@
 
 ---
 
+## v0.23.0 - 2026-05-17
+
+### 新增
+- **手機觸控支援系統**（`systems/ui.js`、`systems/gameState.js`、`systems/player.js`、`index.html`）：
+  - **裝置偵測**：`detectMobile()`（ontouchstart 或 vw ≤ 768）、`getOrientation()`、`applyDeviceMode()`
+  - **設定介面「裝置模式」區塊**：三顆按鈕（自動偵測 / 📱 手機模式 / 🖥️ 電腦模式），即時套用並存入 `localStorage`
+  - **畫面自動縮放**：`_applyMobileScale()` 用 `CSS transform: scale()` 縮放 `#game-container`，橫向填滿寬度，豎向保留下方 40% 給操控區，不改變遊戲內部座標
+  - **方向提示條**：豎向手機時在頂部顯示黃色可關閉提示條，旋轉橫向後自動隱藏
+  - **虛擬搖桿**：右半螢幕（橫向）或右半下 40%（豎向），外圈 60px／內圈 25px，浮動式，`mobileInput.dx/dy` 驅動玩家移動
+  - **攻擊區域**：橫向為左半螢幕整區（⚔️ opacity 0.2 提示），豎向為左半下 40% 中央圓形按鈕（⚔️，r=40px），tap 觸發 `playerAttack()`，沿用既有冷卻邏輯
+  - `viewport` meta 標籤防止手機瀏覽器自動縮放
+
+### 修復
+- **手機模式全螢幕綠色遮罩**：`canvas { background-color }` 改為 `#gameCanvas { background-color: #549954 }`，避免 `#joystick-canvas` 繼承綠色蓋住所有 overlay
+
+---
+
 ## v0.22.0 - 2026-05-17
 
 ### 新增

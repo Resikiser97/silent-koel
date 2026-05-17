@@ -5,7 +5,8 @@
 const DEFAULT_SETTINGS = {
     language: 'zh-TW',
     volume: { master: 80, music: 70, sfx: 80, masterOn: true, musicOn: true, sfxOn: true },
-    keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ' }
+    keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ' },
+    deviceMode: null
 };
 
 const gameState = {
@@ -78,6 +79,10 @@ const gameState = {
     victory: false,
     _rebindTarget: null,
     language: 'zh-TW',
+    isMobile: false,
+    forceMode: null,
+    orientation: 'landscape',
+    mobileInput: { dx: 0, dy: 0 },
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 

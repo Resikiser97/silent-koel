@@ -51,6 +51,9 @@ systems/ui.js             showTooltip, hideTooltip, drawGame, updateUI, drawTrea
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式
                           showGuide, hideGuide, showStartScreen
+                          detectMobile, getOrientation, applyDeviceMode, _applyMobileScale
+                          _updateOrientationBar, _updateJoystickCanvas, _renderMobileOverlay
+                          _attachJoystickListeners, _detachJoystickListeners
 
 main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ```
@@ -98,6 +101,46 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 地形生成流程：4D Tileable Noise → 保護區強制森林 → `mergeSmallRegions`（同化小於 `minBiomeTiles` 的孤島）→ `ensureRequiredBiomes`（最多 10 次重試，超過則 minBiomeTiles 減半）→ `buildTerrainCanvas`。
 
 全域預設值 `MAP_RULES.MIN_BIOME_TILES = 250`；各地圖可在 `terrain.minBiomeTiles` 覆蓋。
+
+---
+
+## 手機觸控系統（v0.23.0）
+
+### 裝置偵測與縮放
+
+- `detectMobile()` — `ontouchstart in window` 或 `innerWidth <= 768` 視為手機
+- `getOrientation()` — `innerHeight > innerWidth` 為豎向，否則橫向
+- `applyDeviceMode()` — 同步 `gameState.forceMode/isMobile/orientation`，呼叫 `_applyMobileScale()` + `_updateJoystickCanvas()` + `_updateOrientationBar()`
+- `_applyMobileScale()` — 用 `CSS transform: scale()` 縮放 `#game-container`，**不改變內部遊戲座標**
+  - 橫向：`scale = vw / 1600`，填滿寬度
+  - 豎向：`scale = min(vw/1600, vh×0.6/900)`，保留下方 40% 給操控區
+
+### 設定介面「裝置模式」區塊
+
+`showSettings()` 新增三顆切換按鈕：自動偵測 / 📱 手機模式 / 🖥️ 電腦模式。選擇即時套用並存入 `localStorage`（key：`gameSettings.deviceMode`）。
+
+### 方向提示條
+
+豎向手機時在 `#game-container` 頂部插入黃色半透明提示條，有 ✕ 關閉鈕。橫向旋轉後自動隱藏並重置 dismissed 狀態。
+
+### 虛擬搖桿
+
+- **搖桿畫布**：`#joystick-canvas`（`position:fixed`，全螢幕，`pointer-events:none`，純繪圖）
+- **事件掛載**：`touchstart/touchmove/touchend` 掛在 `document`，`_joyPaused()` 確保暫停狀態不啟動
+- **區域**：橫向 = 右半螢幕；豎向 = 右半 + 螢幕下 40%
+- **輸出**：`gameState.mobileInput = { dx, dy }`（範圍 −1~1，位移比例決定速度）
+- `updatePlayerMovement()` 讀取 `mobileInput` 並疊加在鍵盤輸入上，電腦版恆為 0
+
+### 攻擊區域
+
+- **橫向**：左半螢幕整區為攻擊區，顯示 ⚔️ 提示（opacity 0.2），tap → `playerAttack()`
+- **豎向**：左半下方 40% 中央一個半徑 40px 圓形按鈕，顯示 ⚔️，tap → `playerAttack()`
+- 攻擊冷卻沿用 `playerAttack()` 內建邏輯，不另外實作
+- 攻擊區與搖桿區不重疊，支援多指同時操作（一手搖桿 + 一手攻擊）
+
+### 關鍵 CSS 注意
+
+- `canvas { background-color }` 已改為 `#gameCanvas { background-color: #549954 }`，避免 `#joystick-canvas` 繼承綠色背景蓋住所有 overlay
 
 ---
 
