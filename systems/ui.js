@@ -835,25 +835,69 @@ function _drawHpHearts(canvas) {
     }
 }
 
+function _initTopLeftUI() {
+    const tl = document.getElementById('top-left');
+    if (!tl || tl.dataset.built) return;
+    tl.dataset.built = '1';
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'background:rgba(0,0,0,0.6);border-radius:6px;padding:6px 8px;display:inline-flex;flex-direction:column;';
+
+    // 第一行：⚙️ + 🐦 + XP 區
+    const row1 = document.createElement('div');
+    row1.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
+
+    const settingsBtn = document.createElement('button');
+    settingsBtn.textContent = '⚙️';
+    settingsBtn.style.cssText = 'background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:4px;font-size:16px;padding:2px 6px;cursor:pointer;pointer-events:all;line-height:1;flex-shrink:0;';
+    settingsBtn.addEventListener('click', function() { showSettings(); });
+
+    const icon = document.createElement('span');
+    icon.textContent = '🐦';
+    icon.style.cssText = 'font-size:28px;line-height:1;flex-shrink:0;';
+
+    const xpWrap = document.createElement('div');
+    xpWrap.style.cssText = 'flex:1;min-width:0;';
+
+    const xpText = document.createElement('div');
+    xpText.id = 'tl-xp-text';
+    xpText.style.cssText = 'font-size:13px;color:white;text-shadow:1px 1px 2px #000;margin-bottom:2px;white-space:nowrap;';
+
+    const xpBarOuter = document.createElement('div');
+    xpBarOuter.style.cssText = 'width:100%;height:6px;background:#333;border-radius:3px;';
+    const xpBarInner = document.createElement('div');
+    xpBarInner.id = 'tl-xp-bar';
+    xpBarInner.style.cssText = 'width:0%;height:100%;background:#00CC00;border-radius:3px;';
+    xpBarOuter.appendChild(xpBarInner);
+
+    xpWrap.appendChild(xpText);
+    xpWrap.appendChild(xpBarOuter);
+    row1.appendChild(settingsBtn);
+    row1.appendChild(icon);
+    row1.appendChild(xpWrap);
+
+    // 第二行：心形血條
+    const heartsCanvas = document.createElement('canvas');
+    heartsCanvas.id = 'hp-hearts-canvas';
+    heartsCanvas.style.display = 'block';
+
+    wrap.appendChild(row1);
+    wrap.appendChild(heartsCanvas);
+    tl.appendChild(wrap);
+}
+
 function updateUI() {
+    _initTopLeftUI();
+
     const p           = gameState.player;
     const lvThreshold = 100 + (p.level - 1) * 50;
     const barPct      = Math.min(1, p.levelXP / lvThreshold);
 
-    document.getElementById('top-left').innerHTML =
-        '<div style="background:rgba(0,0,0,0.6);border-radius:6px;padding:6px 8px;display:inline-flex;flex-direction:column;">' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">' +
-        '<button onclick="showSettings()" style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:4px;font-size:16px;padding:2px 6px;cursor:pointer;pointer-events:all;line-height:1;flex-shrink:0;">⚙️</button>' +
-        '<span style="font-size:28px;line-height:1;flex-shrink:0;">🐦</span>' +
-        '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:13px;color:white;text-shadow:1px 1px 2px #000;margin-bottom:2px;white-space:nowrap;">Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold + '</div>' +
-        '<div style="width:100%;height:6px;background:#333;border-radius:3px;">' +
-        '<div style="width:' + Math.round(barPct * 100) + '%;height:100%;background:#00CC00;border-radius:3px;"></div>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '<canvas id="hp-hearts-canvas" style="display:block;"></canvas>' +
-        '</div>';
+    const xpText = document.getElementById('tl-xp-text');
+    if (xpText) xpText.textContent = 'Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold;
+
+    const xpBar = document.getElementById('tl-xp-bar');
+    if (xpBar) xpBar.style.width = Math.round(barPct * 100) + '%';
 
     _drawHpHearts(document.getElementById('hp-hearts-canvas'));
 
