@@ -80,47 +80,55 @@ function _effectiveMobile() {
     return detectMobile();
 }
 
+function _setViewSize(w, h) {
+    if (VIEW_W === w && VIEW_H === h) return;
+    VIEW_W = w; VIEW_H = h;
+    const gc = document.getElementById('gameCanvas');
+    const co = document.getElementById('game-container');
+    if (gc) { gc.width = w; gc.height = h; }
+    if (co) { co.style.width = w + 'px'; co.style.height = h + 'px'; }
+}
+
 function _applyMobileScale() {
     const container = document.getElementById('game-container');
     if (!container) return;
-    const W = 1600, H = 900;
 
     if (!gameState.isMobile) {
-        container.style.transform = '';
+        _setViewSize(1600, 900);
+        container.style.transform       = '';
         container.style.transformOrigin = '';
-        container.style.position = '';
-        container.style.left = '';
-        container.style.top = '';
-        document.body.style.display = '';
-        document.body.style.height = '';
-        document.body.style.width = '';
+        container.style.position        = '';
+        container.style.left            = '';
+        container.style.top             = '';
+        document.body.style.display  = '';
+        document.body.style.height   = '';
+        document.body.style.width    = '';
         document.body.style.overflow = '';
         return;
     }
 
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    document.body.style.display = 'block';
-    document.body.style.width  = vw + 'px';
-    document.body.style.height = vh + 'px';
+    document.body.style.display  = 'block';
+    document.body.style.width    = vw + 'px';
+    document.body.style.height   = vh + 'px';
     document.body.style.overflow = 'hidden';
 
-    let scale, offsetX;
+    let logicW, scale;
     if (gameState.orientation === 'landscape') {
-        scale   = vw / W;
-        offsetX = 0;
+        logicW = 1600;
+        scale  = vw / 1600;
     } else {
-        const scaleW = vw / W;
-        const scaleH = (vh * 0.6) / H;
-        scale   = Math.min(scaleW, scaleH);
-        offsetX = Math.max(0, (vw - W * scale) / 2);
+        // 直向：1000×900 邏輯解析度，縮放填滿螢幕寬度
+        logicW = 1000;
+        scale  = vw / 1000;
     }
-
-    container.style.position       = 'absolute';
-    container.style.left           = offsetX + 'px';
-    container.style.top            = '0px';
+    _setViewSize(logicW, 900);
+    container.style.position        = 'absolute';
+    container.style.left            = '0px';
+    container.style.top             = '0px';
     container.style.transformOrigin = 'top left';
-    container.style.transform      = 'scale(' + scale + ')';
+    container.style.transform       = 'scale(' + scale + ')';
 }
 
 function applyDeviceMode() {
@@ -133,25 +141,9 @@ function applyDeviceMode() {
 }
 
 function _updateOrientationBar() {
-    const show = gameState.isMobile && gameState.orientation === 'portrait' && !_orientationBarDismissed;
-    let bar = document.getElementById('orientation-bar');
-    if (show) {
-        if (!bar) {
-            bar = document.createElement('div');
-            bar.id = 'orientation-bar';
-            bar.style.cssText = 'position:absolute;top:0;left:0;width:100%;background:rgba(255,200,0,0.75);color:#222;font-size:14px;font-family:Arial,sans-serif;padding:6px 36px 6px 12px;box-sizing:border-box;z-index:300;text-align:center;pointer-events:all;';
-            bar.textContent = t('orientationTip');
-            const closeBtn = document.createElement('button');
-            closeBtn.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#222;font-size:16px;cursor:pointer;line-height:1;padding:2px 4px;';
-            closeBtn.textContent = '✕';
-            closeBtn.onclick = () => { _orientationBarDismissed = true; bar.remove(); };
-            bar.appendChild(closeBtn);
-            const container = document.getElementById('game-container');
-            if (container) container.insertBefore(bar, container.firstChild);
-        }
-    } else if (bar) {
-        bar.remove();
-    }
+    // 直向模式已支援，不再提示旋轉
+    const bar = document.getElementById('orientation-bar');
+    if (bar) bar.remove();
 }
 
 (function _initOrientationWatcher() {
@@ -184,7 +176,7 @@ const ATK_RADIUS = 40;
 
 function _joyZone(x, y) {
     const vw = window.innerWidth, vh = window.innerHeight;
-    if (gameState.orientation === 'landscape') return x > vw / 2;
+    if (gameState.orientation === 'landscape') return x > vw * 0.7 && y > vh * 0.2 && y < vh * 0.8;
     return x > vw / 2 && y > vh * 0.6;
 }
 
@@ -195,7 +187,7 @@ function _getAttackBtnPos() {
 
 function _attackZone(x, y) {
     const vw = window.innerWidth, vh = window.innerHeight;
-    if (gameState.orientation === 'landscape') return x < vw / 2;
+    if (gameState.orientation === 'landscape') return x < vw * 0.3 && y > vh * 0.2 && y < vh * 0.8;
     const btn = _getAttackBtnPos();
     const dx = x - btn.x, dy = y - btn.y;
     return Math.sqrt(dx * dx + dy * dy) < ATK_RADIUS + 10;
@@ -206,19 +198,40 @@ function _renderMobileOverlay() {
     if (!jc) return;
     const jctx = jc.getContext('2d');
     jctx.clearRect(0, 0, jc.width, jc.height);
+    const vw = window.innerWidth, vh = window.innerHeight;
 
-    // ── 攻擊區域提示
     if (gameState.orientation === 'landscape') {
-        const vw = window.innerWidth, vh = window.innerHeight;
+        // ── 攻擊區提示：左側 30% × 垂直 20%~80% 中央
         jctx.save();
         jctx.globalAlpha = 0.2;
         jctx.font = '60px Arial';
         jctx.textAlign = 'center';
         jctx.textBaseline = 'middle';
         jctx.fillStyle = 'white';
-        jctx.fillText('⚔️', vw / 4, vh / 2);
+        jctx.fillText('⚔️', vw * 0.15, vh * 0.5);
         jctx.restore();
+
+        // ── 搖桿區：固定底環（右側 30% 中央，常駐顯示）
+        const joyCx = vw * 0.85, joyCy = vh * 0.5;
+        jctx.beginPath();
+        jctx.arc(joyCx, joyCy, JOY_OUTER, 0, Math.PI * 2);
+        jctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        jctx.lineWidth = 2;
+        jctx.stroke();
+
+        if (_joyActive) {
+            jctx.beginPath();
+            jctx.arc(_joyBaseX, _joyBaseY, JOY_OUTER, 0, Math.PI * 2);
+            jctx.strokeStyle = 'rgba(255,255,255,0.45)';
+            jctx.lineWidth = 3;
+            jctx.stroke();
+            jctx.beginPath();
+            jctx.arc(_joyKnobX, _joyKnobY, JOY_INNER, 0, Math.PI * 2);
+            jctx.fillStyle = 'rgba(255,255,255,0.55)';
+            jctx.fill();
+        }
     } else {
+        // ── 直向：攻擊圓形按鈕
         const btn = _getAttackBtnPos();
         jctx.save();
         jctx.beginPath();
@@ -234,19 +247,20 @@ function _renderMobileOverlay() {
         jctx.fillStyle = 'white';
         jctx.fillText('⚔️', btn.x, btn.y);
         jctx.restore();
-    }
 
-    // ── 搖桿
-    if (!_joyActive) return;
-    jctx.beginPath();
-    jctx.arc(_joyBaseX, _joyBaseY, JOY_OUTER, 0, Math.PI * 2);
-    jctx.strokeStyle = 'rgba(255,255,255,0.4)';
-    jctx.lineWidth = 3;
-    jctx.stroke();
-    jctx.beginPath();
-    jctx.arc(_joyKnobX, _joyKnobY, JOY_INNER, 0, Math.PI * 2);
-    jctx.fillStyle = 'rgba(255,255,255,0.55)';
-    jctx.fill();
+        // ── 直向：搖桿（動態位置）
+        if (_joyActive) {
+            jctx.beginPath();
+            jctx.arc(_joyBaseX, _joyBaseY, JOY_OUTER, 0, Math.PI * 2);
+            jctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            jctx.lineWidth = 3;
+            jctx.stroke();
+            jctx.beginPath();
+            jctx.arc(_joyKnobX, _joyKnobY, JOY_INNER, 0, Math.PI * 2);
+            jctx.fillStyle = 'rgba(255,255,255,0.55)';
+            jctx.fill();
+        }
+    }
 }
 
 let _joyDocListeners = null;
@@ -278,8 +292,13 @@ function _attachJoystickListeners() {
             handled = true;
             _joyActive  = true;
             _joyTouchId = touch.identifier;
-            _joyBaseX   = x;  _joyBaseY   = y;
-            _joyKnobX   = x;  _joyKnobY   = y;
+            if (gameState.orientation === 'landscape') {
+                _joyBaseX = window.innerWidth * 0.85;
+                _joyBaseY = window.innerHeight * 0.5;
+            } else {
+                _joyBaseX = x; _joyBaseY = y;
+            }
+            _joyKnobX = x; _joyKnobY = y;
             gameState.mobileInput = { dx: 0, dy: 0 };
             _renderMobileOverlay();
         }
@@ -771,18 +790,73 @@ function drawGame() {
     drawMinimap();
 }
 
+function _heartPath(ctx, x, y, size) {
+    const w = size, h = size;
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.5, y + h * 0.9);
+    ctx.bezierCurveTo(x + w * 0.1, y + h * 0.6, x, y + h * 0.3, x + w * 0.25, y + h * 0.15);
+    ctx.bezierCurveTo(x + w * 0.35, y, x + w * 0.5, y + h * 0.18, x + w * 0.5, y + h * 0.3);
+    ctx.bezierCurveTo(x + w * 0.5, y + h * 0.18, x + w * 0.65, y, x + w * 0.75, y + h * 0.15);
+    ctx.bezierCurveTo(x + w, y + h * 0.3, x + w * 0.9, y + h * 0.6, x + w * 0.5, y + h * 0.9);
+    ctx.closePath();
+}
+
+function _drawHpHearts(canvas) {
+    if (!canvas) return;
+    const hp     = Math.round(gameState.stats.hpCurrent);
+    const hpMax  = gameState.stats.hpMax;
+    const total  = Math.ceil(hpMax / 20);
+    const HEART  = 24, GAP = 4, COLS = 10, STEP = 28;
+    const cols   = Math.min(total, COLS);
+    const rows   = Math.ceil(total / COLS);
+    canvas.width  = cols * STEP - GAP;
+    canvas.height = rows * STEP - GAP;
+    const hctx = canvas.getContext('2d');
+    hctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < total; i++) {
+        const col  = i % COLS;
+        const row  = Math.floor(i / COLS);
+        const hx   = col * STEP;
+        const hy   = row * STEP;
+        const fill = Math.max(0, Math.min(1, (hp - i * 20) / 20));
+        _heartPath(hctx, hx, hy, HEART);
+        hctx.fillStyle = 'rgba(0,0,0,0.5)';
+        hctx.fill();
+        if (fill > 0) {
+            hctx.save();
+            hctx.beginPath();
+            hctx.rect(hx, hy, HEART * fill, HEART);
+            hctx.clip();
+            _heartPath(hctx, hx, hy, HEART);
+            hctx.fillStyle = '#EE2222';
+            hctx.fill();
+            hctx.restore();
+        }
+    }
+}
+
 function updateUI() {
-    const p = gameState.player;
+    const p           = gameState.player;
     const lvThreshold = 100 + (p.level - 1) * 50;
-    const barPct = Math.min(1, p.levelXP / lvThreshold);
+    const barPct      = Math.min(1, p.levelXP / lvThreshold);
+
     document.getElementById('top-left').innerHTML =
-        '<div class="status-line">HP: ' + Math.round(gameState.stats.hpCurrent) + '/' + gameState.stats.hpMax + '</div>' +
-        '<div class="status-line">Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold + '</div>' +
-        '<div style="width:120px;height:6px;background:#333;border-radius:3px;margin-top:2px;">' +
+        '<div style="background:rgba(0,0,0,0.6);border-radius:6px;padding:6px 8px;display:inline-flex;flex-direction:column;">' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">' +
+        '<button onclick="showSettings()" style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:4px;font-size:16px;padding:2px 6px;cursor:pointer;pointer-events:all;line-height:1;flex-shrink:0;">⚙️</button>' +
+        '<span style="font-size:28px;line-height:1;flex-shrink:0;">🐦</span>' +
+        '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;color:white;text-shadow:1px 1px 2px #000;margin-bottom:2px;white-space:nowrap;">Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold + '</div>' +
+        '<div style="width:100%;height:6px;background:#333;border-radius:3px;">' +
         '<div style="width:' + Math.round(barPct * 100) + '%;height:100%;background:#00CC00;border-radius:3px;"></div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<canvas id="hp-hearts-canvas" style="display:block;"></canvas>' +
         '</div>';
 
-    // 小地圖資訊列：地形圖示 + 時間
+    _drawHpHearts(document.getElementById('hp-hearts-canvas'));
+
     const mmBiomeEl = document.getElementById('minimap-biome');
     const mmTimeEl  = document.getElementById('minimap-time');
     if (mmBiomeEl) {
