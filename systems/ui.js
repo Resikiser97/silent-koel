@@ -839,6 +839,7 @@ function _initTopLeftUI() {
     const tl = document.getElementById('top-left');
     if (!tl || tl.dataset.built) return;
     tl.dataset.built = '1';
+    tl.innerHTML = '';
 
     const wrap = document.createElement('div');
     wrap.style.cssText = 'background:rgba(0,0,0,0.6);border-radius:6px;padding:6px 8px;display:inline-flex;flex-direction:column;';
