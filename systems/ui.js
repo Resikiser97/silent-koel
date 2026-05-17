@@ -174,6 +174,10 @@ const JOY_OUTER  = 60;
 const JOY_INNER  = 25;
 const ATK_RADIUS = 40;
 
+let _atkFeedbackTime = 0;
+let _atkFeedbackX    = 0;
+let _atkFeedbackY    = 0;
+
 function _joyZone(x, y) {
     const vw = window.innerWidth, vh = window.innerHeight;
     if (gameState.orientation === 'landscape') return x > vw * 0.7 && y > vh * 0.2 && y < vh * 0.8;
@@ -201,24 +205,51 @@ function _renderMobileOverlay() {
     const vw = window.innerWidth, vh = window.innerHeight;
 
     if (gameState.orientation === 'landscape') {
-        // ── 攻擊區提示：左側 30% × 垂直 20%~80% 中央
+        const midY = vh * 0.5, zoneY1 = vh * 0.2, zoneY2 = vh * 0.8;
+
+        // ── 攻擊區：淡邊框 + ⚔️ 提示（透明度 0.1）
         jctx.save();
-        jctx.globalAlpha = 0.2;
+        jctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        jctx.lineWidth = 1;
+        jctx.strokeRect(2, zoneY1 + 2, vw * 0.3 - 4, zoneY2 - zoneY1 - 4);
+        jctx.globalAlpha = 0.1;
         jctx.font = '60px Arial';
         jctx.textAlign = 'center';
         jctx.textBaseline = 'middle';
         jctx.fillStyle = 'white';
-        jctx.fillText('⚔️', vw * 0.15, vh * 0.5);
+        jctx.fillText('⚔️', vw * 0.15, midY);
         jctx.restore();
 
-        // ── 搖桿區：固定底環（右側 30% 中央，常駐顯示）
-        const joyCx = vw * 0.85, joyCy = vh * 0.5;
+        // ── 攻擊點擊回饋（0.3 秒淡出 ⚔️）
+        if (_atkFeedbackTime > 0 && Date.now() - _atkFeedbackTime < 300) {
+            const alpha = (1 - (Date.now() - _atkFeedbackTime) / 300) * 0.85;
+            jctx.save();
+            jctx.globalAlpha = alpha;
+            jctx.font = '50px Arial';
+            jctx.textAlign = 'center';
+            jctx.textBaseline = 'middle';
+            jctx.fillText('⚔️', _atkFeedbackX, _atkFeedbackY);
+            jctx.restore();
+        }
+
+        // ── 搖桿區：淡邊框 + 圓形提示（透明度 0.1）
+        jctx.save();
+        jctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        jctx.lineWidth = 1;
+        jctx.strokeRect(vw * 0.7 + 2, zoneY1 + 2, vw * 0.3 - 4, zoneY2 - zoneY1 - 4);
+        jctx.globalAlpha = 0.1;
         jctx.beginPath();
-        jctx.arc(joyCx, joyCy, JOY_OUTER, 0, Math.PI * 2);
-        jctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        jctx.arc(vw * 0.85, midY, JOY_OUTER, 0, Math.PI * 2);
+        jctx.strokeStyle = 'white';
         jctx.lineWidth = 2;
         jctx.stroke();
+        jctx.beginPath();
+        jctx.arc(vw * 0.85, midY, JOY_INNER, 0, Math.PI * 2);
+        jctx.fillStyle = 'white';
+        jctx.fill();
+        jctx.restore();
 
+        // ── 動態搖桿（啟用時）
         if (_joyActive) {
             jctx.beginPath();
             jctx.arc(_joyBaseX, _joyBaseY, JOY_OUTER, 0, Math.PI * 2);
@@ -283,6 +314,11 @@ function _attachJoystickListeners() {
             if (_attackZone(x, y)) {
                 handled = true;
                 playerAttack();
+                if (gameState.orientation === 'landscape') {
+                    _atkFeedbackTime = Date.now();
+                    _atkFeedbackX = x;
+                    _atkFeedbackY = y;
+                }
                 continue;
             }
 
@@ -292,12 +328,7 @@ function _attachJoystickListeners() {
             handled = true;
             _joyActive  = true;
             _joyTouchId = touch.identifier;
-            if (gameState.orientation === 'landscape') {
-                _joyBaseX = window.innerWidth * 0.85;
-                _joyBaseY = window.innerHeight * 0.5;
-            } else {
-                _joyBaseX = x; _joyBaseY = y;
-            }
+            _joyBaseX = x; _joyBaseY = y;
             _joyKnobX = x; _joyKnobY = y;
             gameState.mobileInput = { dx: 0, dy: 0 };
             _renderMobileOverlay();
@@ -794,6 +825,9 @@ function drawGame() {
 
     // 12. 繪製小地圖
     drawMinimap();
+
+    // 13. 手機疊加層每幀刷新（支援攻擊回饋淡出動畫）
+    if (gameState.isMobile) _renderMobileOverlay();
 }
 
 function _heartPath(ctx, x, y, size) {

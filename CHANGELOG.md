@@ -2,6 +2,16 @@
 
 ---
 
+## v0.25.0 - 2026-05-17
+
+### 新增
+- **橫向手機搖桿動態定位**（`systems/ui.js`）：移除橫向模式固定底環（`vw×0.85, vh×0.5`），改為玩家在搖桿區任意位置按下時，以該觸點為搖桿中心動態生成；`onStart` 移除 `orientation === 'landscape'` 分支，兩個方向統一使用 `_joyBaseX = x; _joyBaseY = y`
+- **攻擊區點擊視覺回饋**（`systems/ui.js`）：新增 `_atkFeedbackTime / _atkFeedbackX / _atkFeedbackY` 三個狀態變數；攻擊區 `touchstart` 觸發時記錄座標與時間；`_renderMobileOverlay` 每幀在點擊位置繪製半透明 ⚔️，300ms 內線性淡出
+- **橫向手機觸控區域視覺提示重繪**（`systems/ui.js`）：攻擊區與搖桿區各以 `rgba(255,255,255,0.1)` 細邊框標示範圍；攻擊區中央 ⚔️ 透明度降至 0.1；搖桿區改為 0.1 透明度的外環 + 內圈提示圓，替代原本 0.2 透明度固定底環
+- **`_renderMobileOverlay` 每幀刷新**（`systems/ui.js`、`main.js`）：在 `drawGame()` 末尾加入 `if (gameState.isMobile) _renderMobileOverlay()`，確保攻擊點擊淡出動畫於每幀正確渲染；原觸控事件內的呼叫保留以維持即時反應
+
+---
+
 ## v0.24.2 - 2026-05-17
 
 ### 修復
