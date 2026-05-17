@@ -1402,10 +1402,12 @@ function devToggleDayNight() {
 // 遊戲說明 (Guide)
 // =============================================================
 
+let _guideKeyHandler = null;
+
 function showGuide(startPage) {
     if (document.getElementById('guide-overlay')) return;
-    const pages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
-    let cur = Math.min(Math.max(0, startPage || 0), pages.length - 1);
+    const TOTAL = 4;
+    let cur = Math.min(Math.max(0, startPage || 0), TOTAL - 1);
 
     const overlay = document.createElement('div');
     overlay.id = 'guide-overlay';
@@ -1413,64 +1415,156 @@ function showGuide(startPage) {
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;align-items:center;justify-content:center;z-index:215;pointer-events:all;color:white;font-family:Arial,sans-serif;';
 
     const panel = document.createElement('div');
-    panel.style.cssText = 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:24px 28px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto;box-sizing:border-box;text-align:center;';
+    panel.style.cssText = 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:22px 26px;width:92%;max-width:580px;max-height:88vh;overflow-y:auto;box-sizing:border-box;';
 
     const titleBar = document.createElement('div');
-    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;';
+    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
+    const headerTitle = document.createElement('div');
+    headerTitle.style.cssText = 'font-size:20px;font-weight:bold;color:#FFD700;';
     const pageLbl = document.createElement('div');
     pageLbl.style.cssText = 'font-size:13px;color:#999;';
-    const headerTitle = document.createElement('div');
-    headerTitle.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;';
-    const spacer = document.createElement('div');
-    spacer.style.cssText = 'min-width:60px;';
-    titleBar.appendChild(spacer); titleBar.appendChild(headerTitle); titleBar.appendChild(pageLbl);
+    titleBar.appendChild(headerTitle);
+    titleBar.appendChild(pageLbl);
     panel.appendChild(titleBar);
 
-    const subTitle = document.createElement('div');
-    subTitle.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:14px;';
-    panel.appendChild(subTitle);
-
-    // 內容
     const content = document.createElement('div');
-    content.style.cssText = 'text-align:left;font-size:15px;line-height:1.9;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:18px 22px;margin-bottom:18px;';
+    content.style.cssText = 'font-size:14px;line-height:1.8;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:16px 20px;margin-bottom:16px;';
     panel.appendChild(content);
 
-    // 導覽
     const navRow = document.createElement('div');
     navRow.style.cssText = 'display:flex;gap:10px;align-items:center;justify-content:space-between;';
     const prevBtn = document.createElement('button');
-    prevBtn.style.cssText = 'padding:8px 18px;font-size:18px;background:#2a2a2a;color:white;border:1px solid #555;border-radius:4px;cursor:pointer;';
+    prevBtn.style.cssText = 'padding:8px 14px;font-size:13px;background:#2a2a2a;color:white;border:1px solid #555;border-radius:4px;cursor:pointer;min-width:96px;';
+    const closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'padding:8px 20px;font-size:13px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;';
     const nextBtn = document.createElement('button');
     nextBtn.style.cssText = prevBtn.style.cssText;
     navRow.appendChild(prevBtn);
-    const closeBtn = document.createElement('button');
-    closeBtn.style.cssText = 'padding:8px 24px;font-size:14px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;';
     navRow.appendChild(closeBtn);
     navRow.appendChild(nextBtn);
     panel.appendChild(navRow);
 
+    function _ln(text) {
+        return '<div style="margin-bottom:6px;">' + _escH(text) + '</div>';
+    }
+    function _sec(text) {
+        return '<div style="font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:10px;">' + _escH(text) + '</div>';
+    }
+    function _dot(color, key, extraStyle) {
+        const ds = 'width:12px;height:12px;border-radius:50%;background:' + color + ';flex-shrink:0;' + (extraStyle || '');
+        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'
+            + '<div style="' + ds + '"></div>'
+            + '<span>' + _escH(t(key)) + '</span></div>';
+    }
+
+    function buildPage0() {
+        if (_effectiveMobile()) {
+            const left = '<div style="flex:1;padding-right:12px;border-right:1px solid #444;">'
+                + _sec(t('guideBasicTitle'))
+                + _ln(t('guideMobileMove'))
+                + _ln(t('guideMobileAttack'))
+                + _ln(t('guideMobileSettings'))
+                + '</div>';
+            const landscapeDiagram =
+                '<div style="position:relative;width:144px;height:80px;background:#1a1a2e;border:1px solid #555;border-radius:4px;overflow:hidden;margin:5px 0 10px 0;">'
+                + '<div style="position:absolute;left:0;top:0;width:30%;height:100%;background:rgba(200,50,50,0.35);display:flex;align-items:center;justify-content:center;font-size:15px;">⚔️</div>'
+                + '<div style="position:absolute;right:0;top:0;width:30%;height:100%;background:rgba(50,100,200,0.35);display:flex;align-items:center;justify-content:center;">'
+                +   '<div style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.55);background:rgba(255,255,255,0.12);"></div>'
+                + '</div>'
+                + '<div style="position:absolute;bottom:3px;left:0;width:30%;text-align:center;font-size:8px;color:rgba(255,255,255,0.7);">攻擊區</div>'
+                + '<div style="position:absolute;bottom:3px;right:0;width:30%;text-align:center;font-size:8px;color:rgba(255,255,255,0.7);">搖桿區</div>'
+                + '</div>';
+            const portraitDiagram =
+                '<div style="position:relative;width:90px;height:108px;background:#1a1a2e;border:1px solid #555;border-radius:4px;overflow:hidden;margin-top:5px;">'
+                + '<div style="position:absolute;top:0;left:0;width:100%;height:60%;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #555;">'
+                +   '<span style="font-size:8px;color:rgba(255,255,255,0.5);">遊戲畫面</span>'
+                + '</div>'
+                + '<div style="position:absolute;bottom:0;left:0;width:50%;height:40%;background:rgba(200,50,50,0.35);display:flex;flex-direction:column;align-items:center;justify-content:center;">'
+                +   '<div style="font-size:11px;">⚔️</div>'
+                +   '<div style="font-size:8px;color:rgba(255,255,255,0.8);">攻擊</div>'
+                + '</div>'
+                + '<div style="position:absolute;bottom:0;right:0;width:50%;height:40%;background:rgba(50,100,200,0.35);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">'
+                +   '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.55);background:rgba(255,255,255,0.12);"></div>'
+                +   '<div style="font-size:8px;color:rgba(255,255,255,0.8);">搖桿</div>'
+                + '</div>'
+                + '</div>';
+            const right = '<div style="flex:1;padding-left:12px;overflow:hidden;">'
+                + _sec(t('guideTouchTitle'))
+                + '<div style="font-size:13px;color:#FFD700;margin-bottom:2px;">' + _escH(t('guideLandscape')) + '</div>'
+                + '<div style="font-size:11px;color:#bbb;margin-bottom:2px;">' + _escH(t('guideLandscapeDesc')) + '</div>'
+                + landscapeDiagram
+                + '<div style="font-size:13px;color:#FFD700;margin-bottom:2px;">' + _escH(t('guidePortrait')) + '</div>'
+                + '<div style="font-size:11px;color:#bbb;margin-bottom:2px;">' + _escH(t('guidePortraitDesc')) + '</div>'
+                + portraitDiagram
+                + '</div>';
+            return '<div style="display:flex;gap:0;">' + left + right + '</div>';
+        }
+        return _sec(t('guideBasicTitle'))
+            + _ln(t('guideMove'))
+            + _ln(t('guideAttack'))
+            + _ln(t('guideSettings'))
+            + _ln(t('guideFruit'))
+            + _ln(t('guideGoal'));
+    }
+
+    function buildPage1() {
+        return _sec(t('guideOrganTitle'))
+            + _ln(t('guideOrgan1')) + _ln(t('guideOrgan2')) + _ln(t('guideOrgan3'))
+            + _ln(t('guideOrgan4')) + _ln(t('guideOrgan5')) + _ln(t('guideOrgan6'))
+            + _ln(t('guideOrgan7'));
+    }
+
+    function buildPage2() {
+        return _sec(t('guideEvoTitle'))
+            + _ln(t('guideEvo1')) + _ln(t('guideEvo2')) + _ln(t('guideEvo3'))
+            + _ln(t('guideEvo4')) + _ln(t('guideEvo5'));
+    }
+
+    function buildPage3() {
+        return _sec(t('guideMapTitle'))
+            + _dot('#000000', 'guideMapPlayer', 'border:1px solid #888;animation:dotBlink 1.5s ease-in-out infinite;')
+            + _dot('#FFA500', 'guideMapNeutral')
+            + _dot('#FF0000', 'guideMapHostile')
+            + _dot('#FFD700', 'guideMapEliteH', 'animation:dotBlink 1.5s ease-in-out infinite;')
+            + _dot('#9B59B6', 'guideMapEliteC', 'animation:dotBlink 1.5s ease-in-out infinite;')
+            + _dot('#8B4513', 'guideMapBossBear', 'color:#8B4513;animation:dotGlow 2s ease-in-out infinite;')
+            + _dot('#1a3a5c', 'guideMapBossShark', 'color:#1a3a5c;animation:dotGlow 2s ease-in-out infinite;')
+            + _dot('#8B6914', 'guideMapBossScorp', 'color:#8B6914;animation:dotGlow 2s ease-in-out infinite;')
+            + _dot('#2d5a1b', 'guideMapTree')
+            + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'
+            + '<div style="width:12px;height:12px;border-radius:2px;background:rgba(255,255,255,0.3);flex-shrink:0;"></div>'
+            + '<span>' + _escH(t('guideMapFog')) + '</span></div>';
+    }
+
     function render() {
-        const allPages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
-        const p = allPages[cur];
         headerTitle.textContent = t('guideTitle');
-        pageLbl.textContent = t('guidePageFmt', { cur: cur + 1, total: allPages.length });
-        subTitle.textContent = p.title;
-        content.innerHTML = p.lines.map(l => '<div style="margin-bottom:6px;">' + l.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</div>').join('');
+        pageLbl.textContent = t('guidePage', {'0': cur + 1, '1': TOTAL});
         prevBtn.textContent = t('guidePrev');
         nextBtn.textContent = t('guideNext');
-        closeBtn.textContent = t('close');
+        closeBtn.textContent = t('guideClose');
         prevBtn.disabled = (cur === 0);
-        nextBtn.disabled = (cur === allPages.length - 1);
+        nextBtn.disabled = (cur === TOTAL - 1);
         prevBtn.style.opacity = prevBtn.disabled ? '0.35' : '1';
         nextBtn.style.opacity = nextBtn.disabled ? '0.35' : '1';
         overlay.dataset.page = String(cur);
+        if (cur === 0) content.innerHTML = buildPage0();
+        else if (cur === 1) content.innerHTML = buildPage1();
+        else if (cur === 2) content.innerHTML = buildPage2();
+        else content.innerHTML = buildPage3();
     }
+
     prevBtn.onclick = () => { if (cur > 0) { cur--; render(); } };
-    nextBtn.onclick = () => {
-        const allPages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
-        if (cur < allPages.length - 1) { cur++; render(); }
-    };
+    nextBtn.onclick = () => { if (cur < TOTAL - 1) { cur++; render(); } };
     closeBtn.onclick = hideGuide;
+
+    _guideKeyHandler = function(e) {
+        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+            if (cur < TOTAL - 1) { cur++; render(); }
+        } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+            if (cur > 0) { cur--; render(); }
+        }
+    };
+    document.addEventListener('keydown', _guideKeyHandler);
 
     overlay.appendChild(panel);
     document.getElementById('game-container').appendChild(overlay);
@@ -1480,6 +1574,10 @@ function showGuide(startPage) {
 function hideGuide() {
     const el = document.getElementById('guide-overlay');
     if (el) el.remove();
+    if (_guideKeyHandler) {
+        document.removeEventListener('keydown', _guideKeyHandler);
+        _guideKeyHandler = null;
+    }
 }
 
 // =============================================================

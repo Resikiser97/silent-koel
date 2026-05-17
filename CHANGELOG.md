@@ -2,6 +2,18 @@
 
 ---
 
+## v0.26.0 - 2026-05-17
+
+### 新增
+- **遊戲說明系統全面重構**（`lang/zh-TW.js`、`lang/en.js`、`lang.js`、`systems/ui.js`、`index.html`）：說明介面由舊版 `guidePages` 陣列改為扁平 lang key 架構，支援逐 key fallback（當前語言 → en → zh-TW）
+- **說明頁擴充至4頁**（`systems/ui.js`）：第1頁基本操作（桌機）或左右分欄觸控操作（手機）、第2頁器官系統、第3頁進化系統、第4頁小地圖說明；桌機手機頁數統一
+- **手機第1頁觸控示意圖**（`systems/ui.js`）：右半欄新增橫向模式示意圖（144×80px，左30%攻擊區/右30%搖桿區）與直向模式示意圖（90×108px，上60%遊戲畫面/下40%攻擊+搖桿），使用絕對定位 HTML div 繪製
+- **說明介面鍵盤換頁**（`systems/ui.js`）：開啟說明時監聽 `D/→`（下一頁）、`A/←`（上一頁）；`hideGuide()` 自動移除監聽器（`_guideKeyHandler`），防止殘留
+- **小地圖圖例動畫**（`index.html`、`systems/ui.js`）：新增 `@keyframes dotBlink`（opacity 閃爍，玩家/草食精英/肉食精英）與 `@keyframes dotGlow`（box-shadow 光暈，三種Boss），霧區改用方形色塊（rgba(255,255,255,0.3)）
+- **大量新增 lang key**（`lang/zh-TW.js`、`lang/en.js`）：新增 `guideTitle/guidePage/guideClose/guidePrev/guideNext`、第1頁桌機5條、手機6條、觸控2條、第2頁器官7條、第3頁進化5條、第4頁地圖10條，共新增40+ keys
+
+---
+
 ## v0.25.0 - 2026-05-17
 
 ### 新增
