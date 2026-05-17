@@ -586,8 +586,6 @@ function _drawSunMoonIndicator() {
     const mctx = _sunmoonCtx;
     const W = 24, H = 24;
     mctx.clearRect(0, 0, W, H);
-    mctx.fillStyle = 'rgba(0,0,0,0.7)';
-    mctx.fillRect(0, 0, W, H);
 
     const timeElapsed   = Math.max(0, 600 - gameState.timeRemaining);
     const phaseIndex    = Math.min(7, Math.floor(timeElapsed / 75));
