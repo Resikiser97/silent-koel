@@ -126,6 +126,7 @@ function initializeGame() {
     applyEvolutionEffects();
 
     // 9. 初始化計時狀態
+    gameState.devModeUsed = false;
     gameState.lastTimeTick = Date.now();
     gameState.spawnTimers.neutral = Date.now();
     gameState.spawnTimers.hostile = Date.now();

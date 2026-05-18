@@ -1315,6 +1315,7 @@ function updateTimer() {
 
 function toggleDevMode() {
     gameState.devMode = !gameState.devMode;
+    if (gameState.devMode) gameState.devModeUsed = true;
     document.getElementById('dev-panel').style.display    = gameState.devMode ? 'block' : 'none';
     document.getElementById('dev-indicator').style.display = gameState.devMode ? 'block' : 'none';
 }

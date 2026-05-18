@@ -55,7 +55,10 @@ function updateDayNightCycle() {
 
 function showGameOver() {
     gameState.gameOver = true;
-    showScoreSubmitPopup(false, null, () => {
+    const devWarning = gameState.devModeUsed
+        ? '<div style="font-size:12px;color:#f80;margin-top:12px;">⚠️ 本局使用了開發者模式，分數不計入排行榜</div>'
+        : '';
+    const doShowOverlay = () => {
         let overlay = document.getElementById('game-over-overlay');
         if (!overlay) {
             overlay = document.createElement('div');
@@ -65,8 +68,14 @@ function showGameOver() {
                 '<div style="font-size:20px;margin-bottom:8px;">' + t('timeUp') + '</div>' +
                 '<div style="font-size:18px;margin-bottom:24px;">' + t('finalXP', { xp: gameState.stats.xpCurrent }) + '</div>' +
                 '<button onclick="location.reload()" style="font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;">' + t('restart') + '</button>' +
-                '<div style="font-size:12px;color:#555;margin-top:20px;">© ' + GAME_INFO.author + ' | ' + GAME_INFO.version + '</div>';
+                '<div style="font-size:12px;color:#555;margin-top:20px;">© ' + GAME_INFO.author + ' | ' + GAME_INFO.version + '</div>' +
+                devWarning;
             document.getElementById('game-container').appendChild(overlay);
         }
-    });
+    };
+    if (gameState.devModeUsed) {
+        doShowOverlay();
+    } else {
+        showScoreSubmitPopup(false, null, doShowOverlay);
+    }
 }

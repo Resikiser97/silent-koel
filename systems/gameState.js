@@ -52,6 +52,7 @@ const gameState = {
     treasures: [],
     devInput: '',
     devMode: false,
+    devModeUsed: false,
     timeRemaining: 600,
     lastTimeTick: 0,
     gameOver: false,

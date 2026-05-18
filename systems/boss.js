@@ -90,7 +90,7 @@ function showVictory() {
     localStorage.removeItem('savedOrgans');
     localStorage.removeItem('savedHiddenOrgans');
     const bossKillTime = gameState.bossSpawnTime ? Math.floor((Date.now() - gameState.bossSpawnTime) / 1000) : null;
-    showScoreSubmitPopup(true, bossKillTime, () => {
+    const doShowVictory = () => {
         const overlay = document.createElement('div');
         overlay.id = 'victory-overlay';
         overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
@@ -129,8 +129,19 @@ function showVictory() {
         vFooter.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
         vFooter.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
         overlay.appendChild(vFooter);
+        if (gameState.devModeUsed) {
+            const devWarn = document.createElement('div');
+            devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
+            devWarn.textContent = '⚠️ 本局使用了開發者模式，分數不計入排行榜';
+            overlay.appendChild(devWarn);
+        }
         document.getElementById('game-container').appendChild(overlay);
-    });
+    };
+    if (gameState.devModeUsed) {
+        doShowVictory();
+    } else {
+        showScoreSubmitPopup(true, bossKillTime, doShowVictory);
+    }
 }
 
 function drawBossArrow() {

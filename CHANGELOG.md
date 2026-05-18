@@ -2,6 +2,13 @@
 
 ---
 
+## v0.27.1 - 2026-05-18
+
+### 新增
+- **排行榜防作弊機制**（`systems/gameState.js`、`systems/ui.js`、`systems/boss.js`、`systems/daynight.js`、`main.js`）：新增 `gameState.devModeUsed` 旗標，啟動開發者模式時設為 `true` 且本局不可重置；遊戲結束時若偵測到旗標，完全跳過分數上傳彈窗並於結束畫面顯示「⚠️ 本局使用了開發者模式，分數不計入排行榜」；`initializeGame()` 重新開局時重置為 `false`
+
+---
+
 ## v0.27.0 - 2026-05-18
 
 ### 新增
