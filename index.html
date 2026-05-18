@@ -298,6 +298,12 @@ function getRankIcon(rank) {
     if (rank <= 10) return '🎖️';
     return String(rank);
 }
+
+if (typeof fetchTop10 === 'undefined') {
+    function fetchTop10() { return Promise.reject(new Error('no supabase')); }
+    function fetchLeaderboard() { return Promise.reject(new Error('no supabase')); }
+    function submitScore() { return Promise.reject(new Error('no supabase')); }
+}
 </script>
 
 </body>
