@@ -1991,13 +1991,13 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
         skipBtn.disabled = true;
         const data = {
             name: name,
-            score: gameState.stats.xpCurrent,
-            level: gameState.player.level,
-            play_time: 600 - gameState.timeRemaining,
+            score: Math.floor(gameState.stats.xpCurrent),
+            level: Math.floor(gameState.player.level),
+            play_time: Math.floor(600 - gameState.timeRemaining),
             is_victory: isVictory,
-            boss_kill_time: bossKillTime,
+            boss_kill_time: bossKillTime !== null && bossKillTime !== undefined ? Math.floor(bossKillTime) : null,
             version: GAME_INFO.version,
-            version_order: parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4))
+            version_order: Math.floor(parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4)))
         };
         submitScore(data).then(() => {
             statusMsg.textContent = t('lbSubmitOk');

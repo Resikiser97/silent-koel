@@ -2,6 +2,13 @@
 
 ---
 
+## v0.28.3 - 2026-05-18
+
+### 修復
+- **分數上傳 400 錯誤**（`systems/ui.js`）：`submitScore` 傳入的 `score`、`level`、`play_time`、`boss_kill_time`、`version_order` 全部套用 `Math.floor()`，確保傳送整數而非浮點數，避免 Supabase 型別驗證回傳 400
+
+---
+
 ## v0.28.2 - 2026-05-18
 
 ### 修復
