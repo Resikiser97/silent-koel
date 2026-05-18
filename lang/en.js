@@ -131,6 +131,7 @@ LANG['en'] = {
         warnNoOrganLine1: '⚠️ You haven\'t selected any organs to keep!',
         warnNoOrganLine2: 'Go to the Skill Tree to choose organs to carry over.',
         warnNoOrganPlay: '⚠️ No organs selected. Press again to confirm and start.',
+        warnNoOrganHome: '⚠️ No organs selected. Press again to confirm and return home.',
         skillTreeTitle: '🌿 Skill Tree',
         skillPoints: 'Skill Points',
         resetSkills: 'Reset Skill Points',

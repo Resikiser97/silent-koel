@@ -87,6 +87,7 @@ const gameState = {
     gameStarted: false,
     lastDifficulty: 'easy',
     playAgainWarned: false,
+    homeWarned: false,
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 

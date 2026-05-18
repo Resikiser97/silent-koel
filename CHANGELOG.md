@@ -2,6 +2,13 @@
 
 ---
 
+## v0.28.4 - 2026-05-18
+
+### 修復
+- **死亡後無器官卻被強制進入器官保留畫面**（`systems/evolution.js`）：`buildSkillTreeOverlay` 新增器官判斷，當 `playerOrgans.length === 0 && hiddenOrgans.length === 0` 時直接跳過器官保留區塊，不顯示該 section；同時修正「回首頁」按鈕從永遠封鎖改為 warn-once（首次點擊顯示確認警告，再按一次才跳轉），並新增 `gameState.homeWarned` 旗標；「再玩一局」按鈕同步加入 `noOrgansToSelect` 判斷，無器官時不觸發警告直接繼續；新增語言 key `warnNoOrganHome`（中英文）
+
+---
+
 ## v0.28.3 - 2026-05-18
 
 ### 修復

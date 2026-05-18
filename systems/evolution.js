@@ -147,6 +147,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
 
     const organsToKeep = 1 + (gameState.playerSkills.organMemory || 0);
     const playerOrgans = gameState.player.organs;
+    const hiddenOrgans = gameState.player.hiddenOrgans || [];
     const selectedOrgans = [];
 
     const organSection = document.createElement('div');
@@ -205,9 +206,8 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
         });
         organSection.appendChild(organGrid);
     }
-    if (!fromHome) overlay.appendChild(organSection);
+    if (!fromHome && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) overlay.appendChild(organSection);
 
-    const hiddenOrgans = gameState.player.hiddenOrgans || [];
     if (!fromHome && hiddenOrgans.length > 0) {
         const hiddenSection = document.createElement('div');
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
@@ -468,23 +468,16 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
         homeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
         homeBtn.textContent = t('btnSaveAndHome');
         homeBtn.onclick = () => {
+            const noOrgansToSelect = playerOrgans.length === 0 && hiddenOrgans.length === 0;
             let hasOrgans = false;
             try {
                 const so = localStorage.getItem('savedOrgans');
                 hasOrgans = !!so && JSON.parse(so).length > 0;
             } catch(e) {}
-            if (!hasOrgans) {
-                const warn = document.createElement('div');
-                warn.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(180,40,0,0.95);color:white;font-size:16px;font-weight:bold;padding:20px 28px;border-radius:10px;z-index:9999;text-align:center;pointer-events:none;';
-                const line1 = document.createElement('div');
-                line1.textContent = t('warnNoOrganLine1');
-                const line2 = document.createElement('div');
-                line2.style.cssText = 'font-size:13px;margin-top:8px;color:#ffd;';
-                line2.textContent = t('warnNoOrganLine2');
-                warn.appendChild(line1);
-                warn.appendChild(line2);
-                document.getElementById('game-container').appendChild(warn);
-                setTimeout(() => { warn.remove(); }, 3000);
+            if (!hasOrgans && !noOrgansToSelect && !gameState.homeWarned) {
+                gameState.homeWarned = true;
+                warnEl.textContent = t('warnNoOrganHome');
+                warnEl.style.display = 'block';
                 return;
             }
             location.reload();
@@ -495,12 +488,13 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
         playAgainBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
         playAgainBtn.textContent = t('playAgain');
         playAgainBtn.onclick = () => {
+            const noOrgansToSelect = playerOrgans.length === 0 && hiddenOrgans.length === 0;
             let hasOrgans = false;
             try {
                 const so = localStorage.getItem('savedOrgans');
                 hasOrgans = !!so && JSON.parse(so).length > 0;
             } catch(e) {}
-            if (!hasOrgans && !gameState.playAgainWarned) {
+            if (!hasOrgans && !noOrgansToSelect && !gameState.playAgainWarned) {
                 gameState.playAgainWarned = true;
                 warnEl.textContent = t('warnNoOrganPlay');
                 warnEl.style.display = 'block';

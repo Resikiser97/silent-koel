@@ -138,6 +138,7 @@ LANG['zh-TW'] = {
         warnNoOrganLine1: '⚠️ 你還沒有選擇保留器官！',
         warnNoOrganLine2: '去技能樹選擇你要帶走的器官',
         warnNoOrganPlay: '⚠️ 你還沒有選擇保留器官，確定要開始嗎？再按一次確認。',
+        warnNoOrganHome: '⚠️ 你還沒有選擇保留器官，確定要回首頁嗎？再按一次確認。',
         // ── 技能樹
         skillTreeTitle: '🌿 技能樹',
         skillPoints: '技能點數',
