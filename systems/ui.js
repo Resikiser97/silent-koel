@@ -1737,6 +1737,12 @@ function showStartScreen() {
     guideBtn.onclick = () => showGuide(0);
     overlay.appendChild(guideBtn);
 
+    const lbMenuBtn = document.createElement('button');
+    lbMenuBtn.style.cssText = menuBtnStyle + 'background:rgba(80,60,10,0.3);border:1px solid #8a7a2a;';
+    lbMenuBtn.textContent = t('leaderboard');
+    lbMenuBtn.onclick = () => showLeaderboard();
+    overlay.appendChild(lbMenuBtn);
+
     const settingsBtn = document.createElement('button');
     settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
     settingsBtn.textContent = t('settings');
@@ -1748,5 +1754,240 @@ function showStartScreen() {
     footerEl.textContent = '© 2026 ' + GAME_INFO.author + '  |  ' + GAME_INFO.version;
     overlay.appendChild(footerEl);
 
+    const top10Panel = document.createElement('div');
+    top10Panel.id = 'top10-panel';
+    top10Panel.style.cssText = 'position:absolute;right:16px;top:50%;transform:translateY(-50%);width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';
+    const top10Title = document.createElement('div');
+    top10Title.style.cssText = 'color:#FFD700;font-weight:bold;margin-bottom:8px;text-align:center;font-size:14px;';
+    top10Title.textContent = t('lbTop10Title');
+    top10Panel.appendChild(top10Title);
+    const top10List = document.createElement('div');
+    top10List.id = 'top10-list';
+    top10List.innerHTML = t('lbLoading');
+    top10Panel.appendChild(top10List);
+    overlay.appendChild(top10Panel);
+
+    fetchTop10().then(rows => {
+        if (!rows || rows.length === 0) { top10List.textContent = t('lbError'); return; }
+        top10List.innerHTML = '';
+        rows.forEach((row, i) => {
+            const rank = i + 1;
+            const name = row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name;
+            const mm = String(Math.floor(row.play_time / 60)).padStart(2, '0');
+            const ss = String(row.play_time % 60).padStart(2, '0');
+            const timeStr = mm + ':' + ss;
+            const result = row.is_victory ? t('lbVictoryIcon') : t('lbDefeatIcon');
+            const rankIcon = getRankIcon(rank);
+            const row_el = document.createElement('div');
+            row_el.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
+            row_el.innerHTML = '<span style="min-width:28px;text-align:center;">' + rankIcon + '</span>' +
+                '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</span>' +
+                '<span style="color:#aaa;">' + timeStr + '</span>' +
+                '<span>' + result + '</span>';
+            top10List.appendChild(row_el);
+        });
+    }).catch(() => { top10List.textContent = t('lbError'); });
+
     document.getElementById('game-container').appendChild(overlay);
+}
+
+function showLeaderboard() {
+    let currentPage = 1;
+    const PAGE_SIZE = 20;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'leaderboard-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;z-index:300;color:white;font-family:Arial,sans-serif;overflow:hidden;';
+
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;margin:20px 0 12px;';
+    titleEl.textContent = t('lbFullTitle');
+    overlay.appendChild(titleEl);
+
+    const tableWrap = document.createElement('div');
+    tableWrap.style.cssText = 'width:90%;max-width:860px;overflow-y:auto;flex:1;';
+    overlay.appendChild(tableWrap);
+
+    const table = document.createElement('table');
+    table.style.cssText = 'width:100%;border-collapse:collapse;font-size:13px;';
+    tableWrap.appendChild(table);
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const cols = ['lbColRank','lbColVersion','lbColDate','lbColName','lbColTime','lbColScore','lbColLevel','lbColResult'];
+    cols.forEach(key => {
+        const th = document.createElement('th');
+        th.style.cssText = 'padding:6px 8px;border-bottom:1px solid #444;color:#FFD700;text-align:left;position:sticky;top:0;background:#111;';
+        th.textContent = t(key);
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    tbody.id = 'lb-tbody';
+    table.appendChild(tbody);
+
+    const pagingBar = document.createElement('div');
+    pagingBar.style.cssText = 'display:flex;align-items:center;gap:16px;padding:12px;font-size:14px;';
+    const prevBtn = document.createElement('button');
+    prevBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:1px solid #666;color:white;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px;';
+    prevBtn.textContent = t('lbPrevPage');
+    const pageLabel = document.createElement('span');
+    pageLabel.style.cssText = 'color:#aaa;';
+    const nextBtn = document.createElement('button');
+    nextBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:1px solid #666;color:white;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px;';
+    nextBtn.textContent = t('lbNextPage');
+    pagingBar.appendChild(prevBtn);
+    pagingBar.appendChild(pageLabel);
+    pagingBar.appendChild(nextBtn);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'background:rgba(180,0,0,0.4);border:1px solid #aa4444;color:white;padding:6px 20px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:20px;';
+    closeBtn.textContent = t('close');
+    pagingBar.appendChild(closeBtn);
+    overlay.appendChild(pagingBar);
+
+    const rowColors = ['rgba(255,215,0,0.12)', 'rgba(192,192,192,0.12)', 'rgba(205,127,50,0.12)'];
+
+    function loadPage(page) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
+        fetchLeaderboard(page, PAGE_SIZE).then(rows => {
+            tbody.innerHTML = '';
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbError') + '</td></tr>';
+                return;
+            }
+            rows.forEach((row, i) => {
+                const rank = (page - 1) * PAGE_SIZE + i + 1;
+                const mm = String(Math.floor(row.play_time / 60)).padStart(2, '0');
+                const ss = String(row.play_time % 60).padStart(2, '0');
+                const dateStr = row.created_at ? row.created_at.slice(0, 10) : '—';
+                const result = row.is_victory ? t('lbVictory') : t('lbDefeat');
+                const rankIcon = getRankIcon(rank);
+                const tr = document.createElement('tr');
+                if (rank <= 3) tr.style.cssText = 'background:' + rowColors[rank - 1] + ';';
+                const cells = [rankIcon, row.version || '—', dateStr,
+                    row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name,
+                    mm + ':' + ss, row.score, row.level, result];
+                cells.forEach(val => {
+                    const td = document.createElement('td');
+                    td.style.cssText = 'padding:6px 8px;border-bottom:1px solid #222;';
+                    td.innerHTML = String(val);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            currentPage = page;
+            pageLabel.textContent = t('lbPageLabel').replace('{n}', page);
+            prevBtn.disabled = page <= 1;
+            prevBtn.style.opacity = page <= 1 ? '0.4' : '1';
+            nextBtn.disabled = rows.length < PAGE_SIZE;
+            nextBtn.style.opacity = rows.length < PAGE_SIZE ? '0.4' : '1';
+        }).catch(() => {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
+        });
+    }
+
+    prevBtn.onclick = () => { if (currentPage > 1) loadPage(currentPage - 1); };
+    nextBtn.onclick = () => { if (!nextBtn.disabled) loadPage(currentPage + 1); };
+
+    function closeLb() {
+        overlay.remove();
+        document.removeEventListener('keydown', lbKeyHandler);
+    }
+    closeBtn.onclick = closeLb;
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeLb(); });
+
+    function lbKeyHandler(e) {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+            e.stopPropagation();
+            if (currentPage > 1) loadPage(currentPage - 1);
+        } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+            e.stopPropagation();
+            if (!nextBtn.disabled) loadPage(currentPage + 1);
+        } else if (e.key === 'Escape') {
+            closeLb();
+        }
+    }
+    document.addEventListener('keydown', lbKeyHandler);
+
+    document.getElementById('game-container').appendChild(overlay);
+    loadPage(1);
+}
+
+function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
+    const popup = document.createElement('div');
+    popup.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:150;color:white;font-family:Arial,sans-serif;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#1a1a2e;border:1px solid #444;border-radius:8px;padding:28px 32px;min-width:300px;max-width:400px;text-align:center;';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:18px;font-weight:bold;margin-bottom:16px;color:#FFD700;';
+    title.textContent = t('lbSubmitTitle');
+    box.appendChild(title);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 20;
+    input.placeholder = t('lbNamePlaceholder');
+    input.style.cssText = 'width:100%;padding:8px 10px;font-size:15px;border-radius:4px;border:1px solid #666;background:#2a2a3e;color:white;box-sizing:border-box;margin-bottom:14px;';
+    box.appendChild(input);
+
+    const statusMsg = document.createElement('div');
+    statusMsg.style.cssText = 'font-size:13px;min-height:18px;margin-bottom:10px;';
+    box.appendChild(statusMsg);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;';
+
+    const submitBtn = document.createElement('button');
+    submitBtn.textContent = t('lbSubmitBtn');
+    submitBtn.style.cssText = 'padding:8px 20px;background:#2a5a2a;border:1px solid #4a8a4a;color:white;border-radius:4px;cursor:pointer;font-size:14px;';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.textContent = t('lbSkipBtn');
+    skipBtn.style.cssText = 'padding:8px 20px;background:rgba(80,80,80,0.4);border:1px solid #666;color:white;border-radius:4px;cursor:pointer;font-size:14px;';
+
+    btnRow.appendChild(submitBtn);
+    btnRow.appendChild(skipBtn);
+    box.appendChild(btnRow);
+    popup.appendChild(box);
+
+    function closePopup() {
+        popup.remove();
+        onDone();
+    }
+
+    submitBtn.onclick = () => {
+        const name = input.value.trim() || t('lbAnonymous');
+        submitBtn.disabled = true;
+        skipBtn.disabled = true;
+        const data = {
+            name: name,
+            score: gameState.stats.xpCurrent,
+            level: gameState.player.level,
+            play_time: 600 - gameState.timeRemaining,
+            is_victory: isVictory,
+            boss_kill_time: bossKillTime,
+            version: GAME_INFO.version,
+            version_order: parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4))
+        };
+        submitScore(data).then(() => {
+            statusMsg.textContent = t('lbSubmitOk');
+            statusMsg.style.color = '#6f6';
+            setTimeout(closePopup, 1200);
+        }).catch(() => {
+            statusMsg.textContent = t('lbSubmitFail');
+            statusMsg.style.color = '#f66';
+            submitBtn.disabled = false;
+            skipBtn.disabled = false;
+        });
+    };
+
+    skipBtn.onclick = closePopup;
+
+    document.getElementById('game-container').appendChild(popup);
+    setTimeout(() => input.focus(), 50);
 }

@@ -2,6 +2,20 @@
 
 ---
 
+## v0.27.0 - 2026-05-18
+
+### 新增
+- **Supabase 全球排行榜系統**（`config/supabase.js`、`systems/ui.js`、`systems/boss.js`、`systems/daynight.js`、`lang/zh-TW.js`、`lang/en.js`、`index.html`）：串接 Supabase REST API，實作完整排行榜功能
+- **首頁 TOP 10 浮窗**（`systems/ui.js`）：首頁右側新增固定浮窗，自動讀取前10名，顯示排名圖示、名字、遊玩時間、勝負結果
+- **完整排行榜介面**（`systems/ui.js`）：點「🏆 排行榜」開啟全屏排行榜，表格含排名/版本/日期/名字/遊玩時間/分數/等級/結果，前三名有金銀銅底色；支援鍵盤 A/←→/D 翻頁，每頁20筆分頁讀取
+- **分數提交彈窗**（`systems/ui.js`）：遊戲結束（死亡/勝利）前彈出名字輸入視窗，提交或跳過後進入結束畫面；上傳欄位含 name/score/level/play_time/is_victory/boss_kill_time/version/version_order
+- **皇冠排名圖示**（`index.html`）：CSS 繪製金銀銅三色皇冠（`buildCrown()`），4–10名🎖️，11名後顯示數字
+- **Boss 生成時間記錄**（`systems/boss.js`）：`spawnBoss()` 記錄 `gameState.bossSpawnTime`，擊殺後計算 `boss_kill_time` 秒數上傳
+- **首頁新增排行榜按鈕**（`systems/ui.js`）：按鈕順序調整為開始遊戲 / 技能樹 / 遊戲說明 / 排行榜 / 設定
+- **雙語支援**（`lang/zh-TW.js`、`lang/en.js`）：新增21個排行榜相關 lang key
+
+---
+
 ## v0.26.1 - 2026-05-17
 
 ### 修復

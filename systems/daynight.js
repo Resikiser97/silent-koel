@@ -55,16 +55,18 @@ function updateDayNightCycle() {
 
 function showGameOver() {
     gameState.gameOver = true;
-    let overlay = document.getElementById('game-over-overlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'game-over-overlay';
-        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-size:32px;z-index:100;pointer-events:all;';
-        overlay.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">' + t('gameOverTitle') + '</div>' +
-            '<div style="font-size:20px;margin-bottom:8px;">' + t('timeUp') + '</div>' +
-            '<div style="font-size:18px;margin-bottom:24px;">' + t('finalXP', { xp: gameState.stats.xpCurrent }) + '</div>' +
-            '<button onclick="location.reload()" style="font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;">' + t('restart') + '</button>' +
-            '<div style="font-size:12px;color:#555;margin-top:20px;">© ' + GAME_INFO.author + ' | ' + GAME_INFO.version + '</div>';
-        document.getElementById('game-container').appendChild(overlay);
-    }
+    showScoreSubmitPopup(false, null, () => {
+        let overlay = document.getElementById('game-over-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'game-over-overlay';
+            overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-size:32px;z-index:100;pointer-events:all;';
+            overlay.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">' + t('gameOverTitle') + '</div>' +
+                '<div style="font-size:20px;margin-bottom:8px;">' + t('timeUp') + '</div>' +
+                '<div style="font-size:18px;margin-bottom:24px;">' + t('finalXP', { xp: gameState.stats.xpCurrent }) + '</div>' +
+                '<button onclick="location.reload()" style="font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;">' + t('restart') + '</button>' +
+                '<div style="font-size:12px;color:#555;margin-top:20px;">© ' + GAME_INFO.author + ' | ' + GAME_INFO.version + '</div>';
+            document.getElementById('game-container').appendChild(overlay);
+        }
+    });
 }
