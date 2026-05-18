@@ -14,6 +14,7 @@ function handleKeyDown(e) {
         if (gameState.settingsOpen) { hideSettings(); } else if (!gameState.gameOver) { showSettings(); }
         return;
     }
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (gameState._rebindTarget) { e.preventDefault(); return; }
 
     const key = e.key.toLowerCase();

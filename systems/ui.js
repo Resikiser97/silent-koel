@@ -1564,6 +1564,7 @@ function showGuide(startPage) {
     closeBtn.onclick = hideGuide;
 
     _guideKeyHandler = function(e) {
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
         if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
             if (cur < TOTAL - 1) { cur++; render(); }
         } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
@@ -1917,6 +1918,7 @@ function showLeaderboard() {
     overlay.addEventListener('click', e => { if (e.target === overlay) closeLb(); });
 
     function lbKeyHandler(e) {
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
         if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
             e.stopPropagation();
             if (currentPage > 1) loadPage(currentPage - 1);
