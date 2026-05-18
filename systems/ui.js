@@ -1846,7 +1846,7 @@ function showLeaderboard() {
     table.appendChild(tbody);
 
     const pagingBar = document.createElement('div');
-    pagingBar.style.cssText = 'display:flex;align-items:center;gap:16px;padding:12px;font-size:14px;';
+    pagingBar.style.cssText = 'display:flex;align-items:center;gap:16px;padding:12px 12px max(20px, env(safe-area-inset-bottom)) 12px;font-size:14px;flex-shrink:0;';
     const prevBtn = document.createElement('button');
     prevBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:1px solid #666;color:white;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px;';
     prevBtn.textContent = t('lbPrevPage');
@@ -1929,7 +1929,13 @@ function showLeaderboard() {
     }
     document.addEventListener('keydown', lbKeyHandler);
 
-    document.getElementById('game-container').appendChild(overlay);
+    const _lbGc = document.getElementById('game-container');
+    const _lbMatch = (_lbGc ? _lbGc.style.transform : '').match(/scale\(([^)]+)\)/);
+    const _lbScale = _lbMatch ? parseFloat(_lbMatch[1]) : 1;
+    const _lbMaxH = _lbScale > 0 ? Math.floor(window.innerHeight / _lbScale) : 900;
+    if (_lbMaxH < 900) overlay.style.height = _lbMaxH + 'px';
+
+    _lbGc.appendChild(overlay);
     loadPage(1);
 }
 

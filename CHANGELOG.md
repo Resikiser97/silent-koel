@@ -2,6 +2,13 @@
 
 ---
 
+## v0.28.1 - 2026-05-18
+
+### 修復
+- **橫向手機排行榜按鈕被導航列遮住**（`systems/ui.js`）：排行榜 overlay 在開啟時動態計算高度（讀取 game-container 的 scale 值，以 `window.innerHeight / scale` 為上限），確保 overlay 不超出視窗；pagingBar 改用 `padding-bottom: max(20px, env(safe-area-inset-bottom))`，兼顧 iOS 安全區域，並加入 `flex-shrink:0` 防止被壓縮
+
+---
+
 ## v0.28.0 - 2026-05-18
 
 ### 修復
