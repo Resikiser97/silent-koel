@@ -84,6 +84,9 @@ const gameState = {
     forceMode: null,
     orientation: 'landscape',
     mobileInput: { dx: 0, dy: 0 },
+    gameStarted: false,
+    lastDifficulty: 'easy',
+    playAgainWarned: false,
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 

@@ -113,16 +113,54 @@ function showVictory() {
         btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(); };
         overlay.appendChild(btnTree);
         const vBtnRow = document.createElement('div');
-        vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;';
+        vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;flex-wrap:wrap;justify-content:center;';
+        const vWarnEl = document.createElement('div');
+        vWarnEl.style.cssText = 'display:none;font-size:13px;color:#f80;margin-bottom:8px;text-align:center;width:100%;';
+        vBtnRow.appendChild(vWarnEl);
         const vHomeBtn = document.createElement('button');
         vHomeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        vHomeBtn.textContent = t('backHome');
-        vHomeBtn.onclick = () => location.reload();
+        vHomeBtn.textContent = t('btnSaveAndHome');
+        vHomeBtn.onclick = () => {
+            let hasOrgans = false;
+            try {
+                const so = localStorage.getItem('savedOrgans');
+                hasOrgans = !!so && JSON.parse(so).length > 0;
+            } catch(e) {}
+            if (!hasOrgans) {
+                const warn = document.createElement('div');
+                warn.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(180,40,0,0.95);color:white;font-size:16px;font-weight:bold;padding:20px 28px;border-radius:10px;z-index:9999;text-align:center;pointer-events:none;';
+                const line1 = document.createElement('div');
+                line1.textContent = t('warnNoOrganLine1');
+                const line2 = document.createElement('div');
+                line2.style.cssText = 'font-size:13px;margin-top:8px;color:#ffd;';
+                line2.textContent = t('warnNoOrganLine2');
+                warn.appendChild(line1);
+                warn.appendChild(line2);
+                document.getElementById('game-container').appendChild(warn);
+                setTimeout(() => { warn.remove(); }, 3000);
+                return;
+            }
+            location.reload();
+        };
         vBtnRow.appendChild(vHomeBtn);
         const vPlayAgainBtn = document.createElement('button');
         vPlayAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
         vPlayAgainBtn.textContent = t('playAgain');
-        vPlayAgainBtn.onclick = () => { sessionStorage.setItem('autostart', '1'); location.reload(); };
+        vPlayAgainBtn.onclick = () => {
+            let hasOrgans = false;
+            try {
+                const so = localStorage.getItem('savedOrgans');
+                hasOrgans = !!so && JSON.parse(so).length > 0;
+            } catch(e) {}
+            if (!hasOrgans && !gameState.playAgainWarned) {
+                gameState.playAgainWarned = true;
+                vWarnEl.textContent = t('warnNoOrganPlay');
+                vWarnEl.style.display = 'block';
+                return;
+            }
+            sessionStorage.setItem('autostart', '1');
+            location.reload();
+        };
         vBtnRow.appendChild(vPlayAgainBtn);
         overlay.appendChild(vBtnRow);
         const vFooter = document.createElement('div');

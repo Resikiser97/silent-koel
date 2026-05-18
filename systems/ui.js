@@ -297,7 +297,8 @@ function _renderMobileOverlay() {
 let _joyDocListeners = null;
 
 function _joyPaused() {
-    return gameState.organSelectionActive || gameState.settingsOpen ||
+    return !gameState.gameStarted ||
+           gameState.organSelectionActive || gameState.settingsOpen ||
            gameState.skillTreeOpen || gameState.gameOver || gameState.victory;
 }
 
@@ -1047,6 +1048,7 @@ function _buildSettingsSection(title) {
 }
 
 function showSettings(fromHome) {
+    applyDeviceMode();
     if (document.getElementById('settings-overlay')) return;
     gameState.settingsOpen = true;
 
@@ -1406,6 +1408,7 @@ function devToggleDayNight() {
 let _guideKeyHandler = null;
 
 function showGuide(startPage) {
+    applyDeviceMode();
     if (document.getElementById('guide-overlay')) return;
     const TOTAL = 4;
     let cur = Math.min(Math.max(0, startPage || 0), TOTAL - 1);
@@ -1588,6 +1591,7 @@ function hideGuide() {
 // =============================================================
 
 function showMapSelect() {
+    applyDeviceMode();
     const prev = document.getElementById('start-screen');
     if (prev) prev.remove();
 
@@ -1689,8 +1693,18 @@ function showMapSelect() {
     startBtn.onclick = () => {
         const selDiff = diffs.find(d => d.id === selectedDiff);
         gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
+        gameState.lastDifficulty = selectedDiff;
         overlay.remove();
-        initializeGame();
+        let hasOrgans = false;
+        try {
+            const so = localStorage.getItem('savedOrgans');
+            hasOrgans = !!so && JSON.parse(so).length > 0;
+        } catch(e) {}
+        if (hasOrgans) {
+            initializeGame();
+        } else {
+            buildSkillTreeOverlay(null, false, true);
+        }
     };
     btnRow.appendChild(startBtn);
     overlay.appendChild(btnRow);
@@ -1699,6 +1713,7 @@ function showMapSelect() {
 }
 
 function showStartScreen() {
+    applyDeviceMode();
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
         initializeGame();
@@ -1793,12 +1808,13 @@ function showStartScreen() {
 }
 
 function showLeaderboard() {
+    applyDeviceMode();
     let currentPage = 1;
     const PAGE_SIZE = 20;
 
     const overlay = document.createElement('div');
     overlay.id = 'leaderboard-overlay';
-    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;z-index:300;color:white;font-family:Arial,sans-serif;overflow:hidden;';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;z-index:500;color:white;font-family:Arial,sans-serif;overflow:hidden;';
 
     const titleEl = document.createElement('div');
     titleEl.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;margin:20px 0 12px;';
@@ -1844,7 +1860,7 @@ function showLeaderboard() {
     pagingBar.appendChild(nextBtn);
 
     const closeBtn = document.createElement('button');
-    closeBtn.style.cssText = 'background:rgba(180,0,0,0.4);border:1px solid #aa4444;color:white;padding:6px 20px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:20px;';
+    closeBtn.style.cssText = 'background:rgba(180,0,0,0.4);border:1px solid #aa4444;color:white;padding:6px 20px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:20px;pointer-events:all;';
     closeBtn.textContent = t('close');
     pagingBar.appendChild(closeBtn);
     overlay.appendChild(pagingBar);

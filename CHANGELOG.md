@@ -2,6 +2,21 @@
 
 ---
 
+## v0.28.0 - 2026-05-18
+
+### 修復
+- **豎向手機模式開始畫面未縮放**（`systems/ui.js`、`systems/evolution.js`）：`showStartScreen()`、`showMapSelect()`、`showSettings()`、`showGuide()`、`showLeaderboard()`、`buildSkillTreeOverlay(fromHome/startAfter)` 開頭均加入 `applyDeviceMode()`，確保所有畫面都正確套用手機縮放
+- **非遊戲畫面出現虛擬搖桿**（`systems/gameState.js`、`main.js`、`systems/ui.js`）：新增 `gameState.gameStarted` 旗標（預設 `false`），`initializeGame()` 時設為 `true`；`_joyPaused()` 加入 `!gameState.gameStarted` 判斷，首頁/技能樹/設定等畫面搖桿不再出現
+- **排行榜被搖桿層遮住無法點擊**（`systems/ui.js`）：排行榜 overlay z-index 從 300 提升至 500，關閉按鈕加上 `pointer-events:all`
+
+### 新增
+- **開始流程加入技能樹前置**（`systems/ui.js`、`systems/evolution.js`）：難度與角色選擇頁的「開始遊戲 →」按鈕，若 `savedOrgans` 為空則強制先進入技能樹；技能樹此模式底部僅顯示「開始遊戲 →」按鈕，點擊後才真正啟動遊戲；有器官資料則直接開始
+- **結算畫面兩顆按鈕**（`systems/evolution.js`、`systems/boss.js`、`lang/zh-TW.js`、`lang/en.js`）：死亡/逾時技能樹畫面與勝利畫面底部改為「💾 保存並返回首頁」+「⚔️ 再來一場」；未選器官點「保存並返回」時顯示 3 秒警告橫幅；「再來一場」第一次點擊在未選器官時顯示確認提示，第二次才真正開始（透過 `gameState.playAgainWarned` 追蹤）
+- 新增 `gameState.lastDifficulty` 記錄上局難度、`gameState.playAgainWarned` 追蹤是否已提醒
+- 新增語言 key：`btnSaveAndHome`、`warnNoOrganLine1`、`warnNoOrganLine2`、`warnNoOrganPlay`（中英文）
+
+---
+
 ## v0.27.1 - 2026-05-18
 
 ### 新增
