@@ -2,6 +2,13 @@
 
 ---
 
+## v0.28.2 - 2026-05-18
+
+### 修復
+- **死亡後不出現分數上傳彈窗**（`systems/evolution.js`）：`showSkillTree()` 原本直接呼叫 `buildSkillTreeOverlay(cause)`，完全跳過了分數提交流程；修復為先呼叫 `showScoreSubmitPopup(false, null, () => buildSkillTreeOverlay(cause))`，與勝利畫面的流程一致；開發者模式下仍直接跳過
+
+---
+
 ## v0.28.1 - 2026-05-18
 
 ### 修復

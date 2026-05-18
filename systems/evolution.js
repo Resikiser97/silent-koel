@@ -113,7 +113,11 @@ function showSkillTree(cause) {
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     localStorage.removeItem('savedOrgans');
     localStorage.removeItem('savedHiddenOrgans');
-    buildSkillTreeOverlay(cause);
+    if (gameState.devModeUsed) {
+        buildSkillTreeOverlay(cause);
+    } else {
+        showScoreSubmitPopup(false, null, () => buildSkillTreeOverlay(cause));
+    }
 }
 
 function buildSkillTreeOverlay(cause, fromHome, startAfter) {
