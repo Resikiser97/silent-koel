@@ -42,6 +42,12 @@ function updateGameLogic() {
     checkTreasureCollision();
     updateCorpseEating();
     updateMinimapFog();
+
+    if (gameState.settings.autoAttack &&
+        !_joyPaused() &&
+        gameState.player.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack')) {
+        playerAttack();
+    }
 }
 
 function gameLoop(timestamp) {

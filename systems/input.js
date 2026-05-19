@@ -28,6 +28,13 @@ function handleKeyDown(e) {
         e.preventDefault();
         if (!gameState.organSelectionActive && !gameState.settingsOpen) playerAttack();
     }
+    if (key === 'z') {
+        if (!gameState.organSelectionActive && !gameState.settingsOpen &&
+            !gameState.skillTreeOpen && !gameState.gameOver && !gameState.victory) {
+            gameState.settings.autoAttack = !gameState.settings.autoAttack;
+            saveSettings();
+        }
+    }
     gameState.devInput = (gameState.devInput + e.key).slice(-8);
     if (gameState.devInput === '77777778') toggleDevMode();
 }

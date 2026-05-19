@@ -182,22 +182,24 @@ let _atkFeedbackX    = 0;
 let _atkFeedbackY    = 0;
 
 function _joyZone(x, y) {
-    const vw = window.innerWidth, vh = window.innerHeight;
-    if (gameState.orientation === 'landscape') return x > vw * 0.7 && y > vh * 0.2 && y < vh * 0.8;
-    return x > vw / 2 && y > vh * 0.6;
+    return !_attackZone(x, y);
 }
 
 function _getAttackBtnPos() {
     const vw = window.innerWidth, vh = window.innerHeight;
-    return { x: vw / 4, y: vh * 0.6 + (vh * 0.4) / 2 };
+    if (gameState.orientation === 'landscape') {
+        return { x: vw * 0.875, y: vh * 0.75 };
+    }
+    return { x: vw * 0.75, y: vh * 0.875 };
 }
 
 function _attackZone(x, y) {
+    if (gameState.settings.autoAttack) return false;
     const vw = window.innerWidth, vh = window.innerHeight;
-    if (gameState.orientation === 'landscape') return x < vw * 0.3 && y > vh * 0.2 && y < vh * 0.8;
-    const btn = _getAttackBtnPos();
-    const dx = x - btn.x, dy = y - btn.y;
-    return Math.sqrt(dx * dx + dy * dy) < ATK_RADIUS + 10;
+    if (gameState.orientation === 'landscape') {
+        return x >= vw * 0.75 && y >= vh * 0.5;
+    }
+    return x >= vw * 0.5 && y >= vh * 0.75;
 }
 
 function _renderMobileOverlay() {
@@ -206,25 +208,29 @@ function _renderMobileOverlay() {
     const jctx = jc.getContext('2d');
     jctx.clearRect(0, 0, jc.width, jc.height);
     const vw = window.innerWidth, vh = window.innerHeight;
+    const autoAtk = gameState.settings.autoAttack;
 
     if (gameState.orientation === 'landscape') {
-        const midY = vh * 0.5, zoneY1 = vh * 0.2, zoneY2 = vh * 0.8;
-
-        // ── 攻擊區：淡邊框 + ⚔️ 提示（透明度 0.1）
+        // ── 攻擊區圖示（自動攻擊：⚔️ 自動 32px；一般：⚔️ 60px）
+        const atkCX = vw * 0.875, atkCY = vh * 0.75;
         jctx.save();
-        jctx.strokeStyle = 'rgba(255,255,255,0.1)';
-        jctx.lineWidth = 1;
-        jctx.strokeRect(2, zoneY1 + 2, vw * 0.3 - 4, zoneY2 - zoneY1 - 4);
-        jctx.globalAlpha = 0.1;
-        jctx.font = '60px Arial';
+        jctx.globalAlpha = 0.25;
         jctx.textAlign = 'center';
         jctx.textBaseline = 'middle';
         jctx.fillStyle = 'white';
-        jctx.fillText('⚔️', vw * 0.15, midY);
+        if (autoAtk) {
+            jctx.globalAlpha = 0.2;
+            jctx.font = '32px Arial';
+            jctx.fillText('⚔️ 自動', atkCX, atkCY);
+        } else {
+            jctx.globalAlpha = 0.2;
+            jctx.font = '60px Arial';
+            jctx.fillText('⚔️', atkCX, atkCY);
+        }
         jctx.restore();
 
-        // ── 攻擊點擊回饋（0.3 秒淡出 ⚔️）
-        if (_atkFeedbackTime > 0 && Date.now() - _atkFeedbackTime < 300) {
+        // ── 攻擊點擊回饋（0.3 秒淡出 ⚔️，自動攻擊時不顯示）
+        if (!autoAtk && _atkFeedbackTime > 0 && Date.now() - _atkFeedbackTime < 300) {
             const alpha = (1 - (Date.now() - _atkFeedbackTime) / 300) * 0.85;
             jctx.save();
             jctx.globalAlpha = alpha;
@@ -234,23 +240,6 @@ function _renderMobileOverlay() {
             jctx.fillText('⚔️', _atkFeedbackX, _atkFeedbackY);
             jctx.restore();
         }
-
-        // ── 搖桿區：淡邊框 + 圓形提示（透明度 0.1）
-        jctx.save();
-        jctx.strokeStyle = 'rgba(255,255,255,0.1)';
-        jctx.lineWidth = 1;
-        jctx.strokeRect(vw * 0.7 + 2, zoneY1 + 2, vw * 0.3 - 4, zoneY2 - zoneY1 - 4);
-        jctx.globalAlpha = 0.1;
-        jctx.beginPath();
-        jctx.arc(vw * 0.85, midY, JOY_OUTER, 0, Math.PI * 2);
-        jctx.strokeStyle = 'white';
-        jctx.lineWidth = 2;
-        jctx.stroke();
-        jctx.beginPath();
-        jctx.arc(vw * 0.85, midY, JOY_INNER, 0, Math.PI * 2);
-        jctx.fillStyle = 'white';
-        jctx.fill();
-        jctx.restore();
 
         // ── 動態搖桿（啟用時）
         if (_joyActive) {
@@ -265,21 +254,22 @@ function _renderMobileOverlay() {
             jctx.fill();
         }
     } else {
-        // ── 直向：攻擊圓形按鈕
-        const btn = _getAttackBtnPos();
+        // ── 直向：攻擊區圖示
+        const atkCX = vw * 0.75, atkCY = vh * 0.875;
         jctx.save();
-        jctx.beginPath();
-        jctx.arc(btn.x, btn.y, ATK_RADIUS, 0, Math.PI * 2);
-        jctx.fillStyle = 'rgba(255,255,255,0.18)';
-        jctx.fill();
-        jctx.strokeStyle = 'rgba(255,255,255,0.45)';
-        jctx.lineWidth = 2;
-        jctx.stroke();
-        jctx.font = '26px Arial';
+        jctx.globalAlpha = 0.25;
         jctx.textAlign = 'center';
         jctx.textBaseline = 'middle';
         jctx.fillStyle = 'white';
-        jctx.fillText('⚔️', btn.x, btn.y);
+        if (autoAtk) {
+            jctx.globalAlpha = 0.2;
+            jctx.font = '32px Arial';
+            jctx.fillText('⚔️ 自動', atkCX, atkCY);
+        } else {
+            jctx.globalAlpha = 0.2;
+            jctx.font = '60px Arial';
+            jctx.fillText('⚔️', atkCX, atkCY);
+        }
         jctx.restore();
 
         // ── 直向：搖桿（動態位置）
@@ -827,10 +817,23 @@ function drawGame() {
         ctx.restore();
     }
 
-    // 12. 繪製小地圖
+    // 12. 電腦版自動攻擊指示器（畫面正中央，透明度 0.25）
+    if (!gameState.isMobile && gameState.settings.autoAttack &&
+        gameState.gameStarted && !gameState.gameOver && !gameState.victory) {
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = 'white';
+        ctx.font = '100px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⚔️ 自動', VIEW_W / 2, VIEW_H / 2);
+        ctx.restore();
+    }
+
+    // 13. 繪製小地圖
     drawMinimap();
 
-    // 13. 手機疊加層每幀刷新（支援攻擊回饋淡出動畫）
+    // 14. 手機疊加層每幀刷新（支援攻擊回饋淡出動畫）
     if (gameState.isMobile) _renderMobileOverlay();
 }
 
@@ -1001,6 +1004,9 @@ function loadSettings() {
             }
             if (parsed.deviceMode !== undefined) {
                 gameState.settings.deviceMode = parsed.deviceMode;
+            }
+            if (parsed.autoAttack !== undefined) {
+                gameState.settings.autoAttack = parsed.autoAttack;
             }
         }
     } catch(e) {}
@@ -1221,7 +1227,41 @@ function showSettings(fromHome) {
         row.appendChild(btn);
         keySec.appendChild(row);
     });
-    panel.appendChild(keySec);
+    keySec.style.cssText = keySec.style.cssText + 'width:65%;box-sizing:border-box;margin-bottom:0;flex-shrink:0;';
+
+    // ─── 輔助功能 ───
+    const accSec = _buildSettingsSection(t('sectionAccessibility'));
+    accSec.style.cssText = accSec.style.cssText + 'flex:1;box-sizing:border-box;margin-bottom:0;';
+
+    const aaRow = document.createElement('div');
+    aaRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const aaTog = document.createElement('button');
+    aaTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshAaTog = () => {
+        const on = gameState.settings.autoAttack;
+        aaTog.textContent = on ? t('on') : t('off');
+        aaTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshAaTog();
+    aaTog.onclick = () => { gameState.settings.autoAttack = !gameState.settings.autoAttack; refreshAaTog(); saveSettings(); };
+    const aaLbl = document.createElement('div');
+    aaLbl.style.cssText = 'font-size:13px;';
+    aaLbl.textContent = t('autoAttack');
+    aaRow.appendChild(aaTog);
+    aaRow.appendChild(aaLbl);
+    accSec.appendChild(aaRow);
+    if (!gameState.isMobile) {
+        const aaHint = document.createElement('div');
+        aaHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;';
+        aaHint.textContent = t('autoAttackHint');
+        accSec.appendChild(aaHint);
+    }
+
+    const keyAccWrapper = document.createElement('div');
+    keyAccWrapper.style.cssText = 'display:flex;flex-direction:row;gap:8px;margin-bottom:14px;';
+    keyAccWrapper.appendChild(keySec);
+    keyAccWrapper.appendChild(accSec);
+    panel.appendChild(keyAccWrapper);
 
     // ─── 裝置模式 ───
     const deviceSec = _buildSettingsSection(t('sectionDevice'));
@@ -1476,43 +1516,33 @@ function showGuide(startPage) {
         if (_effectiveMobile()) {
             const left = '<div style="flex:1;padding-right:12px;border-right:1px solid #444;">'
                 + _sec(t('guideBasicTitle'))
-                + _ln(t('guideMobileMove'))
-                + _ln(t('guideMobileAttack'))
+                + _ln(t('guideMobileMove2'))
+                + _ln(t('guideMobileAttackZone'))
                 + _ln(t('guideMobileSettings'))
                 + _ln(t('guideFruit'))
                 + _ln(t('guideGoal'))
+                + _ln(t('guideAutoAttack'))
                 + '</div>';
-            const landscapeDiagram =
-                '<div style="position:relative;width:144px;height:80px;background:#1a1a2e;border:1px solid #555;border-radius:4px;overflow:hidden;margin:5px 0 10px 0;">'
-                + '<div style="position:absolute;left:0;top:0;width:30%;height:100%;background:rgba(200,50,50,0.35);display:flex;align-items:center;justify-content:center;font-size:15px;">⚔️</div>'
-                + '<div style="position:absolute;right:0;top:0;width:30%;height:100%;background:rgba(50,100,200,0.35);display:flex;align-items:center;justify-content:center;">'
-                +   '<div style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.55);background:rgba(255,255,255,0.12);"></div>'
-                + '</div>'
-                + '<div style="position:absolute;bottom:3px;left:0;width:30%;text-align:center;font-size:8px;color:rgba(255,255,255,0.7);">攻擊區</div>'
-                + '<div style="position:absolute;bottom:3px;right:0;width:30%;text-align:center;font-size:8px;color:rgba(255,255,255,0.7);">搖桿區</div>'
-                + '</div>';
-            const portraitDiagram =
-                '<div style="position:relative;width:90px;height:108px;background:#1a1a2e;border:1px solid #555;border-radius:4px;overflow:hidden;margin-top:5px;">'
-                + '<div style="position:absolute;top:0;left:0;width:100%;height:60%;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #555;">'
-                +   '<span style="font-size:8px;color:rgba(255,255,255,0.5);">遊戲畫面</span>'
-                + '</div>'
-                + '<div style="position:absolute;bottom:0;left:0;width:50%;height:40%;background:rgba(200,50,50,0.35);display:flex;flex-direction:column;align-items:center;justify-content:center;">'
-                +   '<div style="font-size:11px;">⚔️</div>'
-                +   '<div style="font-size:8px;color:rgba(255,255,255,0.8);">攻擊</div>'
-                + '</div>'
-                + '<div style="position:absolute;bottom:0;right:0;width:50%;height:40%;background:rgba(50,100,200,0.35);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">'
-                +   '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.55);background:rgba(255,255,255,0.12);"></div>'
-                +   '<div style="font-size:8px;color:rgba(255,255,255,0.8);">搖桿</div>'
-                + '</div>'
-                + '</div>';
+            // 手機示意圖：直向比例（高25% 寬50% 攻擊區）
+            const _isZhTW = gameState.language === 'zh-TW';
+            const lblMove = _isZhTW ? '移動區' : 'Move';
+            const lblAtk  = _isZhTW ? '攻擊區' : 'Attack';
+            const mobileDiagram =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="110" height="160" style="display:block;margin:0 auto 10px;">'
+                // 手機外框
+                + '<rect x="5" y="5" width="100" height="150" rx="10" ry="10" fill="#1a1a2e" stroke="#555" stroke-width="1.5"/>'
+                // 移動區（全螢幕淡藍色）
+                + '<rect x="8" y="8" width="94" height="144" rx="7" ry="7" fill="rgba(50,100,200,0.25)"/>'
+                + '<text x="55" y="60" text-anchor="middle" font-size="9" fill="rgba(100,160,255,0.85)">' + _escH(lblMove) + '</text>'
+                // 攻擊區（右下角：右50% × 下25%）
+                + '<rect x="57" y="116" width="45" height="36" rx="4" ry="4" fill="rgba(200,60,60,0.45)" stroke="rgba(255,100,100,0.55)" stroke-width="1"/>'
+                + '<text x="79" y="131" text-anchor="middle" font-size="11" fill="white">⚔️</text>'
+                + '<text x="79" y="146" text-anchor="middle" font-size="7" fill="rgba(255,200,200,0.9)">' + _escH(lblAtk) + '</text>'
+                + '</svg>';
             const right = '<div style="flex:1;padding-left:12px;overflow:hidden;">'
                 + _sec(t('guideTouchTitle'))
-                + '<div style="font-size:13px;color:#FFD700;margin-bottom:2px;">' + _escH(t('guideLandscape')) + '</div>'
-                + '<div style="font-size:11px;color:#bbb;margin-bottom:2px;">' + _escH(t('guideLandscapeDesc')) + '</div>'
-                + landscapeDiagram
-                + '<div style="font-size:13px;color:#FFD700;margin-bottom:2px;">' + _escH(t('guidePortrait')) + '</div>'
-                + '<div style="font-size:11px;color:#bbb;margin-bottom:2px;">' + _escH(t('guidePortraitDesc')) + '</div>'
-                + portraitDiagram
+                + mobileDiagram
+                + '<div style="font-size:11px;color:#bbb;margin-top:4px;">' + _escH(t('guidePortraitDesc')) + '</div>'
                 + '</div>';
             return '<div style="display:flex;gap:0;">' + left + right + '</div>';
         }
@@ -1521,7 +1551,8 @@ function showGuide(startPage) {
             + _ln(t('guideAttack'))
             + _ln(t('guideSettings'))
             + _ln(t('guideFruit'))
-            + _ln(t('guideGoal'));
+            + _ln(t('guideGoal'))
+            + _ln(t('guideAutoAttack'));
     }
 
     function buildPage1() {

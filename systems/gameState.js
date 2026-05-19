@@ -6,7 +6,8 @@ const DEFAULT_SETTINGS = {
     language: 'zh-TW',
     volume: { master: 80, music: 70, sfx: 80, masterOn: true, musicOn: true, sfxOn: true },
     keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ' },
-    deviceMode: null
+    deviceMode: null,
+    autoAttack: false
 };
 
 const gameState = {

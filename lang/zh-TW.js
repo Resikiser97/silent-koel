@@ -58,6 +58,9 @@ LANG['zh-TW'] = {
         sectionKeys:     '按鍵設定',
         sectionOther:    '其他設定',
         sectionDevice:   '裝置模式',
+        sectionAccessibility: '輔助功能',
+        autoAttack:      '自動攻擊',
+        autoAttackHint:  'Z 鍵切換',
         deviceAuto:      '自動偵測',
         deviceMobile:    '📱 手機模式',
         deviceDesktop:   '🖥️ 電腦模式',
@@ -167,9 +170,12 @@ LANG['zh-TW'] = {
         guideSettings: '設定：Esc / ⚙️ 按鈕',
         guideFruit: '吃果子：走過去自動吃',
         guideGoal: '目標：10分鐘內擊敗最終Boss',
+        guideAutoAttack: '⚔️ 自動攻擊：Z 鍵切換（需有攻擊器官）',
         // 第1頁 手機左半
         guideMobileMove: '移動：搖桿',
+        guideMobileMove2: '📱 全螢幕任意位置拖動即可移動',
         guideMobileAttack: '攻擊：點擊攻擊區',
+        guideMobileAttackZone: '⚔️ 右下角區域為攻擊區，點擊攻擊',
         guideMobileSettings: '設定：⚙️ 按鈕',
         // 第1頁 手機右半
         guideTouchTitle: '觸控操作',

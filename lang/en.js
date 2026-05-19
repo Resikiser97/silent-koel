@@ -56,6 +56,9 @@ LANG['en'] = {
         sectionKeys:     'Key Bindings',
         sectionOther:    'Other',
         sectionDevice:   'Device Mode',
+        sectionAccessibility: 'Accessibility',
+        autoAttack:      'Auto Attack',
+        autoAttackHint:  'Z key to toggle',
         deviceAuto:      'Auto Detect',
         deviceMobile:    '📱 Mobile',
         deviceDesktop:   '🖥️ Desktop',
@@ -158,9 +161,12 @@ LANG['en'] = {
         guideSettings: 'Settings: Esc / ⚙️ Button',
         guideFruit: 'Eat Fruit: Walk over to collect',
         guideGoal: 'Goal: Defeat the final Boss within 10 minutes',
+        guideAutoAttack: '⚔️ Auto Attack: Z key to toggle (requires attack organ)',
         // Page 1 Mobile left
         guideMobileMove: 'Move: Joystick',
+        guideMobileMove2: '📱 Drag anywhere on screen to move',
         guideMobileAttack: 'Attack: Tap attack zone',
+        guideMobileAttackZone: '⚔️ Bottom-right area is the attack zone',
         guideMobileSettings: 'Settings: ⚙️ Button',
         // Page 1 Mobile right
         guideTouchTitle: 'Touch Controls',
