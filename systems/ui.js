@@ -302,6 +302,24 @@ function _attachJoystickListeners() {
         if (_joyPaused()) return;
         let handled = false;
         for (const touch of e.changedTouches) {
+            const topEl = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (topEl && topEl.id !== 'gameCanvas' && topEl.id !== 'joystick-canvas') continue;
+
+            // 器官 tooltip（gameCanvas 觸碰需先換算 canvas 座標）
+            if (topEl && topEl.id === 'gameCanvas' && _organHitRegions.length) {
+                const rect = topEl.getBoundingClientRect();
+                const canvasX = (touch.clientX - rect.left) / rect.width  * topEl.width;
+                const canvasY = (touch.clientY - rect.top)  / rect.height * topEl.height;
+                const hit = _organHitRegions.find(
+                    r => canvasX >= r.x && canvasX <= r.x + r.w && canvasY >= r.y && canvasY <= r.y + r.h
+                );
+                if (hit) {
+                    showTooltip(hit.data, touch.clientX, touch.clientY);
+                    setTimeout(hideTooltip, 500);
+                    continue;
+                }
+            }
+
             const x = touch.clientX, y = touch.clientY;
 
             // 攻擊區

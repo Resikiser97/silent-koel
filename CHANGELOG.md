@@ -2,6 +2,20 @@
 
 ---
 
+## v0.30.2 - 2026-05-20
+
+### 修復
+- **手機版器官 tooltip 無法觸發**（`systems/ui.js`）：`onStart` handler 在確認觸點落在 `gameCanvas` 後，換算 canvas 內部座標並比對 `_organHitRegions`，命中時呼叫 `showTooltip()` 並以 `setTimeout 500ms` 自動 `hideTooltip()`，然後 `continue` 不啟動搖桿，修復全螢幕模式下左下角器官區域觸碰無法顯示 tooltip 的問題
+
+---
+
+## v0.30.1 - 2026-05-20
+
+### 修復
+- **全螢幕搖桿攔截 HTML UI 點擊**（`systems/ui.js`）：`_attachJoystickListeners()` 的 `onStart` handler 在 for 迴圈開頭以 `document.elementFromPoint()` 判斷觸點目標，若不是 `gameCanvas` 或 `joystick-canvas` 則 `continue`，確保齒輪、小地圖、overlay 按鈕等 HTML UI 元素的 touch 事件不被搖桿邏輯攔截，修復全螢幕模式下按鈕無法點擊的問題
+
+---
+
 ## v0.30.0 - 2026-05-19
 
 ### 新增
