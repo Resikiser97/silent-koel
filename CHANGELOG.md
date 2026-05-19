@@ -2,6 +2,19 @@
 
 ---
 
+## v0.30.0 - 2026-05-19
+
+### 新增
+- **全螢幕移動區域**（`systems/ui.js`）：`_joyZone()` 改為 `!_attackZone(x, y)`，手機版非攻擊區的任意位置均可作為搖桿起始點
+- **攻擊區重構為右下角矩形**（`systems/ui.js`）：直向為右50%×下25%、橫向為右25%×下50%；`_getAttackBtnPos()` 回傳矩形正中心；視覺改為 ⚔️ 置中、透明度 0.2、無邊框
+- **自動攻擊功能**（`systems/gameState.js`、`systems/ui.js`、`main.js`、`systems/input.js`）：`DEFAULT_SETTINGS` 新增 `autoAttack: false`；遊戲主迴圈每幀偵測條件自動呼叫 `playerAttack()`；`Z` 鍵可即時切換並存檔
+- **設定介面輔助功能區塊**（`systems/ui.js`）：按鍵設定縮至65%寬，旁邊新增35%「輔助功能」區塊，內含自動攻擊 ON/OFF toggle；電腦版顯示「Z 鍵切換」提示
+- **⚔️ 自動指示器**（`systems/ui.js`）：自動攻擊開啟時，手機版在攻擊區中心顯示「⚔️ 自動」32px；電腦版在畫布正中央顯示「⚔️ 自動」100px；透明度均為 0.2
+- **遊戲說明第一頁更新**（`systems/ui.js`）：電腦版加入自動攻擊說明；手機版左欄更新移動/攻擊說明並加入自動攻擊，右欄改為 SVG 手機示意圖（移動區/攻擊區，支援中英文）
+- **語言 key 新增**（`lang/zh-TW.js`、`lang/en.js`）：`sectionAccessibility`、`autoAttack`、`autoAttackHint`、`guideAutoAttack`、`guideMobileMove2`、`guideMobileAttackZone`
+
+---
+
 ## v0.29.5 - 2026-05-19
 
 ### 修復
