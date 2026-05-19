@@ -2,6 +2,13 @@
 
 ---
 
+## v0.29.3 - 2026-05-19
+
+### 修復
+- **resumePlayTimer 初始條件導致計時器未啟動**（`main.js`）：移除 `if (gameState._playTimerPaused)` 條件判斷，改為無條件設定 `_playTimerStart`，修復遊戲開始時計時器因 `_playTimerPaused` 初始值為 `false` 而未啟動的問題
+
+---
+
 ## v0.29.2 - 2026-05-19
 
 ### 新增

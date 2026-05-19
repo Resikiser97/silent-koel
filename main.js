@@ -17,10 +17,8 @@ function pausePlayTimer() {
 }
 
 function resumePlayTimer() {
-    if (gameState._playTimerPaused) {
-        gameState._playTimerStart = Date.now();
-        gameState._playTimerPaused = false;
-    }
+    gameState._playTimerStart = Date.now();
+    gameState._playTimerPaused = false;
 }
 
 function isGamePaused() {
