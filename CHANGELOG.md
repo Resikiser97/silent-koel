@@ -2,6 +2,13 @@
 
 ---
 
+## v0.29.2 - 2026-05-19
+
+### 新增
+- **小地圖真實遊玩時間顯示**（`index.html`、`systems/ui.js`）：在小地圖 `#minimap-info` 的生態系 span 後新增 `#minimap-playtime`，每幀將 `gameState.realPlayTime`（毫秒）換算為 `mm:ss` 格式即時顯示於小地圖資訊欄
+
+---
+
 ## v0.29.1 - 2026-05-19
 
 ### 修改
