@@ -112,8 +112,10 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - `getOrientation()` — `innerHeight > innerWidth` 為豎向，否則橫向
 - `applyDeviceMode()` — 同步 `gameState.forceMode/isMobile/orientation`，呼叫 `_applyMobileScale()` + `_updateJoystickCanvas()` + `_updateOrientationBar()`
 - `_applyMobileScale()` — 用 `CSS transform: scale()` 縮放 `#game-container`，**不改變內部遊戲座標**
-  - 橫向：`scale = vw / 1600`，填滿寬度
-  - 豎向：`scale = min(vw/1600, vh×0.6/900)`，保留下方 40% 給操控區
+  - 縮放比例由 `MOBILE_GAME_SCALE`（預設 0.7）控制，定義在 `_applyMobileScale()` 上方
+  - 橫向：`logicW = round(1600 × MOBILE_GAME_SCALE)`，`logicH = round(900 × MOBILE_GAME_SCALE)`，`scale = vw / logicW`
+  - 直向：`logicW = round(900 × MOBILE_GAME_SCALE)`，`logicH = round(1600 × MOBILE_GAME_SCALE)`，`scale = vw / logicW`
+  - 調整手機畫面大小只需修改 `MOBILE_GAME_SCALE` 這一個變數，其餘系統（攝影機、生物生成、UI）自動跟著 `VIEW_W/VIEW_H` 更新
 
 ### 設定介面「裝置模式」區塊
 
