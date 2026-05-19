@@ -955,7 +955,8 @@ function updateUI() {
     if (mmTimeEl) mmTimeEl.innerText = gameState.stats.timeStatus;
     const mmPlaytimeEl = document.getElementById('minimap-playtime');
     if (mmPlaytimeEl) {
-        const rpt = gameState.realPlayTime || 0;
+        const rpt = (gameState.realPlayTime || 0) +
+            (gameState._playTimerStart ? Date.now() - gameState._playTimerStart : 0);
         const rpm = String(Math.floor(rpt / 60000)).padStart(2, '0');
         const rps = String(Math.floor((rpt % 60000) / 1000)).padStart(2, '0');
         mmPlaytimeEl.innerText = '⏱ ' + rpm + ':' + rps;
