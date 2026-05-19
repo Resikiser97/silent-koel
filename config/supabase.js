@@ -29,11 +29,17 @@ async function submitScore(data) {
     return supabaseQuery('leaderboard', 'POST', data);
 }
 
-async function fetchLeaderboard(page = 1, pageSize = 20) {
-    const offset = (page - 1) * pageSize;
+async function fetchVictoryRecords() {
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        `?select=*&order=version_order.desc,is_victory.desc,play_time.asc,boss_kill_time.asc,play_time.desc,score.desc&limit=${pageSize}&offset=${offset}`
+        '?select=*&is_victory=eq.true&order=version_order.desc,play_time.asc,boss_kill_time.asc&limit=100'
+    );
+}
+
+async function fetchDefeatRecords(limit) {
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=*&is_victory=eq.false&order=version_order.desc,play_time.desc,score.desc&limit=' + limit
     );
 }
 

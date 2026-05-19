@@ -2,6 +2,13 @@
 
 ---
 
+## v0.29.1 - 2026-05-19
+
+### 修改
+- **排行榜查詢與分頁重構**（`config/supabase.js`、`systems/ui.js`、`index.html`）：拆分原本 `fetchLeaderboard` 為 `fetchVictoryRecords()`（勝利，最多 100 筆，按 version_order.desc / play_time.asc / boss_kill_time.asc 排序）與 `fetchDefeatRecords(limit)`（失敗，按 version_order.desc / play_time.desc / score.desc 排序）；排行榜開啟時先抓勝利記錄，計算剩餘名額再抓失敗記錄，合併後存入 `allRows`；`loadPage` 改為純前端切片分頁，無翻頁 network request；`index.html` fallback 同步更新
+
+---
+
 ## v0.29.0 - 2026-05-19
 
 ### 新增

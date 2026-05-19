@@ -1815,6 +1815,7 @@ function showLeaderboard() {
     applyDeviceMode();
     let currentPage = 1;
     const PAGE_SIZE = 20;
+    let allRows = [];
 
     const overlay = document.createElement('div');
     overlay.id = 'leaderboard-overlay';
@@ -1872,42 +1873,40 @@ function showLeaderboard() {
     const rowColors = ['rgba(255,215,0,0.12)', 'rgba(192,192,192,0.12)', 'rgba(205,127,50,0.12)'];
 
     function loadPage(page) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
-        fetchLeaderboard(page, PAGE_SIZE).then(rows => {
-            tbody.innerHTML = '';
-            if (!rows || rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbError') + '</td></tr>';
-                return;
-            }
-            rows.forEach((row, i) => {
-                const rank = (page - 1) * PAGE_SIZE + i + 1;
-                const mm = String(Math.floor(row.play_time / 60)).padStart(2, '0');
-                const ss = String(row.play_time % 60).padStart(2, '0');
-                const dateStr = row.created_at ? row.created_at.slice(0, 10) : '—';
-                const result = row.is_victory ? t('lbVictory') : t('lbDefeat');
-                const rankIcon = getRankIcon(rank);
-                const tr = document.createElement('tr');
-                if (rank <= 3) tr.style.cssText = 'background:' + rowColors[rank - 1] + ';';
-                const cells = [rankIcon, row.version || '—', dateStr,
-                    row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name,
-                    mm + ':' + ss, row.score, row.level, result];
-                cells.forEach(val => {
-                    const td = document.createElement('td');
-                    td.style.cssText = 'padding:6px 8px;border-bottom:1px solid #222;';
-                    td.innerHTML = String(val);
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
+        tbody.innerHTML = '';
+        if (allRows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbError') + '</td></tr>';
+            return;
+        }
+        const start = (page - 1) * PAGE_SIZE;
+        const slice = allRows.slice(start, start + PAGE_SIZE);
+        slice.forEach((row, i) => {
+            const rank = start + i + 1;
+            const mm = String(Math.floor(row.play_time / 60)).padStart(2, '0');
+            const ss = String(row.play_time % 60).padStart(2, '0');
+            const dateStr = row.created_at ? row.created_at.slice(0, 10) : '—';
+            const result = row.is_victory ? t('lbVictory') : t('lbDefeat');
+            const rankIcon = getRankIcon(rank);
+            const tr = document.createElement('tr');
+            if (rank <= 3) tr.style.cssText = 'background:' + rowColors[rank - 1] + ';';
+            const cells = [rankIcon, row.version || '—', dateStr,
+                row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name,
+                mm + ':' + ss, row.score, row.level, result];
+            cells.forEach(val => {
+                const td = document.createElement('td');
+                td.style.cssText = 'padding:6px 8px;border-bottom:1px solid #222;';
+                td.innerHTML = String(val);
+                tr.appendChild(td);
             });
-            currentPage = page;
-            pageLabel.textContent = t('lbPageLabel').replace('{n}', page);
-            prevBtn.disabled = page <= 1;
-            prevBtn.style.opacity = page <= 1 ? '0.4' : '1';
-            nextBtn.disabled = rows.length < PAGE_SIZE;
-            nextBtn.style.opacity = rows.length < PAGE_SIZE ? '0.4' : '1';
-        }).catch(() => {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
+            tbody.appendChild(tr);
         });
+        currentPage = page;
+        const totalPages = Math.ceil(allRows.length / PAGE_SIZE);
+        pageLabel.textContent = t('lbPageLabel').replace('{n}', page);
+        prevBtn.disabled = page <= 1;
+        prevBtn.style.opacity = page <= 1 ? '0.4' : '1';
+        nextBtn.disabled = page >= totalPages;
+        nextBtn.style.opacity = page >= totalPages ? '0.4' : '1';
     }
 
     prevBtn.onclick = () => { if (currentPage > 1) loadPage(currentPage - 1); };
@@ -1941,7 +1940,21 @@ function showLeaderboard() {
     if (_lbMaxH < 900) overlay.style.height = _lbMaxH + 'px';
 
     _lbGc.appendChild(overlay);
-    loadPage(1);
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
+    fetchVictoryRecords().then(function(victoryRows) {
+        const vRows = victoryRows || [];
+        const defeatLimit = Math.max(0, 100 - vRows.length);
+        if (defeatLimit > 0) {
+            return fetchDefeatRecords(defeatLimit).then(function(defeatRows) {
+                allRows = vRows.concat(defeatRows || []);
+            });
+        }
+        allRows = vRows;
+    }).then(function() {
+        loadPage(1);
+    }).catch(function() {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
+    });
 }
 
 function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
