@@ -18,3 +18,12 @@
 2. 更新 CHANGELOG.md
 3. 更新 gameConfig.js 裡的版本號
 4. git commit
+5. 推送到 GitHub（見下方自動推送規則）
+
+## 自動推送規則（每次必須執行）
+每次完成 git commit 後，必須立刻執行以下指令推送到 GitHub：
+```
+"C:\AI\Git\bin\git.exe" -C "c:\AI\VS CODE" push origin master
+```
+推送完成後在回覆摘要裡確認「已推送到 GitHub」。
+如果推送失敗，告訴用戶錯誤原因。

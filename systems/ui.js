@@ -89,6 +89,8 @@ function _setViewSize(w, h) {
     if (co) { co.style.width = w + 'px'; co.style.height = h + 'px'; }
 }
 
+const MOBILE_GAME_SCALE = 0.7;
+
 function _applyMobileScale() {
     const container = document.getElementById('game-container');
     if (!container) return;
@@ -114,16 +116,17 @@ function _applyMobileScale() {
     document.body.style.height   = vh + 'px';
     document.body.style.overflow = 'hidden';
 
-    let logicW, scale;
+    let logicW, logicH, scale;
     if (gameState.orientation === 'landscape') {
-        logicW = 1600;
-        scale  = vw / 1600;
+        logicW = Math.round(1600 * MOBILE_GAME_SCALE);
+        logicH = Math.round(900  * MOBILE_GAME_SCALE);
+        scale  = vw / logicW;
     } else {
-        // 直向：1000×900 邏輯解析度，縮放填滿螢幕寬度
-        logicW = 1000;
-        scale  = vw / 1000;
+        logicW = Math.round(900  * MOBILE_GAME_SCALE);
+        logicH = Math.round(1600 * MOBILE_GAME_SCALE);
+        scale  = vw / logicW;
     }
-    _setViewSize(logicW, 900);
+    _setViewSize(logicW, logicH);
     container.style.position        = 'absolute';
     container.style.left            = '0px';
     container.style.top             = '0px';
