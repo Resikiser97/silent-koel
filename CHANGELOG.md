@@ -2,6 +2,13 @@
 
 ---
 
+## v0.29.5 - 2026-05-19
+
+### 修復
+- **minimap-playtime 改為緊貼生態顯示**（`index.html`）：`#minimap-info` 的 `justify-content` 從 `space-between` 改為 `flex-start`，使生態系與遊玩時間緊靠左側；右側時間 span 加上 `margin-left:auto` 維持靠右對齊
+
+---
+
 ## v0.29.4 - 2026-05-19
 
 ### 修復
