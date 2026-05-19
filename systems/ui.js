@@ -1996,7 +1996,7 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             name: name,
             score: Math.floor(gameState.stats.xpCurrent),
             level: Math.floor(gameState.player.level),
-            play_time: Math.floor(600 - gameState.timeRemaining),
+            play_time: Math.floor(gameState.realPlayTime / 1000),
             is_victory: isVictory,
             boss_kill_time: bossKillTime !== null && bossKillTime !== undefined ? Math.floor(bossKillTime) : null,
             version: GAME_INFO.version,

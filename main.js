@@ -6,6 +6,22 @@ const FIXED_FPS = 60;
 const FIXED_DELTA = 1000 / FIXED_FPS;
 let accumulator = 0;
 let lastTimestamp = 0;
+let _wasPaused = false;
+
+function pausePlayTimer() {
+    if (gameState._playTimerStart !== null) {
+        gameState.realPlayTime += Date.now() - gameState._playTimerStart;
+        gameState._playTimerStart = null;
+    }
+    gameState._playTimerPaused = true;
+}
+
+function resumePlayTimer() {
+    if (gameState._playTimerPaused) {
+        gameState._playTimerStart = Date.now();
+        gameState._playTimerPaused = false;
+    }
+}
 
 function isGamePaused() {
     return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen || gameState.gameOver || gameState.victory;
@@ -36,8 +52,13 @@ function gameLoop(timestamp) {
     lastTimestamp = timestamp;
     accumulator += elapsed;
 
+    const paused = isGamePaused();
+    if (paused && !_wasPaused) pausePlayTimer();
+    else if (!paused && _wasPaused) resumePlayTimer();
+    _wasPaused = paused;
+
     while (accumulator >= FIXED_DELTA) {
-        if (!isGamePaused()) {
+        if (!paused) {
             updateGameLogic();
         }
         accumulator -= FIXED_DELTA;
@@ -140,7 +161,8 @@ function initializeGame() {
 
     console.log("--- 初始化完成，啟動遊戲循環 ---");
 
-    // 11. 開始遊戲主循環
+    // 11. 啟動真實遊玩時間計時並開始遊戲主循環
+    resumePlayTimer();
     requestAnimationFrame(gameLoop);
 }
 

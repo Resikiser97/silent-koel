@@ -103,6 +103,7 @@ function saveLastRunOrgans() {
 
 function showSkillTree(cause) {
     if (gameState.gameOver) return;
+    pausePlayTimer();
     gameState.gameOver = true;
     gameState.skillTreeOpen = true;
     AudioManager.play('death');

@@ -2,6 +2,13 @@
 
 ---
 
+## v0.29.0 - 2026-05-19
+
+### 新增
+- **真實遊玩時間計時系統**（`main.js`、`systems/gameState.js`、`systems/organs.js`、`systems/evolution.js`、`systems/boss.js`、`systems/ui.js`）：新增 `realPlayTime`、`_playTimerStart`、`_playTimerPaused` 三個欄位至 `gameState`；新增全域函式 `pausePlayTimer()` / `resumePlayTimer()`；`gameLoop` 每幀透過 `_wasPaused` 偵測暫停狀態切換並自動呼叫對應函式；`handleEliteKill` 開頭/結尾各呼叫 `pausePlayTimer()` / `resumePlayTimer()` 以排除精英怪擊殺跳天的時間；`showSkillTree` 與 `showVictory` 結束時呼叫 `pausePlayTimer()` 定格最終時間；排行榜上傳的 `play_time` 改用 `realPlayTime / 1000`（秒），排除所有暫停介面與跳天時間
+
+---
+
 ## v0.28.5 - 2026-05-19
 
 ### 重構

@@ -356,6 +356,7 @@ function drawOrganUI() {
 }
 
 function handleEliteKill(elite) {
+    pausePlayTimer();
     const xp = elite.xp;
     gameState.eliteCreature = null;
     gameState.eliteJustKilled = true;
@@ -375,6 +376,7 @@ function handleEliteKill(elite) {
     updateDayNightCycle();
     gameState.dayNightMessage.text = t('morningEliteKilled');
     gameState.dayNightMessage.timer = Date.now();
+    resumePlayTimer();
 }
 
 function showHiddenOrganSelection(drops) {

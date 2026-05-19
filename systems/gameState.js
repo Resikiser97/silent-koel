@@ -88,6 +88,9 @@ const gameState = {
     lastDifficulty: 'easy',
     playAgainWarned: false,
     homeWarned: false,
+    realPlayTime: 0,
+    _playTimerStart: null,
+    _playTimerPaused: false,
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 
