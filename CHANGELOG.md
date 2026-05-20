@@ -2,6 +2,21 @@
 
 ---
 
+## v0.31.1 - 2026-05-20
+
+### 修復
+
+- **重整結算畫面按鈕流程**（`systems/boss.js`、`systems/evolution.js`）
+  - 勝利和死亡結算畫面統一顯示 3 個按鈕：「前往技能樹」「🏠 回到首頁」「⚔️ 再來一場」
+  - 「前往技能樹」→ `buildSkillTreeOverlay(mode='postGame')`，底部顯示「🏠 回到首頁」+「⚔️ 再來一場」，直接執行無警告
+  - 「🏠 回到首頁」（從結算畫面）→ warn-once 提示，再按一次確認返回首頁
+  - 「⚔️ 再來一場」（從結算畫面）→ 強制進入 `buildSkillTreeOverlay(mode='forceStart')`，底部只顯示「▶ 開始遊戲」
+  - `buildSkillTreeOverlay` 新增 `mode` 參數（`postGame` / `forceStart` / `fromHome`），透過 `_skillTreeMode` 全域變數在 reset / upgrade 時正確保留模式
+  - 移除 `gameState.homeWarned`、`gameState.playAgainWarned`（改為結算 overlay 內的 local 變數）
+  - 移除 `btnSaveAndHome`、`warnNoOrganLine1`、`warnNoOrganLine2`、`warnNoOrganPlay` 語言 key
+
+---
+
 ## v0.31.0 - 2026-05-20
 
 ### 新增

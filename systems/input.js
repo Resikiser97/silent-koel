@@ -8,6 +8,7 @@ let _settingsMouseHandler = null;
 let _rebindBlink          = null;
 let _rebindTimeout        = null;
 let _skillTreeFromHome    = false;
+let _skillTreeMode        = '';
 
 function handleKeyDown(e) {
     if (e.key === 'Escape') {

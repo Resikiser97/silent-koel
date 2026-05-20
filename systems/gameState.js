@@ -90,8 +90,6 @@ const gameState = {
     mobileInput: { dx: 0, dy: 0 },
     gameStarted: false,
     lastDifficulty: 'easy',
-    playAgainWarned: false,
-    homeWarned: false,
     realPlayTime: 0,
     _playTimerStart: null,
     _playTimerPaused: false,

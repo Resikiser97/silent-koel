@@ -76,7 +76,6 @@ function gameLoop(timestamp) {
 
 function initializeGame() {
     gameState.gameStarted = true;
-    gameState.playAgainWarned = false;
     console.log("--- 遊戲初始化開始 ---");
 
     // 1. 設定地圖種子並生成 Noise 地形

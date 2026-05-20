@@ -153,16 +153,76 @@ function showSkillTree(cause) {
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     localStorage.removeItem('savedOrgans');
     localStorage.removeItem('savedHiddenOrgans');
+    const showDeathSettlement = () => {
+        const overlay = document.createElement('div');
+        overlay.id = 'death-settlement-overlay';
+        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;font-family:Arial,sans-serif;';
+        const titleEl = document.createElement('div');
+        titleEl.style.cssText = 'font-size:52px;margin-bottom:16px;';
+        titleEl.textContent = cause === 'timeout' ? t('timeoutTitle') : t('youDied');
+        overlay.appendChild(titleEl);
+        const xpEl = document.createElement('div');
+        xpEl.style.cssText = 'font-size:18px;margin-bottom:24px;color:#FFD700;';
+        xpEl.textContent = t('finalXP', { xp: gameState.stats.xpCurrent });
+        overlay.appendChild(xpEl);
+        const goTreeBtn = document.createElement('button');
+        goTreeBtn.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
+        goTreeBtn.textContent = t('goSkillTree');
+        goTreeBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'postGame'); };
+        overlay.appendChild(goTreeBtn);
+        const vBtnRow = document.createElement('div');
+        vBtnRow.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;';
+        const warnEl = document.createElement('div');
+        warnEl.style.cssText = 'display:none;font-size:13px;color:#f80;text-align:center;';
+        vBtnRow.appendChild(warnEl);
+        const vRowInner = document.createElement('div');
+        vRowInner.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
+        const homeBtn = document.createElement('button');
+        homeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
+        homeBtn.textContent = t('backHome');
+        let homeWarned = false;
+        homeBtn.onclick = () => {
+            if (!homeWarned) {
+                homeWarned = true;
+                warnEl.textContent = t('warnNoOrganHome');
+                warnEl.style.display = 'block';
+                return;
+            }
+            location.reload();
+        };
+        vRowInner.appendChild(homeBtn);
+        const playAgainBtn = document.createElement('button');
+        playAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
+        playAgainBtn.textContent = t('playAgain');
+        playAgainBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'forceStart'); };
+        vRowInner.appendChild(playAgainBtn);
+        vBtnRow.appendChild(vRowInner);
+        overlay.appendChild(vBtnRow);
+        const footer = document.createElement('div');
+        footer.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
+        footer.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
+        overlay.appendChild(footer);
+        if (gameState.devModeUsed) {
+            const devWarn = document.createElement('div');
+            devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
+            devWarn.textContent = '⚠️ 本局使用了開發者模式，分數不計入排行榜';
+            overlay.appendChild(devWarn);
+        }
+        document.getElementById('game-container').appendChild(overlay);
+    };
     if (gameState.devModeUsed) {
-        buildSkillTreeOverlay(cause);
+        showDeathSettlement();
     } else {
-        showScoreSubmitPopup(false, null, () => buildSkillTreeOverlay(cause));
+        showScoreSubmitPopup(false, null, showDeathSettlement);
     }
 }
 
-function buildSkillTreeOverlay(cause, fromHome, startAfter) {
-    if (fromHome || startAfter) applyDeviceMode();
-    _skillTreeFromHome = !!fromHome;
+function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
+    const effectiveMode = (mode != null && mode !== '') ? mode
+        : (fromHome ? 'fromHome' : (startAfter ? 'forceStart' : _skillTreeMode));
+    _skillTreeMode = effectiveMode;
+    _skillTreeFromHome = (effectiveMode === 'fromHome');
+    if (effectiveMode === 'fromHome' || effectiveMode === 'forceStart') applyDeviceMode();
     if (fromHome) {
         try {
             const ss = localStorage.getItem('playerSkills');
@@ -182,7 +242,9 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
 
     const title = document.createElement('div');
     title.style.cssText = 'font-size:32px;margin-bottom:14px;flex-shrink:0;';
-    title.textContent = fromHome ? t('skillTreeTitle') : (cause === 'timeout' ? t('timeoutTitle') : t('youDied'));
+    title.textContent = (effectiveMode === 'fromHome' || effectiveMode === 'postGame' || effectiveMode === 'forceStart')
+        ? t('skillTreeTitle')
+        : (cause === 'timeout' ? t('timeoutTitle') : t('youDied'));
     overlay.appendChild(title);
 
     const organsToKeep = 1 + (gameState.playerSkills.organMemory || 0);
@@ -246,9 +308,9 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
         });
         organSection.appendChild(organGrid);
     }
-    if (!fromHome && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) overlay.appendChild(organSection);
+    if (effectiveMode !== 'fromHome' && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) overlay.appendChild(organSection);
 
-    if (!fromHome && hiddenOrgans.length > 0) {
+    if (effectiveMode !== 'fromHome' && hiddenOrgans.length > 0) {
         const hiddenSection = document.createElement('div');
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const hiddenTitle = document.createElement('div');
@@ -316,7 +378,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
         gameState.skillPoints += spent;
         localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
         localStorage.setItem('skillPoints', String(gameState.skillPoints));
-        buildSkillTreeOverlay(null, _skillTreeFromHome);
+        buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
     };
     ptsRow.appendChild(resetBtn);
     overlay.appendChild(ptsRow);
@@ -353,7 +415,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
     let _lrData = null;
     try { if (_lrRaw) _lrData = JSON.parse(_lrRaw); } catch(e) {}
 
-    if (fromHome) {
+    if (effectiveMode === 'fromHome') {
         const inheritSec = document.createElement('div');
         inheritSec.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #665500;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const homeOrgansToKeep = 1 + (gameState.playerSkills.organMemory || 0);
@@ -487,66 +549,39 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter) {
 
     const btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;justify-content:center;';
-    if (startAfter) {
+    if (effectiveMode === 'forceStart') {
         const goBtn = document.createElement('button');
         goBtn.style.cssText = 'font-size:16px;padding:10px 28px;cursor:pointer;border:2px solid #FFD700;background:#2a5a2a;color:white;font-weight:bold;border-radius:5px;';
-        goBtn.textContent = t('btnStart');
+        goBtn.textContent = t('btnStartGame');
         goBtn.onclick = () => { hideTooltip(); overlay.remove(); initializeGame(); };
         btnRow.appendChild(goBtn);
-    } else if (fromHome) {
+    } else if (effectiveMode === 'fromHome') {
         const closeBtn = document.createElement('button');
         closeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
         closeBtn.textContent = t('close');
         closeBtn.onclick = () => { hideTooltip(); overlay.remove(); };
         btnRow.appendChild(closeBtn);
     } else {
-        const warnEl = document.createElement('div');
-        warnEl.style.cssText = 'display:none;font-size:13px;color:#f80;margin-bottom:8px;text-align:center;width:100%;';
-        btnRow.appendChild(warnEl);
-
+        // mode === 'postGame'：從技能樹進入，直接執行，不再有警告
         const homeBtn = document.createElement('button');
         homeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        homeBtn.textContent = t('btnSaveAndHome');
-        homeBtn.onclick = () => {
-            const noOrgansToSelect = playerOrgans.length === 0 && hiddenOrgans.length === 0;
-            let hasOrgans = false;
-            try {
-                const so = localStorage.getItem('savedOrgans');
-                hasOrgans = !!so && JSON.parse(so).length > 0;
-            } catch(e) {}
-            if (!hasOrgans && !noOrgansToSelect && !gameState.homeWarned) {
-                gameState.homeWarned = true;
-                warnEl.textContent = t('warnNoOrganHome');
-                warnEl.style.display = 'block';
-                return;
-            }
-            location.reload();
-        };
+        homeBtn.textContent = t('backHome');
+        homeBtn.onclick = () => { hideTooltip(); overlay.remove(); location.reload(); };
         btnRow.appendChild(homeBtn);
 
         const playAgainBtn = document.createElement('button');
         playAgainBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
         playAgainBtn.textContent = t('playAgain');
         playAgainBtn.onclick = () => {
-            const noOrgansToSelect = playerOrgans.length === 0 && hiddenOrgans.length === 0;
-            let hasOrgans = false;
-            try {
-                const so = localStorage.getItem('savedOrgans');
-                hasOrgans = !!so && JSON.parse(so).length > 0;
-            } catch(e) {}
-            if (!hasOrgans && !noOrgansToSelect && !gameState.playAgainWarned) {
-                gameState.playAgainWarned = true;
-                warnEl.textContent = t('warnNoOrganPlay');
-                warnEl.style.display = 'block';
-                return;
-            }
+            hideTooltip();
+            overlay.remove();
             sessionStorage.setItem('autostart', '1');
             location.reload();
         };
         btnRow.appendChild(playAgainBtn);
     }
     overlay.appendChild(btnRow);
-    (fromHome || startAfter ? document.getElementById('game-container') : document.getElementById('ui-overlay')).appendChild(overlay);
+    (effectiveMode === 'fromHome' || effectiveMode === 'forceStart' ? document.getElementById('game-container') : document.getElementById('ui-overlay')).appendChild(overlay);
 }
 
 function upgradeSkill(id) {
@@ -559,5 +594,5 @@ function upgradeSkill(id) {
     gameState.skillPoints--;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
-    buildSkillTreeOverlay(null, _skillTreeFromHome);
+    buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
 }
