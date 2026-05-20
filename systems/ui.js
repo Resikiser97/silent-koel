@@ -1851,9 +1851,21 @@ function showCompendium(startTab) {
             // 特殊器官：毒囊
             if (i === 0) {
                 const sac = ORGANS.poisonSac;
+                const sacLang = (LANG[gameState.language] || LANG['zh-TW']).organs.poisonSac;
                 html += '<div style="margin-bottom:12px;border-left:3px solid #AAAAFF;padding-left:8px;">';
                 html += '<div style="font-weight:bold;color:#AAAAFF;font-size:14px;">☠ ' + _esc(sac.name) + ' <span style="font-size:10px;color:#888;">（雜食性Lv1獲得，自動升級）</span></div>';
                 html += '<div style="color:#aaa;font-size:11px;margin-top:3px;">' + t('compendiumSacHint') + '</div>';
+                html += '<div style="margin-top:5px;">';
+                sac.levels.forEach((lv, idx) => {
+                    const desc = sacLang ? sacLang.levels[idx] : lv.desc;
+                    const threshold = sac.thresholds[idx];
+                    html += '<div style="font-size:11px;color:#ccc;line-height:1.6;">'
+                        + '<span style="color:#AAAAFF;margin-right:4px;">Lv' + (idx + 1) + '</span>'
+                        + '<span style="color:#777;margin-right:6px;">[白骨素≥' + threshold + ']</span>'
+                        + _esc(desc || lv.desc)
+                        + '</div>';
+                });
+                html += '</div>';
                 html += '</div>';
             }
             pages.push(html);
