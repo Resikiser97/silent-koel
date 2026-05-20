@@ -41,6 +41,7 @@ function updateGameLogic() {
     updateStatusEffects();
     checkTreasureCollision();
     updateCorpseEating();
+    updateBoneEating();
     updateMinimapFog();
 
     if (gameState.settings.autoAttack &&
@@ -103,13 +104,26 @@ function initializeGame() {
 
     // 5. 生成敵意生物與初始化屍體、寶物陣列
     gameState.corpses = [];
+    gameState.bones = [];
     gameState.treasures = [];
     spawnHostileCreatures();
 
     // 6. 設定事件監聽器
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
-    canvas.addEventListener('click', function() {
+    canvas.addEventListener('click', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top)  * scaleY;
+        // 圖鑑按鈕點擊
+        if (_compendiumBtnRegion &&
+            mx >= _compendiumBtnRegion.x && mx <= _compendiumBtnRegion.x + _compendiumBtnRegion.w &&
+            my >= _compendiumBtnRegion.y && my <= _compendiumBtnRegion.y + _compendiumBtnRegion.h) {
+            showCompendium('organs');
+            return;
+        }
         if (!gameState.organSelectionActive && !gameState.settingsOpen) playerAttack();
     });
     canvas.addEventListener('mousemove', function(e) {

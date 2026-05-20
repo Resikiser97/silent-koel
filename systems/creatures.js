@@ -11,13 +11,14 @@ function updateNeutralCreatures() {
         if (creature.hp <= 0) continue;
         if (creature.stunnedUntil && now < creature.stunnedUntil) continue;
 
-        // 激進化生物：行為與敵意生物相同
+        // 激進化生物：行為與敵意生物相同（草食性Lv4+時不攻擊玩家）
         if (creature.diet === 'aggressive') {
+            const isSuperFriendly = (p.evolution.herbivore || 0) >= 4;
             const aggroRange = creature.aggroRange || 120;
             let target = null;
             let bestDist = aggroRange;
             const dp = wrappedDistance(creature.x, creature.y, p.x, p.y);
-            if (dp < bestDist) { target = p; bestDist = dp; }
+            if (!isSuperFriendly && dp < bestDist) { target = p; bestDist = dp; }
             for (const h of gameState.hostileCreatures) {
                 if (h.hp <= 0) continue;
                 const d = wrappedDistance(creature.x, creature.y, h.x, h.y);
@@ -63,21 +64,27 @@ function updateNeutralCreatures() {
         const distToPlayer = wrappedDistance(creature.x, creature.y, p.x, p.y);
         const touchDist = creature.radius + p.radius;
 
-        // 草食安撫：Lv2=100px 不逃跑，Lv3=150px 完全友善
+        // 草食安撫等級行為：
+        // Lv2：撞到不逃跑，但被攻擊仍逃
+        // Lv3：被攻擊或撞到都不逃跑
+        // Lv4+：友善（狂暴生物也不攻擊玩家，在 aggressive 分支處理）
         const herbLv = p.evolution.herbivore || 0;
-        const isCalm     = herbLv >= 2 && distToPlayer < 100;
-        const isFriendly = herbLv >= 3 && distToPlayer < 150;
+        const isCalm     = herbLv >= 2; // 撞到不逃
+        const isFriendly = herbLv >= 3; // 完全不逃
 
         // 判斷與玩家碰撞狀態
         if (distToPlayer < touchDist) {
-            if (!isFriendly) {
-                creature.state = (isCalm && !creature.canFight) ? 'idle' : (creature.canFight ? 'fighting' : 'fleeing');
+            if (isFriendly) {
+                creature.state = 'idle';
+            } else if (isCalm) {
+                // 撞到不逃，但可以戰鬥
+                creature.state = creature.canFight ? 'fighting' : 'idle';
+            } else {
+                creature.state = creature.canFight ? 'fighting' : 'fleeing';
             }
         } else if ((creature.state === 'fighting' || creature.state === 'fleeing') && distToPlayer > touchDist + 50) {
             creature.state = 'idle';
         } else if (isFriendly && (creature.state === 'fighting' || creature.state === 'fleeing')) {
-            creature.state = 'idle';
-        } else if (isCalm && creature.state === 'fleeing') {
             creature.state = 'idle';
         }
 

@@ -10,6 +10,7 @@ LANG['en'] = {
         startGame:   '▶ Start Game',
         skillTree:   '🌿 Skill Tree',
         guide:       '📖 Guide',
+        compendium:  '📖 Compendium',
         leaderboard: '🏆 Leaderboard',
         settings:    '⚙️ Settings',
         lbSubmitTitle:  'Upload your score to the leaderboard!',
@@ -112,6 +113,15 @@ LANG['en'] = {
         noAttackOrgan: 'No attack organ!',
         bleedFloat: 'Bleed -{n}',
         poisonFloat: 'Poison -{n}',
+        boneMaterialFloat: '+{n} Bone Material',
+        // ── Compendium
+        compendiumTitle:      '📖 Compendium',
+        compendiumTabGuide:   'Guide',
+        compendiumTabOrgans:  'Organs',
+        compendiumTabEvo:     'Evolution',
+        compendiumSacHint:    'Poison Sac auto-upgrades by accumulating Bone Material — cannot be selected or inherited',
+        compendiumHiddenOrgans: '✨ Hidden Organs',
+        compendiumCombos:     '⚡ Combo Effects (each organ must reach Lv3)',
         nightCome: '🌙 Night falls',
         morningCome: '☀️ Dawn arrives',
         morningEliteGone: '☀️ Dawn arrives, the Elite retreats',
@@ -185,11 +195,11 @@ LANG['en'] = {
         guideOrgan7: 'Some organs increase body size, larger size means larger attack range',
         // Page 3 Evolution System
         guideEvoTitle: 'Evolution System',
-        guideEvo1: '🌿 Herbivore: Boosts HP, neutral creatures won\'t flee',
-        guideEvo2: '🥩 Carnivore: Eat corpses for more XP, boosts attack',
-        guideEvo3: '⚖️ Omnivore: Requires both Herbivore and Carnivore, boosts speed',
-        guideEvo4: 'Each path upgrades to Lv.3',
-        guideEvo5: 'Evolution resets each run',
+        guideEvo1: '🌿 Herbivore: Boosts HP and size, high-level neutrals become fully friendly',
+        guideEvo2: '🥩 Carnivore: Eat corpses for more XP, boosts attack and attack speed',
+        guideEvo3: '⚖️ Omnivore: Needs Herbivore + Carnivore, boosts speed, devour bones to power up Poison Sac',
+        guideEvo4: 'Each path upgrades to Lv.5',
+        guideEvo5: 'Evolution resets each run and is not inherited',
         // Page 4 Minimap Guide
         guideMapTitle: 'Minimap Guide',
         guideMapPlayer: 'Your character',
@@ -227,10 +237,10 @@ LANG['en'] = {
             {
                 title: 'Evolution System',
                 lines: [
-                    '🌿 Herbivore: more HP, neutral creatures stop fleeing',
-                    '🥩 Carnivore: eat corpses for bonus XP, more attack',
-                    '⚖️ Omnivore: needs both Herbivore and Carnivore to unlock, gains speed',
-                    '📈 Each path goes up to Lv.3',
+                    '🌿 Herbivore (max Lv5): more HP & size, neutrals become fully friendly',
+                    '🥩 Carnivore (max Lv5): eat corpses for bonus XP, attack & attack speed',
+                    '⚖️ Omnivore (max Lv5): needs Herb+Carn, gains speed, devour bones for Poison Sac',
+                    '☠ Bone System: corpses → bones → Omnivore devours → Bone Material → Poison Sac levels up',
                     '🔁 Evolution paths reset every run and are not inherited'
                 ]
             }
@@ -238,44 +248,44 @@ LANG['en'] = {
     },
     organs: {
         crabClaw:      { name: 'Crab Claw', levels: [
-            'Atk +8, 15% Bleed (1 dmg/s for 3s)',
-            'Atk +2, Bleed +5%, +1 dmg/s, +1s duration',
-            'Atk +3, Bleed +10%, +1 dmg/s, +1s duration'
+            'Atk +5, 25% Bleed (1 dmg/s for 10s)',
+            'Atk +2, Bleed +25%, +2 dmg/s',
+            'Atk +3, Bleed +50%, +2 dmg/s'
         ]},
         boxingGloves:  { name: 'Boxing Gloves', levels: [
-            'Atk +5, Attack Speed +30%',
-            'Atk +2, Attack Speed +5%',
-            'Atk +3, Attack Speed +5%'
+            'Atk +5, Attack Speed +10%',
+            'Atk +2, Attack Speed +15%',
+            'Atk +3, Attack Speed +15%'
         ]},
         poisonStinger: { name: 'Poison Stinger', levels: [
-            'Atk +1, attacks poison: 2 dmg/s for 5s',
-            '+1 dmg/s, +1s duration',
-            '+2 dmg/s, +1s duration'
+            'Attacks inflict Poison: 2 dmg/s for 5s',
+            '+1 dmg/s, +3s duration',
+            '+2 dmg/s, +2s duration'
         ]},
         fang:          { name: 'Fang', levels: [
-            'Atk +12, 15% chance to stun for 1s',
-            'Atk +2, Stun chance +2%',
-            'Atk +3, Stun chance +3%'
+            'Atk +12, 15% chance to stun for 0.5s',
+            'Atk +2, Stun chance +5%',
+            'Atk +3, Stun chance +5%, Stun duration +0.5s'
         ]},
         longLegs:      { name: 'Long Legs', levels: [
-            'Move Speed +0.5',
-            'Move Speed +0.5',
-            'Move Speed +0.5'
+            'Move Speed +1.5',
+            'Move Speed +1.5',
+            'Move Speed +1.5'
         ]},
         turtleShell:   { name: 'Turtle Shell', levels: [
-            'Damage Taken -30%, Speed -0.2',
-            'Extra DR -3%, recover Speed +0.1',
-            'Extra DR -7%, recover Speed +0.1'
+            'Damage Taken -10%, Speed -1',
+            'Extra DR -10% (total -20%), Speed -1',
+            'Extra DR -10% (total -30%), Speed -1'
         ]},
         thickSkin:     { name: 'Thick Skin', levels: [
-            'Max HP +50, current HP +50',
-            'Max HP +50, Size +20% (radius +2, attack range scales)',
-            'Max HP +50, Size +20% more'
+            'Max HP +20, current HP +20',
+            'Max HP +30, current HP +30, Size +20% (radius +2)',
+            'Max HP +50, current HP +50, Size +20% (radius +2)'
         ]},
         thornArmor:    { name: 'Thorn Armor', levels: [
-            'Reflect 10% damage when hit',
-            'Reflect +5%',
-            'Reflect +5%, plus 5% of your attack as bonus reflect'
+            'Reflect 5% of Max HP as damage when hit',
+            'Extra 5% of Max HP reflected (total 10%)',
+            'Extra 5% of Max HP reflected (total 15%)'
         ]},
         brain:         { name: 'Brain', levels: [
             'Every 5s: 8 dmg in 100px radius, Pickup +10px',
@@ -283,25 +293,38 @@ LANG['en'] = {
             'Cooldown -1s, range +30px, dmg +8, pickup +15px'
         ]},
         trueEye:       { name: 'True Eye', levels: [
-            'Crit +10%, Crit Damage x1.5',
-            'Crit +5%, Crit Damage +0.25',
-            'Crit +10%, Crit Damage +0.25'
+            'Crit chance +10%',
+            'Crit chance +5%, Crit damage +0.25',
+            'Crit chance +10%, Crit damage +0.25'
         ]},
         sharpSense:    { name: 'Sharp Sense', levels: [
-            'Hostile detection range -30px',
-            'Detection range -20px more',
-            'Detection range -20px more'
+            'Detect fruits within 1000px, show best path',
+            'Detection range total 1750px',
+            'Detection range total 2500px'
         ]},
         naturalRegen:  { name: 'Natural Regen', levels: [
             'Recover 1 HP every 10s',
-            'Interval -2s, HP +1',
-            'Interval -3s, HP +1'
+            'Interval -2s, +1 HP, +0.5% Max HP healed',
+            'Interval -3s, +1 HP, +0.5% Max HP healed'
+        ]},
+        poisonSac:     { name: 'Poison Sac', levels: [
+            'Lv1: Atk +1, Poison +1 dmg/s (5s)',
+            'Lv2: Atk +1, Poison +1 dmg/s',
+            'Lv3: Atk +2, Poison +2 dmg/s',
+            'Lv4: Atk +3, Poison +3 dmg/s',
+            'Lv5: Atk +3, Poison +3 dmg/s',
+            'Lv6: Atk +4, Poison +4 dmg/s',
+            'Lv7: Atk +4, Poison +4 dmg/s',
+            'Lv8: Atk +5, Poison +5 dmg/s',
+            'Lv9: Atk +5, Poison +5 dmg/s',
+            'Lv10: Atk +8, Poison +8 dmg/s'
         ]}
     },
     hidden: {
-        strongHeart: { name: 'Mighty Heart', desc: 'Speed +0.2, Atk +5, Max HP +100, Size +20%' },
-        strongLegs:  { name: 'Mighty Legs',  desc: 'Speed +1, Size +20%' },
-        strongArms:  { name: 'Mighty Arms',  desc: 'Pickup +15px, Size +20% (attack range scales)' }
+        strongHeart: { name: 'Mighty Heart', desc: 'Speed +0.6, Atk +5, Max HP +100, Size +20% (radius +2)' },
+        strongLegs:  { name: 'Mighty Legs',  desc: 'Speed +3, Size +20% (radius +2)' },
+        strongArms:  { name: 'Mighty Arms',  desc: 'Pickup +15px, Size +20% (radius +2)' },
+        strongEye:   { name: 'Mighty Eye',   desc: 'Crit chance +10%, Crit damage +0.25, Size +20% (radius +2)' }
     },
     skills: {
         vitality:            { name: 'Vitality',            desc: 'Starting HP +20 (per level)' },
@@ -317,26 +340,32 @@ LANG['en'] = {
     evo: {
         herbivore: { name: 'Herbivore', levels: [
             'Can eat fruit, Max HP +30',
-            'Neutrals within 100px stop fleeing, HP +40, Fruit XP +2',
-            'Neutrals within 150px become fully friendly, HP +50, Fruit XP +3'
+            'HP +10, Fruit XP +1, neutrals stop fleeing on bump',
+            'HP +15, Fruit XP +2, neutrals don\'t flee even when attacked',
+            'HP +20, Fruit XP +3, Size +10%, neutrals fully friendly',
+            'HP +25, Fruit XP +4, Size +20%, neutrals fully friendly'
         ]},
         carnivore: { name: 'Carnivore', levels: [
-            'Can eat corpses (20 XP, 3s), Atk +5',
-            'Corpse 35 XP, 2.5s, Atk +5',
-            'Corpse 50 XP, 2s, Atk +5'
+            'Can eat corpses (20 XP, 3s), Atk +2',
+            'Corpse total 40 XP, 2.5s, Atk +4',
+            'Corpse total 60 XP, 2s, Atk +6, Atk Speed +5%',
+            'Corpse total 80 XP, 1.5s, Atk +8, Atk Speed total +15%',
+            'Corpse total 100 XP, 1s, Atk +10, Atk Speed total +30%'
         ]},
         omnivore:  { name: 'Omnivore', levels: [
-            'Fruit XP +2, Corpse XP +5, Speed +0.3',
-            'Fruit XP +3, Corpse XP +10, Speed +0.3',
-            'Fruit XP +4, Corpse XP +15, Speed +0.4, 10% chance to recover 5 HP when eating'
+            'Speed +0.4, gain Poison Sac, devour bones in 1s, +1 Bone Material',
+            'Speed +0.5, devour bones in 0.5s, +1 Bone Material',
+            'Speed +0.6, instant bone devour, +1 Bone Material',
+            'Speed +0.7, instant bone devour, +2 Bone Material',
+            'Speed +0.8, instant bone devour, +3 Bone Material'
         ]}
     },
     combos: {
-        comboCrabPoison: 'Bleed also inflicts Poison (poison dmg x2)',
-        comboShellArmor: 'Reflect damage doubles on block',
-        comboBrainEye:   'Psy-wave can roll for critical damage',
-        comboSkinRegen:  'Recovery +1 HP, interval -1s additional',
-        comboEyeFang:    'Crits also apply Stun'
+        comboCrabPoison: 'Poison dmg x2 (Crab Claw + Poison Stinger + Poison Sac each at Lv3)',
+        comboShellArmor: 'Reflect damage doubled (Turtle Shell + Thorn Armor each at Lv3)',
+        comboBrainEye:   'Psy-wave can crit (Brain + True Eye each at Lv3)',
+        comboSkinRegen:  'Regen +1 HP, interval -1s more (Thick Skin + Natural Regen each at Lv3)',
+        comboEyeFang:    'Crits also stun (True Eye + Fang each at Lv3)'
     },
     elite: ['★Elite', '★★Elite', '★★★Elite'],
     boss: {

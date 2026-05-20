@@ -29,15 +29,20 @@ systems/spawning.js       spawnFruitFromTree, spawnFruit, spawnNeutralCreatures
 systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction
                           showXPPopup, checkTreasureCollision, updatePassiveOrgans
                           checkXPMilestone, addXP, checkLevelUp
+                          findBestPerceptionPath
 systems/combat.js         showFloatingText, applyDamageToPlayer, handleKill, playerAttack
                           updateStatusEffects, updateCorpseEating, drawCorpseEatingBars
+                          updateBoneEating, _addBoneMaterial, _checkPoisonSacUpgrade
+                          _spawnBone, drawBones
 systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, checkComboEffects
                           getOrganSlotsUsed, applyHiddenOrganEffects, applyOrganEffects
                           checkOrganUpgrade, showOrganSelection, drawOrganUI
                           handleEliteKill, showHiddenOrganSelection
+                          _drawCompendiumBtn（繪製 📖 按鈕，設定 _compendiumBtnRegion）
 systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, applyEvolutionEffects
                           applySkillBonuses, saveLastRunOrgans, showSkillTree
                           buildSkillTreeOverlay, upgradeSkill
+                          _grantPoisonSac（雜食性 Lv1 時自動授予毒囊器官）
 systems/creatures.js      updateNeutralCreatures, drawNeutralCreatures
                           updateHostileCreatures, drawCorpses, drawHostileCreatures
 systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCreature
@@ -51,6 +56,7 @@ systems/ui.js             showTooltip, hideTooltip, drawGame, updateUI, drawTrea
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式
                           showGuide, hideGuide, showStartScreen
+                          showCompendium（三分頁圖鑑：遊戲說明/器官/進化，暫停遊戲）
                           detectMobile, getOrientation, applyDeviceMode, _applyMobileScale
                           _updateOrientationBar, _updateJoystickCanvas, _renderMobileOverlay
                           _attachJoystickListeners, _detachJoystickListeners
@@ -143,6 +149,34 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ### 關鍵 CSS 注意
 
 - `canvas { background-color }` 已改為 `#gameCanvas { background-color: #549954 }`，避免 `#joystick-canvas` 繼承綠色背景蓋住所有 overlay
+
+---
+
+## 新增 gameState 欄位（v0.31.0）
+
+| 欄位 | 位置 | 類型 | 說明 |
+|------|------|------|------|
+| `player.boneMaterial` | `gameState.player` | `number` | 累積白骨素，達門檻自動升級毒囊 |
+| `player.perceptionRange` | `gameState.player` | `number` | 靈敏知覺偵測半徑（px） |
+| `player.naturalRegenHpMaxPercent` | `gameState.player` | `number` | 超自然回復每次額外回復的最大HP百分比 |
+| `gameState.bones` | `gameState` | `Array` | 白骨物件陣列，`{x, y, radius, spawnTime, eatTimer}` |
+| `gameState.brainShockwaves` | `gameState` | `Array` | 大腦衝擊波視覺效果陣列，`{x, y, range, startTime}` |
+
+### 毒囊（poisonSac）設計說明
+
+- `noSelection: true` — 不出現在器官選擇池
+- `noInherit: true` — 死後不可繼承
+- `thresholds: [5, 10, 20, 40, 60, 100, 120, 140, 160, 200]` — 10 個等級對應的白骨素門檻
+- Lv0 為初始無效果狀態（`applyOrganEffects` 遇到 Lv0 直接 return）
+- 雜食性 Lv1 時由 `_grantPoisonSac()` 自動推入 player.organs
+
+### 白骨系統流程
+
+1. 屍體 60 秒後或被吃掉 → `_spawnBone(x, y, radius)` 推入 `gameState.bones[]`
+2. 白骨在地圖存在 180 秒後自動消失
+3. 雜食性玩家靠近白骨 → `updateBoneEating()` 計時（`boneEatTime` 毫秒，Lv3+ 即時）
+4. 吞噬完成 → `_addBoneMaterial(boneMaterialAdd)` 累加白骨素
+5. `_checkPoisonSacUpgrade(p)` 對照 `thresholds[]` 自動升級毒囊並套用 delta 效果
 
 ---
 

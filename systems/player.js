@@ -25,21 +25,21 @@ function updatePlayerMovement() {
 
 function checkFruitCollision() {
     const p = gameState.player;
-    const collisionRadius = p.radius + 6 + p.pickupRange;
+    const bodyScale = p.radius / 10;
+    const collisionRadius = (p.radius + 6 + p.pickupRange) * bodyScale;
 
     for (let i = gameState.fruits.length - 1; i >= 0; i--) {
         const fruit = gameState.fruits[i];
         if (wrappedDistance(p.x, p.y, fruit.x, fruit.y) < collisionRadius) {
             const ev = p.evolution;
-            const herbBonus = ev.herbivore >= 2 ? EVOLUTION_PATHS.herbivore.levels[ev.herbivore - 1].fruitXPBonus : 0;
-            const omniBonus = ev.omnivore > 0 ? EVOLUTION_PATHS.omnivore.levels[ev.omnivore - 1].fruitXPBonus : 0;
-            const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus + omniBonus;
+            // 草食性fruitXPBonus：Lv2以上累計
+            let herbBonus = 0;
+            for (let h = 1; h < ev.herbivore; h++) {
+                herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
+            }
+            const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
             addXP(fruitXP);
             AudioManager.play('eatFruit');
-            if (ev.omnivore >= 3 && Math.random() < 0.1) {
-                gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 5);
-                showFloatingText(p.x, p.y - 40, t('fullText'), '#00FF88');
-            }
             gameState.fruits.splice(i, 1);
             showXPPopup(p.x, p.y, fruitXP);
             return true;
@@ -99,6 +99,8 @@ function updatePassiveOrgans() {
     // 大腦：念力波（等級化範圍/間隔/傷害）
     if (p.brainActive && now - p.brainTimer >= p.brainInterval) {
         p.brainTimer = now;
+        // 衝擊波視覺效果
+        gameState.brainShockwaves.push({ x: p.x, y: p.y, range: p.brainRange, startTime: now });
         for (const c of gameState.hostileCreatures) {
             if (c.hp <= 0) continue;
             if (wrappedDistance(p.x, p.y, c.x, c.y) <= p.brainRange) {
@@ -126,7 +128,9 @@ function updatePassiveOrgans() {
         if (p.comboSkinRegen) interval = Math.max(1000, interval - 1000);
         if (now - p.naturalRegenTimer >= interval) {
             p.naturalRegenTimer = now;
-            const amt = p.naturalRegenHp + (p.comboSkinRegen ? 1 : 0);
+            const flatAmt = p.naturalRegenHp + (p.comboSkinRegen ? 1 : 0);
+            const percentAmt = Math.round(gameState.stats.hpMax * (p.naturalRegenHpMaxPercent || 0));
+            const amt = flatAmt + percentAmt;
             gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + amt);
             showFloatingText(p.x, p.y - 30, '+' + amt + ' HP', '#00FF88');
         }
@@ -156,4 +160,61 @@ function checkLevelUp() {
         AudioManager.play('levelUp');
         showOrganSelection();
     }
+}
+
+// =============================================================
+// 靈敏知覺算法 - 找出果子最多的高效率直線路徑
+// =============================================================
+
+function findBestPerceptionPath(player, fruits, detectionRange) {
+    if (!fruits || fruits.length === 0) return null;
+
+    // 篩選範圍內的果子
+    const nearby = fruits.filter(f => wrappedDistance(player.x, player.y, f.x, f.y) <= detectionRange);
+    if (nearby.length === 0) return null;
+
+    const tolerance = 5 * Math.PI / 180; // 左右各5度
+
+    let bestEfficiency = Infinity;
+    let bestAngle = 0;
+    let bestFruits = [];
+    let bestEndpoint = null;
+
+    // 以每顆果子的方向為候選角度
+    const candidateAngles = nearby.map(f => {
+        const d = wrappedDelta(player.x, player.y, f.x, f.y);
+        return Math.atan2(d.dy, d.dx);
+    });
+
+    for (const angle of candidateAngles) {
+        // 滑動窗口：容差內的果子
+        const windowFruits = nearby.filter(f => {
+            const d = wrappedDelta(player.x, player.y, f.x, f.y);
+            const fAngle = Math.atan2(d.dy, d.dx);
+            let diff = Math.abs(fAngle - angle);
+            if (diff > Math.PI) diff = 2 * Math.PI - diff;
+            return diff <= tolerance;
+        });
+        if (windowFruits.length === 0) continue;
+
+        // 按距離排序
+        windowFruits.sort((a, b) =>
+            wrappedDistance(player.x, player.y, a.x, a.y) -
+            wrappedDistance(player.x, player.y, b.x, b.y)
+        );
+
+        const farthest = windowFruits[windowFruits.length - 1];
+        const farthestDist = wrappedDistance(player.x, player.y, farthest.x, farthest.y);
+        const efficiency = farthestDist / windowFruits.length; // 值越低越好
+
+        if (efficiency < bestEfficiency) {
+            bestEfficiency = efficiency;
+            bestAngle = angle;
+            bestFruits = windowFruits;
+            bestEndpoint = farthest;
+        }
+    }
+
+    if (!bestEndpoint) return null;
+    return { endpoint: bestEndpoint, fruits: bestFruits, angle: bestAngle };
 }

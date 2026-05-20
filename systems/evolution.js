@@ -8,11 +8,15 @@
 function checkEvolutionUnlock() {
     const ev = gameState.player.evolution;
     const opts = [];
-    if (ev.herbivore < 3) opts.push({ type: 'herbivore', nextLevel: ev.herbivore + 1 });
-    if (ev.herbivore >= 1 && ev.carnivore < 3) opts.push({ type: 'carnivore', nextLevel: ev.carnivore + 1 });
-    const omnNext = ev.omnivore + 1;
-    if (omnNext <= 3 && ev.herbivore >= omnNext && ev.carnivore >= omnNext) {
-        opts.push({ type: 'omnivore', nextLevel: omnNext });
+    if (ev.herbivore < EVOLUTION_PATHS.herbivore.maxLevel) {
+        opts.push({ type: 'herbivore', nextLevel: ev.herbivore + 1 });
+    }
+    if (ev.carnivore < EVOLUTION_PATHS.carnivore.maxLevel) {
+        opts.push({ type: 'carnivore', nextLevel: ev.carnivore + 1 });
+    }
+    // 雜食性解鎖條件：草食性>=1 且 肉食性>=1；Lv2~5 無額外條件
+    if (ev.herbivore >= 1 && ev.carnivore >= 1 && ev.omnivore < EVOLUTION_PATHS.omnivore.maxLevel) {
+        opts.push({ type: 'omnivore', nextLevel: ev.omnivore + 1 });
     }
     return opts;
 }
@@ -21,12 +25,25 @@ function applyEvolutionLevelEffect(type, newLevel) {
     const p = gameState.player;
     const lvData = EVOLUTION_PATHS[type].levels[newLevel - 1];
     if (type === 'herbivore') {
-        gameState.stats.hpMax += lvData.hpBonus;
-        gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + lvData.hpBonus);
+        gameState.stats.hpMax += lvData.hpMaxAdd;
+        gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + lvData.hpMaxAdd);
+        if (lvData.radiusPercent) {
+            const add = Math.round(p.radius * lvData.radiusPercent);
+            const rangeIncrease = Math.round(add / p.radius * p.attackRange);
+            p.radius += add;
+            p.attackRange += rangeIncrease;
+        }
     } else if (type === 'carnivore') {
-        p.attack += lvData.attackBonus;
+        p.attack += lvData.attackAdd;
+        if (lvData.attackSpeedBonusAdd) {
+            p.attackSpeed *= (1 + lvData.attackSpeedBonusAdd);
+        }
     } else if (type === 'omnivore') {
         p.speed += lvData.speedBonus;
+        // Lv1：給予毒囊
+        if (newLevel === 1) {
+            _grantPoisonSac(p);
+        }
     }
     p.organSlots += 3;
     p.evolution[type] = newLevel;
@@ -35,12 +52,34 @@ function applyEvolutionLevelEffect(type, newLevel) {
     else p.evolution.active = 'herbivore';
 }
 
+function _grantPoisonSac(p) {
+    if (p.organs.find(o => o.id === 'poisonSac')) return;
+    p.organs.push({ id: 'poisonSac', name: ORGANS.poisonSac.name, type: 'special', level: 0, desc: '沒什麼囊用' });
+}
+
 function applyEvolutionEffects() {
     const ev = gameState.player.evolution;
     const p = gameState.player;
-    for (let i = 0; i < ev.herbivore; i++) gameState.stats.hpMax += EVOLUTION_PATHS.herbivore.levels[i].hpBonus;
-    for (let i = 0; i < ev.carnivore; i++) p.attack += EVOLUTION_PATHS.carnivore.levels[i].attackBonus;
-    for (let i = 0; i < ev.omnivore;  i++) p.speed  += EVOLUTION_PATHS.omnivore.levels[i].speedBonus;
+    for (let i = 0; i < ev.herbivore; i++) {
+        const lv = EVOLUTION_PATHS.herbivore.levels[i];
+        gameState.stats.hpMax += lv.hpMaxAdd;
+        if (lv.radiusPercent) {
+            const add = Math.round(p.radius * lv.radiusPercent);
+            const rangeIncrease = Math.round(add / p.radius * p.attackRange);
+            p.radius += add;
+            p.attackRange += rangeIncrease;
+        }
+    }
+    for (let i = 0; i < ev.carnivore; i++) {
+        const lv = EVOLUTION_PATHS.carnivore.levels[i];
+        p.attack += lv.attackAdd;
+        if (lv.attackSpeedBonusAdd) p.attackSpeed *= (1 + lv.attackSpeedBonusAdd);
+    }
+    for (let i = 0; i < ev.omnivore; i++) {
+        p.speed += EVOLUTION_PATHS.omnivore.levels[i].speedBonus;
+    }
+    // 若雜食性>=1，確保擁有毒囊
+    if (ev.omnivore >= 1) _grantPoisonSac(p);
     gameState.stats.hpCurrent = gameState.stats.hpMax;
     if (ev.omnivore > 0) ev.active = 'omnivore';
     else if (ev.carnivore > 0) ev.active = 'carnivore';

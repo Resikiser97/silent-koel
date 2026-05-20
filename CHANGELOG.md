@@ -2,6 +2,75 @@
 
 ---
 
+## v0.31.0 - 2026-05-20
+
+### 新增
+
+#### 進化系統擴展至 Lv5（`config/evolution.js`、`systems/evolution.js`）
+- 草食性、肉食性、雜食性三條路線各從 Lv3 擴展至 Lv5
+- 草食性 Lv4/5：增加體型（`radiusPercent`）+ 中立生物完全友善（`friendly: true`）
+- 肉食性 Lv4/5：攻擊力持續增加，攻速累積加成（`attackSpeedBonusAdd` 最高 +30%）
+- 雜食性 Lv1~5：改為速度加成 + 白骨系統整合，移除舊版果子/屍體 XP 加成
+- 肉食性不再需要草食性前置；雜食性需草食 ≥1 且肉食 ≥1
+- 雜食性 Lv1 自動授予毒囊器官（`_grantPoisonSac`）
+
+#### 器官系統大改（`config/organs.js`、`systems/organs.js`）
+- 重寫所有器官數值以符合實際平衡設計
+  - 蟹鉗：流血持續時間 10 秒、每秒傷提升
+  - 搏擊拳套：攻速改為 10%/15%/15%（非累乘）
+  - 毒刺：移除 Lv1 攻擊加成，改為純中毒傷害
+  - 大長腿：每級 +1.5 速度（原 +0.5）
+  - 龜殼：每級 -10% 傷害 -1 速度（統一）
+  - 厚皮：HP 20/30/50，半徑加成只在 Lv2/3
+  - 刺甲：改為「反彈最大HP百分比」，每級 +5%（最高 15%）
+  - 真視之眼：Lv1 只加暴擊率，不加暴擊倍數
+  - 靈敏知覺：完全改版為「偵測範圍內果子並顯示最佳採集路徑」
+  - 超自然回復：Lv2/3 新增回復最大HP 0.5%
+- 新增特殊器官 **毒囊**（`poisonSac`）：`noSelection: true, noInherit: true`，10 個等級，透過白骨素門檻自動升級
+- 新增隱藏器官 **強大的眼睛**（`strongEye`）：暴擊率+10%、暴擊傷害+0.25、體型+20%
+- 所有組合效果（COMBOS）改為「兩/三方器官各達 Lv3 才觸發」
+- 蟹毒組合改為三方：蟹鉗 + 毒刺 + 毒囊
+
+#### 白骨系統（`systems/combat.js`、`systems/ui.js`）
+- 屍體超過 60 秒自動轉化為白骨；被吃掉的屍體也生成白骨
+- 雜食性玩家可吞噬白骨（有時間進度條），吞噬後增加白骨素（`boneMaterial`）
+- 白骨素累積達門檻時自動升級毒囊（10 個門檻：5/10/20/40/60/100/120/140/160/200）
+- 白骨以白色圓形顯示在地圖上，帶吞噬進度條
+
+#### 靈敏知覺算法（`systems/player.js`）
+- 新函式 `findBestPerceptionPath(player, fruits, detectionRange)`
+- 以候選角度 ±5° 容差窗口篩選果子，計算效率（距離/數量），返回最佳路徑端點
+- 繪製紅色虛線指向最佳目標 + 目標果子閃爍點
+
+#### 大腦充能條與衝擊波（`systems/ui.js`）
+- 大腦激活時在玩家下方繪製 4px 藍色充能條（`#4488FF`）
+- 大腦觸發時推入 `gameState.brainShockwaves[]`，繪製擴張衝擊波圓環（600ms，淡出）
+
+#### 圖鑑系統（`systems/ui.js`、`main.js`）
+- 首頁「遊戲說明」按鈕改為「📖 圖鑑」，呼叫 `showCompendium('guide')`
+- 遊戲內右上角新增 📖 圖鑑按鈕（`_drawCompendiumBtn`），點擊開啟器官頁
+- `showCompendium(startTab)` 三分頁：遊戲說明 / 器官圖鑑 / 進化系統
+- 器官頁列出所有普通器官 + 隱藏器官 + 毒囊說明 + 組合效果
+- 進化頁列出三條路線 Lv1~5 詳細說明
+- 開啟時暫停遊戲（`organSelectionActive = true`），關閉時恢復
+
+#### gameState 更新（`systems/gameState.js`）
+- `critMultiplier` 初始值改為 `1.5`
+- 新增 `player.boneMaterial: 0`、`player.perceptionRange: 0`、`player.naturalRegenHpMaxPercent: 0`
+- 新增陣列 `gameState.bones: []`、`gameState.brainShockwaves: []`
+
+#### 語言包更新（`lang/zh-TW.js`、`lang/en.js`）
+- 新增 `compendium`、`compendiumTitle`、`compendiumTabGuide/Organs/Evo`
+- 新增 `compendiumSacHint`、`compendiumHiddenOrgans`、`compendiumCombos`
+- 新增 `boneMaterialFloat` 浮動文字
+- 更新所有器官描述以反映新數值
+- 更新進化路線描述，加入 Lv4/5
+- 更新 `guideEvo4`：每條路線最高 5 級
+- 更新進化系統說明頁，加入白骨系統介紹
+- 新增隱藏器官 `strongEye` 描述
+
+---
+
 ## v0.30.2 - 2026-05-20
 
 ### 修復

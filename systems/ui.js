@@ -723,6 +723,9 @@ function drawGame() {
     drawCorpses();
     drawCorpseEatingBars();
 
+    // 5b. 繪製白骨
+    drawBones();
+
     // 5. 繪製中立生物
     drawNeutralCreatures();
 
@@ -793,6 +796,74 @@ function drawGame() {
 
     drawEliteArrow();
     drawBossArrow();
+
+    // 9b. 大腦衝能條（玩家正下方）
+    if (p.brainActive) {
+        const barW = p.radius * 2;
+        const barH = 4;
+        const barX = ps.x - barW / 2;
+        const barY = ps.y + p.radius + 8;
+        const prog = Math.min(1, (Date.now() - p.brainTimer) / p.brainInterval);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(barX, barY, barW, barH);
+        ctx.fillStyle = '#4488FF';
+        ctx.fillRect(barX, barY, barW * prog, barH);
+    }
+
+    // 9c. 大腦衝擊波視覺效果（向外擴散圓形波紋）
+    const now_sw = Date.now();
+    for (let i = gameState.brainShockwaves.length - 1; i >= 0; i--) {
+        const sw = gameState.brainShockwaves[i];
+        const elapsed = now_sw - sw.startTime;
+        const duration = 600;
+        if (elapsed >= duration) { gameState.brainShockwaves.splice(i, 1); continue; }
+        const progress = elapsed / duration;
+        const swS = worldToScreen(sw.x, sw.y);
+        const swR = sw.range * progress;
+        const alpha = (1 - progress) * 0.6;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(68,136,255,' + alpha.toFixed(2) + ')';
+        ctx.lineWidth = 3 * (1 - progress) + 1;
+        ctx.beginPath();
+        ctx.arc(swS.x, swS.y, swR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // 9d. 靈敏知覺路徑（果子最佳路徑）
+    if (p.perceptionRange > 0 && gameState.fruits.length > 0) {
+        const path = findBestPerceptionPath(p, gameState.fruits, p.perceptionRange);
+        if (path) {
+            const endS = worldToScreen(path.endpoint.x, path.endpoint.y);
+            // clamp 終點到畫面邊緣
+            const clampedEnd = {
+                x: Math.max(5, Math.min(VIEW_W - 5, endS.x)),
+                y: Math.max(5, Math.min(VIEW_H - 5, endS.y))
+            };
+            ctx.save();
+            ctx.globalAlpha = 0.55;
+            ctx.strokeStyle = '#FF4444';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(ps.x, ps.y);
+            ctx.lineTo(clampedEnd.x, clampedEnd.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            // 路徑上的果子畫閃爍紅點
+            const blink = Math.sin(Date.now() * 0.002 * Math.PI * 2) > 0;
+            if (blink) {
+                ctx.fillStyle = '#FF4444';
+                path.fruits.forEach(f => {
+                    const fs = worldToScreen(f.x, f.y);
+                    ctx.beginPath();
+                    ctx.arc(fs.x, fs.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            ctx.restore();
+        }
+    }
 
     // 9. 繪製器官清單（左下角）
     drawOrganUI();
@@ -1648,6 +1719,233 @@ function hideGuide() {
 }
 
 // =============================================================
+// 圖鑑系統 (Compendium)
+// =============================================================
+
+let _compendiumPaused = false;
+
+function showCompendium(startTab) {
+    applyDeviceMode();
+    if (document.getElementById('compendium-overlay')) return;
+
+    // 遊戲中開啟時暫停
+    if (gameState.gameStarted && !gameState.gameOver && !gameState.victory) {
+        _compendiumPaused = true;
+        gameState.organSelectionActive = true; // 借用暫停機制
+    } else {
+        _compendiumPaused = false;
+    }
+
+    const tabs = ['guide', 'organs', 'evo'];
+    const tabNames = { guide: t('compendiumTabGuide'), organs: t('compendiumTabOrgans'), evo: t('compendiumTabEvo') };
+    let curTab = tabs.includes(startTab) ? startTab : 'guide';
+    let curPage = 0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'compendium-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:215;pointer-events:all;color:white;font-family:Arial,sans-serif;';
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:18px 22px;width:92%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;box-sizing:border-box;';
+
+    // ── 標題列
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;';
+    const headerTitle = document.createElement('div');
+    headerTitle.style.cssText = 'font-size:20px;font-weight:bold;color:#FFD700;';
+    headerTitle.textContent = t('compendiumTitle');
+    titleBar.appendChild(headerTitle);
+    panel.appendChild(titleBar);
+
+    // ── 書本樣式內容區
+    const content = document.createElement('div');
+    content.style.cssText = 'font-size:13px;line-height:1.7;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:14px 16px;flex:1;overflow-y:auto;min-height:0;';
+    panel.appendChild(content);
+
+    // ── Tab 列
+    const tabRow = document.createElement('div');
+    tabRow.style.cssText = 'display:flex;gap:6px;margin-top:10px;flex-shrink:0;';
+    const tabBtns = {};
+    tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'flex:1;padding:7px 4px;font-size:12px;border-radius:4px 4px 0 0;cursor:pointer;border:1px solid #555;';
+        btn.textContent = tabNames[tab];
+        btn.onclick = () => { curTab = tab; curPage = 0; render(); };
+        tabBtns[tab] = btn;
+        tabRow.appendChild(btn);
+    });
+    panel.appendChild(tabRow);
+
+    // ── 底部列：分頁 + 關閉
+    const navRow = document.createElement('div');
+    navRow.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:8px;flex-shrink:0;';
+    const prevBtn = document.createElement('button');
+    prevBtn.style.cssText = 'padding:7px 12px;font-size:12px;background:#2a2a2a;color:white;border:1px solid #555;border-radius:4px;cursor:pointer;min-width:80px;';
+    prevBtn.textContent = t('guidePrev');
+    const pageLbl = document.createElement('div');
+    pageLbl.style.cssText = 'font-size:12px;color:#aaa;';
+    const nextBtn = document.createElement('button');
+    nextBtn.style.cssText = prevBtn.style.cssText;
+    nextBtn.textContent = t('guideNext');
+    const closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'padding:7px 16px;font-size:12px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;';
+    closeBtn.textContent = t('close');
+    navRow.appendChild(prevBtn);
+    navRow.appendChild(pageLbl);
+    navRow.appendChild(nextBtn);
+    navRow.appendChild(closeBtn);
+    panel.appendChild(navRow);
+
+    function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function _h2(t) { return '<div style="font-size:15px;font-weight:bold;color:#FFD700;margin:10px 0 6px;">' + _esc(t) + '</div>'; }
+    function _p(t)  { return '<div style="margin-bottom:5px;">' + _esc(t) + '</div>'; }
+
+    function getPages() {
+        if (curTab === 'guide') {
+            return buildGuidePages();
+        } else if (curTab === 'organs') {
+            return buildOrganPages();
+        } else {
+            return buildEvoPages();
+        }
+    }
+
+    function buildGuidePages() {
+        const pages = [];
+        // 操作說明（原 showGuide 的四頁內容精簡為文字版）
+        pages.push(
+            _h2(t('guideBasicTitle')) +
+            _p(t('guideMove')) + _p(t('guideAttack')) + _p(t('guideSettings')) +
+            _p(t('guideFruit')) + _p(t('guideGoal')) + _p(t('guideAutoAttack'))
+        );
+        pages.push(
+            _h2(t('guideOrganTitle')) +
+            _p(t('guideOrgan1')) + _p(t('guideOrgan2')) + _p(t('guideOrgan3')) +
+            _p(t('guideOrgan4')) + _p(t('guideOrgan5')) + _p(t('guideOrgan6')) + _p(t('guideOrgan7'))
+        );
+        pages.push(
+            _h2(t('guideEvoTitle')) +
+            _p(t('guideEvo1')) + _p(t('guideEvo2')) + _p(t('guideEvo3')) +
+            _p(t('guideEvo4')) + _p(t('guideEvo5'))
+        );
+        return pages;
+    }
+
+    function buildOrganPages() {
+        const pages = [];
+        const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF', special: '#AAAAFF' };
+        // 普通器官每頁3個
+        const allOrgans = Object.values(ORGANS).filter(o => !o.noSelection);
+        for (let i = 0; i < allOrgans.length; i += 3) {
+            const chunk = allOrgans.slice(i, i + 3);
+            let html = '';
+            chunk.forEach(org => {
+                const c = typeColor[org.type] || '#FFD700';
+                html += '<div style="margin-bottom:12px;border-left:3px solid ' + c + ';padding-left:8px;">';
+                html += '<div style="font-weight:bold;color:' + c + ';font-size:14px;">' + _esc(org.name) + '</div>';
+                org.levels.forEach((lv, idx) => {
+                    html += '<div style="color:#ccc;font-size:11px;margin-top:2px;"><span style="color:#aaa;">Lv' + (idx+1) + ':</span> ' + _esc(lv.desc) + '</div>';
+                });
+                html += '</div>';
+            });
+            // 特殊器官：毒囊
+            if (i === 0) {
+                const sac = ORGANS.poisonSac;
+                html += '<div style="margin-bottom:12px;border-left:3px solid #AAAAFF;padding-left:8px;">';
+                html += '<div style="font-weight:bold;color:#AAAAFF;font-size:14px;">☠ ' + _esc(sac.name) + ' <span style="font-size:10px;color:#888;">（雜食性Lv1獲得，自動升級）</span></div>';
+                html += '<div style="color:#aaa;font-size:11px;margin-top:3px;">' + t('compendiumSacHint') + '</div>';
+                html += '</div>';
+            }
+            pages.push(html);
+        }
+        // 隱藏器官頁
+        let hiddenHtml = _h2(t('compendiumHiddenOrgans'));
+        Object.values(HIDDEN_ORGANS).forEach(h => {
+            hiddenHtml += '<div style="margin-bottom:10px;border-left:3px solid #FFD700;padding-left:8px;">';
+            hiddenHtml += '<div style="font-weight:bold;color:#FFD700;">✨ ' + _esc(h.name) + '</div>';
+            hiddenHtml += '<div style="color:#ccc;font-size:11px;margin-top:2px;">' + _esc(h.desc) + '</div>';
+            hiddenHtml += '</div>';
+        });
+        // 組合效果頁
+        hiddenHtml += _h2(t('compendiumCombos'));
+        COMBOS.forEach(combo => {
+            hiddenHtml += '<div style="margin-bottom:8px;">';
+            hiddenHtml += '<div style="color:#FFD700;font-size:12px;">' + _esc(combo.ids.join(' + ')) + '</div>';
+            hiddenHtml += '<div style="color:#ccc;font-size:11px;">' + _esc(combo.desc) + '</div>';
+            hiddenHtml += '</div>';
+        });
+        pages.push(hiddenHtml);
+        return pages;
+    }
+
+    function buildEvoPages() {
+        const pages = [];
+        Object.values(EVOLUTION_PATHS).forEach(path => {
+            let html = _h2(path.icon + ' ' + path.name + '  (最高Lv' + path.maxLevel + ')');
+            path.levels.forEach((lv, i) => {
+                html += '<div style="margin-bottom:6px;"><span style="color:#FFD700;">Lv' + (i+1) + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(lv.desc) + '</span></div>';
+            });
+            pages.push(html);
+        });
+        return pages;
+    }
+
+    function render() {
+        // 更新 Tab 按鈕樣式
+        tabs.forEach(tab => {
+            tabBtns[tab].style.background = tab === curTab ? '#2a5a2a' : 'rgba(40,40,40,0.8)';
+            tabBtns[tab].style.borderColor = tab === curTab ? '#4a8a4a' : '#555';
+            tabBtns[tab].style.color = 'white';
+        });
+        const pages = getPages();
+        const total = pages.length;
+        curPage = Math.max(0, Math.min(curPage, total - 1));
+        content.innerHTML = pages[curPage] || '';
+        content.scrollTop = 0;
+        pageLbl.textContent = t('guidePage', {'0': curPage + 1, '1': total});
+        prevBtn.disabled = curPage === 0;
+        nextBtn.disabled = curPage >= total - 1;
+        prevBtn.style.opacity = prevBtn.disabled ? '0.35' : '1';
+        nextBtn.style.opacity = nextBtn.disabled ? '0.35' : '1';
+    }
+
+    function closeCompendium() {
+        overlay.remove();
+        if (_compendiumPaused) {
+            gameState.organSelectionActive = false;
+            gameState.lastTimeTick = Date.now();
+            _compendiumPaused = false;
+        }
+        if (_compKeyHandler) {
+            document.removeEventListener('keydown', _compKeyHandler);
+            _compKeyHandler = null;
+        }
+    }
+
+    prevBtn.onclick = () => { if (curPage > 0) { curPage--; render(); } };
+    nextBtn.onclick = () => { const pages = getPages(); if (curPage < pages.length - 1) { curPage++; render(); } };
+    closeBtn.onclick = closeCompendium;
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeCompendium(); });
+
+    let _compKeyHandler = null;
+    _compKeyHandler = function(e) {
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+        if (e.key === 'Escape') { closeCompendium(); return; }
+        const pages = getPages();
+        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+            if (curPage < pages.length - 1) { curPage++; render(); }
+        } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+            if (curPage > 0) { curPage--; render(); }
+        }
+    };
+    document.addEventListener('keydown', _compKeyHandler);
+
+    overlay.appendChild(panel);
+    document.getElementById('game-container').appendChild(overlay);
+    render();
+}
+
+// =============================================================
 // 開始畫面
 // =============================================================
 
@@ -1810,8 +2108,8 @@ function showStartScreen() {
 
     const guideBtn = document.createElement('button');
     guideBtn.style.cssText = menuBtnStyle + 'background:rgba(90,80,40,0.3);border:1px solid #8a7a4a;';
-    guideBtn.textContent = t('guide');
-    guideBtn.onclick = () => showGuide(0);
+    guideBtn.textContent = t('compendium');
+    guideBtn.onclick = () => showCompendium('guide');
     overlay.appendChild(guideBtn);
 
     const lbMenuBtn = document.createElement('button');

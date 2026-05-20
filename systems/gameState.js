@@ -18,14 +18,15 @@ const gameState = {
         x: 4000, y: 4000, radius: 10, speed: 4.5, color: 'black',
         organs: [], hiddenOrgans: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5, rerollsRemaining: 0,
         attack: 0, attackSpeed: 1.0, attackRange: 50,
-        critChance: 0, critMultiplier: 1.0,
+        critChance: 0, critMultiplier: 1.5,
         damageReduction: 0, thornDamage: 0, thornPlayerAtkReflect: false,
         brainActive: false, brainTimer: 0, brainInterval: 5000, brainRange: 100, brainDmg: 8,
-        pickupRange: 0, aggroRangeReduction: 0,
-        naturalRegenHp: 0, naturalRegenInterval: 10000, naturalRegenTimer: 0,
+        pickupRange: 0, aggroRangeReduction: 0, perceptionRange: 0,
+        naturalRegenHp: 0, naturalRegenHpMaxPercent: 0, naturalRegenInterval: 10000, naturalRegenTimer: 0,
         comboCrabPoison: false, comboShellArmor: false, comboBrainEye: false,
         comboSkinRegen: false, comboEyeFang: false,
         attackTimer: 0, attackVisual: 0,
+        boneMaterial: 0,
         level: 1, levelXP: 0, tenacityUsed: false,
         evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' }
     },
@@ -35,6 +36,8 @@ const gameState = {
     neutralCreatures: [],
     hostileCreatures: [],
     corpses: [],
+    bones: [],
+    brainShockwaves: [],
 
     stats: {
         hpMax: 50,
