@@ -180,6 +180,20 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
+## 技能點獲得方式（v0.32.0）
+
+| 來源 | 時機 | 數量 | 位置 |
+|------|------|------|------|
+| 精英怪擊殺 | 遊戲中（每夜） | 夜晚1=+1、夜晚2=+2、夜晚3=+3 | `systems/organs.js` `handleEliteKill` |
+| Boss擊殺 | 勝利結算前 | +5 | `systems/boss.js` `showVictory` |
+| 時間獎勵 | 死亡/勝利結算 | `Math.floor((600 - timeRemaining) / 180)` | `showSkillTree` / `showVictory` |
+| 等級獎勵 | 死亡/勝利結算 | `Math.floor(player.level / 6)` | `showSkillTree` / `showVictory` |
+
+### 技能升級費用（`upgradeSkill`）
+升至第 N 級費 N 技能點：Lv1=1點、Lv2=2點、Lv3=3點、Lv4=4點、Lv5=5點。
+
+---
+
 ## 重要設計注意事項
 
 ### handleEliteKill 執行順序（v0.15.2 修復）

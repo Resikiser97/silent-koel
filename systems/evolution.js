@@ -148,7 +148,9 @@ function showSkillTree(cause) {
     AudioManager.play('death');
     AudioManager.stopMusic();
     saveLastRunOrgans();
-    gameState.skillPoints += 1;
+    const timeBonus = Math.floor((600 - gameState.timeRemaining) / 180);
+    const levelBonus = Math.floor(gameState.player.level / 6);
+    gameState.skillPoints += timeBonus + levelBonus;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     localStorage.removeItem('savedOrgans');
@@ -162,9 +164,19 @@ function showSkillTree(cause) {
         titleEl.textContent = cause === 'timeout' ? t('timeoutTitle') : t('youDied');
         overlay.appendChild(titleEl);
         const xpEl = document.createElement('div');
-        xpEl.style.cssText = 'font-size:18px;margin-bottom:24px;color:#FFD700;';
+        xpEl.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
         xpEl.textContent = t('finalXP', { xp: gameState.stats.xpCurrent });
         overlay.appendChild(xpEl);
+        if (timeBonus > 0 || levelBonus > 0) {
+            const spSection = document.createElement('div');
+            spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:16px;text-align:center;line-height:1.8;';
+            let spHtml = '';
+            if (timeBonus > 0) spHtml += t('skillPtTime', { n: timeBonus });
+            if (timeBonus > 0 && levelBonus > 0) spHtml += '<br>';
+            if (levelBonus > 0) spHtml += t('skillPtLevel', { n: levelBonus });
+            spSection.innerHTML = spHtml;
+            overlay.appendChild(spSection);
+        }
         const goTreeBtn = document.createElement('button');
         goTreeBtn.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
         goTreeBtn.textContent = t('goSkillTree');
@@ -401,9 +413,10 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         card.appendChild(descEl);
         const btn = document.createElement('button');
         const maxed = level >= skill.maxLevel;
-        const canUp = !maxed && gameState.skillPoints > 0;
+        const cost = level + 1;
+        const canUp = !maxed && gameState.skillPoints >= cost;
         btn.style.cssText = 'padding:5px 0;font-size:12px;width:100%;border-radius:3px;background:transparent;cursor:' + (canUp ? 'pointer' : 'default') + ';border:1px solid ' + (maxed || !canUp ? '#555' : '#FFD700') + ';color:' + (maxed || !canUp ? '#555' : 'white') + ';';
-        btn.textContent = maxed ? t('maxed') : t('upgradeCost1');
+        btn.textContent = maxed ? t('maxed') : t('upgradeCostN', { n: cost });
         btn.disabled = !canUp;
         btn.onclick = () => upgradeSkill(skill.id);
         card.appendChild(btn);
@@ -585,13 +598,14 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
 }
 
 function upgradeSkill(id) {
-    if (gameState.skillPoints <= 0) return;
     const skill = SKILLS[id];
     if (!skill) return;
     const current = gameState.playerSkills[id] || 0;
     if (current >= skill.maxLevel) return;
+    const cost = current + 1;
+    if (gameState.skillPoints < cost) return;
     gameState.playerSkills[id] = current + 1;
-    gameState.skillPoints--;
+    gameState.skillPoints -= cost;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);

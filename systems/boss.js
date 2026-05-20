@@ -85,7 +85,9 @@ function showVictory() {
     AudioManager.play('victory');
     addXP(500);
     saveLastRunOrgans();
-    gameState.skillPoints += 1;
+    const timeBonus = Math.floor((600 - gameState.timeRemaining) / 180);
+    const levelBonus = Math.floor(gameState.player.level / 6);
+    gameState.skillPoints += 5 + timeBonus + levelBonus;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     localStorage.removeItem('savedOrgans');
@@ -105,9 +107,15 @@ function showVictory() {
         desc1.textContent = t('victoryDesc', { boss: bossName });
         overlay.appendChild(desc1);
         const desc2 = document.createElement('div');
-        desc2.style.cssText = 'font-size:18px;margin-bottom:28px;color:#FFD700;';
+        desc2.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
         desc2.textContent = t('victoryReward');
         overlay.appendChild(desc2);
+        const spSection = document.createElement('div');
+        spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;';
+        spSection.innerHTML = t('skillPtBoss', { n: 5 })
+            + (timeBonus > 0 ? '<br>' + t('skillPtTime', { n: timeBonus }) : '')
+            + (levelBonus > 0 ? '<br>' + t('skillPtLevel', { n: levelBonus }) : '');
+        overlay.appendChild(spSection);
         const btnTree = document.createElement('button');
         btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
         btnTree.textContent = t('goSkillTree');

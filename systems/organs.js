@@ -437,7 +437,8 @@ function handleEliteKill(elite) {
     }
     addXP(xp);
     showXPPopup(gameState.player.x, gameState.player.y, xp);
-    gameState.skillPoints += 1;
+    const eliteNightNum = Math.round((gameState.currentPhaseIndex + 1) / 2);
+    gameState.skillPoints += eliteNightNum;
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
     gameState.timeRemaining = nextDayTime;

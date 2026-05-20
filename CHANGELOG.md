@@ -2,6 +2,29 @@
 
 ---
 
+## v0.32.0 - 2026-05-20
+
+### 新增 / 修改
+
+#### 技能點系統重整
+
+- **移除** 死亡/勝利後固定給 1 技能點的邏輯（`showSkillTree`、`showVictory`）
+- **精英怪擊殺**（`systems/organs.js` `handleEliteKill`）：依夜晚編號給點：第1夜 +1、第2夜 +2、第3夜 +3
+- **Boss擊殺**（`systems/boss.js` `showVictory`）：+5技能點
+- **時間獎勵**（死亡/勝利結算時）：`Math.floor((600 - timeRemaining) / 180)`，最多3點
+- **等級獎勵**（死亡/勝利結算時）：`Math.floor(player.level / 6)`
+- 結算畫面顯示本局技能點明細（時間/等級/Boss獎勵）
+
+#### 技能升級費用改為階梯式（`systems/evolution.js` `upgradeSkill`）
+- Lv1費1點、Lv2費2點、Lv3費3點、Lv4費4點、Lv5費5點
+- 技能樹按鈕動態顯示「升級（費N點）」，點數不足時按鈕變灰
+
+#### 其他
+- `SAVE_VERSION` 1.0 → 1.1（自動清除舊技能點存檔）
+- 語言 key：`upgradeCost1` → `upgradeCostN`（含 `{n}` 占位符）；新增 `skillPtTime`、`skillPtLevel`、`skillPtElite`、`skillPtBoss`
+
+---
+
 ## v0.31.1 - 2026-05-20
 
 ### 修復
