@@ -42,8 +42,8 @@ const SKILLS = {
     forager:             { id: 'forager',             name: '採集專家', maxLevel: 3, desc: '果子 XP +3（每級）' },
     hunter:              { id: 'hunter',              name: '獵人本能', maxLevel: 3, desc: '擊殺 XP +10（每級）' },
     tenacity:            { id: 'tenacity',            name: '頑強意志', maxLevel: 3, desc: '死亡時 HP 保留 10%（每級，每局一次）' },
-    organMemory:         { id: 'organMemory',         name: '記憶器官', maxLevel: 3, desc: '死亡保留器官數 +1（預設1個；Lv1=2個，Lv2=3個，Lv3=4個）' },
+    organMemory:         { id: 'organMemory',         name: '記憶器官', maxLevel: 3, desc: '死亡保留器官數（預設0個；Lv1=1，Lv2=2，Lv3=3）' },
     luckyReroll:         { id: 'luckyReroll',         name: '幸運重選', maxLevel: 3, desc: '器官選擇時可重新隨機（每級1次）' },
-    collectionAddiction: { id: 'collectionAddiction', name: '收集成癮', maxLevel: 3, desc: '收集範圍+10px（果子和屍體，每級）' },
-    terribleFang:        { id: 'terribleFang',        name: '恐怖之牙', maxLevel: 5, desc: '攻擊+2（每級）；Lv5開局獲得獠牙Lv1' }
+    collectionAddiction: { id: 'collectionAddiction', name: '收集成癮', maxLevel: 3, desc: '收集範圍+10px（果子、屍體和白骨，每級）' },
+    terribleFang:        { id: 'terribleFang',        name: '恐怖之牙', maxLevel: 5, desc: '攻擊+2（每級）；Lv3=開局獠牙Lv1；Lv5=開局獠牙Lv2' }
 };

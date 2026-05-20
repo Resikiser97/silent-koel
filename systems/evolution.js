@@ -86,6 +86,26 @@ function applyEvolutionEffects() {
     else ev.active = 'herbivore';
 }
 
+function _setFangLevel(targetLv) {
+    const p = gameState.player;
+    const existing = p.organs.find(o => o.id === 'fang');
+    if (existing) {
+        const startLv = (existing.level || 1) + 1;
+        if (targetLv <= (existing.level || 1)) return;
+        for (let lv = startLv; lv <= targetLv; lv++) {
+            existing.level = lv;
+            applyOrganEffects(existing);
+        }
+    } else {
+        const fangOrgan = { id: 'fang', name: ORGANS.fang.name, type: 'attack', level: 1 };
+        p.organs.push(fangOrgan);
+        for (let lv = 1; lv <= targetLv; lv++) {
+            fangOrgan.level = lv;
+            applyOrganEffects(fangOrgan);
+        }
+    }
+}
+
 function applySkillBonuses() {
     const sk = gameState.playerSkills;
     const p = gameState.player;
@@ -96,11 +116,12 @@ function applySkillBonuses() {
     p.rerollsRemaining = sk.luckyReroll || 0;
     p.pickupRange += (sk.collectionAddiction || 0) * 10;
     p.attack += (sk.terribleFang || 0) * 2;
-    // 恐怖之牙 Lv5：開局獲得獠牙 Lv1
-    if ((sk.terribleFang || 0) >= 5 && !p.organs.find(o => o.id === 'fang')) {
-        const fangOrgan = { id: 'fang', name: '獠牙', type: 'attack', level: 1, desc: ORGANS.fang.levels[0].desc };
-        p.organs.push(fangOrgan);
-        applyOrganEffects(fangOrgan);
+    // 恐怖之牙 Lv3：開局獠牙Lv1；Lv5：開局獠牙Lv2
+    const terribleFangLv = sk.terribleFang || 0;
+    if (terribleFangLv >= 5) {
+        _setFangLevel(2);
+    } else if (terribleFangLv >= 3) {
+        _setFangLevel(1);
     }
     // 記憶器官：載入玩家死亡時手動選擇保留的器官（只用一次）
     const savedOrgans = localStorage.getItem('savedOrgans');
@@ -259,7 +280,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         : (cause === 'timeout' ? t('timeoutTitle') : t('youDied'));
     overlay.appendChild(title);
 
-    const organsToKeep = 1 + (gameState.playerSkills.organMemory || 0);
+    const organsToKeep = gameState.playerSkills.organMemory || 0;
     const playerOrgans = gameState.player.organs;
     const hiddenOrgans = gameState.player.hiddenOrgans || [];
     const selectedOrgans = [];
@@ -431,7 +452,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     if (effectiveMode === 'fromHome') {
         const inheritSec = document.createElement('div');
         inheritSec.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #665500;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
-        const homeOrgansToKeep = 1 + (gameState.playerSkills.organMemory || 0);
+        const homeOrgansToKeep = gameState.playerSkills.organMemory || 0;
         const inheritTitle = document.createElement('div');
         inheritTitle.style.cssText = 'font-size:15px;color:#FFD700;margin-bottom:10px;';
         inheritTitle.textContent = t('inheritOrgansHome', { n: homeOrgansToKeep });

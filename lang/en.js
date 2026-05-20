@@ -333,10 +333,10 @@ LANG['en'] = {
         forager:             { name: 'Forager',             desc: 'Fruit XP +3 (per level)' },
         hunter:              { name: "Hunter's Instinct",   desc: 'Kill XP +10 (per level)' },
         tenacity:            { name: 'Tenacity',            desc: 'Keep 10% HP on death (per level, once per run)' },
-        organMemory:         { name: 'Organ Memory',        desc: 'Keep +1 organ on death (default 1; Lv1=2, Lv2=3, Lv3=4)' },
+        organMemory:         { name: 'Organ Memory',        desc: 'Organs kept on death (default 0; Lv1=1, Lv2=2, Lv3=3)' },
         luckyReroll:         { name: 'Lucky Reroll',        desc: 'Reroll an organ choice (once per level)' },
-        collectionAddiction: { name: 'Collection Addict',   desc: 'Pickup range +10px (fruit and corpses, per level)' },
-        terribleFang:        { name: 'Terrible Fang',       desc: 'Attack +2 (per level); Lv5 starts run with Fang Lv1' }
+        collectionAddiction: { name: 'Collection Addict',   desc: 'Pickup range +10px (fruit, corpses and bones, per level)' },
+        terribleFang:        { name: 'Terrible Fang',       desc: 'Attack +2 (per level); Lv3: start with Fang Lv1; Lv5: start with Fang Lv2' }
     },
     evo: {
         herbivore: { name: 'Herbivore', levels: [

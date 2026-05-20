@@ -2,6 +2,27 @@
 
 ---
 
+## v0.32.1 - 2026-05-20
+
+### 修復
+
+#### 毒刺 Bug 修復（`systems/combat.js`）
+- **Bug 1 — 毒計時器被重置**：`playerAttack()` 的毒刺邏輯改為只在敵人未中毒時才初始化 `lastPoisonTick`；重複攻擊不重置計時器，確保毒傷每秒正常 tick
+- **`updateStatusEffects()` 毒傷 tick**：`c.lastPoisonTick = now` 改為 `c.lastPoisonTick += 1000`，避免誤差累積導致毒傷中斷
+- **Bug 2 — 只有毒刺沒有攻擊力時無法攻擊**：攔截條件改為同時判斷 `p.attack <= 0 && !hasPoison`（`poisonStinger > 0` 或 `poisonSac.level > 0`），有毒性器官時可正常觸發攻擊
+
+### 調整
+
+#### 技能樹平衡（`config/evolution.js`、`systems/evolution.js`）
+- **記憶器官**：死亡保留器官數改為預設 0 個（原預設 1 個）；Lv1=1個，Lv2=2個，Lv3=3個；`organsToKeep` 公式改為 `gameState.playerSkills.organMemory || 0`
+- **恐怖之牙**：Lv3 開局強制設定獠牙 Lv1；Lv5 開局強制設定獠牙 Lv2（覆蓋 Lv3 效果）；新增 `_setFangLevel(targetLv)` 工具函式，支援升級已繼承的獠牙器官
+- **收集成癮**：描述更新為「收集範圍+10px（果子、屍體和白骨，每級）」（白骨吞噬距離已使用 `p.pickupRange`，此為描述修正）
+
+#### 語言包更新（`lang/zh-TW.js`、`lang/en.js`）
+- 同步更新 `organMemory`、`terribleFang`、`collectionAddiction` 的技能描述文字
+
+---
+
 ## v0.32.0 - 2026-05-20
 
 ### 新增 / 修改

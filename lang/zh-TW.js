@@ -342,10 +342,10 @@ LANG['zh-TW'] = {
         forager:             { name: '採集專家', desc: '果子 XP +3（每級）' },
         hunter:              { name: '獵人本能', desc: '擊殺 XP +10（每級）' },
         tenacity:            { name: '頑強意志', desc: '死亡時 HP 保留 10%（每級，每局一次）' },
-        organMemory:         { name: '記憶器官', desc: '死亡保留器官數 +1（預設1個；Lv1=2個，Lv2=3個，Lv3=4個）' },
+        organMemory:         { name: '記憶器官', desc: '死亡保留器官數（預設0個；Lv1=1，Lv2=2，Lv3=3）' },
         luckyReroll:         { name: '幸運重選', desc: '器官選擇時可重新隨機（每級1次）' },
-        collectionAddiction: { name: '收集成癮', desc: '收集範圍+10px（果子和屍體，每級）' },
-        terribleFang:        { name: '恐怖之牙', desc: '攻擊+2（每級）；Lv5開局獲得獠牙Lv1' }
+        collectionAddiction: { name: '收集成癮', desc: '收集範圍+10px（果子、屍體和白骨，每級）' },
+        terribleFang:        { name: '恐怖之牙', desc: '攻擊+2（每級）；Lv3=開局獠牙Lv1；Lv5=開局獠牙Lv2' }
     },
     evo: {
         herbivore: { name: '草食性', levels: [

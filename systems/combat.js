@@ -69,7 +69,9 @@ function playerAttack() {
     if (now - p.attackTimer < cooldownMs) return;
     p.attackTimer = now;
 
-    if (p.attack <= 0) {
+    const hasPoison = getOrganLevel('poisonStinger') > 0 ||
+                      (p.organs.find(o => o.id === 'poisonSac') && p.organs.find(o => o.id === 'poisonSac').level > 0);
+    if (p.attack <= 0 && !hasPoison) {
         showFloatingText(p.x, p.y - 30, t('noAttackOrgan'), '#FF8800');
         return;
     }
@@ -127,9 +129,10 @@ function playerAttack() {
             const finalPoisonDur = Math.max(stingerDur, sacDur);
             if (p.comboCrabPoison) finalPoisonDmg *= 2;
             if (finalPoisonDmg > 0 && finalPoisonDur > 0) {
+                const wasAlreadyPoisoned = c.poisonEndTime && now < c.poisonEndTime;
                 c.poisonEndTime = now + finalPoisonDur;
                 c.poisonDmg = finalPoisonDmg;
-                c.lastPoisonTick = now;
+                if (!wasAlreadyPoisoned) c.lastPoisonTick = now;
             }
         }
 
@@ -181,11 +184,11 @@ function updateStatusEffects() {
             }
         }
 
-        if (c.poisonEndTime && now < c.poisonEndTime && now - (c.lastPoisonTick || 0) >= 1000) {
+        if (c.poisonEndTime && now < c.poisonEndTime && now - c.lastPoisonTick >= 1000) {
             const poisonAmt = c.poisonDmg || 2;
             const hpBefore = c.hp;
             c.hp -= poisonAmt;
-            c.lastPoisonTick = now;
+            c.lastPoisonTick += 1000;
             showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: poisonAmt }), '#8800CC', 11);
             if (hpBefore > 0 && c.hp <= 0) {
                 if (isElite) handleEliteKill(c);
