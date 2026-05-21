@@ -144,8 +144,10 @@ function checkXPMilestone() {
 }
 
 function addXP(amount) {
-    gameState.stats.xpCurrent += amount;
-    gameState.player.levelXP += amount;
+    const xpMult = (gameState.player.mutationXpBonus || 1);
+    const finalAmount = xpMult !== 1 ? Math.round(amount * xpMult) : amount;
+    gameState.stats.xpCurrent += finalAmount;
+    gameState.player.levelXP  += finalAmount;
     checkLevelUp();
 }
 

@@ -22,7 +22,8 @@ function resumePlayTimer() {
 }
 
 function isGamePaused() {
-    return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen || gameState.gameOver || gameState.victory;
+    return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen ||
+           gameState.gameOver || gameState.victory || gameState.mutationPanelOpen;
 }
 
 function updateGameLogic() {
@@ -126,6 +127,9 @@ function initializeGame() {
     });
     gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };
 
+    gameState.mutationPanelOpen = false;
+    // mutationData 不重置（跨局永久保存，由 window.onload 的 initMutationData 管理）
+
     gameState.gameStarted = true;
     console.log("--- 遊戲初始化開始 ---");
 
@@ -212,6 +216,7 @@ function initializeGame() {
     } catch(e) {}
     applySkillBonuses();
     applyEvolutionEffects();
+    applyAllMutationBonuses(); // 套用變異器官 Final 值加成（一次性，在所有器官效果之後）
 
     // 9. 初始化計時狀態
     gameState.devModeUsed = false;
@@ -232,6 +237,9 @@ function initializeGame() {
 }
 
 window.onload = () => {
+    // 先載入變異資料（獨立於遊戲存檔版本）
+    initMutationData();
+
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
         initializeGame();

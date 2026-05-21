@@ -2,6 +2,26 @@
 
 ---
 
+## v0.39.0 - 2026-05-22
+
+### 新增
+- **變異器官系統**（`systems/mutation.js`）：四種永久跨局器官（憤怒的獠牙/懦弱的尾巴/勇敢的翅膀/好奇的眼睛），各對 Final 值 +1%攻擊/最大HP/速度/XP倍數；升級費用每5級+1費（Lv0→1=1點）；獨立 localStorage key `mutationData`，不受 SAVE_VERSION 清除
+- **變異點獲得**（`addMutationPoints`）：擊殺巨人化/Alpha/殺手化掉落變異點（Phase 3-4 已實作），即時顯示浮動文字 `✦ +N 變異點`
+- **變異器官 UI**（`systems/ui.js`）：頂左 UI 第三行加入 ⚗️ 圖標 + 總等級，獲得新變異點時顯示紅點；點擊彈出升級面板（z-index 120，遊戲暫停）
+- **補償機制**（`mutation.js`）：`MUTATION_COMPENSATION_VERSION` 控制，可按比例返還變異點和技能點，執行一次後記錄版本避免重複
+- **applyAllMutationBonuses**（`mutation.js`）：遊戲初始化一次性套用，在所有器官效果之後；mid-game 升級用 delta 比值套用，避免複利誤算
+
+### 調整
+- `addXP()`（`systems/player.js`）：動態套用 `mutationXpBonus` 乘數
+- `applyOrganEffects()`（`systems/organs.js`）：末尾呼叫 `applyMutationEffects()` 刷新倍率
+- `isGamePaused()`（`main.js`）：加入 `mutationPanelOpen` 判斷
+- `_joyPaused()`（`systems/ui.js`）：加入 `mutationPanelOpen` 判斷
+- `initializeGame()`（`main.js`）：重置 `mutationPanelOpen = false`；呼叫 `applyAllMutationBonuses()`
+- `window.onload`（`main.js`）：先呼叫 `initMutationData()` 載入變異資料
+- **普通地圖 aggroRange**（`map/normalmap.js`）：`aggroRangeOverride: 2000 → 400`（原值等於全地圖鎖定，玩家完全無法躲避）
+
+---
+
 ## v0.38.0 - 2026-05-22
 
 ### 新增

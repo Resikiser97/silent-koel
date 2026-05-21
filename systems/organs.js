@@ -108,6 +108,10 @@ function applyOrganEffects(organ) {
     // 毒囊特有欄位：不影響 player stats，combat.js 直接讀 getOrganCumulative
 
     checkComboEffects();
+
+    // 刷新變異倍率（只更新 player 上的 mutationXxxBonus，不直接改 stats）
+    // 實際一次性 Final 值乘算由 applyAllMutationBonuses() 在遊戲初始化末尾完成
+    if (typeof applyMutationEffects === 'function') applyMutationEffects();
 }
 
 function checkOrganUpgrade() {

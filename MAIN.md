@@ -40,6 +40,10 @@ systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, check
                           checkOrganUpgrade, showOrganSelection, drawOrganUI
                           handleEliteKill, showHiddenOrganSelection
                           _drawCompendiumBtn（繪製 📖 按鈕，設定 _compendiumBtnRegion）
+systems/mutation.js       initMutationData, saveMutationData, addMutationPoints
+                          getMutationUpgradeCost, upgradeMutation
+                          applyMutationEffects, applyAllMutationBonuses
+                          checkMutationCompensation, showMutationPanel
 systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, applyEvolutionEffects
                           applySkillBonuses, saveLastRunOrgans, showSkillTree
                           buildSkillTreeOverlay, upgradeSkill
@@ -125,10 +129,10 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
-## 普通地圖（NORMAL_MAP）（v0.36.0）
+## 普通地圖（NORMAL_MAP）（v0.36.0 / aggroRange 調整 v0.39.0）
 - 地形：中心森林保護區半徑 400px（簡單為 600px）
 - 生物強度倍率全部 ×1.5
-- `aggroRangeOverride: 2000`（全局追擊範圍）
+- `aggroRangeOverride: 400`（全局追擊範圍，v0.39.0 由 2000 調整至 400）
 - `removeHostileCap: true`（移除速度/傷害上限）
 - 精英怪：第1夜 ×5/+0.3/×1.5、第2夜 ×10/+0.7/×2.1、第3夜 ×20/+1.5/×2.9
 - Boss：黑熊 HP1500/速4.5/傷30/r33、大白鯊 HP1800/速5.85/傷36/r40、蠍王 HP1650/速5.4/傷40/r37
@@ -404,6 +408,52 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 `checkComboEffects()` 對 `comboCrabPoison` 採用特殊邏輯（`hasLv3('poisonStinger') && hasOrgan('poisonSac')`），其餘組合統一用 `combo.ids.every(id => hasLv3(id))`。
 
 `healReduction`：`combat.js` `playerAttack()` 在 `comboCrabGloves` 觸發時對命中目標設定 `c.healReduction = 0.5`，作為未來回復機制的前置 debuff。
+
+---
+
+## 變異器官系統（v0.39.0）
+
+### 儲存
+- localStorage key：`mutationData`（獨立，不受 SAVE_VERSION 清除）
+- 結構：`{ levels:{fang/tail/wing/eye}, points, totalPointsEarned, compensationVersion, skillPointsCompensated, hasNewPoints }`
+
+### 四種變異器官
+| organId | 圖標 | 名稱           | 效果（Final值）    |
+|---------|------|---------------|------------------|
+| fang    | 🦷   | 變異-憤怒的獠牙 | 每級+1%攻擊力     |
+| tail    | 🐾   | 變異-懦弱的尾巴 | 每級+1%最大HP     |
+| wing    | 🪶   | 變異-勇敢的翅膀 | 每級+1%速度       |
+| eye     | 👁️   | 變異-好奇的眼睛 | 每級+1%XP倍數     |
+
+### 升級費用
+每5級+1費，起始1費：Lv0→1=1點，Lv5→6=2點，Lv10→11=3點
+`getMutationUpgradeCost(currentLevel) = Math.floor(currentLevel/5)+1`
+
+### 效果套用
+- `applyAllMutationBonuses()`：遊戲初始化一次性套用（在 `applyEvolutionEffects()` 之後）
+- `upgradeMutation(organId)`：mid-game 升級使用 delta 比值（新/舊），避免複利誤算
+- XP 加成在 `addXP()` 裡動態套用 `mutationXpBonus`
+
+### 獲得方式
+- 擊殺巨人化：100%+1，10%額外1~3
+- 擊殺Alpha：100%+1，20%額外1~6
+- 擊殺殺手化：100%+1，`killerCorpseEaten=N` → N%機率額外1~N（死亡時結算）
+
+### 補償機制
+- `MUTATION_COMPENSATION_VERSION` 控制版本（改為 '1' 觸發第一次補償）
+- `MUTATION_COMPENSATION_CONFIG` 設定各版本補償比例（mutationPointsRate / skillPointsRate）
+- 執行一次後記錄 `compensationVersion` 避免重複
+- 呼叫時機：`initMutationData()` 末尾
+
+### UI
+- `_initTopLeftUI()` 第三行：⚗️ Lv.X 圖標 + 紅點（`#mutation-icon-row`），`pointer-events:all`，click → `showMutationPanel()`
+- `updateUI()` 每幀更新：`#mutation-level-text` 顯示四個器官等級總和，`#mutation-red-dot` 顯示/隱藏
+- `showMutationPanel()`：彈出 z-index 120 面板，遊戲暫停（`mutationPanelOpen=true`）
+- `isGamePaused()` 和 `_joyPaused()` 均加入 `mutationPanelOpen` 判斷
+
+### 初始化流程
+`window.onload` → `initMutationData()` → `applyMutationEffects()` 設定倍率
+`initializeGame()` → `applySkillBonuses()` → `applyEvolutionEffects()` → `applyAllMutationBonuses()` 一次性套用
 
 ---
 

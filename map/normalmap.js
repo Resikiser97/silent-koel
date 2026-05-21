@@ -24,8 +24,8 @@ const NORMAL_MAP = {
     // 普通地圖移除速度和傷害上限 cap
     removeHostileCap: true,
 
-    // aggroRange 全局提升
-    aggroRangeOverride: 2000,
+    // aggroRange 全局提升（400 = 約2.5倍輕鬆模式的150，保持挑戰性但不至於全圖鎖定）
+    aggroRangeOverride: 400,
 
     elites: [
         { night: 1, hpMultiplier:   5, speedBonus: 0.3, damageMultiplier: 1.5 },

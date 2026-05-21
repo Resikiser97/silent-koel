@@ -292,7 +292,8 @@ let _joyDocListeners = null;
 function _joyPaused() {
     return !gameState.gameStarted ||
            gameState.organSelectionActive || gameState.settingsOpen ||
-           gameState.skillTreeOpen || gameState.gameOver || gameState.victory;
+           gameState.skillTreeOpen || gameState.gameOver || gameState.victory ||
+           gameState.mutationPanelOpen;
 }
 
 function _attachJoystickListeners() {
@@ -1179,8 +1180,50 @@ function _initTopLeftUI() {
     heartsCanvas.id = 'hp-hearts-canvas';
     heartsCanvas.style.display = 'block';
 
+    // 第三行：變異器官圖標（⚗️ Lv.X + 紅點）
+    const mutRow = document.createElement('div');
+    mutRow.id = 'mutation-icon-row';
+    mutRow.style.cssText = [
+        'display:flex', 'align-items:center', 'gap:5px',
+        'margin-top:5px', 'cursor:pointer', 'pointer-events:all',
+        'padding:2px 4px', 'border-radius:4px',
+        'transition:background 0.15s', 'position:relative'
+    ].join(';');
+    mutRow.title = '⚗️ 變異器官（點擊升級）';
+    mutRow.addEventListener('mouseenter', () => {
+        mutRow.style.background = 'rgba(255,215,0,0.12)';
+    });
+    mutRow.addEventListener('mouseleave', () => {
+        mutRow.style.background = '';
+    });
+    mutRow.addEventListener('click', () => {
+        if (typeof showMutationPanel === 'function') showMutationPanel();
+    });
+
+    const mutIcon = document.createElement('span');
+    mutIcon.style.cssText = 'font-size:15px;line-height:1;flex-shrink:0;';
+    mutIcon.textContent = '⚗️';
+
+    const mutLvText = document.createElement('span');
+    mutLvText.id = 'mutation-level-text';
+    mutLvText.style.cssText = 'font-size:12px;color:#FFD700;text-shadow:1px 1px 2px #000;';
+    mutLvText.textContent = 'Lv.0';
+
+    const mutRedDot = document.createElement('span');
+    mutRedDot.id = 'mutation-red-dot';
+    mutRedDot.style.cssText = [
+        'width:8px', 'height:8px', 'border-radius:50%',
+        'background:#FF3300', 'display:none',
+        'flex-shrink:0'
+    ].join(';');
+
+    mutRow.appendChild(mutIcon);
+    mutRow.appendChild(mutLvText);
+    mutRow.appendChild(mutRedDot);
+
     wrap.appendChild(row1);
     wrap.appendChild(heartsCanvas);
+    wrap.appendChild(mutRow);
     tl.appendChild(wrap);
 }
 
@@ -1219,6 +1262,21 @@ function updateUI() {
         document.getElementById('dev-stat-fruits').textContent = t('devFruits') + '：' + gameState.fruits.length;
         document.getElementById('dev-stat-neutral').textContent = t('devNeutral') + '：' + gameState.neutralCreatures.filter(c => c.hp > 0).length + ' / 50';
         document.getElementById('dev-stat-hostile').textContent = t('devHostile') + '：' + gameState.hostileCreatures.filter(c => c.hp > 0).length + ' / 35';
+    }
+
+    // ── 更新變異器官圖標（等級與紅點）
+    const mutData = gameState.mutationData;
+    if (mutData) {
+        const mutLvEl = document.getElementById('mutation-level-text');
+        if (mutLvEl) {
+            const totalLv = (mutData.levels.fang || 0) + (mutData.levels.tail || 0) +
+                            (mutData.levels.wing || 0) + (mutData.levels.eye  || 0);
+            mutLvEl.textContent = 'Lv.' + totalLv;
+        }
+        const mutDotEl = document.getElementById('mutation-red-dot');
+        if (mutDotEl) {
+            mutDotEl.style.display = mutData.hasNewPoints ? 'inline-block' : 'none';
+        }
     }
 }
 

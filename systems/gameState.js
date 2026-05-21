@@ -101,6 +101,8 @@ const gameState = {
     realPlayTime: 0,
     _playTimerStart: null,
     _playTimerPaused: false,
+    mutationData: null,         // 由 initMutationData() 初始化（跨局永久保存）
+    mutationPanelOpen: false,   // 變異面板是否開啟
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 
