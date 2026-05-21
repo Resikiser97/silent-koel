@@ -432,6 +432,16 @@ let _compendiumBtnRegion = null;
 function handleEliteKill(elite) {
     pausePlayTimer();
     const xp = elite.xp;
+
+    // 精英怪死亡掉落：1個1倍屍體 + 4具白骨（圓形散落）
+    spawnLootCircle(elite.x, elite.y, [
+        { type: 'corpse', data: { multiplier: 1 } },
+        { type: 'bone', data: {} },
+        { type: 'bone', data: {} },
+        { type: 'bone', data: {} },
+        { type: 'bone', data: {} },
+    ]);
+
     gameState.eliteCreature = null;
     gameState.eliteJustKilled = true;
     if (!gameState.gameOver) {

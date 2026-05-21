@@ -158,6 +158,63 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
+## 肉系吃屍體系統（v0.38.0，僅普通地圖）
+
+### 機制
+- 肉系生物（diet='carnivore'）在漫遊/休息/巡邏狀態時，偵測 60px 內屍體進入 `state: 'eating'`
+- 每 0.5 秒一 tick（`eatTickTimer` 累計 FIXED_DELTA），6 ticks（3秒）完成一具屍體
+- 吃屍體期間 aggroRange×1.5（`eatBaseAggroRange` 記錄進入時的值）；有玩家或中立生物進入臨時 aggroRange → 立刻中斷（進度重置），回到 `patrolling`
+- 吃完一具：`_carnivoreEatCorpse(creature, corpse)`，移除屍體，回復 5% maxHP
+
+### 成長（不累乘，基礎值計算）
+- 每吃1具：HP/速度/攻擊力/體積各 +10% 基礎值（`corpseEaten` 計數）
+- `baseRadius` 在 `_makeCarnCreature` 生成時記錄（與 `baseHp`、`baseSpeed`、`baseDamage` 一起）
+
+---
+
+## 殺手化系統（v0.38.0，僅普通地圖）
+
+### 觸發
+- `corpseEaten >= 5` 且 `features.killer === true` 時觸發 `_triggerKiller(creature)`
+- `isKiller = true`，`killerCorpseEaten = 0`（殺手化後獨立計數）
+
+### 殺手化數值（基礎值計算，不累乘）
+- aggroRange 翻倍
+- 攻擊力：`baseDamage * (1 + 0.5 + 0.1 * corpseEaten)`（+50% + 之前10%累計）
+- 速度：`baseSpeed * (1 + 0.3 + 0.1 * corpseEaten)`（+30% + 之前10%累計）
+- 每 5 秒回復 1% maxHP（`killerRegenTimer` 計時）
+
+### 殺手化後繼續吃屍體
+- 每多吃 1 具：damage/speed/maxHp/radius 各再 +10% 基礎值（`killerCorpseEaten` 計數）
+- 兩個計數疊加（`corpseEaten + killerCorpseEaten`）
+
+### 擊殺獎勵（`handleKillerKill`，`systems/combat.js`）
+- XP：`baseDamage * 2`（乘上 `1.1^killerCorpseEaten`）+ 獵人本能加成
+- `spawnLootCircle`：3 份 1 倍屍體
+- 100% 掉落 1 個變異點；`killerCorpseEaten = N` → N% 機率額外掉 1~N 個
+- 殺手本身屍體正常生成
+
+### 死亡路由
+- `handleKill(c, isHostile)` 開頭檢查 `c.isKiller`，若是則路由至 `handleKillerKill(c)`
+
+---
+
+## 精英/Boss回血（v0.38.0，僅普通地圖）
+
+### 精英怪回血（`features.eliteRegen`）
+- `spawnEliteCreature` 記錄 `elite.tierIndex`（0/1/2）
+- 第1夜：每 5 秒 +1% maxHP；第2夜：+2%；第3夜：+3%
+
+### Boss回血（`features.bossRegen`）
+- 每 10 秒 +10% maxHP
+
+---
+
+## 精英怪死亡掉落（v0.38.0，兩種難度均適用）
+- `handleEliteKill` 呼叫 `spawnLootCircle`：1 個 1 倍屍體 + 4 具白骨
+
+---
+
 ## 巨人化系統（v0.37.0，僅普通地圖）
 
 ### 觸發

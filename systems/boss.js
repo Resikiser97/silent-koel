@@ -44,6 +44,14 @@ function updateBoss() {
     if (boss.stunnedUntil && now < boss.stunnedUntil) return;
     const { dx, dy } = wrappedDelta(boss.x, boss.y, p.x, p.y);
     const dist = Math.sqrt(dx * dx + dy * dy);
+    // Boss回血（普通地圖 bossRegen 開啟）
+    if (gameState.currentMap && gameState.currentMap.features && gameState.currentMap.features.bossRegen) {
+        if (now - (boss.regenTimer || 0) >= 10000) {
+            boss.regenTimer = now;
+            boss.hp = Math.min(boss.maxHp, boss.hp + boss.maxHp * 0.10);
+        }
+    }
+
     if (dist < boss.aggroRange) {
         boss.state = 'chasing';
     } else if (boss.state === 'chasing' && dist > boss.aggroRange + 150) {

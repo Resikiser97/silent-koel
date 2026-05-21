@@ -3,6 +3,48 @@
 //            updateHostileCreatures / drawCorpses / drawHostileCreatures
 // =============================================================
 
+// ── 肉系吃屍體成長（每具+10%基礎值，不累乘）──
+function _carnivoreEatCorpse(creature, corpse) {
+    creature.corpseEaten++;
+    const bonus = creature.corpseEaten * 0.1; // 每吃1具+10%，不累乘
+
+    // 回血5% maxHP
+    creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * 0.05);
+
+    // 成長數值（基礎值×bonus，不累乘）
+    creature.maxHp   = creature.baseHp     * (1 + bonus);
+    creature.hp      = Math.min(creature.maxHp, creature.hp);
+    creature.speed   = creature.baseSpeed  * (1 + bonus);
+    creature.damage  = creature.baseDamage * (1 + bonus);
+    creature.radius  = creature.baseRadius * (1 + bonus);
+
+    if (creature.isKiller) {
+        // 殺手化後繼續吃：killerCorpseEaten 計數，再疊加+10%基礎值
+        creature.killerCorpseEaten++;
+        const kBonus = creature.killerCorpseEaten * 0.1;
+        creature.damage  += creature.baseDamage * kBonus;
+        creature.speed   += creature.baseSpeed  * kBonus;
+        creature.maxHp   += creature.baseHp     * kBonus;
+        creature.hp       = Math.min(creature.maxHp, creature.hp);
+        creature.radius  += creature.baseRadius * kBonus;
+    } else if (creature.corpseEaten >= 5 &&
+               gameState.currentMap && gameState.currentMap.features &&
+               gameState.currentMap.features.killer) {
+        // 觸發殺手化
+        _triggerKiller(creature);
+    }
+}
+
+// ── 殺手化觸發（吃滿5具）──
+function _triggerKiller(creature) {
+    creature.isKiller         = true;
+    creature.killerCorpseEaten = 0;
+    creature.aggroRange       = creature.aggroRange * 2;
+    creature.damage           = creature.baseDamage * (1 + 0.5 + 0.1 * creature.corpseEaten);
+    creature.speed            = creature.baseSpeed  * (1 + 0.3 + 0.1 * creature.corpseEaten);
+    creature.killerRegenTimer = 0;
+}
+
 function _triggerGiantization(creature) {
     const prevMaxHp = creature.maxHp || 30;
     const oldLeader = creature.packLeaderRef; // 保存舊隊長引用
@@ -443,6 +485,74 @@ function updateHostileCreatures() {
         if (creature.hp <= 0) continue;
         if (creature.stunnedUntil && now < creature.stunnedUntil) continue;
 
+        // ── 殺手化：每5秒回復1% maxHP ──────────────────────────────
+        if (creature.isKiller) {
+            if (now - (creature.killerRegenTimer || 0) >= 5000) {
+                creature.killerRegenTimer = now;
+                creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * 0.01);
+            }
+        }
+
+        // ── 肉系吃屍體（僅普通地圖 hostileEatMeat 開啟）──────────
+        const featureEatMeat = !!(gameState.currentMap && gameState.currentMap.features &&
+                                  gameState.currentMap.features.hostileEatMeat);
+        if (featureEatMeat && creature.diet === 'carnivore') {
+            if (creature.state === 'eating') {
+                // 吃屍體期間 aggroRange×1.5，有生物進入則中斷
+                const tempAggro = (creature.eatBaseAggroRange || creature.aggroRange) * 1.5;
+                let interrupted = false;
+                if (wrappedDistance(creature.x, creature.y, gameState.player.x, gameState.player.y) < tempAggro) interrupted = true;
+                if (!interrupted) {
+                    for (const n of gameState.neutralCreatures) {
+                        if (n.hp <= 0) continue;
+                        if (wrappedDistance(creature.x, creature.y, n.x, n.y) < tempAggro) { interrupted = true; break; }
+                    }
+                }
+                if (interrupted) {
+                    // 中斷：進度重置，進入巡邏
+                    creature.state = 'patrolling';
+                    creature.eatTickTimer = 0;
+                    creature.eatTicks = 0;
+                    creature.eatTarget = null;
+                    // 繼續執行下方追擊邏輯
+                } else {
+                    // 每0.5秒一tick，6 ticks（3秒）完成一具屍體
+                    creature.eatTickTimer = (creature.eatTickTimer || 0) + FIXED_DELTA;
+                    while (creature.eatTickTimer >= 500) {
+                        creature.eatTickTimer -= 500;
+                        creature.eatTicks = (creature.eatTicks || 0) + 1;
+                        if (creature.eatTicks >= 6) {
+                            // 吃完：移除屍體 + 呼叫成長
+                            const corpseIdx = gameState.corpses.indexOf(creature.eatTarget);
+                            if (corpseIdx !== -1) gameState.corpses.splice(corpseIdx, 1);
+                            if (creature.eatTarget) _carnivoreEatCorpse(creature, creature.eatTarget);
+                            creature.state = 'patrolling';
+                            creature.eatTickTimer = 0;
+                            creature.eatTicks = 0;
+                            creature.eatTarget = null;
+                            break;
+                        }
+                    }
+                    if (creature.state === 'eating') continue; // 仍在吃，跳過其他邏輯
+                }
+            } else if (creature.state !== 'chasing') {
+                // 漫遊/休息時：偵測60px內的屍體
+                let closestCorpse = null, closestCorpseDist = 60;
+                for (const corpse of gameState.corpses) {
+                    const d = wrappedDistance(creature.x, creature.y, corpse.x, corpse.y);
+                    if (d < closestCorpseDist) { closestCorpseDist = d; closestCorpse = corpse; }
+                }
+                if (closestCorpse) {
+                    creature.state = 'eating';
+                    creature.eatTarget = closestCorpse;
+                    creature.eatTickTimer = 0;
+                    creature.eatTicks = 0;
+                    creature.eatBaseAggroRange = creature.aggroRange;
+                    continue; // 進入吃屍體，跳過其他邏輯
+                }
+            }
+        }
+
         // 尋找最近目標（玩家 > 中立生物）
         let bestTarget = null;
         let bestDist = Infinity;
@@ -525,31 +635,6 @@ function updateHostileCreatures() {
                 moveCreature(creature, creature.x + Math.cos(angle) * creature.speed, creature.y + Math.sin(angle) * creature.speed);
             }
             continue;
-        }
-
-        // carnivore/omnivore 吃附近屍體（普通地圖才啟用 hostileEatMeat）
-        const featureEatMeat = !!(gameState.currentMap && gameState.currentMap.features && gameState.currentMap.features.hostileEatMeat);
-        if (featureEatMeat && (creature.diet === 'carnivore' || creature.diet === 'omnivore')) {
-            let closestIdx = -1, closestDist = creature.aggroRange;
-            for (let i = 0; i < gameState.corpses.length; i++) {
-                const d = wrappedDistance(creature.x, creature.y, gameState.corpses[i].x, gameState.corpses[i].y);
-                if (d < closestDist) { closestDist = d; closestIdx = i; }
-            }
-            if (closestIdx !== -1) {
-                const corpse = gameState.corpses[closestIdx];
-                if (closestDist < creature.radius + corpse.radius) {
-                    const removeCap = !!(gameState.currentMap && gameState.currentMap.removeHostileCap);
-                    creature.speed  = removeCap ? creature.speed + 0.3 : Math.min(7.5, Math.round((creature.speed + 0.3) * 10) / 10);
-                    creature.damage = removeCap ? creature.damage + 1   : Math.min(20, creature.damage + 1);
-                    gameState.corpses.splice(closestIdx, 1);
-                    creature.corpseEaten = (creature.corpseEaten || 0) + 1;
-                } else {
-                    const { dx: cdx, dy: cdy } = wrappedDelta(creature.x, creature.y, corpse.x, corpse.y);
-                    moveCreature(creature, creature.x + Math.cos(Math.atan2(cdy, cdx)) * creature.speed,
-                                           creature.y + Math.sin(Math.atan2(cdy, cdx)) * creature.speed);
-                    continue;
-                }
-            }
         }
 
         // ── 生態肉系生物三態移動 ──────────────────────────────────

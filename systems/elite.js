@@ -21,7 +21,8 @@ function spawnEliteCreature(nightNum) {
         attackCooldown: 0, state: 'patrolling',
         wanderTarget: null, lastWanderTime: Date.now(),
         label: tier.label, color: tier.color, xp: tier.xp,
-        diet: Math.random() < 0.5 ? 'herbivore' : 'carnivore'
+        diet: Math.random() < 0.5 ? 'herbivore' : 'carnivore',
+        tierIndex  // 第1/2/3夜 → 0/1/2，供 eliteRegen 使用
     };
     gameState.eliteJustKilled = false;
     gameState.dayNightMessage.text = t('eliteAppeared');
@@ -41,6 +42,16 @@ function updateEliteCreature() {
     } else if (elite.state === 'chasing' && dist > elite.aggroRange + 100) {
         elite.state = 'patrolling';
     }
+    // 精英怪回血（普通地圖 eliteRegen 開啟）
+    if (gameState.currentMap && gameState.currentMap.features && gameState.currentMap.features.eliteRegen) {
+        const tierIdx = elite.tierIndex || 0;
+        const regenRate = [0.01, 0.02, 0.03][tierIdx] || 0.01; // 第1/2/3夜 1%/2%/3%
+        if (now - (elite.regenTimer || 0) >= 5000) {
+            elite.regenTimer = now;
+            elite.hp = Math.min(elite.maxHp, elite.hp + elite.maxHp * regenRate);
+        }
+    }
+
     if (elite.state === 'chasing') {
         if (dist <= elite.attackRange) {
             if (now - elite.attackCooldown >= 1200) {

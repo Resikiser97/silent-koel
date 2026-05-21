@@ -104,6 +104,7 @@ function _makeCarnCreature(x, y, biome, spec, strength, mapConfig) {
         baseSpeed: 3.6,
         damage,
         baseDamage: 5,
+        baseRadius: 10,
         diet: 'carnivore',
         canFight: true,
         state: 'patrolling',

@@ -95,7 +95,37 @@ function handleGiantKill(c) {
     if (gameState.topBarTarget === c) { gameState.topBarTarget = null; gameState.topBarFadeTimer = 0; }
 }
 
+function handleKillerKill(creature) {
+    const baseXP = (creature.baseDamage || 5) * 2;
+    const xpMultiplier = Math.pow(1.1, creature.killerCorpseEaten || 0);
+    const finalXP = Math.round(baseXP * xpMultiplier) + (gameState.playerSkills.hunter || 0) * 10;
+    addXP(finalXP);
+    showXPPopup(creature.x, creature.y, finalXP);
+
+    // 圓形散落：3份1倍屍體
+    spawnLootCircle(creature.x, creature.y, [
+        { type: 'corpse', data: { multiplier: 1 } },
+        { type: 'corpse', data: { multiplier: 1 } },
+        { type: 'corpse', data: { multiplier: 1 } },
+    ]);
+
+    // 變異點：100%掉落1個
+    addMutationPoints(1);
+    // 殺手化後每吃1具N%機率額外掉落1~N個（N=killerCorpseEaten）
+    const killerEaten = creature.killerCorpseEaten || 0;
+    if (killerEaten > 0) {
+        const extraChance = killerEaten / 100;
+        if (Math.random() < extraChance) {
+            addMutationPoints(Math.floor(Math.random() * killerEaten) + 1);
+        }
+    }
+
+    // 殺手本身屍體
+    gameState.corpses.push({ x: creature.x, y: creature.y, radius: creature.radius, spawnTime: Date.now() });
+}
+
 function handleKill(c, isHostile) {
+    if (c.isKiller) { handleKillerKill(c); return; }
     const p = gameState.player;
     const now = Date.now();
     gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });

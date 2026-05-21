@@ -2,6 +2,22 @@
 
 ---
 
+## v0.38.0 - 2026-05-22
+
+### 新增
+- **肉系吃屍體系統**（`systems/creatures.js`）：普通地圖肉系生物在漫遊/休息時偵測 60px 內屍體進入 `eating` 狀態，每 0.5s tick / 6 ticks（3秒）完成，期間 aggroRange×1.5，有生物進入則中斷；完成後 `_carnivoreEatCorpse` 成長（每具 +10% 基礎值，不累乘）+ 回血 5%
+- **殺手化系統**（`systems/creatures.js`）：`corpseEaten >= 5` 觸發 `_triggerKiller`，aggroRange 翻倍、攻擊 +50%+之前10%累計、速度 +30%+之前10%累計；每5秒回血1%；繼續吃屍體每具再 +10% 基礎值；`handleKillerKill`（`systems/combat.js`）：XP×2（累乘 1.1^killerCorpseEaten）+ 3份屍體 + 變異點
+- **精英怪回血**（`systems/elite.js`）：普通地圖 `eliteRegen`，第1/2/3夜每5秒回復 1%/2%/3% maxHP；`elite.tierIndex` 記錄夜晚等級
+- **Boss回血**（`systems/boss.js`）：普通地圖 `bossRegen`，每10秒回復 10% maxHP
+- **精英怪死亡掉落**（`systems/organs.js`）：`handleEliteKill` 呼叫 `spawnLootCircle`，散落 1 個 1 倍屍體 + 4 具白骨
+- **`baseRadius`**（`systems/spawning.js`）：`_makeCarnCreature` 新增 `baseRadius: 10` 欄位，供吃屍體成長計算使用
+
+### 調整
+- `handleKill`（`systems/combat.js`）：開頭新增 `isKiller` 判斷，路由至 `handleKillerKill`
+- 舊肉系即時吃屍體邏輯（舊 Phase 1 簡易版）完全替換為新 tick-based `eating` 狀態系統
+
+---
+
 ## v0.37.0 - 2026-05-22
 
 ### 新增
