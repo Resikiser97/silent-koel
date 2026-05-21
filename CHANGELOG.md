@@ -2,6 +2,17 @@
 
 ---
 
+## v0.33.0 - 2026-05-21
+
+### 新增
+
+#### 首頁童書故事系統（`systems/ui.js`、`main.js`）
+- **首頁童書故事按鈕**：首頁左上角新增 📖 圖示按鈕，暖黃色半透明設計，hover 輕微放大，點擊觸發 `showGuideStory()`
+- **噪鹃生存記 Guide Story 系統**：新增 `showGuideStory()` 和 `_getGuideStoryPages()`；童書風格 UI（米黃紙質背景、深棕文字），4 頁故事各附 SVG 動畫插畫（破曉 / 孤兒 / 蛻變 / 試煉），翻頁進度點導航，關閉按鈕，手機版插畫縮小至 140px
+- **First Time Player 判斷**：`window.onload` 改為檢查 `localStorage.hasPlayedBefore`；首次玩家自動彈出 Guide Story；`initializeGame()` 開頭與 Guide 最後一頁「開始冒險」均寫入標記
+
+---
+
 ## v0.32.1 - 2026-05-20
 
 ### 修復

@@ -56,6 +56,7 @@ systems/ui.js             showTooltip, hideTooltip, drawGame, updateUI, drawTrea
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式
                           showGuide, hideGuide, showStartScreen
+                          showGuideStory, _getGuideStoryPages（4頁噪鹃生存記故事書，SVG動畫插畫）
                           showCompendium（三分頁圖鑑：遊戲說明/器官/進化，暫停遊戲）
                           detectMobile, getOrientation, applyDeviceMode, _applyMobileScale
                           _updateOrientationBar, _updateJoystickCanvas, _renderMobileOverlay

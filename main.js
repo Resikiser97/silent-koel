@@ -75,6 +75,7 @@ function gameLoop(timestamp) {
 }
 
 function initializeGame() {
+    localStorage.setItem('hasPlayedBefore', 'true');
     gameState.gameStarted = true;
     console.log("--- 遊戲初始化開始 ---");
 
@@ -183,4 +184,16 @@ function initializeGame() {
     requestAnimationFrame(gameLoop);
 }
 
-window.onload = showStartScreen;
+window.onload = () => {
+    if (sessionStorage.getItem('autostart')) {
+        sessionStorage.removeItem('autostart');
+        initializeGame();
+        return;
+    }
+    if (!localStorage.getItem('hasPlayedBefore')) {
+        showStartScreen();
+        setTimeout(() => showGuideStory(), 300);
+    } else {
+        showStartScreen();
+    }
+};
