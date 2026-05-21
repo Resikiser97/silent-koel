@@ -2248,15 +2248,11 @@ function showGuideStory() {
         border-left: 8px solid rgba(130,80,20,0.45);
     `;
 
-    if (_effectiveMobile && _effectiveMobile()) {
-        book.style.maxWidth = '98%';
-    }
-
     // ── 插畫區（上半部）
     const illustrationArea = document.createElement('div');
     illustrationArea.style.cssText = `
         width: 100%;
-        height: 200px;
+        height: 260px;
         overflow: hidden;
         flex-shrink: 0;
         border-radius: 8px 8px 0 0;
@@ -2266,10 +2262,6 @@ function showGuideStory() {
         justify-content: center;
     `;
 
-    if (_effectiveMobile && _effectiveMobile()) {
-        illustrationArea.style.height = '140px';
-    }
-
     // ── 文字區（下半部）
     const textArea = document.createElement('div');
     textArea.style.cssText = `
@@ -2278,10 +2270,6 @@ function showGuideStory() {
         overflow-y: auto;
         min-height: 0;
     `;
-
-    if (_effectiveMobile && _effectiveMobile()) {
-        textArea.style.padding = '14px 20px 8px';
-    }
 
     const chapterHeader = document.createElement('div');
     chapterHeader.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;';
@@ -2303,6 +2291,9 @@ function showGuideStory() {
     `;
 
     if (_effectiveMobile && _effectiveMobile()) {
+        book.style.maxWidth = '98%';
+        illustrationArea.style.height = '200px';
+        textArea.style.padding = '14px 20px 8px';
         storyText.style.fontSize = '12.5px';
     }
 
@@ -2467,7 +2458,7 @@ function _getGuideStoryPages() {
         {
             icon: '🌑',
             title: '第一章 — 破曉',
-            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 180" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="0" width="520" height="180" fill="#0a1208"/>
 <ellipse cx="90" cy="95" rx="70" ry="52" fill="#111f0e"/>
 <ellipse cx="95" cy="88" rx="50" ry="36" fill="#162a12"/>
@@ -2502,7 +2493,7 @@ function _getGuideStoryPages() {
   <line x1="481" y1="51" x2="475" y2="47" stroke="#ffee88" stroke-width="1.5" opacity=".7"/>
   <line x1="495" y1="51" x2="501" y2="47" stroke="#ffee88" stroke-width="1.5" opacity=".7"/>
 </g>
-<text x="260" y="165" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#4a7a38" opacity=".7">遠方傳來槍聲。你孤身一人。</text>
+<text x="260" y="188" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#4a7a38" opacity=".7">遠方傳來槍聲。你孤身一人。</text>
 </svg>`,
             content: `你睜開了眼睛。
 
@@ -2535,7 +2526,7 @@ function _getGuideStoryPages() {
         {
             icon: '🐦‍⬛',
             title: '第二章 — 孤兒',
-            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 180" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="0" width="520" height="180" fill="#1a1005"/>
 <ellipse style="animation:_warmP 3s ease-in-out infinite" cx="260" cy="150" rx="160" ry="45" fill="#c8640a" opacity=".2"/>
 <ellipse cx="260" cy="150" rx="78" ry="20" fill="#2a1a06"/>
@@ -2577,7 +2568,7 @@ function _getGuideStoryPages() {
 </g>
 <path style="animation:_fall 3s ease-in infinite" d="M230 65 Q228 70 232 73 Q230 75 228 71Z" fill="#333" opacity=".6"/>
 <path style="animation:_fall 3s ease-in infinite 1.4s" d="M290 60 Q288 65 292 68 Q290 70 288 66Z" fill="#333" opacity=".5"/>
-<text x="260" y="172" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#8a6030" opacity=".8">牠們咬著你，叼進了自己的巢。</text>
+<text x="260" y="188" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#8a6030" opacity=".8">牠們咬著你，叼進了自己的巢。</text>
 </svg>`,
             content: `你很小很小的時候，
 人類帶著槍聲進入了那片樹林。
@@ -2613,7 +2604,7 @@ function _getGuideStoryPages() {
         {
             icon: '☠️',
             title: '第三章 — 蛻變',
-            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 180" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="0" width="520" height="180" fill="#0c0a15"/>
 <ellipse style="animation:_vglow 2s ease-in-out infinite" cx="180" cy="95" rx="75" ry="52" fill="#6030c0" opacity=".2"/>
 <g style="animation:_breath 3s ease-in-out infinite;transform-origin:180px 95px">
@@ -2649,7 +2640,7 @@ function _getGuideStoryPages() {
 <circle cx="420" cy="35" r="1.2" fill="#a080d0" opacity=".5"/>
 <circle cx="455" cy="22" r="1" fill="#a080d0" opacity=".4"/>
 <circle cx="480" cy="44" r="1.1" fill="#a080d0" opacity=".6"/>
-<text x="260" y="170" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#9060c8" opacity=".8">白骨素不是詛咒。是生存的證明。</text>
+<text x="260" y="188" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#9060c8" opacity=".8">白骨素不是詛咒。是生存的證明。</text>
 </svg>`,
             content: `每一口果子，是為了活著。
 每一次進化，是為了更強壯。
@@ -2681,7 +2672,7 @@ function _getGuideStoryPages() {
         {
             icon: '⚔️',
             title: '第四章 — 試煉',
-            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 180" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <radialGradient id="_bg" cx="50%" cy="50%"><stop offset="0%" stop-color="#141810"/><stop offset="100%" stop-color="#060806"/></radialGradient>
   <radialGradient id="_bg1" cx="50%" cy="50%"><stop offset="0%" stop-color="#5a3010" stop-opacity=".45"/><stop offset="100%" stop-color="#5a3010" stop-opacity="0"/></radialGradient>
@@ -2737,7 +2728,7 @@ function _getGuideStoryPages() {
 </g>
 <text x="435" y="165" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#8830b0" opacity=".85">🦂 沙漠蠍王</text>
 <text x="260" y="14" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#506040" opacity=".6">三個威脅，從黑暗中浮現</text>
-<text x="260" y="177" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#506040" opacity=".65">用腦子去贏。</text>
+<text x="260" y="188" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#506040" opacity=".65">用腦子去贏。</text>
 </svg>`,
             content: `這片廣東的森林，隱藏著三個威脅。
 
