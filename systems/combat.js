@@ -52,6 +52,49 @@ function applyDamageToPlayer(rawDamage, attacker) {
     }
 }
 
+function addMutationPoints(amount) {
+    // TODO: Phase 5 實作
+    console.log('[Mutation] +' + amount + ' points (pending Phase 5)');
+}
+
+function handleGiantKill(c) {
+    const p = gameState.player;
+    // XP：巨人化 60，Alpha 200（+獵人本能加成）
+    const baseXP = c.isAlpha ? 200 : 60;
+    const xp = baseXP + (gameState.playerSkills.hunter || 0) * 10;
+    addXP(xp);
+    showXPPopup(p.x, p.y, xp);
+
+    // 掉落道具（圓形散落）
+    const items = c.isAlpha
+        ? [{ type: 'corpse', data: { multiplier: 2 } },
+           { type: 'corpse', data: { multiplier: 2 } },
+           { type: 'bone',   data: {} },
+           { type: 'bone',   data: {} },
+           { type: 'bone',   data: {} }]
+        : [{ type: 'corpse', data: { multiplier: 2 } },
+           { type: 'bone',   data: {} }];
+    spawnLootCircle(c.x, c.y, items);
+
+    // 變異點掉落（100%掉1個；Alpha 20%/巨人化 10%機率額外掉）
+    addMutationPoints(1);
+    const extraChance = c.isAlpha ? 0.2 : 0.1;
+    if (Math.random() < extraChance) {
+        const extra = c.isAlpha
+            ? (1 + Math.floor(Math.random() * 6))
+            : (1 + Math.floor(Math.random() * 3));
+        addMutationPoints(extra);
+    }
+
+    // 清理隊伍與UI追蹤狀態
+    if (c.isAlpha && gameState.alphaCreature === c) gameState.alphaCreature = null;
+    if (c.packMembers) {
+        for (const m of c.packMembers) m.packLeaderRef = null;
+        c.packMembers = [];
+    }
+    if (gameState.topBarTarget === c) { gameState.topBarTarget = null; gameState.topBarFadeTimer = 0; }
+}
+
 function handleKill(c, isHostile) {
     const p = gameState.player;
     const now = Date.now();
@@ -100,6 +143,9 @@ function playerAttack() {
         }
         anyHit = true;
         if (isCrit) anyCrit = true;
+
+        // 追蹤特殊目標（精英/Boss/巨人化/Alpha），毒傷tick不更新此值
+        if (isElite || isBoss || c.isGiantized) gameState.topBarTarget = c;
 
         c.hp -= dmg;
         showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FF4444');
@@ -161,6 +207,7 @@ function playerAttack() {
         if (c.hp <= 0) {
             if (isBoss) { bossDied = true; continue; }
             if (isElite) { handleEliteKill(c); continue; }
+            if (c.isGiantized) { handleGiantKill(c); continue; }
             handleKill(c, hostile);
         }
     }
@@ -172,9 +219,11 @@ function playerAttack() {
 function updateStatusEffects() {
     const now = Date.now();
     const eliteArr = (gameState.eliteCreature && gameState.eliteCreature.hp > 0) ? [gameState.eliteCreature] : [];
-    for (const c of [...gameState.hostileCreatures, ...gameState.neutralCreatures, ...eliteArr]) {
+    const bossArr  = (gameState.boss && gameState.boss.hp > 0) ? [gameState.boss] : [];
+    for (const c of [...gameState.hostileCreatures, ...gameState.neutralCreatures, ...eliteArr, ...bossArr]) {
         if (c.hp <= 0) continue;
-        const isElite = c === gameState.eliteCreature;
+        const isElite  = c === gameState.eliteCreature;
+        const isBoss   = c === gameState.boss;
         const isHostile = gameState.hostileCreatures.includes(c);
 
         if (c.bleedEndTime && now < c.bleedEndTime && now - (c.lastBleedTick || 0) >= 1000) {
@@ -184,19 +233,29 @@ function updateStatusEffects() {
             c.lastBleedTick = now;
             showFloatingText(c.x, c.y - 18, t('bleedFloat', { n: bleedAmt }), '#880000', 11);
             if (hpBefore > 0 && c.hp <= 0) {
-                if (isElite) handleEliteKill(c);
+                if (isBoss) showVictory();
+                else if (isElite) handleEliteKill(c);
+                else if (c.isGiantized) handleGiantKill(c);
                 else handleKill(c, isHostile);
             }
         }
 
         if (c.poisonEndTime && now < c.poisonEndTime && now - c.lastPoisonTick >= 1000) {
             const poisonAmt = c.poisonDmg || 2;
+            // 毒傷減免：精英20%、Boss通用30%、沙漠蠍王50%
+            let poisonResist = 0;
+            if (isElite) poisonResist = 0.2;
+            if (isBoss)  poisonResist = 0.3;
+            if (isBoss && c.name === '沙漠蠍王') poisonResist = 0.5;
+            const actualPoison = Math.round(poisonAmt * (1 - poisonResist));
             const hpBefore = c.hp;
-            c.hp -= poisonAmt;
+            c.hp -= actualPoison;
             c.lastPoisonTick += 1000;
-            showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: poisonAmt }), '#8800CC', 11);
+            showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: actualPoison }), '#8800CC', 11);
             if (hpBefore > 0 && c.hp <= 0) {
-                if (isElite) handleEliteKill(c);
+                if (isBoss) showVictory();
+                else if (isElite) handleEliteKill(c);
+                else if (c.isGiantized) handleGiantKill(c);
                 else handleKill(c, isHostile);
             }
         }

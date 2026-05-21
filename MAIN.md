@@ -23,9 +23,10 @@ systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
 systems/audio.js          AudioManager, initAudio
 systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera
 systems/input.js          handleKeyDown, handleKeyUp（含設定介面按鍵 handler refs）
-systems/spawning.js       spawnFruitFromTree, spawnFruit, spawnNeutralCreatures
-                          moveCreature, spawnHostileCreatures, spawnTreasure
-                          spawnCreatureAtEdge, updateCreatureSpawning
+systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature, spawnTreasure
+                          _randomPointInBiome, _makeHerbCreature, _makeCarnCreature
+                          spawnBiomeCreatures, spawnCreatureAtEdgeBiome
+                          updateCreatureSpawning
 systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction
                           showXPPopup, checkTreasureCollision, updatePassiveOrgans
                           checkXPMilestone, addXP, checkLevelUp
@@ -43,8 +44,10 @@ systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, apply
                           applySkillBonuses, saveLastRunOrgans, showSkillTree
                           buildSkillTreeOverlay, upgradeSkill
                           _grantPoisonSac（雜食性 Lv1 時自動授予毒囊器官）
-systems/creatures.js      updateNeutralCreatures, drawNeutralCreatures
-                          updateHostileCreatures, drawCorpses, drawHostileCreatures
+systems/creatures.js      updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯）
+                          drawNeutralCreatures
+                          updateHostileCreatures（三態移動 + hostileEatMeat 門控）
+                          drawCorpses, drawHostileCreatures
 systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCreature
                           （箭頭繪製改用 systems/utils.js 的 drawArrow）
 systems/boss.js           spawnBoss, updateBoss, showVictory
@@ -86,6 +89,135 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 - `drawGlowEffect(screenX, screenY, radius, fillColor, glowColor, glowBlur)`
   → 繪製帶光暈的填色圓形，精英怪和 Boss 專用
+
+- `spawnLootCircle(cx, cy, items)`
+  → 以圓形平均角度散落掉落物（詳見下方區塊）
+
+---
+
+## 生態生物系統（v0.36.0）
+
+### 生物命名
+| 生態區 | 草系             | 肉系           |
+|--------|-----------------|----------------|
+| 森林   | 駝鹿 (moose)    | 猞猁 (lynx)    |
+| 水潭   | 巨型甲虫 (beetle)| 鱷魚 (croc)    |
+| 沙漠   | 駱駝 (camel)    | 鬣狗 (hyena)   |
+
+### 生成規則
+- 草系和肉系只在對應生態區生成（`_randomPointInBiome` 拒絕採樣）
+- 每個物種獨立計算：上限（草系 20 / 肉系 15）、計時器、少於 3 隻間隔 ×0.3（加速 70%）
+- 每隻生物帶 `biome` 和 `speciesId` 屬性
+
+### 生物基礎屬性
+- **草系**：radius 8、HP 30、speed 2.4、canFight 50%（true 時 damage=3，false 時 damage=0）、diet herbivore
+- **肉系**：radius 10、HP 50、speed 3.6、damage 5、diet carnivore
+
+### 三態移動（biome 生物專屬）
+- **wandering**：每幀角度小幅偏移（±0.12 rad，模擬 Perlin Noise 平滑）
+- **resting**：速度 0~30%，持續 1.5s；玩家（非超友善）或敵意生物靠近 150px 內中斷
+- **attacking / fleeing**：玩家互動觸發（與舊邏輯相同）
+- 草系每 5~15s 有 30% 機率切換為 resting，30% 機率探索最近果子（400px 內）
+- 肉系每 5~15s 有 30% 機率切換為 resting，30% 機率探索最近草系生物（500px 內）
+
+### 簡單地圖限制
+- `hostileEatMeat: false`（EASY_MAP 無此 feature）→ 肉系不會吃屍體成長
+
+---
+
+## 普通地圖（NORMAL_MAP）（v0.36.0）
+- 地形：中心森林保護區半徑 400px（簡單為 600px）
+- 生物強度倍率全部 ×1.5
+- `aggroRangeOverride: 2000`（全局追擊範圍）
+- `removeHostileCap: true`（移除速度/傷害上限）
+- 精英怪：第1夜 ×5/+0.3/×1.5、第2夜 ×10/+0.7/×2.1、第3夜 ×20/+1.5/×2.9
+- Boss：黑熊 HP1500/速4.5/傷30/r33、大白鯊 HP1800/速5.85/傷36/r40、蠍王 HP1650/速5.4/傷40/r37
+- 專屬 features：`giantization`、`killer`、`eliteRegen`、`bossRegen`、`hostileEatMeat`
+
+---
+
+## 圓形散落全局函式 spawnLootCircle（v0.35.0）
+
+- **位置**：`systems/utils.js`
+- 所有掉落物統一可經過此函式散落，圓形平均角度，距中點 10~25px 隨機
+- 單個物品時隨機角度；多個物品時等角均分
+- **支援 type**：
+  - `'corpse'`：`data = { multiplier }`，radius 按 multiplier 縮放（1倍=8px，>1倍=8×1.5px）
+  - `'bone'`：直接呼叫 `_spawnBone(x, y, 8)`
+  - `'mutation'`：待 Phase 5 擴充
+
+---
+
+## 毒傷減免系統（v0.35.0）
+
+- **精英怪**：20% 減免
+- **Boss 通用**：30% 減免
+- **沙漠蠍王**：50% 減免（通用 30% + 專屬 20%）
+- 減免在 `updateStatusEffects()` 的毒傷 tick 扣血時計算
+- 浮動數字顯示減免後實際扣血值
+
+---
+
+## 巨人化系統（v0.37.0，僅普通地圖）
+
+### 觸發
+- 草系生物 `_seekingFruit` 吃滿5顆果子且 `features.giantization === true`
+- 移除舊版激進化（`diet=aggressive`）邏輯，改由巨人化取代
+
+### 巨人化數值（在原本數值基礎上修改）
+- 攻擊力 +20，血量 ×10，體積 ×1.5，aggroRange 150
+- 每秒回復 1% maxHP（`giantRegenTimer` 計時）
+- 不再吃果子
+
+### 組隊（同族同生態限定）
+- 巨人化後自動成為隊長（`packLeader = true`）
+- 每3秒嘗試招募 800px 內同族草食性，20% 成功率，上限5隻（含隊長）
+- 超出 800px 自動掉隊，隊員距離 >600px 時巨人化暫停移動等待
+- 隊員超過 200px 時跟隨隊長
+
+### 行為
+- 優先攻擊：aggroRange 內的敵意生物 / 玩家（草食性Lv4+除外）
+- 無目標時：每3~5秒選最近果子作為移動目標，帶領隊伍前進
+
+### 擊殺獎勵（`handleGiantKill`，`systems/combat.js`）
+- XP：60（+獵人本能加成）
+- `spawnLootCircle`：1個2倍屍體 + 1具白骨
+- 100% 掉落1個變異點；額外10%機率掉 1~3個
+
+---
+
+## Alpha系統（v0.37.0，僅普通地圖）
+
+### 觸發
+- 某巨人化隊長的 `packMembers` 中出現第2隻巨人化時，隊長升格 Alpha
+- `gameState.alphaCreature`：全圖只有1隻 Alpha 的引用
+- 已有 Alpha 時不再觸發新的
+
+### Alpha數值（巨人化基礎上再計算）
+- 攻擊力 ×2，血量 ×3，體積 ×1.5，aggroRange 300
+- 跟隨範圍 `packFollowRange: 1000`，每秒回復 2% maxHP
+
+### 誕生公告
+- `showAlphaAnnouncement(name)`：全屏顯示3秒，2.5秒後淡出
+- 文字：「⚠️ Alpha [物種名] 誕生了！」
+
+### 擊殺獎勵
+- XP：200（+獵人本能加成）
+- `spawnLootCircle`：2個2倍屍體 + 3具白骨
+- 100% 掉落1個變異點；額外20%機率掉 1~6個
+
+---
+
+## 上方血條UI（v0.37.0）
+
+- **函式**：`drawTopBarUI()`，在 `drawGame()` 最末尾呼叫
+- **顯示條件**：玩家2000px內存在精英/Boss/巨人化/Alpha
+- **追蹤邏輯**：`gameState.topBarTarget` 在 `playerAttack()` 命中特殊目標時設定，毒傷tick不更新
+- **淡出**：目標死亡或超出2000px後0.5秒淡出，完成後清空 `topBarTarget`
+- **血條顏色**：精英紫色 `#AA22CC`、Boss深紅 `#CC2200`、巨人化橙色 `#FF8800`、Alpha金色 `#FFD700`
+- **gameState 新增欄位**：`alphaCreature`、`topBarTarget`、`topBarFadeTimer`
+
+---
 
 ### 繪製順序規範（所有生物統一）
 

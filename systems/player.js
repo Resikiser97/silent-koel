@@ -114,8 +114,7 @@ function updatePassiveOrgans() {
                 c.hp -= dmg;
                 showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FFAAAA');
                 if (c.hp <= 0) {
-                    gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
-                    addXP(30 + (gameState.playerSkills.hunter || 0) * 10);
+                    handleKill(c, true);
                 }
             }
         }

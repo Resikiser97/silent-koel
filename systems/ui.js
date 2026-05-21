@@ -680,6 +680,112 @@ function _drawSunMoonIndicator() {
 // 繪製系統
 // =============================================================
 
+function showAlphaAnnouncement(name) {
+    const el = document.createElement('div');
+    el.style.cssText = [
+        'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
+        'display:flex', 'align-items:center', 'justify-content:center',
+        'pointer-events:none', 'z-index:9999', 'opacity:1', 'transition:opacity 0.5s'
+    ].join(';');
+    el.innerHTML =
+        '<div style="font-size:48px;font-weight:bold;color:#FFD700;' +
+        'text-shadow:0 0 20px #FF8800,2px 2px 4px #000;text-align:center;">' +
+        '⚠️ Alpha ' + (name || '') +
+        '<br><span style="font-size:32px">誕生了！</span></div>';
+    document.getElementById('ui-overlay').appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; }, 2500);
+    setTimeout(() => el.remove(), 3000);
+}
+
+function drawTopBarUI() {
+    const now = Date.now();
+    const p   = gameState.player;
+    const target = gameState.topBarTarget;
+    if (!target) return;
+
+    // 目標死亡或超出2000px → 啟動淡出計時
+    const tgtDead = target.hp <= 0;
+    const tgtFar  = wrappedDistance(p.x, p.y, target.x, target.y) > 2000;
+    if (tgtDead || tgtFar) {
+        if (!gameState.topBarFadeTimer) gameState.topBarFadeTimer = now;
+    } else {
+        gameState.topBarFadeTimer = 0;
+    }
+
+    // 計算透明度（0.5秒淡出）
+    let alpha = 1;
+    if (gameState.topBarFadeTimer) {
+        const elapsed = now - gameState.topBarFadeTimer;
+        if (elapsed >= 500) {
+            gameState.topBarTarget    = null;
+            gameState.topBarFadeTimer = 0;
+            return;
+        }
+        alpha = 1 - elapsed / 500;
+    }
+
+    // 決定顯示名稱與血條顏色
+    let displayName = target.name || '目標';
+    let barColor    = '#AA22CC'; // 預設：精英紫色
+    if (target === gameState.boss) {
+        displayName = target.name || 'Boss';
+        barColor    = '#CC2200';
+    } else if (target === gameState.eliteCreature) {
+        displayName = '★★ 精英 ' + (target.name || '');
+        barColor    = '#AA22CC';
+    } else if (target.isAlpha) {
+        displayName = (target.name || '') + '（Alpha）';
+        barColor    = '#FFD700';
+    } else if (target.isGiantized) {
+        displayName = (target.name || '') + '（巨人化）';
+        barColor    = '#FF8800';
+    }
+
+    // 繪製 UI（頂部中央，寬400，高50）
+    const barW = 400, barH = 50;
+    const x = (VIEW_W - barW) / 2, y = 10;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // 半透明背景框
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    if (ctx.roundRect) {
+        ctx.beginPath(); ctx.roundRect(x, y, barW, barH, 6); ctx.fill();
+    } else {
+        ctx.fillRect(x, y, barW, barH);
+    }
+
+    // 目標名稱
+    ctx.fillStyle = target.isAlpha ? '#FFD700' : '#FFFFFF';
+    ctx.font = 'bold 13px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(displayName, x + barW / 2, y + 5);
+
+    // 血條底色
+    const hpBarX = x + 10, hpBarY = y + 24, hpBarW = barW - 20, hpBarH = 10;
+    ctx.fillStyle = '#333';
+    ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
+
+    // 血條（彩色）
+    const hpRatio = Math.max(0, Math.min(1, target.hp / (target.maxHp || 100)));
+    ctx.fillStyle = barColor;
+    ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
+
+    // HP 數值
+    ctx.fillStyle = '#CCC';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(
+        Math.max(0, Math.ceil(target.hp)) + ' / ' + (target.maxHp || 100),
+        x + barW / 2, y + 37
+    );
+
+    ctx.restore();
+}
+
 function drawGame() {
     // 1. 貼上地形預渲染底圖（離屏 Canvas），夜晚遮罩在 drawTerrain 內疊加
     drawTerrain();
@@ -976,6 +1082,9 @@ function drawGame() {
 
     // 14. 手機疊加層每幀刷新（支援攻擊回饋淡出動畫）
     if (gameState.isMobile) _renderMobileOverlay();
+
+    // 15. 上方血條UI（精英/Boss/巨人化/Alpha）
+    drawTopBarUI();
 }
 
 function _heartPath(ctx, x, y, size) {
@@ -2051,10 +2160,10 @@ function showMapSelect() {
 
     let selectedDiff = 'easy';
     const diffs = [
-        { id: 'easy',   key: 'diffEasy',   map: typeof EASY_MAP !== 'undefined' ? EASY_MAP : null, locked: false },
-        { id: 'normal', key: 'diffNormal',  map: null, locked: true },
-        { id: 'hard',   key: 'diffHard',    map: null, locked: true },
-        { id: 'hell',   key: 'diffHell',    map: null, locked: true },
+        { id: 'easy',   key: 'diffEasy',   map: typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null, locked: false },
+        { id: 'normal', key: 'diffNormal', map: typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null, locked: false },
+        { id: 'hard',   key: 'diffHard',   map: null, locked: true },
+        { id: 'hell',   key: 'diffHell',   map: null, locked: true },
     ];
     const diffBtnEls = {};
 

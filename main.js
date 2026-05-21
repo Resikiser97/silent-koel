@@ -86,6 +86,9 @@ function initializeGame() {
     gameState.keys                = {};
     gameState.mobileInput         = { dx: 0, dy: 0 };
     gameState.eliteCreature       = null;
+    gameState.alphaCreature       = null;
+    gameState.topBarTarget        = null;
+    gameState.topBarFadeTimer     = 0;
     gameState.boss                = null;
     gameState.bossSpawned         = false;
     gameState.bossBellPlayed      = false;
@@ -146,14 +149,11 @@ function initializeGame() {
         spawnFruitFromTree(tree);
     }
 
-    // 4. 生成中立生物
-    spawnNeutralCreatures();
-
-    // 5. 生成敵意生物與初始化屍體、寶物陣列
+    // 4+5. 生成生態生物（草系＋肉系）並初始化屍體、骨骼、寶物陣列
     gameState.corpses = [];
-    gameState.bones = [];
+    gameState.bones   = [];
     gameState.treasures = [];
-    spawnHostileCreatures();
+    spawnBiomeCreatures();
 
     // 6. 設定事件監聽器
     document.addEventListener('keydown', handleKeyDown);

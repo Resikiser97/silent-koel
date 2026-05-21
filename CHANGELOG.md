@@ -2,6 +2,51 @@
 
 ---
 
+## v0.37.0 - 2026-05-22
+
+### 新增
+- **巨人化系統**（`systems/creatures.js`）：草系生物吃滿5顆果子觸發（普通地圖限定），攻擊力+20、血量×10、體積×1.5、aggroRange 150、每秒回復1%血；組隊系統（同族上限5隻，跟隨範圍800px，隊員等待機制）；`_triggerGiantization()` 輔助函式
+- **Alpha系統**（`systems/creatures.js`）：隊伍出現第2隻巨人化時，隊長升格Alpha，全圖唯一（`gameState.alphaCreature`），攻擊力翻倍/血量×3/體積×1.5/aggroRange 300/每秒回復2%血；`_triggerAlpha()` 輔助函式；`showAlphaAnnouncement()` 全屏3秒公告
+- **上方血條UI**（`systems/ui.js`）：`drawTopBarUI()` 函式，玩家2000px內有特殊目標時頂部顯示血條（寬400px），追蹤最後被普通攻擊命中的目標，目標死亡/超出範圍後0.5秒淡出
+- **handleGiantKill**（`systems/combat.js`）：巨人化/Alpha專屬擊殺獎勵，包含XP（60/200）、`spawnLootCircle` 掉落、變異點（預留Phase 5）
+- **addMutationPoints**（`systems/combat.js`）：Phase 5 預留空函式
+
+### 調整
+- 移除草系生物的激進化邏輯（`diet=aggressive`），由巨人化系統取代
+- `playerAttack()`：命中精英/Boss/巨人化時設定 `gameState.topBarTarget`；巨人化擊殺路由至 `handleGiantKill`
+- `updateStatusEffects()`：狀態異常（毒/流血）擊殺巨人化生物時正確路由至 `handleGiantKill`
+- `gameState` 新增三個欄位：`alphaCreature`、`topBarTarget`、`topBarFadeTimer`
+- `initializeGame()` 再來一場重置時清空上述三個欄位
+
+---
+
+## v0.36.0 - 2026-05-22
+
+### 新增
+- **`map/normalmap.js`**：普通難度地圖配置，含地形參數（中心森林 400px）、生物強度 ×1.5、aggroRange 2000、移除速度/傷害 cap（`removeHostileCap`）、精英/Boss 強化數值、專屬 features 開關
+- **普通難度解鎖**（`systems/ui.js`）：難度選擇頁面普通難度從 🔒 改為可選，寫入 `NORMAL_MAP`
+- **`BIOME_CREATURES`**（`config/creatures.js`）：六種命名生物（駝鹿/猞猁/巨型甲虫/鱷魚/駱駝/鬣狗），各自對應生態區
+- **生態生物生成系統**（`systems/spawning.js`）：`spawnBiomeCreatures()` 替換舊 grid 生成；草系初始 10 隻 × 3 區、肉系 8 隻 × 3 區；`_randomPointInBiome` 拒絕採樣確保在正確生態區；6 個獨立計時器（各生態區各草/肉系）；少於 3 隻時間隔 ×0.3 加速
+- **生物三態移動**（`systems/creatures.js`）：`creature.biome` 標記的生物使用 wandering（Perlin Noise 平滑）/ resting（1.5 秒，可被中斷）/ attacking 三態；草系偶爾探索果子、肉系偶爾探索獵物
+
+### 調整
+- **簡單地圖肉系限制**（`systems/creatures.js`）：肉系吃屍體成長邏輯由 `features.hostileEatMeat` 控制，EASY_MAP 無此 feature → 預設不執行
+- **`gameState.spawnTimers`**（`systems/gameState.js`）：由 `{ neutral, hostile }` 改為 `{ forest_herb, forest_carn, ocean_herb, ocean_carn, desert_herb, desert_carn }`
+
+---
+
+## v0.35.0 - 2026-05-22
+
+### 修復
+- **Boss毒傷未生效**（`systems/combat.js`）：`updateStatusEffects()` 的生物 loop 新增 `bossArr`，使 Boss 正常接受毒傷 tick；Boss 死亡時走 `showVictory()`，不走 `handleKill()`
+- **念力波擊殺XP寫死**（`systems/player.js`）：`updatePassiveOrgans()` 的念力波擊殺改為統一走 `handleKill(c, true)`，移除寫死的 `addXP(30)` 和手動 `corpses.push`；補齊獵人本能加成、屍體生成、XP 浮動文字
+
+### 新增
+- **毒傷減免系統**（`systems/combat.js`）：精英怪 20%、Boss 通用 30%、沙漠蠍王 50%；`updateStatusEffects()` 毒傷 tick 依目標類型計算減免後實際傷害，浮動數字顯示實際扣血值
+- **圓形散落全局函式 `spawnLootCircle`**（`systems/utils.js`）：圓形平均角度散落掉落物，距中點 10~25px 隨機；單個物品隨機角度；支援 type：`corpse`（含 multiplier 縮放）、`bone`；易擴充設計供後續 Phase 使用
+
+---
+
 ## v0.34.1 - 2026-05-21
 
 ### 修復

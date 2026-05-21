@@ -23,6 +23,25 @@ const ELITE_CONFIG = {
     ]
 };
 
+// =============================================================
+// 生態生物種類（v0.36.0）
+// 每個生態區各有一種草系（herbivore）和一種肉系（carnivore）
+// =============================================================
+const BIOME_CREATURES = {
+    forest: {
+        herbivore: { id: 'moose',  name: '駝鹿',     nameEn: 'Moose'         },
+        carnivore: { id: 'lynx',   name: '猞猁',     nameEn: 'Lynx'          },
+    },
+    ocean: {
+        herbivore: { id: 'beetle', name: '巨型甲虫', nameEn: 'Giant Beetle'  },
+        carnivore: { id: 'croc',   name: '鱷魚',     nameEn: 'Crocodile'     },
+    },
+    desert: {
+        herbivore: { id: 'camel',  name: '駱駝',     nameEn: 'Camel'         },
+        carnivore: { id: 'hyena',  name: '鬣狗',     nameEn: 'Hyena'         },
+    },
+};
+
 const BOSS_CONFIG = {
     forest: {
         name: '黑熊',    label: '⚠️黑熊',
