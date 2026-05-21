@@ -1776,6 +1776,12 @@ function hideGuide() {
 
 let _compendiumPaused = false;
 
+function getOrganDisplayName(id) {
+    if (ORGANS[id]) return ORGANS[id].name;
+    if (HIDDEN_ORGANS[id]) return HIDDEN_ORGANS[id].name;
+    return id;
+}
+
 function showCompendium(startTab) {
     applyDeviceMode();
     if (document.getElementById('compendium-overlay')) return;
@@ -1934,7 +1940,7 @@ function showCompendium(startTab) {
         hiddenHtml += _h2(t('compendiumCombos'));
         COMBOS.forEach(combo => {
             hiddenHtml += '<div style="margin-bottom:8px;">';
-            hiddenHtml += '<div style="color:#FFD700;font-size:12px;">' + _esc(combo.ids.join(' + ')) + '</div>';
+            hiddenHtml += '<div style="color:#FFD700;font-size:12px;">' + _esc(combo.ids.map(id => getOrganDisplayName(id)).join(' + ')) + '</div>';
             hiddenHtml += '<div style="color:#ccc;font-size:11px;">' + _esc(combo.desc) + '</div>';
             hiddenHtml += '</div>';
         });
@@ -2196,9 +2202,11 @@ function showStartScreen() {
     const top10Panel = document.createElement('div');
     top10Panel.id = 'top10-panel';
     const _top10Transform = gameState.isMobile
-        ? 'translateY(-50%) scale(0.7)'
+        ? 'scale(0.55)'
         : 'translateY(-50%)';
-    top10Panel.style.cssText = 'position:absolute;right:16px;top:50%;transform:' + _top10Transform + ';transform-origin:right center;width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';
+    const _top10TransformOrigin = gameState.isMobile ? 'top right' : 'right center';
+    const _top10Top = gameState.isMobile ? '16px' : '50%';
+    top10Panel.style.cssText = 'position:absolute;right:16px;top:' + _top10Top + ';transform:' + _top10Transform + ';transform-origin:' + _top10TransformOrigin + ';width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';
     const top10Title = document.createElement('div');
     top10Title.style.cssText = 'color:#FFD700;font-weight:bold;margin-bottom:8px;text-align:center;font-size:14px;';
     top10Title.textContent = t('lbTop10Title');

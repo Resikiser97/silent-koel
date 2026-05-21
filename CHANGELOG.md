@@ -2,6 +2,20 @@
 
 ---
 
+## v0.34.1 - 2026-05-21
+
+### 修復
+
+#### UI 修復
+- **圖鑑組合效果器官名稱顯示**（`systems/ui.js`）：`showCompendium` 的器官圖鑑頁，組合效果（COMBOS）標題原本直接使用 `combo.ids.join(' + ')` 顯示 id 字串（如 `poisonStinger + poisonSac`）；新增 `getOrganDisplayName(id)` helper（優先從 `ORGANS` 取名，其次 `HIDDEN_ORGANS`，fallback 回 id），組合標題改為 `combo.ids.map(id => getOrganDisplayName(id)).join(' + ')`，正確顯示中文名稱（如「毒刺 + 毒囊」）
+
+### 調整
+
+#### 手機 UI
+- **手機版首頁 TOP10 排行榜縮小為 55%**（`systems/ui.js`）：手機裝置下 TOP10 浮窗套用 `scale(0.55)` CSS 縮放（原 `scale(0.7)`），`transform-origin` 改為 `top right`，`top` 改為 `16px`，確保浮窗從右上角縮放不超出畫面
+
+---
+
 ## v0.34.0 - 2026-05-21
 
 ### 修復
