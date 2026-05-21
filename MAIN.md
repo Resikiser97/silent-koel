@@ -119,7 +119,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - `getOrientation()` — `innerHeight > innerWidth` 為豎向，否則橫向
 - `applyDeviceMode()` — 同步 `gameState.forceMode/isMobile/orientation`，呼叫 `_applyMobileScale()` + `_updateJoystickCanvas()` + `_updateOrientationBar()`
 - `_applyMobileScale()` — 用 `CSS transform: scale()` 縮放 `#game-container`，**不改變內部遊戲座標**
-  - 縮放比例由 `MOBILE_GAME_SCALE`（預設 0.7）控制，定義在 `_applyMobileScale()` 上方
+  - 縮放比例由 `MOBILE_GAME_SCALE`（預設 0.6）控制，定義在 `_applyMobileScale()` 上方
   - 橫向：`logicW = round(1600 × MOBILE_GAME_SCALE)`，`logicH = round(900 × MOBILE_GAME_SCALE)`，`scale = vw / logicW`
   - 直向：`logicW = round(900 × MOBILE_GAME_SCALE)`，`logicH = round(1600 × MOBILE_GAME_SCALE)`，`scale = vw / logicW`
   - 調整手機畫面大小只需修改 `MOBILE_GAME_SCALE` 這一個變數，其餘系統（攝影機、生物生成、UI）自動跟著 `VIEW_W/VIEW_H` 更新
@@ -181,7 +181,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
-## 技能點獲得方式（v0.32.0）
+## 技能點獲得方式（v0.32.0 / v0.34.0）
 
 | 來源 | 時機 | 數量 | 位置 |
 |------|------|------|------|
@@ -190,8 +190,31 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 | 時間獎勵 | 死亡/勝利結算 | `Math.floor((600 - timeRemaining) / 180)` | `showSkillTree` / `showVictory` |
 | 等級獎勵 | 死亡/勝利結算 | `Math.floor(player.level / 6)` | `showSkillTree` / `showVictory` |
 
+### 技能點追蹤（v0.34.0）
+- `gameState.sessionSkillPoints = { elite: 0, boss: 0 }` 在每局開始時清零（`initializeGame()` 的狀態重設區塊）
+- `handleEliteKill` 累加 `sessionSkillPoints.elite += eliteNightNum`
+- `showVictory` 設定 `sessionSkillPoints.boss = 5`
+- 結算畫面（`showDeathSettlement` / `doShowVictory`）讀取此值顯示詳細明細
+
 ### 技能升級費用（`upgradeSkill`）
 升至第 N 級費 N 技能點：Lv1=1點、Lv2=2點、Lv3=3點、Lv4=4點、Lv5=5點。
+
+---
+
+## 組合效果（COMBOS）（v0.34.0 調整）
+
+| key | 觸發條件 | 效果 |
+|-----|----------|------|
+| `comboCrabPoison` | 毒刺Lv3 + 擁有毒囊（任意等級） | 毒傷翻倍 |
+| `comboCrabGloves` | 蟹鉗Lv3 + 搏擊拳套Lv3 | 流血傷害翻倍；命中施加 `healReduction=0.5` |
+| `comboShellArmor` | 龜殼Lv3 + 刺甲Lv3 | 反彈傷害翻倍 |
+| `comboBrainEye` | 大腦Lv3 + 真視之眼Lv3 | 念力波可觸發暴擊 |
+| `comboSkinRegen` | 厚皮Lv3 + 超自然回復Lv3 | 回復+1HP，間隔-1秒 |
+| `comboEyeFang` | 真視之眼Lv3 + 獠牙Lv3 | 暴擊附加暈眩 |
+
+`checkComboEffects()` 對 `comboCrabPoison` 採用特殊邏輯（`hasLv3('poisonStinger') && hasOrgan('poisonSac')`），其餘組合統一用 `combo.ids.every(id => hasLv3(id))`。
+
+`healReduction`：`combat.js` `playerAttack()` 在 `comboCrabGloves` 觸發時對命中目標設定 `c.healReduction = 0.5`，作為未來回復機制的前置 debuff。
 
 ---
 

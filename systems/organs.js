@@ -28,15 +28,19 @@ function getComboHint(organId) {
 
 function checkComboEffects() {
     const p = gameState.player;
-    // 所有組合效果觸發條件：雙/多器官都達到 Lv3 才生效
     const hasLv3 = id => {
         const o = p.organs.find(o => o.id === id);
-        // poisonSac 需要 level >= 3（在1-10的範圍）
-        if (id === 'poisonSac') return o && (o.level || 0) >= 3;
         return o && (o.level || 1) >= 3;
     };
+    const hasOrgan = id => p.organs.some(o => o.id === id);
+
     for (const combo of COMBOS) {
-        p[combo.key] = combo.ids.every(id => hasLv3(id));
+        if (combo.key === 'comboCrabPoison') {
+            // 毒刺 Lv3 且擁有毒囊（不要求毒囊達 Lv3）
+            p.comboCrabPoison = hasLv3('poisonStinger') && hasOrgan('poisonSac');
+        } else {
+            p[combo.key] = combo.ids.every(id => hasLv3(id));
+        }
     }
 }
 
@@ -344,7 +348,7 @@ function drawOrganUI() {
         const sepBase = normalOrgans.length + 1 + sacRow;
         hiddenOrgans.forEach((organ, j) => {
             _organHitRegions.push({
-                x: _hrX, y: boxY + padY + (sepBase + 1 + j) * lineH, w: _hrW, h: lineH,
+                x: _hrX, y: boxY + padY + (sepBase + 2 + j) * lineH, w: _hrW, h: lineH,
                 data: {
                     name: organ.name,
                     desc: HIDDEN_ORGANS[organ.id] ? HIDDEN_ORGANS[organ.id].desc : (organ.desc || ''),
@@ -395,12 +399,12 @@ function drawOrganUI() {
 
     if (hiddenOrgans.length > 0) {
         const sepBase = normalOrgans.length + 1 + sacRow;
-        const sepRow = sepBase + 1;
+        // sepBase+1 行為分隔行（畫中線），器官名稱從 sepBase+2 開始
         ctx.fillStyle = 'rgba(255,215,0,0.5)';
-        ctx.fillRect(padX - 2, boxY + padY + (sepBase + 1) * lineH - 14, 160, 1);
+        ctx.fillRect(padX - 2, boxY + padY + (sepBase + 1) * lineH - Math.floor(lineH / 2), 160, 1);
         hiddenOrgans.forEach((organ, i) => {
             ctx.fillStyle = '#FFD700';
-            ctx.fillText('✨ ' + organ.name, padX, boxY + padY + (sepRow + i) * lineH - 4);
+            ctx.fillText('✨ ' + organ.name, padX, boxY + padY + (sepBase + 2 + i) * lineH - 4);
         });
     }
 
@@ -439,6 +443,8 @@ function handleEliteKill(elite) {
     showXPPopup(gameState.player.x, gameState.player.y, xp);
     const eliteNightNum = Math.round((gameState.currentPhaseIndex + 1) / 2);
     gameState.skillPoints += eliteNightNum;
+    if (!gameState.sessionSkillPoints) gameState.sessionSkillPoints = { elite: 0, boss: 0 };
+    gameState.sessionSkillPoints.elite += eliteNightNum;
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
     gameState.timeRemaining = nextDayTime;

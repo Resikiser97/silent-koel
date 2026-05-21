@@ -171,6 +171,7 @@ function showSkillTree(cause) {
     saveLastRunOrgans();
     const timeBonus = Math.floor((600 - gameState.timeRemaining) / 180);
     const levelBonus = Math.floor(gameState.player.level / 6);
+    const eliteBonus = (gameState.sessionSkillPoints && gameState.sessionSkillPoints.elite) || 0;
     gameState.skillPoints += timeBonus + levelBonus;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
@@ -188,14 +189,14 @@ function showSkillTree(cause) {
         xpEl.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
         xpEl.textContent = t('finalXP', { xp: gameState.stats.xpCurrent });
         overlay.appendChild(xpEl);
-        if (timeBonus > 0 || levelBonus > 0) {
+        if (timeBonus > 0 || levelBonus > 0 || eliteBonus > 0) {
             const spSection = document.createElement('div');
             spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:16px;text-align:center;line-height:1.8;';
-            let spHtml = '';
-            if (timeBonus > 0) spHtml += t('skillPtTime', { n: timeBonus });
-            if (timeBonus > 0 && levelBonus > 0) spHtml += '<br>';
-            if (levelBonus > 0) spHtml += t('skillPtLevel', { n: levelBonus });
-            spSection.innerHTML = spHtml;
+            const spLines = [];
+            if (eliteBonus > 0) spLines.push(t('skillPtElite', { n: eliteBonus }));
+            if (timeBonus > 0)  spLines.push(t('skillPtTime',  { n: timeBonus }));
+            if (levelBonus > 0) spLines.push(t('skillPtLevel', { n: levelBonus }));
+            spSection.innerHTML = spLines.join('<br>');
             overlay.appendChild(spSection);
         }
         const goTreeBtn = document.createElement('button');
@@ -281,7 +282,11 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     overlay.appendChild(title);
 
     const organsToKeep = gameState.playerSkills.organMemory || 0;
-    const playerOrgans = gameState.player.organs;
+    // 過濾掉 noInherit: true 的器官（如毒囊），不顯示在繼承選擇列表中
+    const playerOrgans = gameState.player.organs.filter(o => {
+        const def = ORGANS[o.id];
+        return !def || !def.noInherit;
+    });
     const hiddenOrgans = gameState.player.hiddenOrgans || [];
     const selectedOrgans = [];
 

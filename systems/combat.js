@@ -111,9 +111,14 @@ function playerAttack() {
             if (Math.random() < bleedChance) {
                 const baseDmg = getOrganCumulative('crabClaw', 'bleedDmg');
                 c.bleedEndTime = now + getOrganCumulative('crabClaw', 'bleedDur');
-                c.bleedDmg = baseDmg;
+                // 蟹鉗+搏擊拳套組合：流血傷害翻倍
+                c.bleedDmg = p.comboCrabGloves ? baseDmg * 2 : baseDmg;
                 c.lastBleedTick = now;
             }
+        }
+        // 蟹鉗+搏擊拳套組合：命中施加回復量-50% Debuff（供未來有回復的Boss使用）
+        if (p.comboCrabGloves) {
+            c.healReduction = 0.5;
         }
 
         // 毒刺 + 毒囊：合併計算

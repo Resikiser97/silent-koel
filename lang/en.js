@@ -269,9 +269,9 @@ LANG['en'] = {
             'Atk +3, Stun chance +5%, Stun duration +0.5s'
         ]},
         longLegs:      { name: 'Long Legs', levels: [
-            'Move Speed +1.5',
-            'Move Speed +1.5',
-            'Move Speed +1.5'
+            'Move Speed +1',
+            'Move Speed +1',
+            'Move Speed +1'
         ]},
         turtleShell:   { name: 'Turtle Shell', levels: [
             'Damage Taken -10%, Speed -1',
@@ -299,9 +299,9 @@ LANG['en'] = {
             'Crit chance +10%, Crit damage +0.25'
         ]},
         sharpSense:    { name: 'Sharp Sense', levels: [
-            'Detect fruits within 1000px, show best path',
-            'Detection range total 1750px',
-            'Detection range total 2500px'
+            'Detect fruits within 1000px, show best path (red line)',
+            'Add: track nearest corpse (yellow line)',
+            'Add: track nearest bone (white line)'
         ]},
         naturalRegen:  { name: 'Natural Regen', levels: [
             'Recover 1 HP every 10s',
@@ -322,7 +322,7 @@ LANG['en'] = {
         ]}
     },
     hidden: {
-        strongHeart: { name: 'Mighty Heart', desc: 'Speed +0.6, Atk +5, Max HP +100, Size +20% (radius +2)' },
+        strongHeart: { name: 'Mighty Heart', desc: 'Speed +0.6, Atk +5, Max HP +60, Size +20% (radius +2)' },
         strongLegs:  { name: 'Mighty Legs',  desc: 'Speed +3, Size +20% (radius +2)' },
         strongArms:  { name: 'Mighty Arms',  desc: 'Pickup +15px, Size +20% (radius +2)' },
         strongEye:   { name: 'Mighty Eye',   desc: 'Crit chance +10%, Crit damage +0.25, Size +20% (radius +2)' }
@@ -362,7 +362,8 @@ LANG['en'] = {
         ]}
     },
     combos: {
-        comboCrabPoison: 'Poison dmg x2 (Crab Claw + Poison Stinger + Poison Sac each at Lv3)',
+        comboCrabPoison: 'Poison dmg x2 (Stinger at Lv3 + any Poison Sac)',
+        comboCrabGloves: 'Bleed dmg x2, attacks apply -50% healing (Crab Claw + Boxing Gloves each at Lv3)',
         comboShellArmor: 'Reflect damage doubled (Turtle Shell + Thorn Armor each at Lv3)',
         comboBrainEye:   'Psy-wave can crit (Brain + True Eye each at Lv3)',
         comboSkinRegen:  'Regen +1 HP, interval -1s more (Thick Skin + Natural Regen each at Lv3)',

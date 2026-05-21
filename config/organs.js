@@ -54,9 +54,9 @@ const ORGANS = {
     longLegs: {
         id: 'longLegs', name: '大長腿', type: 'defense', maxLevel: 3,
         levels: [
-            { desc: '移動速度+1.5', effects: { speedAdd: 1.5 } },
-            { desc: '移動速度+1.5', effects: { speedAdd: 1.5 } },
-            { desc: '移動速度+1.5', effects: { speedAdd: 1.5 } }
+            { desc: '移動速度+1', effects: { speedAdd: 1 } },
+            { desc: '移動速度+1', effects: { speedAdd: 1 } },
+            { desc: '移動速度+1', effects: { speedAdd: 1 } }
         ]
     },
     turtleShell: {
@@ -119,12 +119,12 @@ const ORGANS = {
     sharpSense: {
         id: 'sharpSense', name: '靈敏知覺', type: 'spirit', maxLevel: 3,
         levels: [
-            { desc: '偵測1000px範圍內果子，顯示最佳路徑',
+            { desc: '偵測1000px範圍內果子，顯示最佳路徑（紅線）',
               effects: { perceptionRangeAdd: 1000 } },
-            { desc: '偵測範圍累計1750px',
-              effects: { perceptionRangeAdd: 750 } },
-            { desc: '偵測範圍累計2500px',
-              effects: { perceptionRangeAdd: 750 } }
+            { desc: '新增追蹤最近屍體（黃線）',
+              effects: {} },
+            { desc: '新增追蹤最近白骨（白線）',
+              effects: {} }
         ]
     },
     naturalRegen: {
@@ -163,8 +163,8 @@ const ORGANS = {
 const HIDDEN_ORGANS = {
     strongHeart: {
         id: 'strongHeart', name: '強大的心臟', type: 'hidden',
-        desc: '移速+0.6，攻擊+5，HP上限+100，體型+20%',
-        effects: { speedAdd: 0.6, attackAdd: 5, hpMaxAdd: 100, radiusAdd: 2 }
+        desc: '移速+0.6，攻擊+5，HP上限+60，體型+20%',
+        effects: { speedAdd: 0.6, attackAdd: 5, hpMaxAdd: 60, radiusAdd: 2 }
     },
     strongLegs: {
         id: 'strongLegs', name: '強大的大腿', type: 'hidden',
@@ -184,9 +184,10 @@ const HIDDEN_ORGANS = {
 };
 
 const COMBOS = [
-    { ids: ['crabClaw', 'poisonStinger', 'poisonSac'], key: 'comboCrabPoison', desc: '毒傷翻倍（三器官各達Lv3）' },
-    { ids: ['turtleShell', 'thornArmor'],              key: 'comboShellArmor', desc: '反彈時傷害翻倍（各達Lv3）' },
-    { ids: ['brain',      'trueEye'],                  key: 'comboBrainEye',   desc: '念力波可沿用暴擊率和暴擊傷害（各達Lv3）' },
-    { ids: ['thickSkin',  'naturalRegen'],             key: 'comboSkinRegen',  desc: '回復量+1HP，回復間隔再-1秒（各達Lv3）' },
-    { ids: ['trueEye',    'fang'],                     key: 'comboEyeFang',    desc: '暴擊時附加暈眩效果（各達Lv3）' }
+    { ids: ['poisonStinger', 'poisonSac'],             key: 'comboCrabPoison', desc: '毒傷翻倍（毒刺Lv3且擁有毒囊）' },
+    { ids: ['crabClaw',      'boxingGloves'],          key: 'comboCrabGloves', desc: '流血傷害翻倍，命中敵人施加回復量-50%（蟹鉗+搏擊拳套各達Lv3）' },
+    { ids: ['turtleShell',   'thornArmor'],            key: 'comboShellArmor', desc: '反彈時傷害翻倍（各達Lv3）' },
+    { ids: ['brain',         'trueEye'],               key: 'comboBrainEye',   desc: '念力波可沿用暴擊率和暴擊傷害（各達Lv3）' },
+    { ids: ['thickSkin',     'naturalRegen'],          key: 'comboSkinRegen',  desc: '回復量+1HP，回復間隔再-1秒（各達Lv3）' },
+    { ids: ['trueEye',       'fang'],                  key: 'comboEyeFang',    desc: '暴擊時附加暈眩效果（各達Lv3）' }
 ];

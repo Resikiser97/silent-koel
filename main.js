@@ -76,6 +76,53 @@ function gameLoop(timestamp) {
 
 function initializeGame() {
     localStorage.setItem('hasPlayedBefore', 'true');
+
+    // ── 完整重置遊戲狀態（確保「再來一場」直接呼叫時不殘留舊資料）──
+    gameState.gameOver            = false;
+    gameState.skillTreeOpen       = false;
+    gameState.victory             = false;
+    gameState.organSelectionActive = false;
+    gameState.pendingOrganSelections = 0;
+    gameState.keys                = {};
+    gameState.mobileInput         = { dx: 0, dy: 0 };
+    gameState.eliteCreature       = null;
+    gameState.boss                = null;
+    gameState.bossSpawned         = false;
+    gameState.bossBellPlayed      = false;
+    gameState.eliteJustKilled     = false;
+    gameState.isNight             = false;
+    gameState.currentPhaseIndex   = 0;
+    gameState.timeRemaining       = 600;
+    gameState.creatureStrengthMultiplier = 0;
+    gameState.realPlayTime        = 0;
+    gameState._playTimerStart     = null;
+    gameState._playTimerPaused    = false;
+    gameState.dayNightMessage     = { text: '', timer: 0 };
+    gameState.levelUpMessage      = { text: '', timer: 0 };
+    gameState.sessionSkillPoints  = { elite: 0, boss: 0 };
+    gameState.neutralCreatures    = [];
+    gameState.hostileCreatures    = [];
+    gameState.camera              = { x: 3200, y: 3550 };
+    gameState.xpThreshold        = 100;
+    // 重置玩家到基礎狀態（保留 player.x/y 會在 spawn 時覆蓋）
+    Object.assign(gameState.player, {
+        x: 4000, y: 4000, radius: 10, speed: 4.5, color: 'black',
+        organs: [], hiddenOrgans: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5, rerollsRemaining: 0,
+        attack: 0, attackSpeed: 1.0, attackRange: 50,
+        critChance: 0, critMultiplier: 1.5,
+        damageReduction: 0, thornDamage: 0, thornPlayerAtkReflect: false,
+        brainActive: false, brainTimer: 0, brainInterval: 5000, brainRange: 100, brainDmg: 8,
+        pickupRange: 0, aggroRangeReduction: 0, perceptionRange: 0,
+        naturalRegenHp: 0, naturalRegenHpMaxPercent: 0, naturalRegenInterval: 10000, naturalRegenTimer: 0,
+        comboCrabPoison: false, comboShellArmor: false, comboBrainEye: false,
+        comboSkinRegen: false, comboEyeFang: false, comboCrabGloves: false,
+        attackTimer: 0, attackVisual: 0,
+        boneMaterial: 0,
+        level: 1, levelXP: 0, tenacityUsed: false,
+        evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' }
+    });
+    gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };
+
     gameState.gameStarted = true;
     console.log("--- 遊戲初始化開始 ---");
 

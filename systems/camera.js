@@ -33,8 +33,8 @@ function worldToScreen(wx, wy) {
 function updateCamera() {
     const p = gameState.player;
     const cam = gameState.camera;
-    const marginX = VIEW_W * 0.25;
-    const marginY = VIEW_H * 0.25;
+    const marginX = VIEW_W * 0.30;
+    const marginY = VIEW_H * 0.30;
     let screenX = p.x - cam.x;
     let screenY = p.y - cam.y;
     if (screenX < -MAP_WIDTH  / 2) screenX += MAP_WIDTH;

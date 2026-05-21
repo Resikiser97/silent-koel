@@ -89,7 +89,7 @@ function _setViewSize(w, h) {
     if (co) { co.style.width = w + 'px'; co.style.height = h + 'px'; }
 }
 
-const MOBILE_GAME_SCALE = 0.7;
+const MOBILE_GAME_SCALE = 0.6;
 
 function _applyMobileScale() {
     const container = document.getElementById('game-container');
@@ -830,12 +830,13 @@ function drawGame() {
         ctx.restore();
     }
 
-    // 9d. 靈敏知覺路徑（果子最佳路徑）
+    // 9d. 靈敏知覺路徑
+    const sharpSenseLv = (p.organs.find(o => o.id === 'sharpSense') || {}).level || 0;
+    // Lv1+：紅線（果子最佳路徑）
     if (p.perceptionRange > 0 && gameState.fruits.length > 0) {
         const path = findBestPerceptionPath(p, gameState.fruits, p.perceptionRange);
         if (path) {
             const endS = worldToScreen(path.endpoint.x, path.endpoint.y);
-            // clamp 終點到畫面邊緣
             const clampedEnd = {
                 x: Math.max(5, Math.min(VIEW_W - 5, endS.x)),
                 y: Math.max(5, Math.min(VIEW_H - 5, endS.y))
@@ -850,7 +851,6 @@ function drawGame() {
             ctx.lineTo(clampedEnd.x, clampedEnd.y);
             ctx.stroke();
             ctx.setLineDash([]);
-            // 路徑上的果子畫閃爍紅點
             const blink = Math.sin(Date.now() * 0.002 * Math.PI * 2) > 0;
             if (blink) {
                 ctx.fillStyle = '#FF4444';
@@ -861,6 +861,58 @@ function drawGame() {
                     ctx.fill();
                 });
             }
+            ctx.restore();
+        }
+    }
+    // Lv2+：黃線（最近屍體）
+    if (sharpSenseLv >= 2 && gameState.corpses && gameState.corpses.length > 0) {
+        let nearestCorpse = null, nearestDist = Infinity;
+        for (const c of gameState.corpses) {
+            const d = wrappedDistance(p.x, p.y, c.x, c.y);
+            if (d < nearestDist) { nearestDist = d; nearestCorpse = c; }
+        }
+        if (nearestCorpse) {
+            const endS = worldToScreen(nearestCorpse.x, nearestCorpse.y);
+            const clampedEnd = {
+                x: Math.max(5, Math.min(VIEW_W - 5, endS.x)),
+                y: Math.max(5, Math.min(VIEW_H - 5, endS.y))
+            };
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            ctx.strokeStyle = '#FFDD44';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(ps.x, ps.y);
+            ctx.lineTo(clampedEnd.x, clampedEnd.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+    }
+    // Lv3+：白線（最近白骨）
+    if (sharpSenseLv >= 3 && gameState.bones && gameState.bones.length > 0) {
+        let nearestBone = null, nearestDist2 = Infinity;
+        for (const b of gameState.bones) {
+            const d = wrappedDistance(p.x, p.y, b.x, b.y);
+            if (d < nearestDist2) { nearestDist2 = d; nearestBone = b; }
+        }
+        if (nearestBone) {
+            const endS = worldToScreen(nearestBone.x, nearestBone.y);
+            const clampedEnd = {
+                x: Math.max(5, Math.min(VIEW_W - 5, endS.x)),
+                y: Math.max(5, Math.min(VIEW_H - 5, endS.y))
+            };
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(ps.x, ps.y);
+            ctx.lineTo(clampedEnd.x, clampedEnd.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
             ctx.restore();
         }
     }
@@ -2143,7 +2195,10 @@ function showStartScreen() {
 
     const top10Panel = document.createElement('div');
     top10Panel.id = 'top10-panel';
-    top10Panel.style.cssText = 'position:absolute;right:16px;top:50%;transform:translateY(-50%);width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';
+    const _top10Transform = gameState.isMobile
+        ? 'translateY(-50%) scale(0.7)'
+        : 'translateY(-50%)';
+    top10Panel.style.cssText = 'position:absolute;right:16px;top:50%;transform:' + _top10Transform + ';transform-origin:right center;width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';
     const top10Title = document.createElement('div');
     top10Title.style.cssText = 'color:#FFD700;font-weight:bold;margin-bottom:8px;text-align:center;font-size:14px;';
     top10Title.textContent = t('lbTop10Title');

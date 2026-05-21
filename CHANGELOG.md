@@ -2,6 +2,59 @@
 
 ---
 
+## v0.34.0 - 2026-05-21
+
+### 修復
+
+#### Bug 修復
+- **毒囊繼承 Bug**（`systems/evolution.js`）：`buildSkillTreeOverlay` 的器官繼承選單現在正確過濾 `noInherit: true` 的器官（毒囊），使其不再出現於繼承選擇清單
+- **再來一場→技能樹→開始遊戲 無法移動 Bug**（`main.js`）：`initializeGame()` 開頭新增完整狀態重設區塊，確保 `gameState.gameOver`、`skillTreeOpen`、`organSelectionActive` 等旗標在重新遊戲時歸零，修復 `isGamePaused()` 誤回傳 `true` 導致玩家無法移動的問題
+
+#### UI 修復
+- **左下角隱藏器官清單跑版**（`systems/organs.js`）：重構 `drawOrganUI()` 的隱藏器官繪製邏輯；分隔行（`sepBase+1`）專門繪製分隔線，器官名稱從 `sepBase+2` 開始，hit region 同步修正，確保所有文字在背景方塊內正確顯示
+
+### 調整
+
+#### 器官數值
+- **大長腿**（`config/organs.js`、`lang/zh-TW.js`、`lang/en.js`）：各級移動速度 +1.5 → +1
+- **強大的心臟**（`config/organs.js`、`lang/zh-TW.js`、`lang/en.js`）：HP上限+100 → HP上限+60
+
+#### 組合效果調整（`config/organs.js`、`systems/organs.js`、`systems/combat.js`）
+- **移除**原有三器官組合（蟹鉗+毒刺+毒囊）
+- **新增** `comboCrabPoison`：毒刺Lv3 + 擁有毒囊即觸發 → 毒傷翻倍
+- **新增** `comboCrabGloves`：蟹鉗+搏擊拳套各達Lv3 → 流血傷害翻倍、命中施加回復量-50%
+- `gameState.player` 新增 `comboCrabGloves` 旗標；`checkComboEffects()` 對 `comboCrabPoison` 採用特殊判斷邏輯
+
+#### 靈敏知覺重設計（`config/organs.js`、`systems/ui.js`、`lang/zh-TW.js`、`lang/en.js`）
+- Lv1：維持顯示果子最佳路徑（紅線，1000px 偵測範圍）
+- Lv2：新增追蹤最近屍體（黃線），使用 `wrappedDistance` 計算最近目標
+- Lv3：新增追蹤最近白骨（白線），同上邏輯
+- 三條線可累積同時顯示；`perceptionRange` 維持 1000px 不再隨等級增加
+
+#### 鏡頭與縮放（`systems/camera.js`、`systems/ui.js`）
+- 鏡頭邊界觸發距離：25% → 30%（`marginX/Y = VIEW_W/H * 0.30`）
+- 手機遊戲縮放比例：`MOBILE_GAME_SCALE` 0.7 → 0.6
+
+### 新增
+
+#### 結算畫面技能點明細（`systems/evolution.js`、`systems/boss.js`、`systems/gameState.js`）
+- `gameState.sessionSkillPoints = { elite: 0, boss: 0 }` 追蹤本局各來源技能點
+- `handleEliteKill` 在擊殺精英後累加 `sessionSkillPoints.elite`
+- 死亡/超時結算畫面：顯示精英獎勵（`skillPtElite`）、時間獎勵、等級獎勵明細
+- 勝利結算畫面：顯示 Boss 獎勵（+5）、精英獎勵、時間獎勵、等級獎勵明細；`sessionSkillPoints.boss = 5` 在勝利時記錄
+
+#### 手機首頁 TOP10 面板縮放（`systems/ui.js`）
+- 手機裝置下 TOP10 排行榜面板套用 `scale(0.7)` CSS 縮放，`transform-origin: right center`
+
+### 語言檔更新（`lang/zh-TW.js`、`lang/en.js`）
+- 大長腿速度描述 +1.5 → +1
+- 靈敏知覺 Lv2/Lv3 描述更新（屍體黃線 / 白骨白線）
+- 強大的心臟描述 HP+100 → HP+60
+- `comboCrabPoison` 描述更新（條件從三器官改為毒刺Lv3+毒囊）
+- 新增 `comboCrabGloves` 描述
+
+---
+
 ## v0.33.0 - 2026-05-21
 
 ### 新增

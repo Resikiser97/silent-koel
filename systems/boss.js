@@ -87,6 +87,8 @@ function showVictory() {
     saveLastRunOrgans();
     const timeBonus = Math.floor((600 - gameState.timeRemaining) / 180);
     const levelBonus = Math.floor(gameState.player.level / 6);
+    const eliteBonus = (gameState.sessionSkillPoints && gameState.sessionSkillPoints.elite) || 0;
+    if (gameState.sessionSkillPoints) gameState.sessionSkillPoints.boss = 5;
     gameState.skillPoints += 5 + timeBonus + levelBonus;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
@@ -112,9 +114,11 @@ function showVictory() {
         overlay.appendChild(desc2);
         const spSection = document.createElement('div');
         spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;';
-        spSection.innerHTML = t('skillPtBoss', { n: 5 })
-            + (timeBonus > 0 ? '<br>' + t('skillPtTime', { n: timeBonus }) : '')
-            + (levelBonus > 0 ? '<br>' + t('skillPtLevel', { n: levelBonus }) : '');
+        const spLines = [t('skillPtBoss', { n: 5 })];
+        if (eliteBonus > 0)  spLines.push(t('skillPtElite', { n: eliteBonus }));
+        if (timeBonus > 0)   spLines.push(t('skillPtTime',  { n: timeBonus }));
+        if (levelBonus > 0)  spLines.push(t('skillPtLevel', { n: levelBonus }));
+        spSection.innerHTML = spLines.join('<br>');
         overlay.appendChild(spSection);
         const btnTree = document.createElement('button');
         btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';

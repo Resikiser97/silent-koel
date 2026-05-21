@@ -278,9 +278,9 @@ LANG['zh-TW'] = {
             '攻擊+3，暈眩+5%，暈眩時間+0.5秒'
         ]},
         longLegs:      { name: '大長腿', levels: [
-            '移動速度+1.5',
-            '移動速度+1.5',
-            '移動速度+1.5'
+            '移動速度+1',
+            '移動速度+1',
+            '移動速度+1'
         ]},
         turtleShell:   { name: '龜殼', levels: [
             '受傷-10%，速度-1',
@@ -308,9 +308,9 @@ LANG['zh-TW'] = {
             '暴擊率+10%，暴擊傷害+0.25'
         ]},
         sharpSense:    { name: '靈敏知覺', levels: [
-            '偵測1000px範圍內果子，顯示最佳路徑',
-            '偵測範圍累計1750px',
-            '偵測範圍累計2500px'
+            '偵測1000px範圍內果子，顯示最佳路徑（紅線）',
+            '新增追蹤最近屍體（黃線）',
+            '新增追蹤最近白骨（白線）'
         ]},
         naturalRegen:  { name: '超自然回復', levels: [
             '每10秒回復1HP',
@@ -331,7 +331,7 @@ LANG['zh-TW'] = {
         ]}
     },
     hidden: {
-        strongHeart: { name: '強大的心臟', desc: '移速+0.6，攻擊+5，HP上限+100，體型+20%（半徑+2）' },
+        strongHeart: { name: '強大的心臟', desc: '移速+0.6，攻擊+5，HP上限+60，體型+20%（半徑+2）' },
         strongLegs:  { name: '強大的大腿', desc: '移速+3，體型+20%（半徑+2）' },
         strongArms:  { name: '強大的手臂', desc: '收集範圍+15px，體型+20%（半徑+2）' },
         strongEye:   { name: '強大的眼睛', desc: '暴擊率+10%，暴擊傷害+0.25，體型+20%（半徑+2）' }
@@ -371,7 +371,8 @@ LANG['zh-TW'] = {
         ]}
     },
     combos: {
-        comboCrabPoison: '毒傷翻倍（蟹鉗+毒刺+毒囊各達Lv3）',
+        comboCrabPoison: '毒傷翻倍（毒刺Lv3且擁有毒囊）',
+        comboCrabGloves: '流血傷害翻倍，命中敵人施加回復量-50%（蟹鉗+搏擊拳套各達Lv3）',
         comboShellArmor: '反彈傷害翻倍（龜殼+刺甲各達Lv3）',
         comboBrainEye:   '念力波可觸發暴擊傷害（大腦+真視之眼各達Lv3）',
         comboSkinRegen:  '回復量+1HP，間隔再-1秒（厚皮+超自然回復各達Lv3）',
