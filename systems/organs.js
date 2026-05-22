@@ -128,6 +128,10 @@ function showOrganSelection() {
         gameState.pendingOrganSelections++;
         return;
     }
+    // 戰鬥教學：第一教學完成、戰鬥教學尚未完成 → 鎖定只能選攻擊器官
+    if (localStorage.getItem('tutorialCompleted') && !localStorage.getItem('tutorialCombatDone')) {
+        gameState.tutorialOrganPhase = true;
+    }
     const p = gameState.player;
     gameState.organSelectionActive = true;
 
@@ -198,7 +202,23 @@ function showOrganSelection() {
     function renderOptions(organOptions) {
         optionsContainer.innerHTML = '';
 
-        organOptions.forEach(opt => {
+        // ── 教學器官階段：找出第一個攻擊器官的索引
+        const _tutAtkIdx = gameState.tutorialOrganPhase
+            ? organOptions.findIndex(o => o.def && o.def.type === 'attack')
+            : -1;
+        // 若在教學模式下卻無攻擊器官選項，自動取消鎖定（安全保護）
+        if (gameState.tutorialOrganPhase && _tutAtkIdx < 0) {
+            gameState.tutorialOrganPhase = false;
+        }
+        // 注入閃爍動畫 CSS（只注入一次）
+        if (_tutAtkIdx >= 0 && !document.getElementById('tut-organ-style')) {
+            const _st = document.createElement('style');
+            _st.id = 'tut-organ-style';
+            _st.textContent = '@keyframes tutOrganGlow{0%,100%{box-shadow:0 0 8px #FFD700,0 0 16px rgba(255,215,0,0.4);}50%{box-shadow:0 0 22px #FFD700,0 0 44px rgba(255,215,0,0.7);}}';
+            document.head.appendChild(_st);
+        }
+
+        organOptions.forEach((opt, _tutIdx) => {
             const { def, type, existingOrgan } = opt;
             const color = typeColor[def.type] || '#FFD700';
             const isUpgrade = type === 'upgrade';
@@ -206,29 +226,48 @@ function showOrganSelection() {
             const lvDesc = def.levels[targetLevel - 1].desc;
             const comboHint = getComboHint(def.id);
 
+            // 教學狀態：第一張攻擊器官 = 高亮；其他 = 灰暗禁用
+            const _isAtkHighlight = _tutAtkIdx >= 0 && _tutIdx === _tutAtkIdx;
+            const _isDisabled     = _tutAtkIdx >= 0 && _tutIdx !== _tutAtkIdx;
+
             const btn = document.createElement('div');
-            btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid ' + (isUpgrade ? '#FFAA44' : '#666') + ';color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
+            if (_isAtkHighlight) {
+                btn.style.cssText = 'background:rgba(255,215,0,0.12);border:2px solid #FFD700;color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;animation:tutOrganGlow 1.2s ease-in-out infinite;';
+            } else if (_isDisabled) {
+                btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid #555;color:white;padding:12px 20px;margin:5px;border-radius:6px;width:380px;text-align:center;opacity:0.4;pointer-events:none;cursor:default;';
+            } else {
+                btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid ' + (isUpgrade ? '#FFAA44' : '#666') + ';color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
+            }
             btn.innerHTML =
                 '<div style="color:' + color + ';font-weight:bold;font-size:15px;">' +
                     def.name + (isUpgrade ? ' Lv.' + existingOrgan.level + ' → Lv.' + targetLevel : ' Lv.1') +
                 '</div>' +
                 '<div style="font-size:11px;color:#ccc;margin-top:4px;">' + lvDesc + '</div>' +
-                (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">' + t('comboHintLabel') + comboHint + '</div>' : '');
-            btn.onmouseenter = (e) => {
-                btn.style.background = 'rgba(255,255,255,0.2)';
-                showTooltip({ name: def.name, level: targetLevel, maxLevel: def.maxLevel, desc: def.levels[targetLevel - 1].desc, combo: comboHint }, e.clientX, e.clientY);
-            };
-            btn.onmouseleave = () => { btn.style.background = 'rgba(255,255,255,0.08)'; hideTooltip(); };
-            btn.onclick = () => {
-                if (isUpgrade) {
-                    existingOrgan.level = targetLevel;
-                    existingOrgan.desc = def.levels[targetLevel - 1].desc;
-                } else {
-                    p.organs.push({ id: def.id, name: def.name, type: def.type, level: 1, desc: def.levels[0].desc });
-                }
-                applyOrganEffects(isUpgrade ? existingOrgan : p.organs[p.organs.length - 1]);
-                closeOverlay();
-            };
+                (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">' + t('comboHintLabel') + comboHint + '</div>' : '') +
+                (_isAtkHighlight ? '<div style="font-size:12px;color:#FFD700;margin-top:8px;">👆 選擇你的第一個攻擊器官！</div>' : '');
+            if (!_isDisabled) {
+                btn.onmouseenter = (e) => {
+                    btn.style.background = _isAtkHighlight ? 'rgba(255,215,0,0.22)' : 'rgba(255,255,255,0.2)';
+                    showTooltip({ name: def.name, level: targetLevel, maxLevel: def.maxLevel, desc: def.levels[targetLevel - 1].desc, combo: comboHint }, e.clientX, e.clientY);
+                };
+                btn.onmouseleave = () => {
+                    btn.style.background = _isAtkHighlight ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.08)';
+                    hideTooltip();
+                };
+                btn.onclick = () => {
+                    if (isUpgrade) {
+                        existingOrgan.level = targetLevel;
+                        existingOrgan.desc = def.levels[targetLevel - 1].desc;
+                    } else {
+                        p.organs.push({ id: def.id, name: def.name, type: def.type, level: 1, desc: def.levels[0].desc });
+                    }
+                    applyOrganEffects(isUpgrade ? existingOrgan : p.organs[p.organs.length - 1]);
+                    const _wasTutOrgan = _isAtkHighlight;
+                    if (_wasTutOrgan) gameState.tutorialOrganPhase = false;
+                    closeOverlay();
+                    if (_wasTutOrgan) spawnTutorialStump();
+                };
+            }
             optionsContainer.appendChild(btn);
         });
 
@@ -250,7 +289,7 @@ function showOrganSelection() {
             optionsContainer.appendChild(btn);
         });
 
-        if (!slotsFull && (gameState.playerSkills.luckyReroll || 0) > 0) {
+        if (!slotsFull && (gameState.playerSkills.luckyReroll || 0) > 0 && !gameState.tutorialOrganPhase) {
             const remaining = gameState.player.rerollsRemaining || 0;
             const canReroll = remaining > 0;
             const rerollBtn = document.createElement('div');

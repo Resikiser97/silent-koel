@@ -104,6 +104,10 @@ const gameState = {
     _playTimerPaused: false,
     mutationData: null,         // 由 initMutationData() 初始化（跨局永久保存）
     mutationPanelOpen: false,   // 變異面板是否開啟
+    tutorialOpen: false,        // 新手教學是否開啟（暫停遊戲邏輯）
+    tutorialOrganPhase: false,  // 戰鬥教學：器官鎖定中（只能選攻擊器官）
+    tutorialCombatActive: false,// 戰鬥教學：木樁存活中
+    tutorialStump: null,        // 教學木樁物件
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 

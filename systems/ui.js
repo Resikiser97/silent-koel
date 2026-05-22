@@ -893,6 +893,39 @@ function drawGame() {
     // 7b. 繪製精英怪
     drawEliteCreature();
 
+    // 7c. 繪製教學木樁（若存在且 hp > 0）
+    if (gameState.tutorialStump && gameState.tutorialStump.hp > 0) {
+        const st  = gameState.tutorialStump;
+        const ss  = worldToScreen(st.x, st.y);
+        if (ss.x >= -80 && ss.x <= VIEW_W + 80 && ss.y >= -80 && ss.y <= VIEW_H + 80) {
+            // 棕色圓形本體（帶光暈）
+            ctx.save();
+            ctx.shadowColor = 'rgba(139,69,19,0.9)';
+            ctx.shadowBlur  = 14;
+            ctx.fillStyle   = st.color;
+            ctx.beginPath();
+            ctx.arc(ss.x, ss.y, st.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            // 名稱標籤
+            ctx.save();
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
+            ctx.fillStyle   = '#FFFFFF';
+            ctx.font        = '12px Arial';
+            ctx.textAlign   = 'center';
+            ctx.fillText(st.name, ss.x, ss.y - st.radius - 10);
+            ctx.restore();
+            // 血條
+            const _bW = 36, _bH = 5;
+            const _bX = ss.x - _bW / 2;
+            const _bY = ss.y - st.radius - 22;
+            ctx.fillStyle = '#3A1A00';
+            ctx.fillRect(_bX, _bY, _bW, _bH);
+            ctx.fillStyle = '#CC5500';
+            ctx.fillRect(_bX, _bY, _bW * (st.hp / st.maxHp), _bH);
+        }
+    }
+
     // 8. 攻擊範圍視覺圓圈（0.2 秒淡出）
     const p = gameState.player;
     const ps = worldToScreen(p.x, p.y);
@@ -1609,6 +1642,39 @@ function showSettings(fromHome) {
     otRow.appendChild(otTog);
     otRow.appendChild(otLbl);
     accSec.appendChild(otRow);
+
+    // ── 新手教學開關（ON = 下一場會出現教學）
+    const tutRow = document.createElement('div');
+    tutRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const tutTog = document.createElement('button');
+    tutTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const _isTutorialOn = () => !localStorage.getItem('tutorialCompleted');
+    const refreshTutTog = () => {
+        const on = _isTutorialOn();
+        tutTog.textContent  = on ? t('on') : t('off');
+        tutTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshTutTog();
+    tutTog.onclick = () => {
+        if (_isTutorialOn()) {
+            // 目前 ON → 關閉（標記已完成，下一場不再顯示）
+            localStorage.setItem('tutorialCompleted', 'true');
+        } else {
+            // 目前 OFF → 開啟（移除完成標記，下一場會出現教學）
+            localStorage.removeItem('tutorialCompleted');
+        }
+        refreshTutTog();
+    };
+    const tutLbl = document.createElement('div');
+    tutLbl.style.cssText = 'font-size:13px;';
+    tutLbl.textContent = '新手教學';
+    tutRow.appendChild(tutTog);
+    tutRow.appendChild(tutLbl);
+    accSec.appendChild(tutRow);
+    const tutHint = document.createElement('div');
+    tutHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;margin-bottom:4px;';
+    tutHint.textContent = '開啟後，下一場遊戲開始時會顯示教學';
+    accSec.appendChild(tutHint);
 
     const keyAccWrapper = document.createElement('div');
     keyAccWrapper.style.cssText = 'display:flex;flex-direction:row;gap:8px;margin-bottom:14px;';

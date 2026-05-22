@@ -2,6 +2,43 @@
 
 ---
 
+## v0.45.0 - 2026-05-22
+
+### 新增
+- **新手教學第二階段：戰鬥教學**（`systems/tutorial.js`、`systems/organs.js`、`systems/combat.js`、`systems/ui.js`、`systems/gameState.js`、`main.js`、`index.html`）：
+  繼第一階段（移動、吃果子、日夜說明）之後，在玩家第一次升級時自動觸發戰鬥教學。
+  - **器官鎖定**：`showOrganSelection()` 偵測到 `tutorialCompleted` 存在且 `tutorialCombatDone` 不存在時，設定 `tutorialOrganPhase = true`；畫面只有第一張攻擊器官卡片可選（金色閃爍邊框 + 「👆 選擇你的第一個攻擊器官！」提示），其他卡片灰暗禁用、幸運重抽按鈕隱藏。
+  - **教學木樁**：選完攻擊器官後，在玩家正前方 150 像素生成一根棕色木樁（HP 30、不移動、不攻擊），並顯示左上角戰鬥提示框（手機版顯示攻擊區提示）。木樁有血條與名稱標籤，繪製於 `drawGame()` 7c 步驟。
+  - **攻擊整合**：`playerAttack()` 將教學木樁加入攻擊目標陣列，死亡時呼叫 `handleTutorialStumpKill()` 而非一般 `handleKill()`。
+  - **完成流程**：擊殺木樁 → 凍結 0.5 秒 → 顯示「⚔️ 攻擊學會了！」小框（玩家頭頂，2 秒自動消失）→ 寫入 `localStorage.tutorialCombatDone` → 解凍繼續遊戲。
+  - **`index.html` 載入順序調整**：`tutorial.js` 移至 `combat.js` / `organs.js` 之前，確保兩者可呼叫教學函式。
+  - 新增 `gameState` 旗標：`tutorialOrganPhase`、`tutorialCombatActive`、`tutorialStump`，均在 `initializeGame()` 重置。
+
+---
+
+## v0.44.0 - 2026-05-22
+
+### 新增
+- **設定面板 → 輔助功能 → 新手教學開關**（`systems/ui.js`）：
+  可手動切換下一場遊戲是否顯示新手教學。
+  開啟（綠色）= 移除 `tutorialCompleted` 標記，下一場進入遊戲後會自動出現三步驟教學；
+  關閉（灰色）= 寫入 `tutorialCompleted`，教學不再觸發。
+  開關狀態即時反映 `localStorage` 現況，不需要重新整理頁面。
+
+---
+
+## v0.43.0 - 2026-05-22
+
+### 新增
+- **新手教學系統**（`systems/tutorial.js`、`main.js`、`systems/gameState.js`、`index.html`）：
+  首次遊玩自動觸發三步驟教學，完成後寫入 `localStorage.tutorialCompleted` 不再重複顯示。
+  - **步驟一（凍結）**：全螢幕暗色遮罩 + 玩家白色光圈脈衝動畫 + 歡迎提示框（「🐦 你是噪鵑……」），按鈕進入下一步。
+  - **步驟二（解凍）**：遊戲恢復運行；找到最近果子並標記金色脈衝光暈與閃爍 ↓ 箭頭；提示框移至左上角（手機版為上方置中）；15 秒防呆自動繪製從玩家到果子的紅色虛線引導線；XP 增加即觸發金色閃光並進入下一步。
+  - **步驟三（凍結）**：遮罩重新出現；右上角日夜指示器金色邊框閃爍高亮；中央提示框說明日夜機制與勝利條件，按鈕結束教學。
+  - `gameState.tutorialOpen`：新增狀態旗標，已整合至 `isGamePaused()` 使教學期間暫停遊戲邏輯。
+
+---
+
 ## 文件修正 - 2026-05-22（不更新版本號）
 
 ### 調整

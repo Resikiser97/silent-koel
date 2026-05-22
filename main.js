@@ -23,7 +23,8 @@ function resumePlayTimer() {
 
 function isGamePaused() {
     return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen ||
-           gameState.gameOver || gameState.victory || gameState.mutationPanelOpen;
+           gameState.gameOver || gameState.victory || gameState.mutationPanelOpen ||
+           gameState.tutorialOpen;
 }
 
 function updateGameLogic() {
@@ -127,7 +128,11 @@ function initializeGame() {
     });
     gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };
 
-    gameState.mutationPanelOpen = false;
+    gameState.mutationPanelOpen    = false;
+    gameState.tutorialOpen         = false;
+    gameState.tutorialOrganPhase   = false;
+    gameState.tutorialCombatActive = false;
+    gameState.tutorialStump        = null;
     // mutationData 不重置（跨局永久保存，由 window.onload 的 initMutationData 管理）
 
     gameState.gameStarted = true;
@@ -236,6 +241,11 @@ function initializeGame() {
     // 11. 啟動真實遊玩時間計時並開始遊戲主循環
     resumePlayTimer();
     requestAnimationFrame(gameLoop);
+
+    // 12. 新手教學：首次遊玩自動觸發
+    if (!localStorage.getItem('tutorialCompleted')) {
+        showTutorial();
+    }
 }
 
 window.onload = () => {

@@ -155,7 +155,10 @@ function playerAttack() {
         ...gameState.hostileCreatures.map(c => ({ c, hostile: true, isBoss: false, isElite: false })),
         ...gameState.neutralCreatures.map(c => ({ c, hostile: false, isBoss: false, isElite: false })),
         ...(gameState.boss && gameState.boss.hp > 0 ? [{ c: gameState.boss, hostile: true, isBoss: true, isElite: false }] : []),
-        ...(gameState.eliteCreature && gameState.eliteCreature.hp > 0 ? [{ c: gameState.eliteCreature, hostile: true, isBoss: false, isElite: true }] : [])
+        ...(gameState.eliteCreature && gameState.eliteCreature.hp > 0 ? [{ c: gameState.eliteCreature, hostile: true, isBoss: false, isElite: true }] : []),
+        ...(gameState.tutorialStump && gameState.tutorialStump.hp > 0
+            ? [{ c: gameState.tutorialStump, hostile: true, isBoss: false, isElite: false }]
+            : [])
     ];
 
     let anyHit = false, anyCrit = false, bossDied = false;
@@ -238,6 +241,7 @@ function playerAttack() {
             if (isBoss) { bossDied = true; continue; }
             if (isElite) { handleEliteKill(c); continue; }
             if (c.isGiantized) { handleGiantKill(c); continue; }
+            if (c.isTutorialStump) { handleTutorialStumpKill(); continue; }
             handleKill(c, hostile);
         }
     }
