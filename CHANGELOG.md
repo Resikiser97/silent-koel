@@ -2,6 +2,586 @@
 
 ---
 
+## 文件修正 - 2026-05-22（不更新版本號）
+
+### 調整
+- **MOBILE_GAME_SCALE 文件衝突修正**（`project_summary.md`、`.claude/instructions.md`）：
+  v0.34.0 已將 `MOBILE_GAME_SCALE` 從 0.7 調整為 0.6，但三處文件未同步更新。
+  本次修正技術架構區塊邏輯解析度數值（橫向 1120×630 → 960×540，直向 630×1120 → 540×960）、
+  重要提醒第 3 條、`.claude/instructions.md` 技術陷阱說明，統一對齊實際程式碼與 CHANGELOG。
+
+---
+
+## 文件修正 - 2026-05-22（不更新版本號）
+
+### 調整
+- **速度 ×3.0 歷史補丁文案 Fixed**（`project_summary.md`、`.claude/instructions.md`）：
+  早期無 Fixed Timestep 時，為修正 180Hz 螢幕速度偏快問題對所有速度數值乘以 3.0；
+  Fixed Timestep 加入後補丁已無必要但數值基準保留，`lang/zh-TW.js` 速度描述在 v0.34.0
+  數值調整時已同步與實際 `speedAdd` 一致。移除過時的「描述不一致」note 與待辦項目，
+  更新說明為「✅ 文案 Fixed，無需再處理」，後續 AI 不需要繼續處理此問題。
+
+---
+
+## v0.42.0 - 2026-05-22
+
+### 新增
+- **版本更新公告系統**（`config/patchnotes.js`、`systems/ui.js`、`index.html`）：首頁左上角故事書按鈕下方新增「📋 更新」按鈕；新增 `showPatchNotes()` 面板（垂直 Tab 列顯示所有版本，未讀版本紅點 highlight，內容依「新增/修復/調整」分類顯示）；新增 `checkPatchNotesPopup()` 在首頁自動彈出未讀公告（新玩家跳過）；新增 `config/patchnotes.js` 統一管理所有版本公告資料（`PATCH_NOTES` 陣列，最新版本置頂）
+
+### 修復
+- **手機版 Boss/精英血條與玩家血條重疊**（`systems/ui.js`）：`drawTopBarUI()` 的 `y = 10` 改為動態偵測 `#top-left` DOM 元素高度並換算 Canvas 邏輯座標，手機/桌機自動適應
+- **Boss 死亡後血條 UI 殘留**（`systems/boss.js`）：`showVictory()` 開頭加入 `gameState.topBarTarget = null; gameState.topBarFadeTimer = 0;`，確保勝利時血條立即清除
+
+### 調整
+- **草食性中立生物探索果子行為**（`systems/creatures.js`）：探索果子機率 30% → 60%，搜尋範圍 400px → 800px，休息機率 30% → 20%，隨機漫遊機率 40% → 20%
+
+---
+
+## v0.41.2 - 2026-05-22
+
+### 修正
+- **器官區域觸碰造成移動死區**（`systems/ui.js`）：`_attachJoystickListeners` `onStart` handler 中，命中 `_organHitRegions` 時移除 `continue`，讓觸碰在顯示（或略過）tooltip 後繼續執行搖桿啟動邏輯；`showOrganTooltip` 關閉時左下角器官區域不再成為無法移動的死區
+
+---
+
+## v0.41.1 - 2026-05-22
+
+### 修正
+- **器官提示開關同時管控桌機版**（`main.js`）：`mousemove` 事件在 `showTooltip` 呼叫前加入 `showOrganTooltip` 判斷，開關關閉時立即呼叫 `hideTooltip()` 並返回
+- **隱藏器官 tooltip 無法點擊**（`systems/organs.js`）：`_organHitRegions` 隱藏器官的 y 座標從 `(sepBase + 2 + j) * lineH` 修正為 `(sepBase + 1 + j) * lineH`，使 hit region 與畫面上實際文字位置對齊（與普通器官公式一致）
+- **器官提示開關在桌機版不顯示**（`systems/ui.js`）：移除 `showSettings()` 中包住 organTooltip toggle 的 `if (gameState.isMobile)` 條件，桌機版與手機版均可操作
+
+---
+
+## v0.41.0 - 2026-05-22
+
+### 新增
+- **手機版器官提示開關**（`systems/ui.js`、`systems/gameState.js`）：新增 `DEFAULT_SETTINGS.showOrganTooltip: true`；手機版設定面板「輔助功能」區塊新增「器官提示」ON/OFF toggle（桌機版隱藏）；關閉後點觸器官區域不顯示 tooltip，仍阻擋搖桿啟動
+- **語言包**（`lang/zh-TW.js`、`lang/en.js`）：新增 `organTooltip` key
+
+---
+
+## v0.40.1 - 2026-05-22
+
+### 修正
+- **TOP10 浮窗縮放**（`systems/ui.js`）：桌機版 transform 恢復 `translateY(-50%)`（移除多餘的 `scale(0.65)`）；手機版改為 `scale(0.65)`（原為 `scale(0.55)`）
+
+---
+
+## v0.40.0 - 2026-05-22
+
+### 新增
+- **排行榜難度切換**（`config/supabase.js`、`systems/ui.js`）：`fetchVictoryRecords`、`fetchDefeatRecords`、`fetchTop10` 新增 `difficulty` 篩選參數；新增 `fetchAvailableDifficulties()` 查詢有資料的難度陣列（前端去重）
+- **排行榜難度切換按鈕**（`systems/ui.js` `showLeaderboard()`）：標題列旁加入切換按鈕，點擊循環切換有資料的難度，顯示語言包文字（`diffEasy`/`diffNormal`等）；切換時同步更新 `_top10Difficulty`
+- **TOP10 難度切換按鈕**（`systems/ui.js` `showStartScreen()`）：標題右側加入小切換按鈕，透過 `fetchAvailableDifficulties()` 循環切換；切換時同步更新 `_lbDifficulty`
+- **模組級難度狀態**（`systems/ui.js`）：`_lbDifficulty`、`_top10Difficulty` 兩個模組變數保持同步；`_diffKey()` 輔助函式轉換語言包 key
+- **分數上傳含難度欄位**（`systems/ui.js` `showScoreSubmitPopup()`）：上傳資料加入 `difficulty: gameState.lastDifficulty || 'easy'`
+- **index.html fallback 更新**：`fetchVictoryRecords`/`fetchDefeatRecords`/`fetchTop10` 簽名同步；新增 `fetchAvailableDifficulties` fallback（回傳空陣列）
+
+### 調整
+- **TOP10 浮窗縮放**（`systems/ui.js`）：桌機版 transform 從 `translateY(-50%)` 改為 `translateY(-50%) scale(0.65)`，縮小版面不遮擋主選單；手機版維持 `scale(0.55)`
+
+---
+
+## v0.39.0 - 2026-05-22
+
+### 新增
+- **變異器官系統**（`systems/mutation.js`）：四種永久跨局器官（憤怒的獠牙/懦弱的尾巴/勇敢的翅膀/好奇的眼睛），各對 Final 值 +1%攻擊/最大HP/速度/XP倍數；升級費用每5級+1費（Lv0→1=1點）；獨立 localStorage key `mutationData`，不受 SAVE_VERSION 清除
+- **變異點獲得**（`addMutationPoints`）：擊殺巨人化/Alpha/殺手化掉落變異點（Phase 3-4 已實作），即時顯示浮動文字 `✦ +N 變異點`
+- **變異器官 UI**（`systems/ui.js`）：頂左 UI 第三行加入 ⚗️ 圖標 + 總等級，獲得新變異點時顯示紅點；點擊彈出升級面板（z-index 120，遊戲暫停）
+- **補償機制**（`mutation.js`）：`MUTATION_COMPENSATION_VERSION` 控制，可按比例返還變異點和技能點，執行一次後記錄版本避免重複
+- **applyAllMutationBonuses**（`mutation.js`）：遊戲初始化一次性套用，在所有器官效果之後；mid-game 升級用 delta 比值套用，避免複利誤算
+
+### 調整
+- `addXP()`（`systems/player.js`）：動態套用 `mutationXpBonus` 乘數
+- `applyOrganEffects()`（`systems/organs.js`）：末尾呼叫 `applyMutationEffects()` 刷新倍率
+- `isGamePaused()`（`main.js`）：加入 `mutationPanelOpen` 判斷
+- `_joyPaused()`（`systems/ui.js`）：加入 `mutationPanelOpen` 判斷
+- `initializeGame()`（`main.js`）：重置 `mutationPanelOpen = false`；呼叫 `applyAllMutationBonuses()`
+- `window.onload`（`main.js`）：先呼叫 `initMutationData()` 載入變異資料
+- **普通地圖 aggroRange**（`map/normalmap.js`）：`aggroRangeOverride: 2000 → 400`（原值等於全地圖鎖定，玩家完全無法躲避）
+
+---
+
+## v0.38.0 - 2026-05-22
+
+### 新增
+- **肉系吃屍體系統**（`systems/creatures.js`）：普通地圖肉系生物在漫遊/休息時偵測 60px 內屍體進入 `eating` 狀態，每 0.5s tick / 6 ticks（3秒）完成，期間 aggroRange×1.5，有生物進入則中斷；完成後 `_carnivoreEatCorpse` 成長（每具 +10% 基礎值，不累乘）+ 回血 5%
+- **殺手化系統**（`systems/creatures.js`）：`corpseEaten >= 5` 觸發 `_triggerKiller`，aggroRange 翻倍、攻擊 +50%+之前10%累計、速度 +30%+之前10%累計；每5秒回血1%；繼續吃屍體每具再 +10% 基礎值；`handleKillerKill`（`systems/combat.js`）：XP×2（累乘 1.1^killerCorpseEaten）+ 3份屍體 + 變異點
+- **精英怪回血**（`systems/elite.js`）：普通地圖 `eliteRegen`，第1/2/3夜每5秒回復 1%/2%/3% maxHP；`elite.tierIndex` 記錄夜晚等級
+- **Boss回血**（`systems/boss.js`）：普通地圖 `bossRegen`，每10秒回復 10% maxHP
+- **精英怪死亡掉落**（`systems/organs.js`）：`handleEliteKill` 呼叫 `spawnLootCircle`，散落 1 個 1 倍屍體 + 4 具白骨
+- **`baseRadius`**（`systems/spawning.js`）：`_makeCarnCreature` 新增 `baseRadius: 10` 欄位，供吃屍體成長計算使用
+
+### 調整
+- `handleKill`（`systems/combat.js`）：開頭新增 `isKiller` 判斷，路由至 `handleKillerKill`
+- 舊肉系即時吃屍體邏輯（舊 Phase 1 簡易版）完全替換為新 tick-based `eating` 狀態系統
+
+---
+
+## v0.37.0 - 2026-05-22
+
+### 新增
+- **巨人化系統**（`systems/creatures.js`）：草系生物吃滿5顆果子觸發（普通地圖限定），攻擊力+20、血量×10、體積×1.5、aggroRange 150、每秒回復1%血；組隊系統（同族上限5隻，跟隨範圍800px，隊員等待機制）；`_triggerGiantization()` 輔助函式
+- **Alpha系統**（`systems/creatures.js`）：隊伍出現第2隻巨人化時，隊長升格Alpha，全圖唯一（`gameState.alphaCreature`），攻擊力翻倍/血量×3/體積×1.5/aggroRange 300/每秒回復2%血；`_triggerAlpha()` 輔助函式；`showAlphaAnnouncement()` 全屏3秒公告
+- **上方血條UI**（`systems/ui.js`）：`drawTopBarUI()` 函式，玩家2000px內有特殊目標時頂部顯示血條（寬400px），追蹤最後被普通攻擊命中的目標，目標死亡/超出範圍後0.5秒淡出
+- **handleGiantKill**（`systems/combat.js`）：巨人化/Alpha專屬擊殺獎勵，包含XP（60/200）、`spawnLootCircle` 掉落、變異點（預留Phase 5）
+- **addMutationPoints**（`systems/combat.js`）：Phase 5 預留空函式
+
+### 調整
+- 移除草系生物的激進化邏輯（`diet=aggressive`），由巨人化系統取代
+- `playerAttack()`：命中精英/Boss/巨人化時設定 `gameState.topBarTarget`；巨人化擊殺路由至 `handleGiantKill`
+- `updateStatusEffects()`：狀態異常（毒/流血）擊殺巨人化生物時正確路由至 `handleGiantKill`
+- `gameState` 新增三個欄位：`alphaCreature`、`topBarTarget`、`topBarFadeTimer`
+- `initializeGame()` 再來一場重置時清空上述三個欄位
+
+---
+
+## v0.36.0 - 2026-05-22
+
+### 新增
+- **`map/normalmap.js`**：普通難度地圖配置，含地形參數（中心森林 400px）、生物強度 ×1.5、aggroRange 2000、移除速度/傷害 cap（`removeHostileCap`）、精英/Boss 強化數值、專屬 features 開關
+- **普通難度解鎖**（`systems/ui.js`）：難度選擇頁面普通難度從 🔒 改為可選，寫入 `NORMAL_MAP`
+- **`BIOME_CREATURES`**（`config/creatures.js`）：六種命名生物（駝鹿/猞猁/巨型甲虫/鱷魚/駱駝/鬣狗），各自對應生態區
+- **生態生物生成系統**（`systems/spawning.js`）：`spawnBiomeCreatures()` 替換舊 grid 生成；草系初始 10 隻 × 3 區、肉系 8 隻 × 3 區；`_randomPointInBiome` 拒絕採樣確保在正確生態區；6 個獨立計時器（各生態區各草/肉系）；少於 3 隻時間隔 ×0.3 加速
+- **生物三態移動**（`systems/creatures.js`）：`creature.biome` 標記的生物使用 wandering（Perlin Noise 平滑）/ resting（1.5 秒，可被中斷）/ attacking 三態；草系偶爾探索果子、肉系偶爾探索獵物
+
+### 調整
+- **簡單地圖肉系限制**（`systems/creatures.js`）：肉系吃屍體成長邏輯由 `features.hostileEatMeat` 控制，EASY_MAP 無此 feature → 預設不執行
+- **`gameState.spawnTimers`**（`systems/gameState.js`）：由 `{ neutral, hostile }` 改為 `{ forest_herb, forest_carn, ocean_herb, ocean_carn, desert_herb, desert_carn }`
+
+---
+
+## v0.35.0 - 2026-05-22
+
+### 修復
+- **Boss毒傷未生效**（`systems/combat.js`）：`updateStatusEffects()` 的生物 loop 新增 `bossArr`，使 Boss 正常接受毒傷 tick；Boss 死亡時走 `showVictory()`，不走 `handleKill()`
+- **念力波擊殺XP寫死**（`systems/player.js`）：`updatePassiveOrgans()` 的念力波擊殺改為統一走 `handleKill(c, true)`，移除寫死的 `addXP(30)` 和手動 `corpses.push`；補齊獵人本能加成、屍體生成、XP 浮動文字
+
+### 新增
+- **毒傷減免系統**（`systems/combat.js`）：精英怪 20%、Boss 通用 30%、沙漠蠍王 50%；`updateStatusEffects()` 毒傷 tick 依目標類型計算減免後實際傷害，浮動數字顯示實際扣血值
+- **圓形散落全局函式 `spawnLootCircle`**（`systems/utils.js`）：圓形平均角度散落掉落物，距中點 10~25px 隨機；單個物品隨機角度；支援 type：`corpse`（含 multiplier 縮放）、`bone`；易擴充設計供後續 Phase 使用
+
+---
+
+## v0.34.1 - 2026-05-21
+
+### 修復
+
+#### UI 修復
+- **圖鑑組合效果器官名稱顯示**（`systems/ui.js`）：`showCompendium` 的器官圖鑑頁，組合效果（COMBOS）標題原本直接使用 `combo.ids.join(' + ')` 顯示 id 字串（如 `poisonStinger + poisonSac`）；新增 `getOrganDisplayName(id)` helper（優先從 `ORGANS` 取名，其次 `HIDDEN_ORGANS`，fallback 回 id），組合標題改為 `combo.ids.map(id => getOrganDisplayName(id)).join(' + ')`，正確顯示中文名稱（如「毒刺 + 毒囊」）
+
+### 調整
+
+#### 手機 UI
+- **手機版首頁 TOP10 排行榜縮小為 55%**（`systems/ui.js`）：手機裝置下 TOP10 浮窗套用 `scale(0.55)` CSS 縮放（原 `scale(0.7)`），`transform-origin` 改為 `top right`，`top` 改為 `16px`，確保浮窗從右上角縮放不超出畫面
+
+---
+
+## v0.34.0 - 2026-05-21
+
+### 修復
+
+#### Bug 修復
+- **毒囊繼承 Bug**（`systems/evolution.js`）：`buildSkillTreeOverlay` 的器官繼承選單現在正確過濾 `noInherit: true` 的器官（毒囊），使其不再出現於繼承選擇清單
+- **再來一場→技能樹→開始遊戲 無法移動 Bug**（`main.js`）：`initializeGame()` 開頭新增完整狀態重設區塊，確保 `gameState.gameOver`、`skillTreeOpen`、`organSelectionActive` 等旗標在重新遊戲時歸零，修復 `isGamePaused()` 誤回傳 `true` 導致玩家無法移動的問題
+
+#### UI 修復
+- **左下角隱藏器官清單跑版**（`systems/organs.js`）：重構 `drawOrganUI()` 的隱藏器官繪製邏輯；分隔行（`sepBase+1`）專門繪製分隔線，器官名稱從 `sepBase+2` 開始，hit region 同步修正，確保所有文字在背景方塊內正確顯示
+
+### 調整
+
+#### 器官數值
+- **大長腿**（`config/organs.js`、`lang/zh-TW.js`、`lang/en.js`）：各級移動速度 +1.5 → +1
+- **強大的心臟**（`config/organs.js`、`lang/zh-TW.js`、`lang/en.js`）：HP上限+100 → HP上限+60
+
+#### 組合效果調整（`config/organs.js`、`systems/organs.js`、`systems/combat.js`）
+- **移除**原有三器官組合（蟹鉗+毒刺+毒囊）
+- **新增** `comboCrabPoison`：毒刺Lv3 + 擁有毒囊即觸發 → 毒傷翻倍
+- **新增** `comboCrabGloves`：蟹鉗+搏擊拳套各達Lv3 → 流血傷害翻倍、命中施加回復量-50%
+- `gameState.player` 新增 `comboCrabGloves` 旗標；`checkComboEffects()` 對 `comboCrabPoison` 採用特殊判斷邏輯
+
+#### 靈敏知覺重設計（`config/organs.js`、`systems/ui.js`、`lang/zh-TW.js`、`lang/en.js`）
+- Lv1：維持顯示果子最佳路徑（紅線，1000px 偵測範圍）
+- Lv2：新增追蹤最近屍體（黃線），使用 `wrappedDistance` 計算最近目標
+- Lv3：新增追蹤最近白骨（白線），同上邏輯
+- 三條線可累積同時顯示；`perceptionRange` 維持 1000px 不再隨等級增加
+
+#### 鏡頭與縮放（`systems/camera.js`、`systems/ui.js`）
+- 鏡頭邊界觸發距離：25% → 30%（`marginX/Y = VIEW_W/H * 0.30`）
+- 手機遊戲縮放比例：`MOBILE_GAME_SCALE` 0.7 → 0.6
+
+### 新增
+
+#### 結算畫面技能點明細（`systems/evolution.js`、`systems/boss.js`、`systems/gameState.js`）
+- `gameState.sessionSkillPoints = { elite: 0, boss: 0 }` 追蹤本局各來源技能點
+- `handleEliteKill` 在擊殺精英後累加 `sessionSkillPoints.elite`
+- 死亡/超時結算畫面：顯示精英獎勵（`skillPtElite`）、時間獎勵、等級獎勵明細
+- 勝利結算畫面：顯示 Boss 獎勵（+5）、精英獎勵、時間獎勵、等級獎勵明細；`sessionSkillPoints.boss = 5` 在勝利時記錄
+
+#### 手機首頁 TOP10 面板縮放（`systems/ui.js`）
+- 手機裝置下 TOP10 排行榜面板套用 `scale(0.7)` CSS 縮放，`transform-origin: right center`
+
+### 語言檔更新（`lang/zh-TW.js`、`lang/en.js`）
+- 大長腿速度描述 +1.5 → +1
+- 靈敏知覺 Lv2/Lv3 描述更新（屍體黃線 / 白骨白線）
+- 強大的心臟描述 HP+100 → HP+60
+- `comboCrabPoison` 描述更新（條件從三器官改為毒刺Lv3+毒囊）
+- 新增 `comboCrabGloves` 描述
+
+---
+
+## v0.33.0 - 2026-05-21
+
+### 新增
+
+#### 首頁童書故事系統（`systems/ui.js`、`main.js`）
+- **首頁童書故事按鈕**：首頁左上角新增 📖 圖示按鈕，暖黃色半透明設計，hover 輕微放大，點擊觸發 `showGuideStory()`
+- **噪鹃生存記 Guide Story 系統**：新增 `showGuideStory()` 和 `_getGuideStoryPages()`；童書風格 UI（米黃紙質背景、深棕文字），4 頁故事各附 SVG 動畫插畫（破曉 / 孤兒 / 蛻變 / 試煉），翻頁進度點導航，關閉按鈕，手機版插畫縮小至 140px
+- **First Time Player 判斷**：`window.onload` 改為檢查 `localStorage.hasPlayedBefore`；首次玩家自動彈出 Guide Story；`initializeGame()` 開頭與 Guide 最後一頁「開始冒險」均寫入標記
+
+---
+
+## v0.32.1 - 2026-05-20
+
+### 修復
+
+#### 毒刺 Bug 修復（`systems/combat.js`）
+- **Bug 1 — 毒計時器被重置**：`playerAttack()` 的毒刺邏輯改為只在敵人未中毒時才初始化 `lastPoisonTick`；重複攻擊不重置計時器，確保毒傷每秒正常 tick
+- **`updateStatusEffects()` 毒傷 tick**：`c.lastPoisonTick = now` 改為 `c.lastPoisonTick += 1000`，避免誤差累積導致毒傷中斷
+- **Bug 2 — 只有毒刺沒有攻擊力時無法攻擊**：攔截條件改為同時判斷 `p.attack <= 0 && !hasPoison`（`poisonStinger > 0` 或 `poisonSac.level > 0`），有毒性器官時可正常觸發攻擊
+
+### 調整
+
+#### 技能樹平衡（`config/evolution.js`、`systems/evolution.js`）
+- **記憶器官**：死亡保留器官數改為預設 0 個（原預設 1 個）；Lv1=1個，Lv2=2個，Lv3=3個；`organsToKeep` 公式改為 `gameState.playerSkills.organMemory || 0`
+- **恐怖之牙**：Lv3 開局強制設定獠牙 Lv1；Lv5 開局強制設定獠牙 Lv2（覆蓋 Lv3 效果）；新增 `_setFangLevel(targetLv)` 工具函式，支援升級已繼承的獠牙器官
+- **收集成癮**：描述更新為「收集範圍+10px（果子、屍體和白骨，每級）」（白骨吞噬距離已使用 `p.pickupRange`，此為描述修正）
+
+#### 語言包更新（`lang/zh-TW.js`、`lang/en.js`）
+- 同步更新 `organMemory`、`terribleFang`、`collectionAddiction` 的技能描述文字
+
+---
+
+## v0.32.0 - 2026-05-20
+
+### 新增 / 修改
+
+#### 技能點系統重整
+
+- **移除** 死亡/勝利後固定給 1 技能點的邏輯（`showSkillTree`、`showVictory`）
+- **精英怪擊殺**（`systems/organs.js` `handleEliteKill`）：依夜晚編號給點：第1夜 +1、第2夜 +2、第3夜 +3
+- **Boss擊殺**（`systems/boss.js` `showVictory`）：+5技能點
+- **時間獎勵**（死亡/勝利結算時）：`Math.floor((600 - timeRemaining) / 180)`，最多3點
+- **等級獎勵**（死亡/勝利結算時）：`Math.floor(player.level / 6)`
+- 結算畫面顯示本局技能點明細（時間/等級/Boss獎勵）
+
+#### 技能升級費用改為階梯式（`systems/evolution.js` `upgradeSkill`）
+- Lv1費1點、Lv2費2點、Lv3費3點、Lv4費4點、Lv5費5點
+- 技能樹按鈕動態顯示「升級（費N點）」，點數不足時按鈕變灰
+
+#### 其他
+- `SAVE_VERSION` 1.0 → 1.1（自動清除舊技能點存檔）
+- 語言 key：`upgradeCost1` → `upgradeCostN`（含 `{n}` 占位符）；新增 `skillPtTime`、`skillPtLevel`、`skillPtElite`、`skillPtBoss`
+
+---
+
+## v0.31.1 - 2026-05-20
+
+### 修復
+
+- **重整結算畫面按鈕流程**（`systems/boss.js`、`systems/evolution.js`）
+  - 勝利和死亡結算畫面統一顯示 3 個按鈕：「前往技能樹」「🏠 回到首頁」「⚔️ 再來一場」
+  - 「前往技能樹」→ `buildSkillTreeOverlay(mode='postGame')`，底部顯示「🏠 回到首頁」+「⚔️ 再來一場」，直接執行無警告
+  - 「🏠 回到首頁」（從結算畫面）→ warn-once 提示，再按一次確認返回首頁
+  - 「⚔️ 再來一場」（從結算畫面）→ 強制進入 `buildSkillTreeOverlay(mode='forceStart')`，底部只顯示「▶ 開始遊戲」
+  - `buildSkillTreeOverlay` 新增 `mode` 參數（`postGame` / `forceStart` / `fromHome`），透過 `_skillTreeMode` 全域變數在 reset / upgrade 時正確保留模式
+  - 移除 `gameState.homeWarned`、`gameState.playAgainWarned`（改為結算 overlay 內的 local 變數）
+  - 移除 `btnSaveAndHome`、`warnNoOrganLine1`、`warnNoOrganLine2`、`warnNoOrganPlay` 語言 key
+
+---
+
+## v0.31.0 - 2026-05-20
+
+### 新增
+
+#### 進化系統擴展至 Lv5（`config/evolution.js`、`systems/evolution.js`）
+- 草食性、肉食性、雜食性三條路線各從 Lv3 擴展至 Lv5
+- 草食性 Lv4/5：增加體型（`radiusPercent`）+ 中立生物完全友善（`friendly: true`）
+- 肉食性 Lv4/5：攻擊力持續增加，攻速累積加成（`attackSpeedBonusAdd` 最高 +30%）
+- 雜食性 Lv1~5：改為速度加成 + 白骨系統整合，移除舊版果子/屍體 XP 加成
+- 肉食性不再需要草食性前置；雜食性需草食 ≥1 且肉食 ≥1
+- 雜食性 Lv1 自動授予毒囊器官（`_grantPoisonSac`）
+
+#### 器官系統大改（`config/organs.js`、`systems/organs.js`）
+- 重寫所有器官數值以符合實際平衡設計
+  - 蟹鉗：流血持續時間 10 秒、每秒傷提升
+  - 搏擊拳套：攻速改為 10%/15%/15%（非累乘）
+  - 毒刺：移除 Lv1 攻擊加成，改為純中毒傷害
+  - 大長腿：每級 +1.5 速度（原 +0.5）
+  - 龜殼：每級 -10% 傷害 -1 速度（統一）
+  - 厚皮：HP 20/30/50，半徑加成只在 Lv2/3
+  - 刺甲：改為「反彈最大HP百分比」，每級 +5%（最高 15%）
+  - 真視之眼：Lv1 只加暴擊率，不加暴擊倍數
+  - 靈敏知覺：完全改版為「偵測範圍內果子並顯示最佳採集路徑」
+  - 超自然回復：Lv2/3 新增回復最大HP 0.5%
+- 新增特殊器官 **毒囊**（`poisonSac`）：`noSelection: true, noInherit: true`，10 個等級，透過白骨素門檻自動升級
+- 新增隱藏器官 **強大的眼睛**（`strongEye`）：暴擊率+10%、暴擊傷害+0.25、體型+20%
+- 所有組合效果（COMBOS）改為「兩/三方器官各達 Lv3 才觸發」
+- 蟹毒組合改為三方：蟹鉗 + 毒刺 + 毒囊
+
+#### 白骨系統（`systems/combat.js`、`systems/ui.js`）
+- 屍體超過 60 秒自動轉化為白骨；被吃掉的屍體也生成白骨
+- 雜食性玩家可吞噬白骨（有時間進度條），吞噬後增加白骨素（`boneMaterial`）
+- 白骨素累積達門檻時自動升級毒囊（10 個門檻：5/10/20/40/60/100/120/140/160/200）
+- 白骨以白色圓形顯示在地圖上，帶吞噬進度條
+
+#### 靈敏知覺算法（`systems/player.js`）
+- 新函式 `findBestPerceptionPath(player, fruits, detectionRange)`
+- 以候選角度 ±5° 容差窗口篩選果子，計算效率（距離/數量），返回最佳路徑端點
+- 繪製紅色虛線指向最佳目標 + 目標果子閃爍點
+
+#### 大腦充能條與衝擊波（`systems/ui.js`）
+- 大腦激活時在玩家下方繪製 4px 藍色充能條（`#4488FF`）
+- 大腦觸發時推入 `gameState.brainShockwaves[]`，繪製擴張衝擊波圓環（600ms，淡出）
+
+#### 圖鑑系統（`systems/ui.js`、`main.js`）
+- 首頁「遊戲說明」按鈕改為「📖 圖鑑」，呼叫 `showCompendium('guide')`
+- 遊戲內右上角新增 📖 圖鑑按鈕（`_drawCompendiumBtn`），點擊開啟器官頁
+- `showCompendium(startTab)` 三分頁：遊戲說明 / 器官圖鑑 / 進化系統
+- 器官頁列出所有普通器官 + 隱藏器官 + 毒囊說明 + 組合效果
+- 進化頁列出三條路線 Lv1~5 詳細說明
+- 開啟時暫停遊戲（`organSelectionActive = true`），關閉時恢復
+
+#### gameState 更新（`systems/gameState.js`）
+- `critMultiplier` 初始值改為 `1.5`
+- 新增 `player.boneMaterial: 0`、`player.perceptionRange: 0`、`player.naturalRegenHpMaxPercent: 0`
+- 新增陣列 `gameState.bones: []`、`gameState.brainShockwaves: []`
+
+#### 語言包更新（`lang/zh-TW.js`、`lang/en.js`）
+- 新增 `compendium`、`compendiumTitle`、`compendiumTabGuide/Organs/Evo`
+- 新增 `compendiumSacHint`、`compendiumHiddenOrgans`、`compendiumCombos`
+- 新增 `boneMaterialFloat` 浮動文字
+- 更新所有器官描述以反映新數值
+- 更新進化路線描述，加入 Lv4/5
+- 更新 `guideEvo4`：每條路線最高 5 級
+- 更新進化系統說明頁，加入白骨系統介紹
+- 新增隱藏器官 `strongEye` 描述
+
+---
+
+## v0.30.2 - 2026-05-20
+
+### 修復
+- **手機版器官 tooltip 無法觸發**（`systems/ui.js`）：`onStart` handler 在確認觸點落在 `gameCanvas` 後，換算 canvas 內部座標並比對 `_organHitRegions`，命中時呼叫 `showTooltip()` 並以 `setTimeout 500ms` 自動 `hideTooltip()`，然後 `continue` 不啟動搖桿，修復全螢幕模式下左下角器官區域觸碰無法顯示 tooltip 的問題
+
+---
+
+## v0.30.1 - 2026-05-20
+
+### 修復
+- **全螢幕搖桿攔截 HTML UI 點擊**（`systems/ui.js`）：`_attachJoystickListeners()` 的 `onStart` handler 在 for 迴圈開頭以 `document.elementFromPoint()` 判斷觸點目標，若不是 `gameCanvas` 或 `joystick-canvas` 則 `continue`，確保齒輪、小地圖、overlay 按鈕等 HTML UI 元素的 touch 事件不被搖桿邏輯攔截，修復全螢幕模式下按鈕無法點擊的問題
+
+---
+
+## v0.30.0 - 2026-05-19
+
+### 新增
+- **全螢幕移動區域**（`systems/ui.js`）：`_joyZone()` 改為 `!_attackZone(x, y)`，手機版非攻擊區的任意位置均可作為搖桿起始點
+- **攻擊區重構為右下角矩形**（`systems/ui.js`）：直向為右50%×下25%、橫向為右25%×下50%；`_getAttackBtnPos()` 回傳矩形正中心；視覺改為 ⚔️ 置中、透明度 0.2、無邊框
+- **自動攻擊功能**（`systems/gameState.js`、`systems/ui.js`、`main.js`、`systems/input.js`）：`DEFAULT_SETTINGS` 新增 `autoAttack: false`；遊戲主迴圈每幀偵測條件自動呼叫 `playerAttack()`；`Z` 鍵可即時切換並存檔
+- **設定介面輔助功能區塊**（`systems/ui.js`）：按鍵設定縮至65%寬，旁邊新增35%「輔助功能」區塊，內含自動攻擊 ON/OFF toggle；電腦版顯示「Z 鍵切換」提示
+- **⚔️ 自動指示器**（`systems/ui.js`）：自動攻擊開啟時，手機版在攻擊區中心顯示「⚔️ 自動」32px；電腦版在畫布正中央顯示「⚔️ 自動」100px；透明度均為 0.2
+- **遊戲說明第一頁更新**（`systems/ui.js`）：電腦版加入自動攻擊說明；手機版左欄更新移動/攻擊說明並加入自動攻擊，右欄改為 SVG 手機示意圖（移動區/攻擊區，支援中英文）
+- **語言 key 新增**（`lang/zh-TW.js`、`lang/en.js`）：`sectionAccessibility`、`autoAttack`、`autoAttackHint`、`guideAutoAttack`、`guideMobileMove2`、`guideMobileAttackZone`
+
+---
+
+## v0.29.5 - 2026-05-19
+
+### 修復
+- **minimap-playtime 改為緊貼生態顯示**（`index.html`）：`#minimap-info` 的 `justify-content` 從 `space-between` 改為 `flex-start`，使生態系與遊玩時間緊靠左側；右側時間 span 加上 `margin-left:auto` 維持靠右對齊
+
+---
+
+## v0.29.4 - 2026-05-19
+
+### 修復
+- **minimap 遊玩時間顯示改為即時累加**（`systems/ui.js`）：`rpt` 計算從純讀 `gameState.realPlayTime` 改為加上 `Date.now() - _playTimerStart` 的當前區段時間，使小地圖計時器每幀即時更新而非只在暫停/繼續時才跳動
+
+---
+
+## v0.29.3 - 2026-05-19
+
+### 修復
+- **resumePlayTimer 初始條件導致計時器未啟動**（`main.js`）：移除 `if (gameState._playTimerPaused)` 條件判斷，改為無條件設定 `_playTimerStart`，修復遊戲開始時計時器因 `_playTimerPaused` 初始值為 `false` 而未啟動的問題
+
+---
+
+## v0.29.2 - 2026-05-19
+
+### 新增
+- **小地圖真實遊玩時間顯示**（`index.html`、`systems/ui.js`）：在小地圖 `#minimap-info` 的生態系 span 後新增 `#minimap-playtime`，每幀將 `gameState.realPlayTime`（毫秒）換算為 `mm:ss` 格式即時顯示於小地圖資訊欄
+
+---
+
+## v0.29.1 - 2026-05-19
+
+### 修改
+- **排行榜查詢與分頁重構**（`config/supabase.js`、`systems/ui.js`、`index.html`）：拆分原本 `fetchLeaderboard` 為 `fetchVictoryRecords()`（勝利，最多 100 筆，按 version_order.desc / play_time.asc / boss_kill_time.asc 排序）與 `fetchDefeatRecords(limit)`（失敗，按 version_order.desc / play_time.desc / score.desc 排序）；排行榜開啟時先抓勝利記錄，計算剩餘名額再抓失敗記錄，合併後存入 `allRows`；`loadPage` 改為純前端切片分頁，無翻頁 network request；`index.html` fallback 同步更新
+
+---
+
+## v0.29.0 - 2026-05-19
+
+### 新增
+- **真實遊玩時間計時系統**（`main.js`、`systems/gameState.js`、`systems/organs.js`、`systems/evolution.js`、`systems/boss.js`、`systems/ui.js`）：新增 `realPlayTime`、`_playTimerStart`、`_playTimerPaused` 三個欄位至 `gameState`；新增全域函式 `pausePlayTimer()` / `resumePlayTimer()`；`gameLoop` 每幀透過 `_wasPaused` 偵測暫停狀態切換並自動呼叫對應函式；`handleEliteKill` 開頭/結尾各呼叫 `pausePlayTimer()` / `resumePlayTimer()` 以排除精英怪擊殺跳天的時間；`showSkillTree` 與 `showVictory` 結束時呼叫 `pausePlayTimer()` 定格最終時間；排行榜上傳的 `play_time` 改用 `realPlayTime / 1000`（秒），排除所有暫停介面與跳天時間
+
+---
+
+## v0.28.5 - 2026-05-19
+
+### 重構
+- **手機端遊戲畫面縮放系統重構**（`systems/ui.js`）：新增 `MOBILE_GAME_SCALE = 0.7` 常數；手機橫向邏輯解析度改為 `1120×630`（1600×900 × 0.7），手機直向改為 `630×1120`（長短邊對調），scale 皆以 `vw / logicW` 填滿螢幕寬度；修正 `_setViewSize` 呼叫從寫死 `900` 改為正確傳入 `logicH`
+
+---
+
+## v0.28.4 - 2026-05-18
+
+### 修復
+- **死亡後無器官卻被強制進入器官保留畫面**（`systems/evolution.js`）：`buildSkillTreeOverlay` 新增器官判斷，當 `playerOrgans.length === 0 && hiddenOrgans.length === 0` 時直接跳過器官保留區塊，不顯示該 section；同時修正「回首頁」按鈕從永遠封鎖改為 warn-once（首次點擊顯示確認警告，再按一次才跳轉），並新增 `gameState.homeWarned` 旗標；「再玩一局」按鈕同步加入 `noOrgansToSelect` 判斷，無器官時不觸發警告直接繼續；新增語言 key `warnNoOrganHome`（中英文）
+
+---
+
+## v0.28.3 - 2026-05-18
+
+### 修復
+- **分數上傳 400 錯誤**（`systems/ui.js`）：`submitScore` 傳入的 `score`、`level`、`play_time`、`boss_kill_time`、`version_order` 全部套用 `Math.floor()`，確保傳送整數而非浮點數，避免 Supabase 型別驗證回傳 400
+
+---
+
+## v0.28.2 - 2026-05-18
+
+### 修復
+- **死亡後不出現分數上傳彈窗**（`systems/evolution.js`）：`showSkillTree()` 原本直接呼叫 `buildSkillTreeOverlay(cause)`，完全跳過了分數提交流程；修復為先呼叫 `showScoreSubmitPopup(false, null, () => buildSkillTreeOverlay(cause))`，與勝利畫面的流程一致；開發者模式下仍直接跳過
+
+---
+
+## v0.28.1 - 2026-05-18
+
+### 修復
+- **橫向手機排行榜按鈕被導航列遮住**（`systems/ui.js`）：排行榜 overlay 在開啟時動態計算高度（讀取 game-container 的 scale 值，以 `window.innerHeight / scale` 為上限），確保 overlay 不超出視窗；pagingBar 改用 `padding-bottom: max(20px, env(safe-area-inset-bottom))`，兼顧 iOS 安全區域，並加入 `flex-shrink:0` 防止被壓縮
+
+---
+
+## v0.28.0 - 2026-05-18
+
+### 修復
+- **豎向手機模式開始畫面未縮放**（`systems/ui.js`、`systems/evolution.js`）：`showStartScreen()`、`showMapSelect()`、`showSettings()`、`showGuide()`、`showLeaderboard()`、`buildSkillTreeOverlay(fromHome/startAfter)` 開頭均加入 `applyDeviceMode()`，確保所有畫面都正確套用手機縮放
+- **非遊戲畫面出現虛擬搖桿**（`systems/gameState.js`、`main.js`、`systems/ui.js`）：新增 `gameState.gameStarted` 旗標（預設 `false`），`initializeGame()` 時設為 `true`；`_joyPaused()` 加入 `!gameState.gameStarted` 判斷，首頁/技能樹/設定等畫面搖桿不再出現
+- **排行榜被搖桿層遮住無法點擊**（`systems/ui.js`）：排行榜 overlay z-index 從 300 提升至 500，關閉按鈕加上 `pointer-events:all`
+
+### 新增
+- **開始流程加入技能樹前置**（`systems/ui.js`、`systems/evolution.js`）：難度與角色選擇頁的「開始遊戲 →」按鈕，若 `savedOrgans` 為空則強制先進入技能樹；技能樹此模式底部僅顯示「開始遊戲 →」按鈕，點擊後才真正啟動遊戲；有器官資料則直接開始
+- **結算畫面兩顆按鈕**（`systems/evolution.js`、`systems/boss.js`、`lang/zh-TW.js`、`lang/en.js`）：死亡/逾時技能樹畫面與勝利畫面底部改為「💾 保存並返回首頁」+「⚔️ 再來一場」；未選器官點「保存並返回」時顯示 3 秒警告橫幅；「再來一場」第一次點擊在未選器官時顯示確認提示，第二次才真正開始（透過 `gameState.playAgainWarned` 追蹤）
+- 新增 `gameState.lastDifficulty` 記錄上局難度、`gameState.playAgainWarned` 追蹤是否已提醒
+- 新增語言 key：`btnSaveAndHome`、`warnNoOrganLine1`、`warnNoOrganLine2`、`warnNoOrganPlay`（中英文）
+
+---
+
+## v0.27.1 - 2026-05-18
+
+### 新增
+- **排行榜防作弊機制**（`systems/gameState.js`、`systems/ui.js`、`systems/boss.js`、`systems/daynight.js`、`main.js`）：新增 `gameState.devModeUsed` 旗標，啟動開發者模式時設為 `true` 且本局不可重置；遊戲結束時若偵測到旗標，完全跳過分數上傳彈窗並於結束畫面顯示「⚠️ 本局使用了開發者模式，分數不計入排行榜」；`initializeGame()` 重新開局時重置為 `false`
+
+---
+
+## v0.27.0 - 2026-05-18
+
+### 新增
+- **Supabase 全球排行榜系統**（`config/supabase.js`、`systems/ui.js`、`systems/boss.js`、`systems/daynight.js`、`lang/zh-TW.js`、`lang/en.js`、`index.html`）：串接 Supabase REST API，實作完整排行榜功能
+- **首頁 TOP 10 浮窗**（`systems/ui.js`）：首頁右側新增固定浮窗，自動讀取前10名，顯示排名圖示、名字、遊玩時間、勝負結果
+- **完整排行榜介面**（`systems/ui.js`）：點「🏆 排行榜」開啟全屏排行榜，表格含排名/版本/日期/名字/遊玩時間/分數/等級/結果，前三名有金銀銅底色；支援鍵盤 A/←→/D 翻頁，每頁20筆分頁讀取
+- **分數提交彈窗**（`systems/ui.js`）：遊戲結束（死亡/勝利）前彈出名字輸入視窗，提交或跳過後進入結束畫面；上傳欄位含 name/score/level/play_time/is_victory/boss_kill_time/version/version_order
+- **皇冠排名圖示**（`index.html`）：CSS 繪製金銀銅三色皇冠（`buildCrown()`），4–10名🎖️，11名後顯示數字
+- **Boss 生成時間記錄**（`systems/boss.js`）：`spawnBoss()` 記錄 `gameState.bossSpawnTime`，擊殺後計算 `boss_kill_time` 秒數上傳
+- **首頁新增排行榜按鈕**（`systems/ui.js`）：按鈕順序調整為開始遊戲 / 技能樹 / 遊戲說明 / 排行榜 / 設定
+- **雙語支援**（`lang/zh-TW.js`、`lang/en.js`）：新增21個排行榜相關 lang key
+
+---
+
+## v0.26.1 - 2026-05-17
+
+### 修復
+- **手機版說明第1頁左半缺少兩項**（`systems/ui.js`）：`buildPage0()` 手機分支左欄補上 `guideFruit`（吃果子）與 `guideGoal`（目標），與桌機版5項一致
+
+---
+
+## v0.26.0 - 2026-05-17
+
+### 新增
+- **遊戲說明系統全面重構**（`lang/zh-TW.js`、`lang/en.js`、`lang.js`、`systems/ui.js`、`index.html`）：說明介面由舊版 `guidePages` 陣列改為扁平 lang key 架構，支援逐 key fallback（當前語言 → en → zh-TW）
+- **說明頁擴充至4頁**（`systems/ui.js`）：第1頁基本操作（桌機）或左右分欄觸控操作（手機）、第2頁器官系統、第3頁進化系統、第4頁小地圖說明；桌機手機頁數統一
+- **手機第1頁觸控示意圖**（`systems/ui.js`）：右半欄新增橫向模式示意圖（144×80px，左30%攻擊區/右30%搖桿區）與直向模式示意圖（90×108px，上60%遊戲畫面/下40%攻擊+搖桿），使用絕對定位 HTML div 繪製
+- **說明介面鍵盤換頁**（`systems/ui.js`）：開啟說明時監聽 `D/→`（下一頁）、`A/←`（上一頁）；`hideGuide()` 自動移除監聽器（`_guideKeyHandler`），防止殘留
+- **小地圖圖例動畫**（`index.html`、`systems/ui.js`）：新增 `@keyframes dotBlink`（opacity 閃爍，玩家/草食精英/肉食精英）與 `@keyframes dotGlow`（box-shadow 光暈，三種Boss），霧區改用方形色塊（rgba(255,255,255,0.3)）
+- **大量新增 lang key**（`lang/zh-TW.js`、`lang/en.js`）：新增 `guideTitle/guidePage/guideClose/guidePrev/guideNext`、第1頁桌機5條、手機6條、觸控2條、第2頁器官7條、第3頁進化5條、第4頁地圖10條，共新增40+ keys
+
+---
+
+## v0.25.0 - 2026-05-17
+
+### 新增
+- **橫向手機搖桿動態定位**（`systems/ui.js`）：移除橫向模式固定底環（`vw×0.85, vh×0.5`），改為玩家在搖桿區任意位置按下時，以該觸點為搖桿中心動態生成；`onStart` 移除 `orientation === 'landscape'` 分支，兩個方向統一使用 `_joyBaseX = x; _joyBaseY = y`
+- **攻擊區點擊視覺回饋**（`systems/ui.js`）：新增 `_atkFeedbackTime / _atkFeedbackX / _atkFeedbackY` 三個狀態變數；攻擊區 `touchstart` 觸發時記錄座標與時間；`_renderMobileOverlay` 每幀在點擊位置繪製半透明 ⚔️，300ms 內線性淡出
+- **橫向手機觸控區域視覺提示重繪**（`systems/ui.js`）：攻擊區與搖桿區各以 `rgba(255,255,255,0.1)` 細邊框標示範圍；攻擊區中央 ⚔️ 透明度降至 0.1；搖桿區改為 0.1 透明度的外環 + 內圈提示圓，替代原本 0.2 透明度固定底環
+- **`_renderMobileOverlay` 每幀刷新**（`systems/ui.js`、`main.js`）：在 `drawGame()` 末尾加入 `if (gameState.isMobile) _renderMobileOverlay()`，確保攻擊點擊淡出動畫於每幀正確渲染；原觸控事件內的呼叫保留以維持即時反應
+
+---
+
+## v0.24.2 - 2026-05-17
+
+### 修復
+- **小地圖日月圖示四角顏色異常**（`systems/ui.js`）：移除 `_drawSunMoonIndicator()` 中對整個 24×24 畫布的 `rgba(0,0,0,0.7)` 背景填色；圓形圖示以外的四角現在保持透明，由父容器 `#minimap-info` 的背景自然穿透，消除雙層疊加導致四角顏色偏暗的問題
+
+---
+
+## v0.24.1 - 2026-05-17
+
+### 修復
+- **手機小地圖縮小至 200×200**（`systems/ui.js`）：新增 `_mmSize()` 回傳 `isMobile ? 200 : 300`；`drawMinimap()` 每幀比對並動態調整 `minimapCanvas.width/height`；`_drawMinimapFog()` 的暫存畫布 RC 改為 `mm+30`，最終 drawImage 輸出至 mm×mm；`_drawMinimapEntities()` scale 改為 `mm/MAP_WIDTH`（手機 1/40，桌機 1/26.7）；`#minimap-info` 資訊列寬度跟隨 canvas 自動縮小；桌機維持 300×300 不受影響
+- **設定按鈕每幀重建 DOM 導致 click 失效**（`systems/ui.js`）：左上角 UI 改為 `_initTopLeftUI()` 一次建立穩定結構，`addEventListener` 綁定設定按鈕，`updateUI()` 僅更新 `#tl-xp-text`、`#tl-xp-bar` 數值及 hearts canvas
+
+---
+
+## v0.24.0 - 2026-05-17
+
+### 新增
+- **心形血量 UI**（`systems/ui.js`）：移除 HP 數字，改以心形 Canvas 顯示；每顆心代表 20HP，填充比例 `clamp((hp - i*20)/20, 0, 1)`，紅色從左側填充，空心部分黑色半透明；最多 10 顆一行，超過換行；`_heartPath()` 用 Bezier 曲線繪製 24×24 心形
+- **左上角 UI 重構**（`systems/ui.js`、`index.html`）：改為 `inline-flex` 縱向容器；第一行並排 ⚙️ 按鈕、🐦 圖示（28px）、Lv/XP 文字＋進度條；第二行心形血條；整體包覆 `rgba(0,0,0,0.6)` 半透明背景；XP 進度條寬度自動跟隨心條寬度（`width:100%`）
+- **⚙️ 設定按鈕**（`systems/ui.js`）：嵌入左上角 UI，`pointer-events:all` 穿透 overlay，點擊觸發 `showSettings()`；電腦版 Esc 鍵維持原有開啟邏輯（`systems/input.js`）
+- **直向手機 1000×900 邏輯解析度**（`systems/ui.js`、`systems/map.js`）：直向模式下 canvas 及容器改為 1000×900，`scale = vw/1000` 填滿螢幕寬度；`VIEW_W/VIEW_H` 由 `const` 改為 `let`，`_setViewSize()` 統一管理；橫向/桌機維持 1600×900 不受影響；camera 邊界自動更新（VIEW_W×0.25 = 250px），直向提示條停用
+- **橫向手機攻擊區和搖桿精確化**（`systems/ui.js`）：攻擊區縮至左側 30%（水平）× 中間 60%（垂直，20%~80%）；搖桿區縮至右側 30% × 中間 60%；搖桿底環固定顯示於右側中央（`vw×0.85, vh×0.5`），啟動後 base 鎖定中央、knob 隨觸點偏移；⚔️ 提示移至攻擊區正中央
+
+---
+
+## v0.23.0 - 2026-05-17
+
+### 新增
+- **手機觸控支援系統**（`systems/ui.js`、`systems/gameState.js`、`systems/player.js`、`index.html`）：
+  - **裝置偵測**：`detectMobile()`（ontouchstart 或 vw ≤ 768）、`getOrientation()`、`applyDeviceMode()`
+  - **設定介面「裝置模式」區塊**：三顆按鈕（自動偵測 / 📱 手機模式 / 🖥️ 電腦模式），即時套用並存入 `localStorage`
+  - **畫面自動縮放**：`_applyMobileScale()` 用 `CSS transform: scale()` 縮放 `#game-container`，橫向填滿寬度，豎向保留下方 40% 給操控區，不改變遊戲內部座標
+  - **方向提示條**：豎向手機時在頂部顯示黃色可關閉提示條，旋轉橫向後自動隱藏
+  - **虛擬搖桿**：右半螢幕（橫向）或右半下 40%（豎向），外圈 60px／內圈 25px，浮動式，`mobileInput.dx/dy` 驅動玩家移動
+  - **攻擊區域**：橫向為左半螢幕整區（⚔️ opacity 0.2 提示），豎向為左半下 40% 中央圓形按鈕（⚔️，r=40px），tap 觸發 `playerAttack()`，沿用既有冷卻邏輯
+  - `viewport` meta 標籤防止手機瀏覽器自動縮放
+
+### 修復
+- **手機模式全螢幕綠色遮罩**：`canvas { background-color }` 改為 `#gameCanvas { background-color: #549954 }`，避免 `#joystick-canvas` 繼承綠色蓋住所有 overlay
+
+---
+
 ## v0.22.0 - 2026-05-17
 
 ### 新增

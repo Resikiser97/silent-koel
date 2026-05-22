@@ -1,8 +1,8 @@
 // =============================================================
-// 生成系統 - spawnFruitFromTree / spawnFruit
-//            spawnNeutralCreatures / moveCreature
-//            spawnHostileCreatures / spawnTreasure
-//            spawnCreatureAtEdge / updateCreatureSpawning
+// 生成系統 - spawnFruitFromTree / spawnFruit / moveCreature
+//            spawnBiomeCreatures / spawnTreasure
+//            spawnCreatureAtEdgeBiome / updateCreatureSpawning
+//            _randomPointInBiome / _makeHerbCreature / _makeCarnCreature
 // （generateTrees 已移至 systems/map.js）
 // =============================================================
 
@@ -34,53 +34,123 @@ function spawnFruit() {
     return spawnFruitFromTree(tree);
 }
 
-function spawnNeutralCreatures() {
+// ── 在指定生態區內隨機找一個有效座標（最多200次嘗試）
+function _randomPointInBiome(biome) {
+    for (let i = 0; i < 200; i++) {
+        const x = 50 + Math.random() * (MAP_WIDTH  - 100);
+        const y = 50 + Math.random() * (MAP_HEIGHT - 100);
+        if (getBiome(x, y) === biome) return { x, y };
+    }
+    // fallback：找不到指定生態區時返回隨機座標
+    return { x: 50 + Math.random() * (MAP_WIDTH - 100), y: 50 + Math.random() * (MAP_HEIGHT - 100) };
+}
+
+// ── 建立草系生物（herbivore）
+function _makeHerbCreature(x, y, biome, spec, strength) {
+    const str = (strength && strength.neutral) || { hpMultiplier: 1, speedMultiplier: 1, damageMultiplier: 1 };
+    const canFight = Math.random() < 0.5;
+    const now = Date.now();
+    return {
+        x, y, biome,
+        speciesId: spec.id,
+        name: spec.name,
+        radius: 8,
+        hp:    Math.round(30 * str.hpMultiplier),
+        maxHp: Math.round(30 * str.hpMultiplier),
+        baseHp: 30,
+        speed:     2.4 * str.speedMultiplier,
+        baseSpeed: 2.4,
+        damage:     canFight ? 3 : 0,
+        baseDamage: canFight ? 3 : 0,
+        diet: 'herbivore',
+        canFight,
+        state: 'wandering',
+        wanderTarget: null,
+        lastWanderTime: now,
+        restTimer: 0,
+        isResting: false,
+        _restEndTime: 0,
+        _restSpeed: 0,
+        fruitsEaten: 0,
+        lastDamageTime: 0,
+        attackCooldown: 0,
+        _moveAngle: Math.random() * Math.PI * 2,
+        _nextBehaviorTime: now + 5000 + Math.random() * 10000,
+        _seekingFruit: false,
+    };
+}
+
+// ── 建立肉系生物（carnivore）
+function _makeCarnCreature(x, y, biome, spec, strength, mapConfig) {
+    const str       = (strength && strength.hostile) || { hpMultiplier: 1, speedMultiplier: 1, damageMultiplier: 1 };
+    const removeCap = !!(mapConfig && mapConfig.removeHostileCap);
+    const aggroRange = (mapConfig && mapConfig.aggroRangeOverride) ? mapConfig.aggroRangeOverride : 150;
+    const now = Date.now();
+    let speed  = 3.6 * str.speedMultiplier;
+    let damage = Math.round(5 * str.damageMultiplier);
+    if (!removeCap) {
+        speed  = Math.min(7.5, speed);
+        damage = Math.min(20, damage);
+    }
+    return {
+        x, y, biome,
+        speciesId: spec.id,
+        name: spec.name,
+        radius: 10,
+        hp:    Math.round(50 * str.hpMultiplier),
+        maxHp: Math.round(50 * str.hpMultiplier),
+        baseHp: 50,
+        speed,
+        baseSpeed: 3.6,
+        damage,
+        baseDamage: 5,
+        baseRadius: 10,
+        diet: 'carnivore',
+        canFight: true,
+        state: 'patrolling',
+        aggroRange,
+        attackRange: 20,
+        attackCooldown: 0,
+        wanderTarget: null,
+        lastWanderTime: now,
+        restTimer: 0,
+        isResting: false,
+        _restEndTime: 0,
+        _restSpeed: 0,
+        corpseEaten: 0,
+        target: null,
+        targetType: null,
+        _moveAngle: Math.random() * Math.PI * 2,
+        _nextBehaviorTime: now + 5000 + Math.random() * 10000,
+        _seekingPrey: false,
+    };
+}
+
+// ── 初始生成：按生態區各生成草系10隻、肉系8隻
+function spawnBiomeCreatures() {
     gameState.neutralCreatures = [];
-    const GRID = 5, BLOCK = 1600; // 5x5 格，每格 1600px
-    for (let gx = 0; gx < GRID; gx++) {
-        for (let gy = 0; gy < GRID; gy++) {
-            for (let k = 0; k < 2; k++) { // 每格 2 隻，共 50 隻
-                const x = gx * BLOCK + 50 + Math.random() * (BLOCK - 100);
-                const y = gy * BLOCK + 50 + Math.random() * (BLOCK - 100);
-                const diet = Math.random() < 0.5 ? 'herbivore' : 'omnivore';
-                const canFight = Math.random() < 0.5;
-                gameState.neutralCreatures.push({
-                    x, y, radius: 8, hp: 30, maxHp: 30, speed: 0.8,
-                    diet, canFight, state: 'idle',
-                    wanderTarget: null, lastWanderTime: Date.now(), lastDamageTime: 0
-                });
-            }
+    gameState.hostileCreatures = [];
+    const map      = gameState.currentMap;
+    const strength = map ? map.creatureStrength : null;
+
+    for (const biome of ['forest', 'ocean', 'desert']) {
+        const herbSpec = BIOME_CREATURES[biome].herbivore;
+        const carnSpec = BIOME_CREATURES[biome].carnivore;
+        for (let i = 0; i < 10; i++) {
+            const { x, y } = _randomPointInBiome(biome);
+            gameState.neutralCreatures.push(_makeHerbCreature(x, y, biome, herbSpec, strength));
+        }
+        for (let i = 0; i < 8; i++) {
+            const { x, y } = _randomPointInBiome(biome);
+            gameState.hostileCreatures.push(_makeCarnCreature(x, y, biome, carnSpec, strength, map));
         }
     }
-    console.log("--- 中立生物生成完成：" + gameState.neutralCreatures.length + " 隻（5x5 格，每格2隻）---");
+    console.log('--- 生態生物生成完成：草系' + gameState.neutralCreatures.length + '隻、肉系' + gameState.hostileCreatures.length + '隻 ---');
 }
 
 function moveCreature(entity, newX, newY) {
     entity.x = ((newX % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
     entity.y = ((newY % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
-}
-
-function spawnHostileCreatures() {
-    gameState.hostileCreatures = [];
-    const GRID = 5, BLOCK = 1600; // 5x5 格，每格 1600px
-    const bonus = gameState.creatureStrengthMultiplier;
-    for (let gx = 0; gx < GRID; gx++) {
-        for (let gy = 0; gy < GRID; gy++) { // 每格 1 隻，共 25 隻
-            const x = gx * BLOCK + 50 + Math.random() * (BLOCK - 100);
-            const y = gy * BLOCK + 50 + Math.random() * (BLOCK - 100);
-            const roll = Math.random();
-            const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
-            gameState.hostileCreatures.push({
-                x, y, radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
-                speed: Math.min(2.5, 1.2 + bonus * 0.1),
-                damage: Math.min(20, 5 + bonus), attackCooldown: 0, diet,
-                state: 'patrolling', aggroRange: 150, attackRange: 20,
-                wanderTarget: null, lastWanderTime: Date.now(),
-                target: null, targetType: null
-            });
-        }
-    }
-    console.log("--- 敵意生物生成完成：" + gameState.hostileCreatures.length + " 隻（5x5 格，每格1隻）---");
 }
 
 function spawnTreasure() {
@@ -91,72 +161,45 @@ function spawnTreasure() {
     });
 }
 
-function spawnCreatureAtEdge(type) {
-    const GRID = 5, BLOCK = 1600; // 5x5 格，每格 1600px，座標範圍 0–8000
-    const bonus = gameState.creatureStrengthMultiplier;
-
-    // 統計各格存活數量
-    const alive = (type === 'neutral'
-        ? gameState.neutralCreatures
-        : gameState.hostileCreatures).filter(c => c.hp > 0);
-    const counts = new Array(25).fill(0);
-    for (const c of alive) {
-        const gi = Math.min(4, Math.floor(c.x / BLOCK)) + Math.min(4, Math.floor(c.y / BLOCK)) * GRID;
-        counts[gi]++;
-    }
-    // 加權隨機：存活越少的格子越容易被選到
-    const weights = counts.map(n => 1 / (n + 1));
-    const total = weights.reduce((s, w) => s + w, 0);
-    let r = Math.random() * total, block = 0;
-    for (let i = 0; i < 25; i++) { r -= weights[i]; if (r <= 0) { block = i; break; } }
-    const gx = block % GRID;
-    const gy = Math.floor(block / GRID);
-    const x = gx * BLOCK + 50 + Math.random() * (BLOCK - 100);
-    const y = gy * BLOCK + 50 + Math.random() * (BLOCK - 100);
-
-    if (type === 'neutral') {
-        gameState.neutralCreatures.push({
-            x, y, radius: 12, hp: 30 + bonus * 10, maxHp: 30 + bonus * 10,
-            speed: 0.8 + bonus * 0.1, damage: 3 + bonus,
-            diet: Math.random() < 0.5 ? 'herbivore' : 'omnivore',
-            state: 'wandering', fleeRange: 100, fightBackRange: 40,
-            canFight: Math.random() < 0.5, attackCooldown: 0,
-            wanderTarget: null, lastWanderTime: Date.now()
-        });
+// ── 補充生成：在指定生態區生成一隻草系或肉系生物
+function spawnCreatureAtEdgeBiome(biome, type) {
+    const map      = gameState.currentMap;
+    const strength = map ? map.creatureStrength : null;
+    const { x, y } = _randomPointInBiome(biome);
+    if (type === 'herb') {
+        const spec = BIOME_CREATURES[biome].herbivore;
+        gameState.neutralCreatures.push(_makeHerbCreature(x, y, biome, spec, strength));
     } else {
-        const roll = Math.random();
-        const diet = roll < 0.8 ? 'carnivore' : (roll < 0.9 ? 'herbivore' : 'omnivore');
-        const nightSpd = gameState.isNight ? 0.2 : 0;
-        const nightDmg = gameState.isNight ? 2 : 0;
-        gameState.hostileCreatures.push({
-            x, y, radius: 10, hp: 50 + bonus * 10, maxHp: 50 + bonus * 10,
-            speed: Math.min(2.5, 1.2 + bonus * 0.1 + nightSpd),
-            damage: Math.min(20, 5 + bonus + nightDmg),
-            attackCooldown: 0, diet, state: 'patrolling',
-            aggroRange: 150, attackRange: 20,
-            wanderTarget: null, lastWanderTime: Date.now(),
-            target: null, targetType: null
-        });
+        const spec = BIOME_CREATURES[biome].carnivore;
+        gameState.hostileCreatures.push(_makeCarnCreature(x, y, biome, spec, strength, map));
     }
 }
 
 function updateCreatureSpawning() {
-    const now = Date.now();
-    const elapsed = (600 - gameState.timeRemaining);
+    const now     = Date.now();
+    const elapsed = 600 - gameState.timeRemaining;
     gameState.creatureStrengthMultiplier = Math.floor(elapsed / 150);
 
-    const aliveNeutral = gameState.neutralCreatures.filter(c => c.hp > 0).length;
-    const neutralSpawnInterval = aliveNeutral === 0 ? 9000 : 30000;
-    if (aliveNeutral < 50 && now - gameState.spawnTimers.neutral >= neutralSpawnInterval) {
-        spawnCreatureAtEdge('neutral');
-        gameState.spawnTimers.neutral = now;
-    }
+    const HERB_INTERVAL = 30000; // 草系正常間隔 30s
+    const CARN_INTERVAL = 45000; // 肉系正常間隔 45s
 
-    const maxHostile = 35;
-    const aliveHostile = gameState.hostileCreatures.filter(c => c.hp > 0).length;
-    const hostileSpawnInterval = (aliveHostile === 0 || gameState.fruits.length === 0) ? 13500 : 45000;
-    if (aliveHostile < maxHostile && now - gameState.spawnTimers.hostile >= hostileSpawnInterval) {
-        spawnCreatureAtEdge('hostile');
-        gameState.spawnTimers.hostile = now;
+    for (const biome of ['forest', 'ocean', 'desert']) {
+        // ── 草系補充
+        const herbKey   = biome + '_herb';
+        const herbAlive = gameState.neutralCreatures.filter(c => c.hp > 0 && c.biome === biome).length;
+        const herbTimer = herbAlive < 3 ? HERB_INTERVAL * 0.3 : HERB_INTERVAL; // 少於3隻加速70%
+        if (herbAlive < 20 && now - (gameState.spawnTimers[herbKey] || 0) >= herbTimer) {
+            spawnCreatureAtEdgeBiome(biome, 'herb');
+            gameState.spawnTimers[herbKey] = now;
+        }
+
+        // ── 肉系補充
+        const carnKey   = biome + '_carn';
+        const carnAlive = gameState.hostileCreatures.filter(c => c.hp > 0 && c.biome === biome).length;
+        const carnTimer = carnAlive < 3 ? CARN_INTERVAL * 0.3 : CARN_INTERVAL; // 少於3隻加速70%
+        if (carnAlive < 15 && now - (gameState.spawnTimers[carnKey] || 0) >= carnTimer) {
+            spawnCreatureAtEdgeBiome(biome, 'carn');
+            gameState.spawnTimers[carnKey] = now;
+        }
     }
 }

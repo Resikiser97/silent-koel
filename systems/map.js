@@ -5,8 +5,8 @@
 
 const MAP_WIDTH  = 8000;
 const MAP_HEIGHT = 8000;
-const VIEW_W     = 1600;
-const VIEW_H     = 900;
+let VIEW_W     = 1600;
+let VIEW_H     = 900;
 
 const TILE_SIZE   = 20;    // 地形格子大小，改這個數字可以調整解析度
 const NOISE_SCALE = 0.003; // Noise 縮放比例，影響地形大小

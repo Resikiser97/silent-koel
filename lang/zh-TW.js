@@ -8,10 +8,38 @@
 LANG['zh-TW'] = {
     ui: {
         // ── 首頁
-        startGame: '▶ 開始遊戲',
-        skillTree: '🌿 技能樹',
-        guide:     '📖 遊戲說明',
-        settings:  '⚙️ 設定',
+        startGame:   '▶ 開始遊戲',
+        skillTree:   '🌿 技能樹',
+        guide:       '📖 遊戲說明',
+        compendium:  '📖 圖鑑',
+        leaderboard: '🏆 排行榜',
+        settings:    '⚙️ 設定',
+        lbSubmitTitle:  '上傳你的分數到排行榜！',
+        lbNamePlaceholder: '輸入名字（最多20字）',
+        lbSubmitBtn:    '提交',
+        lbSkipBtn:      '跳過',
+        lbSubmitOk:     '✅ 分數已上傳！',
+        lbSubmitFail:   '❌ 上傳失敗，請檢查網路連線',
+        lbAnonymous:    '匿名',
+        lbTop10Title:  '🏆 排行榜 TOP 10',
+        lbLoading:     '讀取中...',
+        lbError:       '無法讀取排行榜',
+        lbVictory:     '🏆 勝利',
+        lbDefeat:      '💀 失敗',
+        lbVictoryIcon: '🏆',
+        lbDefeatIcon:  '💀',
+        lbFullTitle:   '🏆 全球排行榜',
+        lbColRank:     '排名',
+        lbColVersion:  '版本',
+        lbColDate:     '日期',
+        lbColName:     '名字',
+        lbColTime:     '遊玩時間',
+        lbColScore:    '分數',
+        lbColLevel:    '等級',
+        lbColResult:   '結果',
+        lbPrevPage:    '← 上一頁',
+        lbNextPage:    '下一頁 →',
+        lbPageLabel:   '第 {n} 頁',
         // ── 難度與角色選擇
         selectTitle:     '難度與角色選擇',
         difficultyLabel: '選擇難度',
@@ -30,6 +58,21 @@ LANG['zh-TW'] = {
         sectionVolume:   '音量設定',
         sectionKeys:     '按鍵設定',
         sectionOther:    '其他設定',
+        sectionDevice:   '裝置模式',
+        sectionAccessibility: '輔助功能',
+        autoAttack:      '自動攻擊',
+        autoAttackHint:  'Z 鍵切換',
+        organTooltip:    '器官提示',
+        patchNotes:       '📋 更新日誌',
+        patchNotesTitle:  '📋 版本更新公告',
+        patchAdded:       '✅ 新增',
+        patchFixed:       '🔧 修復',
+        patchChanged:     '⚙️ 調整',
+        patchNoContent:   '（無）',
+        deviceAuto:      '自動偵測',
+        deviceMobile:    '📱 手機模式',
+        deviceDesktop:   '🖥️ 電腦模式',
+        orientationTip:  '建議橫向以獲得最佳體驗 🔄',
         volMaster:  '總音量',
         volMusic:   '音樂音量',
         volSfx:     '音效音量',
@@ -81,6 +124,15 @@ LANG['zh-TW'] = {
         noAttackOrgan: '沒有攻擊器官！',
         bleedFloat: '血 -{n}',
         poisonFloat: '毒 -{n}',
+        boneMaterialFloat: '+{n} 白骨素',
+        // ── 圖鑑
+        compendiumTitle:      '📖 圖鑑',
+        compendiumTabGuide:   '遊戲說明',
+        compendiumTabOrgans:  '器官圖鑑',
+        compendiumTabEvo:     '進化系統',
+        compendiumSacHint:    '毒囊透過累積白骨素自動升級，不可選擇也不可繼承',
+        compendiumHiddenOrgans: '✨ 隱藏器官',
+        compendiumCombos:     '⚡ 組合效果（需各達 Lv3）',
         // ── 日夜 / Boss / 精英
         nightCome: '🌙 夜晚來臨',
         morningCome: '☀️ 黎明到來',
@@ -98,17 +150,23 @@ LANG['zh-TW'] = {
         // ── 勝利
         victoryTitle: '🏆 勝利！',
         victoryDesc: '{boss}已被消滅！',
-        victoryReward: '+500 XP，獲得 1 個技能點',
+        victoryReward: '+500 XP',
         goSkillTree: '前往技能樹',
         backHome: '🏠 回到首頁',
         playAgain: '⚔️ 再來一場',
+        btnStartGame: '▶ 開始遊戲',
+        warnNoOrganHome: '⚠️ 你還沒選保留器官，確定要回首頁嗎？再按一次確認。',
         // ── 技能樹
         skillTreeTitle: '🌿 技能樹',
         skillPoints: '技能點數',
         resetSkills: '重置技能點',
         confirmResetSkills: '確定要重置所有技能點嗎？',
         maxed: '已滿級',
-        upgradeCost1: '升級（費1點）',
+        upgradeCostN: '升級（費{n}點）',
+        skillPtTime:  '⏱ 時間獎勵 +{n}點',
+        skillPtLevel: '⬆️ 等級獎勵 +{n}點',
+        skillPtElite: '⭐ 精英獎勵 +{n}點',
+        skillPtBoss:  '👑 Boss獎勵 +{n}點',
         keepOrgans: '選擇保留器官（最多 {n} 個，下一局繼承）',
         noOrganThisRun: '本局未獲得任何器官',
         keepHiddenOne: '✨ 選擇保留一個隱藏器官（可不選）',
@@ -117,10 +175,60 @@ LANG['zh-TW'] = {
         lastRunOrgansTitle: '📦 上局遺留器官',
         noRecord: '尚無記錄',
         // ── Guide
-        guideTitle: '📖 遊戲說明',
-        guidePrev: '◀',
-        guideNext: '▶',
+        guideTitle: '遊戲說明',
+        guidePage: '第 {0} / {1} 頁',
+        guideClose: '關閉',
+        guidePrev: '← 上一頁',
+        guideNext: '下一頁 →',
         guidePageFmt: '{cur} / {total}',
+        // 第1頁 桌機
+        guideBasicTitle: '基本操作',
+        guideMove: '移動：WASD / 方向鍵',
+        guideAttack: '攻擊：空白鍵 / 滑鼠左鍵',
+        guideSettings: '設定：Esc / ⚙️ 按鈕',
+        guideFruit: '吃果子：走過去自動吃',
+        guideGoal: '目標：10分鐘內擊敗最終Boss',
+        guideAutoAttack: '⚔️ 自動攻擊：Z 鍵切換（需有攻擊器官）',
+        // 第1頁 手機左半
+        guideMobileMove: '移動：搖桿',
+        guideMobileMove2: '📱 全螢幕任意位置拖動即可移動',
+        guideMobileAttack: '攻擊：點擊攻擊區',
+        guideMobileAttackZone: '⚔️ 右下角區域為攻擊區，點擊攻擊',
+        guideMobileSettings: '設定：⚙️ 按鈕',
+        // 第1頁 手機右半
+        guideTouchTitle: '觸控操作',
+        guideLandscape: '橫向模式',
+        guideLandscapeDesc: '左30% 攻擊區／右30% 搖桿區',
+        guidePortrait: '直向模式',
+        guidePortraitDesc: '上方遊戲畫面／下方左攻擊右搖桿',
+        // 第2頁 器官系統
+        guideOrganTitle: '器官系統',
+        guideOrgan1: '每累積一定 XP 可以選擇一個器官',
+        guideOrgan2: '器官分三類：攻擊⚔️、防禦🛡️、靈力🔮',
+        guideOrgan3: '器官可以升級到3級，每級佔用一個槽位',
+        guideOrgan4: '槽位滿後可以選擇進化路線',
+        guideOrgan5: '死亡後可以保留部分器官到下一局',
+        guideOrgan6: '擊敗精英怪有機會獲得隱藏器官✨',
+        guideOrgan7: '部分器官會增加體型，體型越大攻擊範圍越大',
+        // 第3頁 進化系統
+        guideEvoTitle: '進化系統',
+        guideEvo1: '🌿 草食性：增強HP與體型，高等級中立生物完全友善',
+        guideEvo2: '🥩 肉食性：可以吃屍體獲得更多XP，增強攻擊與攻速',
+        guideEvo3: '⚖️ 雜食性：需同時擁有草食和肉食才能解鎖，增加速度，可吞噬白骨強化毒囊',
+        guideEvo4: '每條路線最高5級',
+        guideEvo5: '進化路線每局重置，不會繼承',
+        // 第4頁 小地圖說明
+        guideMapTitle: '小地圖說明',
+        guideMapPlayer: '你的角色',
+        guideMapNeutral: '中立生物',
+        guideMapHostile: '敵意生物',
+        guideMapEliteH: '草食性精英怪',
+        guideMapEliteC: '肉食性精英怪',
+        guideMapBossBear: '黑熊Boss',
+        guideMapBossShark: '大白鯊Boss',
+        guideMapBossScorp: '沙漠蠍王Boss',
+        guideMapTree: '樹木',
+        guideMapFog: '未探索區域，走過才能揭開',
         guidePages: [
             {
                 title: '基本操作',
@@ -146,10 +254,10 @@ LANG['zh-TW'] = {
             {
                 title: '進化系統',
                 lines: [
-                    '🌿 草食性：增強 HP，中立生物不會逃跑',
-                    '🥩 肉食性：可以吃屍體獲得更多 XP，增強攻擊',
-                    '⚖️ 雜食性：需同時擁有草食和肉食才能解鎖，增加移動速度',
-                    '📈 每條路線最高 3 級',
+                    '🌿 草食性（最高5級）：增強 HP 與體型，中立生物友善',
+                    '🥩 肉食性（最高5級）：吃屍體獲得 XP，增強攻擊與攻速',
+                    '⚖️ 雜食性（最高5級）：需草食+肉食解鎖，速度+，吞白骨強化毒囊',
+                    '☠ 白骨系統：肉食Lv3+ 觸發，屍體→白骨→雜食吞噬→累積白骨素→毒囊升級',
                     '🔁 進化路線每局重置，不會繼承'
                 ]
             }
@@ -157,44 +265,44 @@ LANG['zh-TW'] = {
     },
     organs: {
         crabClaw:      { name: '蟹鉗', levels: [
-            '攻擊+8，15%流血（每秒1傷，3秒）',
-            '攻擊+2，流血+5%，每秒傷+1，持續+1秒',
-            '攻擊+3，流血+10%，每秒傷+1，持續+1秒'
+            '攻擊+5，25%流血（每秒1傷，10秒）',
+            '攻擊+2，流血+25%，每秒傷+2',
+            '攻擊+3，流血+50%，每秒傷+2'
         ]},
         boxingGloves:  { name: '搏擊拳套', levels: [
-            '攻擊+5，攻速+30%',
-            '攻擊+2，攻速+5%',
-            '攻擊+3，攻速+5%'
+            '攻擊+5，攻速+10%',
+            '攻擊+2，攻速+15%',
+            '攻擊+3，攻速+15%'
         ]},
         poisonStinger: { name: '毒刺', levels: [
-            '攻擊+1，攻擊時附加中毒每秒2傷持續5秒',
-            '每秒傷+1，持續+1秒',
-            '每秒傷+2，持續+1秒'
+            '攻擊時附加中毒每秒2傷持續5秒',
+            '每秒傷+1，持續+3秒',
+            '每秒傷+2，持續+2秒'
         ]},
         fang:          { name: '獠牙', levels: [
-            '攻擊+12，15%暈眩敵人1秒',
-            '攻擊+2，暈眩+2%',
-            '攻擊+3，暈眩+3%'
+            '攻擊+12，15%暈眩敵人0.5秒',
+            '攻擊+2，暈眩+5%',
+            '攻擊+3，暈眩+5%，暈眩時間+0.5秒'
         ]},
         longLegs:      { name: '大長腿', levels: [
-            '移動速度+0.5',
-            '移動速度+0.5',
-            '移動速度+0.5'
+            '移動速度+1',
+            '移動速度+1',
+            '移動速度+1'
         ]},
         turtleShell:   { name: '龜殼', levels: [
-            '受傷-30%，速度-0.2',
-            '受傷額外-3%，速度回復+0.1',
-            '受傷額外-7%，速度回復+0.1'
+            '受傷-10%，速度-1',
+            '受傷額外-10%（累計-20%），速度-1',
+            '受傷額外-10%（累計-30%），速度-1'
         ]},
         thickSkin:     { name: '厚皮', levels: [
-            'HP上限+50，當前HP+50',
-            'HP上限+50，體型+20%（半徑+2，攻擊範圍同比例增加）',
-            'HP上限+50，體型再+20%'
+            'HP上限+20，當前HP+20',
+            'HP上限+30，當前HP+30，體型+20%（半徑+2）',
+            'HP上限+50，當前HP+50，體型+20%（半徑+2）'
         ]},
         thornArmor:    { name: '刺甲', levels: [
-            '被攻擊時反傷10%',
-            '反傷+5%',
-            '反傷+5%，額外反彈玩家攻擊力5%的傷害'
+            '被攻擊時反彈最大HP 5%的傷害',
+            '額外反彈最大HP 5%（累計10%）',
+            '額外反彈最大HP 5%（累計15%）'
         ]},
         brain:         { name: '大腦', levels: [
             '每5秒100px範圍8傷，拾取範圍+10px',
@@ -202,25 +310,38 @@ LANG['zh-TW'] = {
             '觸發-1秒，範圍+30px，傷害+8，拾取+15px'
         ]},
         trueEye:       { name: '真視之眼', levels: [
-            '暴擊率+10%，暴擊傷害x1.5',
+            '暴擊率+10%',
             '暴擊率+5%，暴擊傷害+0.25',
             '暴擊率+10%，暴擊傷害+0.25'
         ]},
         sharpSense:    { name: '靈敏知覺', levels: [
-            '敵意生物偵測範圍-30px',
-            '偵測範圍再-20px',
-            '偵測範圍再-20px'
+            '偵測1000px範圍內果子，顯示最佳路徑（紅線）',
+            '新增追蹤最近屍體（黃線）',
+            '新增追蹤最近白骨（白線）'
         ]},
         naturalRegen:  { name: '超自然回復', levels: [
             '每10秒回復1HP',
-            '間隔-2秒，回復+1HP',
-            '間隔-3秒，回復+1HP'
+            '間隔-2秒，回復+1HP，額外回復最大HP 0.5%',
+            '間隔-3秒，回復+1HP，額外回復最大HP 0.5%'
+        ]},
+        poisonSac:     { name: '毒囊', levels: [
+            'Lv1：攻擊+1，毒傷+1（5秒）',
+            'Lv2：攻擊+1，毒傷+1',
+            'Lv3：攻擊+2，毒傷+2',
+            'Lv4：攻擊+3，毒傷+3',
+            'Lv5：攻擊+3，毒傷+3',
+            'Lv6：攻擊+4，毒傷+4',
+            'Lv7：攻擊+4，毒傷+4',
+            'Lv8：攻擊+5，毒傷+5',
+            'Lv9：攻擊+5，毒傷+5',
+            'Lv10：攻擊+8，毒傷+8'
         ]}
     },
     hidden: {
-        strongHeart: { name: '強大的心臟', desc: '移速+0.2，攻擊+5，HP上限+100，體型+20%' },
-        strongLegs:  { name: '強大的大腿', desc: '移速+1，體型+20%' },
-        strongArms:  { name: '強大的手臂', desc: '收集範圍+15px，體型+20%（攻擊範圍同比例增加）' }
+        strongHeart: { name: '強大的心臟', desc: '移速+0.6，攻擊+5，HP上限+60，體型+20%（半徑+2）' },
+        strongLegs:  { name: '強大的大腿', desc: '移速+3，體型+20%（半徑+2）' },
+        strongArms:  { name: '強大的手臂', desc: '收集範圍+15px，體型+20%（半徑+2）' },
+        strongEye:   { name: '強大的眼睛', desc: '暴擊率+10%，暴擊傷害+0.25，體型+20%（半徑+2）' }
     },
     skills: {
         vitality:            { name: '強壯體魄', desc: '起始 HP +20（每級）' },
@@ -228,34 +349,41 @@ LANG['zh-TW'] = {
         forager:             { name: '採集專家', desc: '果子 XP +3（每級）' },
         hunter:              { name: '獵人本能', desc: '擊殺 XP +10（每級）' },
         tenacity:            { name: '頑強意志', desc: '死亡時 HP 保留 10%（每級，每局一次）' },
-        organMemory:         { name: '記憶器官', desc: '死亡保留器官數 +1（預設1個；Lv1=2個，Lv2=3個，Lv3=4個）' },
+        organMemory:         { name: '記憶器官', desc: '死亡保留器官數（預設0個；Lv1=1，Lv2=2，Lv3=3）' },
         luckyReroll:         { name: '幸運重選', desc: '器官選擇時可重新隨機（每級1次）' },
-        collectionAddiction: { name: '收集成癮', desc: '收集範圍+10px（果子和屍體，每級）' },
-        terribleFang:        { name: '恐怖之牙', desc: '攻擊+2（每級）；Lv5開局獲得獠牙Lv1' }
+        collectionAddiction: { name: '收集成癮', desc: '收集範圍+10px（果子、屍體和白骨，每級）' },
+        terribleFang:        { name: '恐怖之牙', desc: '攻擊+2（每級）；Lv3=開局獠牙Lv1；Lv5=開局獠牙Lv2' }
     },
     evo: {
         herbivore: { name: '草食性', levels: [
             '可吃果子，HP上限+30',
-            '100px內中立生物不逃跑，HP+40，果子XP+2',
-            '150px內中立生物完全友善，HP+50，果子XP+3'
+            'HP+10，果子XP+1，撞到不逃跑',
+            'HP+15，果子XP+2，被攻擊也不逃跑',
+            'HP+20，果子XP+3，體型+10%，中立生物完全友善',
+            'HP+25，果子XP+4，體型+20%，中立生物完全友善'
         ]},
         carnivore: { name: '肉食性', levels: [
-            '可吃屍體（20XP，3秒），攻擊+5',
-            '屍體35XP，2.5秒，攻擊+5',
-            '屍體50XP，2秒，攻擊+5'
+            '可吃屍體（20XP，3秒），攻擊+2',
+            '屍體累計40XP，2.5秒，攻擊+4',
+            '屍體累計60XP，2秒，攻擊+6，攻速+5%',
+            '屍體累計80XP，1.5秒，攻擊+8，攻速累計+15%',
+            '屍體累計100XP，1秒，攻擊+10，攻速累計+30%'
         ]},
         omnivore:  { name: '雜食性', levels: [
-            '果子XP+2，屍體XP+5，速度+0.3',
-            '果子XP+3，屍體XP+10，速度+0.3',
-            '果子XP+4，屍體XP+15，速度+0.4，10%機率吃東西回血5'
+            '速度+0.4，獲得毒囊，白骨吞噬1秒，白骨素+1',
+            '速度+0.5，白骨吞噬0.5秒，白骨素+1',
+            '速度+0.6，立刻吞噬白骨，白骨素+1',
+            '速度+0.7，立刻吞噬白骨，白骨素+2',
+            '速度+0.8，立刻吞噬白骨，白骨素+3'
         ]}
     },
     combos: {
-        comboCrabPoison: '流血同時附加劇毒（毒傷x2）',
-        comboShellArmor: '格擋時反傷翻倍',
-        comboBrainEye:   '念力波有機率觸發暴擊傷害',
-        comboSkinRegen:  '回復量+1HP，回復間隔再-1秒',
-        comboEyeFang:    '暴擊時附加暈眩效果'
+        comboCrabPoison: '毒傷翻倍（毒刺Lv3且擁有毒囊）',
+        comboCrabGloves: '流血傷害翻倍，命中敵人施加回復量-50%（蟹鉗+搏擊拳套各達Lv3）',
+        comboShellArmor: '反彈傷害翻倍（龜殼+刺甲各達Lv3）',
+        comboBrainEye:   '念力波可觸發暴擊傷害（大腦+真視之眼各達Lv3）',
+        comboSkinRegen:  '回復量+1HP，間隔再-1秒（厚皮+超自然回復各達Lv3）',
+        comboEyeFang:    '暴擊時附加暈眩效果（真視之眼+獠牙各達Lv3）'
     },
     elite: ['★精英', '★★精英', '★★★精英'],
     boss: {

@@ -69,7 +69,10 @@ function applyLanguage(lang) {
 function t(key, params) {
     const lang = (typeof gameState !== 'undefined' && gameState.language) ? gameState.language : 'zh-TW';
     const pack = _langPack(lang);
-    let s = (pack.ui && pack.ui[key] != null) ? pack.ui[key] : (LANG['zh-TW'].ui[key] || key);
+    const enPack = LANG['en'];
+    let s = (pack.ui && pack.ui[key] != null) ? pack.ui[key]
+        : (enPack && enPack.ui && enPack.ui[key] != null) ? enPack.ui[key]
+        : (LANG['zh-TW'].ui[key] || key);
     if (params && typeof s === 'string') {
         Object.keys(params).forEach(k => { s = s.split('{' + k + '}').join(params[k]); });
     }
