@@ -215,9 +215,9 @@ CHANGELOG.md          → 所有版本紀錄（最新在最上方）
 .claude/instructions.md → Claude Code 自動讀取規則
 
 config/
-  gameConfig.js       → GAME_INFO（版本號、SAVE_VERSION）、ELITE_CONFIG、BOSS_CONFIG、AUDIO_FILES
+  gameConfig.js       → GAME_INFO（版本號、SAVE_VERSION）、AUDIO_FILES
   organs.js           → ORGANS（12種普通）+ HIDDEN_ORGANS（4種隱藏）+ poisonSac 毒囊
-  creatures.js        → 生物/精英/Boss 數值
+  creatures.js        → CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG（生物/精英/Boss 數值）
   evolution.js        → EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種）
   patchnotes.js       → PATCH_NOTES（版本更新公告資料，最新版本置頂）
   supabase.js         → Supabase API（fetchVictoryRecords / fetchDefeatRecords / submitScore）
@@ -245,8 +245,11 @@ systems/
   boss.js             → spawnBoss / updateBoss / showVictory
   mutation.js         → initMutationData / applyMutationEffects / applyAllMutationBonuses / showMutationPanel / getMutationUpgradeCost / checkMutationCompensation
   daynight.js         → getDayNightPhaseIndex / updateDayNightCycle / showGameOver
-  ui.js               → 所有 UI（drawGame / updateUI / showSettings / showGuide / _renderMobileOverlay
-                        _attachJoystickListeners / 小地圖 / 圖鑑 / 排行榜 / 分數提交）
+  leaderboard.js      → 排行榜面板 / 分數提交 / 難度狀態管理
+  mobile.js           → 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層
+  hud.js              → drawGame 主渲染 / HUD 更新 / 小地圖 / 上方血條
+  ui.js               → 面板系統（首頁 / 設定 / 地圖選擇 / 圖鑑 / 故事書 / 版本公告）
+                        Tooltip / 語言切換 / 開發者模式
 
 map/
   map.md              → 地形設計文件

@@ -63,17 +63,18 @@ systems/boss.js           spawnBoss, updateBoss, showVictory
                           （箭頭繪製改用 systems/utils.js 的 drawArrow）
 systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayTransition
                           updateDayNightCycle, showGameOver
-systems/ui.js             showTooltip, hideTooltip, drawGame, updateUI, drawTreasures
-                          showMapSelect
+systems/leaderboard.js    _lbDifficulty, _top10Difficulty, _diffKey
+                          showLeaderboard, showScoreSubmitPopup
+systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
+                          _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
+systems/hud.js            drawGame, updateUI, drawTopBarUI
+                          drawMinimap（含所有 _minimap 變數）, drawTreasures
+systems/ui.js             showTooltip, hideTooltip, showMapSelect
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式
                           showGuide, hideGuide, showStartScreen
-                          showGuideStory, _getGuideStoryPages（4頁噪鹃生存記故事書，SVG動畫插畫）
-                          showPatchNotes, checkPatchNotesPopup（版本更新公告系統）
-                          showCompendium（三分頁圖鑑：遊戲說明/器官/進化，暫停遊戲）
-                          detectMobile, getOrientation, applyDeviceMode, _applyMobileScale
-                          _updateOrientationBar, _updateJoystickCanvas, _renderMobileOverlay
-                          _attachJoystickListeners, _detachJoystickListeners
+                          showGuideStory, _getGuideStoryPages
+                          showPatchNotes, checkPatchNotesPopup
 
 main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ```
