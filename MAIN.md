@@ -7,6 +7,7 @@ config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES
 config/organs.js          ORGANS, HIDDEN_ORGANS, COMBOS
 config/creatures.js       CREATURE_CONFIG, ELITE_CONFIG, BOSS_CONFIG
 config/evolution.js       EVOLUTION_PATHS, SKILLS
+config/patchnotes.js      PATCH_NOTES
 
 lang.js                   LANG_LIST, LANG={}, _langPack(), applyLanguage(), t()
 lang/zh-TW.js             LANG['zh-TW']
