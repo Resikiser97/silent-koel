@@ -189,6 +189,7 @@ config/
   organs.js           → ORGANS（12種普通）+ HIDDEN_ORGANS（4種隱藏）+ poisonSac 毒囊
   creatures.js        → 生物/精英/Boss 數值
   evolution.js        → EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種）
+  patchnotes.js       → PATCH_NOTES（版本更新公告資料，最新版本置頂）
   supabase.js         → Supabase API（fetchVictoryRecords / fetchDefeatRecords / submitScore）
 
 lang/
@@ -242,7 +243,14 @@ map/
 - 每次 commit 後必須執行 git push origin master
 
 ### 版本與部署
-- 目前版本：**v0.41.2**
+- 目前版本：**v0.42.0**
+
+### Branch 工作流程
+- `master`：主開發分支，所有日常開發在此進行
+- `stable`：穩定版分支，測試通過無明顯 Bug 後由開發者手動要求同步
+- 同步條件：開發者自行測試確認穩定，說「請同步 stable」才執行
+- 日常 push 只推 master，不自動動 stable
+
 - SAVE_VERSION：`"1.1"`
 - GitHub：https://github.com/Resikiser97/silent-koel
 - Vercel Master（測試）：silent-koel.vercel.app

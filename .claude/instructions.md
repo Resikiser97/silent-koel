@@ -71,3 +71,28 @@ project_summary.md：[已更新｜無需變動] → （一句話說明）
   `git push origin master`
 
 所有路徑操作一律使用相對路徑，不寫死絕對路徑。
+
+## Branch 工作流程
+
+### 兩個 Branch 的職責
+- `master`：主開發分支，所有日常開發和 commit 都在這裡
+- `stable`：穩定版分支，只在開發者確認穩定後才同步
+
+### 穩定標準
+遊戲跑起來沒有明顯 Bug，開發者自己測試通過即視為穩定。
+
+### 同步 stable 的步驟（只在開發者明確要求時才執行）
+1. 確認目前在 master 分支
+2. 執行 merge：
+   `git checkout stable`
+   `git merge master`
+3. Push stable：
+   `git push origin stable`
+4. 切回 master：
+   `git checkout master`
+5. 回報確認「stable 已同步至 vX.XX.X」
+
+### 重要規則
+- 不要自動執行 stable 同步，必須等開發者說「請同步 stable」才執行
+- 日常 commit 和 push 只針對 master
+- sync-docs 流程不影響 stable，只在 master 上執行
