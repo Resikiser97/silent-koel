@@ -7,7 +7,8 @@ const DEFAULT_SETTINGS = {
     volume: { master: 80, music: 70, sfx: 80, masterOn: true, musicOn: true, sfxOn: true },
     keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ' },
     deviceMode: null,
-    autoAttack: false
+    autoAttack: false,
+    showOrganTooltip: true,  // 手機版器官提示開關（桌機版不使用）
 };
 
 const gameState = {

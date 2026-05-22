@@ -2,6 +2,14 @@
 
 ---
 
+## v0.41.0 - 2026-05-22
+
+### 新增
+- **手機版器官提示開關**（`systems/ui.js`、`systems/gameState.js`）：新增 `DEFAULT_SETTINGS.showOrganTooltip: true`；手機版設定面板「輔助功能」區塊新增「器官提示」ON/OFF toggle（桌機版隱藏）；關閉後點觸器官區域不顯示 tooltip，仍阻擋搖桿啟動
+- **語言包**（`lang/zh-TW.js`、`lang/en.js`）：新增 `organTooltip` key
+
+---
+
 ## v0.40.1 - 2026-05-22
 
 ### 修正

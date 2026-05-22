@@ -60,6 +60,7 @@ LANG['en'] = {
         sectionAccessibility: 'Accessibility',
         autoAttack:      'Auto Attack',
         autoAttackHint:  'Z key to toggle',
+        organTooltip:    'Organ Tooltip',
         deviceAuto:      'Auto Detect',
         deviceMobile:    '📱 Mobile',
         deviceDesktop:   '🖥️ Desktop',

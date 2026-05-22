@@ -321,8 +321,11 @@ function _attachJoystickListeners() {
                     r => canvasX >= r.x && canvasX <= r.x + r.w && canvasY >= r.y && canvasY <= r.y + r.h
                 );
                 if (hit) {
-                    showTooltip(hit.data, touch.clientX, touch.clientY);
-                    setTimeout(hideTooltip, 500);
+                    // 器官提示開關關閉時，不顯示 tooltip，但仍 continue 避免觸發搖桿
+                    if (gameState.settings.showOrganTooltip) {
+                        showTooltip(hit.data, touch.clientX, touch.clientY);
+                        setTimeout(hideTooltip, 500);
+                    }
                     continue;
                 }
             }
@@ -1322,6 +1325,9 @@ function loadSettings() {
             if (parsed.autoAttack !== undefined) {
                 gameState.settings.autoAttack = parsed.autoAttack;
             }
+            if (parsed.showOrganTooltip !== undefined) {
+                gameState.settings.showOrganTooltip = parsed.showOrganTooltip;
+            }
         }
     } catch(e) {}
     applyLanguage(gameState.language);
@@ -1569,6 +1575,31 @@ function showSettings(fromHome) {
         aaHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;';
         aaHint.textContent = t('autoAttackHint');
         accSec.appendChild(aaHint);
+    }
+
+    // ── 器官提示 toggle（只在手機版顯示）
+    if (gameState.isMobile) {
+        const otRow = document.createElement('div');
+        otRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+        const otTog = document.createElement('button');
+        otTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+        const refreshOtTog = () => {
+            const on = gameState.settings.showOrganTooltip;
+            otTog.textContent = on ? t('on') : t('off');
+            otTog.style.background = on ? '#2a8a2a' : '#555';
+        };
+        refreshOtTog();
+        otTog.onclick = () => {
+            gameState.settings.showOrganTooltip = !gameState.settings.showOrganTooltip;
+            refreshOtTog();
+            saveSettings();
+        };
+        const otLbl = document.createElement('div');
+        otLbl.style.cssText = 'font-size:13px;';
+        otLbl.textContent = t('organTooltip');
+        otRow.appendChild(otTog);
+        otRow.appendChild(otLbl);
+        accSec.appendChild(otRow);
     }
 
     const keyAccWrapper = document.createElement('div');

@@ -62,6 +62,7 @@ LANG['zh-TW'] = {
         sectionAccessibility: '輔助功能',
         autoAttack:      '自動攻擊',
         autoAttackHint:  'Z 鍵切換',
+        organTooltip:    '器官提示',
         deviceAuto:      '自動偵測',
         deviceMobile:    '📱 手機模式',
         deviceDesktop:   '🖥️ 電腦模式',
