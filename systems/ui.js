@@ -2374,10 +2374,10 @@ function showStartScreen() {
 
     const top10Panel = document.createElement('div');
     top10Panel.id = 'top10-panel';
-    // 桌機版縮小至 scale(0.65) 並保持垂直置中；手機版維持原本 scale(0.55)
+    // 手機版縮小至 scale(0.65)；桌機版維持原本的垂直置中
     const _top10PanelTransform = gameState.isMobile
-        ? 'scale(0.55)'
-        : 'translateY(-50%) scale(0.65)';
+        ? 'scale(0.65)'
+        : 'translateY(-50%)';
     const _top10TransformOrigin = gameState.isMobile ? 'top right' : 'right center';
     const _top10Top = gameState.isMobile ? '16px' : '50%';
     top10Panel.style.cssText = 'position:absolute;right:16px;top:' + _top10Top + ';transform:' + _top10PanelTransform + ';transform-origin:' + _top10TransformOrigin + ';width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';

@@ -55,7 +55,7 @@ async function fetchTop10(difficulty) {
 
 // 取得排行榜中有資料的難度陣列（去重後排序）
 async function fetchAvailableDifficulties() {
-    const rows = await supabaseQuery('leaderboard', 'GET', null, '?select=difficulty&order=difficulty.asc');
+    const rows = await supabaseQuery('leaderboard', 'GET', null, '?select=difficulty&order=difficulty.asc&limit=1000');
     if (!rows || rows.length === 0) return [];
     const seen = new Set();
     const result = [];
