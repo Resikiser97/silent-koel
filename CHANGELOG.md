@@ -5,6 +5,16 @@
 ## 文件修正 - 2026-05-22（不更新版本號）
 
 ### 調整
+- **MOBILE_GAME_SCALE 文件衝突修正**（`project_summary.md`、`.claude/instructions.md`）：
+  v0.34.0 已將 `MOBILE_GAME_SCALE` 從 0.7 調整為 0.6，但三處文件未同步更新。
+  本次修正技術架構區塊邏輯解析度數值（橫向 1120×630 → 960×540，直向 630×1120 → 540×960）、
+  重要提醒第 3 條、`.claude/instructions.md` 技術陷阱說明，統一對齊實際程式碼與 CHANGELOG。
+
+---
+
+## 文件修正 - 2026-05-22（不更新版本號）
+
+### 調整
 - **速度 ×3.0 歷史補丁文案 Fixed**（`project_summary.md`、`.claude/instructions.md`）：
   早期無 Fixed Timestep 時，為修正 180Hz 螢幕速度偏快問題對所有速度數值乘以 3.0；
   Fixed Timestep 加入後補丁已無必要但數值基準保留，`lang/zh-TW.js` 速度描述在 v0.34.0

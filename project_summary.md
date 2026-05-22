@@ -162,11 +162,11 @@ Goblinnest（單人獨立開發，AI 輔助）
 
 邏輯解析度：
   桌機：1600×900
-  手機橫向：1120×630（= 1600×900 × MOBILE_GAME_SCALE 0.7）
-  手機直向：630×1120（= 900×1600 × MOBILE_GAME_SCALE 0.7）
+  手機橫向：960×540（= 1600×900 × MOBILE_GAME_SCALE 0.6）
+  手機直向：540×960（= 900×1600 × MOBILE_GAME_SCALE 0.6）
 
 手機縮放：CSS transform: scale()，scale = vw / logicW
-          MOBILE_GAME_SCALE = 0.7（定義在 _applyMobileScale() 上方）
+          MOBILE_GAME_SCALE = 0.6（定義在 _applyMobileScale() 上方）
           調整此值可統一縮放手機畫面，不需改其他系統
 
 模組載入：傳統 <script src> 標籤，不使用 ES Modules
@@ -252,7 +252,7 @@ map/
 ### 重要提醒給接手的 AI
 1. **開始任何工作前先讀取** `MAIN.md` 和 `CHANGELOG.md`（`.claude/instructions.md` 會自動觸發）
 2. 所有速度數值已乘以 3.0（歷史補丁，Fixed Timestep 加入前為修正高刷新率螢幕速度偏快問題；現已基於此基準調整完畢，×3.0 不得移除，lang/zh-TW.js 速度描述與實際數值已一致，✅ 文案 Fixed，無需再處理）
-3. 手機邏輯解析度由 `MOBILE_GAME_SCALE = 0.7` 控制，不是固定值，不要寫死
+3. 手機邏輯解析度由 `MOBILE_GAME_SCALE = 0.6` 控制，不是固定值，不要寫死
 4. 手機版用 `gameState.isMobile` 和 `gameState.orientation` 判斷裝置和方向
 5. 排行榜使用 Supabase，API 設定在 `config/supabase.js`
 6. 開發者模式暗號：`77777778`，使用後 `gameState.devModeUsed = true` 禁止上傳排行榜

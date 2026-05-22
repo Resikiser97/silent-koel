@@ -15,7 +15,7 @@
 
 ## 關鍵技術陷阱（必須記住，高頻犯錯）
 - 所有速度數值已乘以 3.0（歷史補丁，不要動；lang/zh-TW.js 速度描述已與實際數值一致，✅ 文案 Fixed，無需再處理）
-- `MOBILE_GAME_SCALE = 0.7` 控制手機縮放，不要寫死數值
+- `MOBILE_GAME_SCALE = 0.6` 控制手機縮放，不要寫死數值
 - 手機版用 `gameState.isMobile` 和 `gameState.orientation` 判斷
 - `realPlayTime` 是毫秒，上傳排行榜時用 `Math.floor(realPlayTime / 1000)` 轉秒
 - `resumePlayTimer()` 無條件啟動；`pausePlayTimer()` 有檢查 `_playTimerStart !== null`
