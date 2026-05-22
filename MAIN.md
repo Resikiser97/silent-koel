@@ -64,6 +64,7 @@ systems/ui.js             showTooltip, hideTooltip, drawGame, updateUI, drawTrea
                           updateTimer, toggleDevMode, dev* 函式
                           showGuide, hideGuide, showStartScreen
                           showGuideStory, _getGuideStoryPages（4頁噪鹃生存記故事書，SVG動畫插畫）
+                          showPatchNotes, checkPatchNotesPopup（版本更新公告系統）
                           showCompendium（三分頁圖鑑：遊戲說明/器官/進化，暫停遊戲）
                           detectMobile, getOrientation, applyDeviceMode, _applyMobileScale
                           _updateOrientationBar, _updateJoystickCanvas, _renderMobileOverlay
@@ -121,7 +122,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - **wandering**：每幀角度小幅偏移（±0.12 rad，模擬 Perlin Noise 平滑）
 - **resting**：速度 0~30%，持續 1.5s；玩家（非超友善）或敵意生物靠近 150px 內中斷
 - **attacking / fleeing**：玩家互動觸發（與舊邏輯相同）
-- 草系每 5~15s 有 30% 機率切換為 resting，30% 機率探索最近果子（400px 內）
+- 草系每 5~15s 有 20% 機率切換為 resting，60% 機率探索最近果子（800px 內），20% 繼續漫遊（v0.42.0 調整）
 - 肉系每 5~15s 有 30% 機率切換為 resting，30% 機率探索最近草系生物（500px 內）
 
 ### 簡單地圖限制
@@ -275,6 +276,8 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - **顯示條件**：玩家2000px內存在精英/Boss/巨人化/Alpha
 - **追蹤邏輯**：`gameState.topBarTarget` 在 `playerAttack()` 命中特殊目標時設定，毒傷tick不更新
 - **淡出**：目標死亡或超出2000px後0.5秒淡出，完成後清空 `topBarTarget`
+- **Y 座標**：動態偵測 `#top-left` DOM 元素高度並換算 Canvas 邏輯座標，避免手機版與玩家血條重疊
+- **強制清除**：`showVictory()` 呼叫時立即設定 `topBarTarget = null`、`topBarFadeTimer = 0`，確保勝利畫面不殘留血條
 - **血條顏色**：精英紫色 `#AA22CC`、Boss深紅 `#CC2200`、巨人化橙色 `#FF8800`、Alpha金色 `#FFD700`
 - **gameState 新增欄位**：`alphaCreature`、`topBarTarget`、`topBarFadeTimer`
 
@@ -454,6 +457,17 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ### 初始化流程
 `window.onload` → `initMutationData()` → `applyMutationEffects()` 設定倍率
 `initializeGame()` → `applySkillBonuses()` → `applyEvolutionEffects()` → `applyAllMutationBonuses()` 一次性套用
+
+---
+
+## 版本更新公告系統（v0.42.0）
+
+- **資料檔**：`config/patchnotes.js`，定義全域常數 `PATCH_NOTES`（陣列），最新版本置頂（index 0）
+- **欄位格式**：`{ version, date, added[], fixed[], changed[] }`，沒有內容的欄位可省略
+- **`showPatchNotes()`**（`systems/ui.js`）：彈出公告面板（z-index 210），左側垂直 Tab 切換版本，右側顯示分類內容；開啟即寫入 `lastSeenPatchVersion` 至 localStorage
+- **`checkPatchNotesPopup()`**（`systems/ui.js`）：在 `showStartScreen()` 末尾呼叫；新玩家（無 `hasPlayedBefore`）跳過；有未讀版本（`lastSeenPatchVersion !== PATCH_NOTES[0].version`）時自動 setTimeout 400ms 彈出
+- **未讀標記**：比 `lastSeenPatchVersion` 更新的版本在 Tab 列顯示紅點（`#FF4444`）
+- **首頁按鈕**：`#patch-notes-btn`，位置 `top:96px left:20px`（故事書按鈕正下方），點擊呼叫 `showPatchNotes()`
 
 ---
 

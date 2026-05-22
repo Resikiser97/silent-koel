@@ -2,6 +2,20 @@
 
 ---
 
+## v0.42.0 - 2026-05-22
+
+### 新增
+- **版本更新公告系統**（`config/patchnotes.js`、`systems/ui.js`、`index.html`）：首頁左上角故事書按鈕下方新增「📋 更新」按鈕；新增 `showPatchNotes()` 面板（垂直 Tab 列顯示所有版本，未讀版本紅點 highlight，內容依「新增/修復/調整」分類顯示）；新增 `checkPatchNotesPopup()` 在首頁自動彈出未讀公告（新玩家跳過）；新增 `config/patchnotes.js` 統一管理所有版本公告資料（`PATCH_NOTES` 陣列，最新版本置頂）
+
+### 修復
+- **手機版 Boss/精英血條與玩家血條重疊**（`systems/ui.js`）：`drawTopBarUI()` 的 `y = 10` 改為動態偵測 `#top-left` DOM 元素高度並換算 Canvas 邏輯座標，手機/桌機自動適應
+- **Boss 死亡後血條 UI 殘留**（`systems/boss.js`）：`showVictory()` 開頭加入 `gameState.topBarTarget = null; gameState.topBarFadeTimer = 0;`，確保勝利時血條立即清除
+
+### 調整
+- **草食性中立生物探索果子行為**（`systems/creatures.js`）：探索果子機率 30% → 60%，搜尋範圍 400px → 800px，休息機率 30% → 20%，隨機漫遊機率 40% → 20%
+
+---
+
 ## v0.41.2 - 2026-05-22
 
 ### 修正

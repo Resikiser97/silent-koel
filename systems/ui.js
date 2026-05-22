@@ -753,7 +753,17 @@ function drawTopBarUI() {
 
     // 繪製 UI（頂部中央，寬400，高50）
     const barW = 400, barH = 50;
-    const x = (VIEW_W - barW) / 2, y = 10;
+    const x = (VIEW_W - barW) / 2;
+
+    // 動態偵測左上角 UI 高度，換算為 Canvas 邏輯座標
+    let topBarY = 10;
+    const tlEl = document.getElementById('top-left');
+    if (tlEl) {
+        const gc = document.getElementById('game-container');
+        const scaleMatch = gc ? gc.style.transform.match(/scale\(([^)]+)\)/) : null;
+        const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
+        topBarY = (tlEl.offsetHeight / scale) + 8;
+    }
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -761,9 +771,9 @@ function drawTopBarUI() {
     // 半透明背景框
     ctx.fillStyle = 'rgba(0,0,0,0.72)';
     if (ctx.roundRect) {
-        ctx.beginPath(); ctx.roundRect(x, y, barW, barH, 6); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(x, topBarY, barW, barH, 6); ctx.fill();
     } else {
-        ctx.fillRect(x, y, barW, barH);
+        ctx.fillRect(x, topBarY, barW, barH);
     }
 
     // 目標名稱
@@ -771,10 +781,10 @@ function drawTopBarUI() {
     ctx.font = 'bold 13px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(displayName, x + barW / 2, y + 5);
+    ctx.fillText(displayName, x + barW / 2, topBarY + 5);
 
     // 血條底色
-    const hpBarX = x + 10, hpBarY = y + 24, hpBarW = barW - 20, hpBarH = 10;
+    const hpBarX = x + 10, hpBarY = topBarY + 24, hpBarW = barW - 20, hpBarH = 10;
     ctx.fillStyle = '#333';
     ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
@@ -790,7 +800,7 @@ function drawTopBarUI() {
     ctx.textBaseline = 'top';
     ctx.fillText(
         Math.max(0, Math.ceil(target.hp)) + ' / ' + (target.maxHp || 100),
-        x + barW / 2, y + 37
+        x + barW / 2, topBarY + 37
     );
 
     ctx.restore();
@@ -2500,9 +2510,226 @@ function showStartScreen() {
         bookBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
     };
     bookBtn.onclick = () => showGuideStory();
+
+    // ── 更新日誌按鈕（在故事書按鈕下方）
+    const patchBtn = document.createElement('div');
+    patchBtn.id = 'patch-notes-btn';
+    patchBtn.style.cssText = `
+        position: absolute;
+        top: 96px;
+        left: 20px;
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 220, 130, 0.12);
+        border: 2px solid rgba(255, 220, 130, 0.45);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: all;
+        transition: all 0.2s ease;
+        z-index: 201;
+    `;
+    patchBtn.innerHTML = '<div style="font-size:28px;line-height:1;">📋</div><div style="font-size:11px;color:#FFF5DC;letter-spacing:1px;margin-top:3px;">更新</div>';
+    patchBtn.onmouseenter = () => {
+        patchBtn.style.background = 'rgba(255, 220, 130, 0.28)';
+        patchBtn.style.transform = 'scale(1.08)';
+        patchBtn.style.borderColor = 'rgba(255, 220, 130, 0.8)';
+    };
+    patchBtn.onmouseleave = () => {
+        patchBtn.style.background = 'rgba(255, 220, 130, 0.12)';
+        patchBtn.style.transform = 'scale(1)';
+        patchBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
+    };
+    patchBtn.onclick = () => showPatchNotes();
     overlay.appendChild(bookBtn);
+    overlay.appendChild(patchBtn);
 
     document.getElementById('game-container').appendChild(overlay);
+    checkPatchNotesPopup();
+}
+
+// =============================================================
+// 版本更新公告系統
+// =============================================================
+
+function showPatchNotes() {
+    applyDeviceMode();
+    if (document.getElementById('patch-notes-overlay')) return;
+
+    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    // 標記為已讀（開啟面板即算已讀）
+    if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
+        localStorage.setItem('lastSeenPatchVersion', PATCH_NOTES[0].version);
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'patch-notes-overlay';
+    overlay.style.cssText = [
+        'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
+        'background:rgba(0,0,0,0.88)', 'display:flex', 'align-items:center',
+        'justify-content:center', 'z-index:210', 'pointer-events:all',
+        'font-family:Arial,sans-serif'
+    ].join(';');
+
+    const panel = document.createElement('div');
+    panel.style.cssText = [
+        'background:#131f13', 'border:1px solid #3a5a3a', 'border-radius:10px',
+        'width:92%', 'max-width:620px', 'max-height:85vh',
+        'display:flex', 'flex-direction:column', 'overflow:hidden',
+        'box-shadow:0 8px 40px rgba(0,0,0,0.7)'
+    ].join(';');
+
+    // ── 標題列
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = [
+        'display:flex', 'align-items:center', 'justify-content:space-between',
+        'padding:14px 20px', 'border-bottom:1px solid #2a4a2a',
+        'flex-shrink:0'
+    ].join(';');
+    const titleText = document.createElement('div');
+    titleText.style.cssText = 'font-size:18px;font-weight:bold;color:#FFD700;';
+    titleText.textContent = t('patchNotesTitle');
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = [
+        'background:transparent', 'border:1px solid #555', 'color:#aaa',
+        'border-radius:4px', 'width:28px', 'height:28px', 'cursor:pointer',
+        'font-size:14px', 'pointer-events:all', 'flex-shrink:0'
+    ].join(';');
+    closeBtn.onclick = () => overlay.remove();
+    titleBar.appendChild(titleText);
+    titleBar.appendChild(closeBtn);
+    panel.appendChild(titleBar);
+
+    // ── 主體：Tab 列 + 內容區
+    const body = document.createElement('div');
+    body.style.cssText = 'display:flex;flex:1;min-height:0;';
+
+    // Tab 列（左側垂直）
+    const tabCol = document.createElement('div');
+    tabCol.style.cssText = [
+        'width:170px', 'flex-shrink:0', 'overflow-y:auto',
+        'border-right:1px solid #2a4a2a', 'padding:8px 0'
+    ].join(';');
+
+    // 內容區（右側）
+    const contentArea = document.createElement('div');
+    contentArea.style.cssText = [
+        'flex:1', 'overflow-y:auto', 'padding:16px 20px',
+        'color:white', 'font-size:14px', 'line-height:1.7'
+    ].join(';');
+
+    const notes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
+    let activeIdx = 0;
+
+    function renderContent(idx) {
+        activeIdx = idx;
+        const note = notes[idx];
+        contentArea.innerHTML = '';
+        if (!note) return;
+
+        // 版本標題
+        const vh = document.createElement('div');
+        vh.style.cssText = 'font-size:17px;font-weight:bold;color:#FFD700;margin-bottom:4px;';
+        vh.textContent = note.version;
+        contentArea.appendChild(vh);
+
+        const dateEl = document.createElement('div');
+        dateEl.style.cssText = 'font-size:12px;color:#666;margin-bottom:16px;';
+        dateEl.textContent = note.date;
+        contentArea.appendChild(dateEl);
+
+        const sections = [
+            { key: 'added',   label: t('patchAdded'),   color: '#6fca6f', items: note.added   },
+            { key: 'fixed',   label: t('patchFixed'),   color: '#6ab0e8', items: note.fixed   },
+            { key: 'changed', label: t('patchChanged'), color: '#e8c46a', items: note.changed },
+        ];
+
+        sections.forEach(sec => {
+            if (!sec.items || sec.items.length === 0) return;
+            const secTitle = document.createElement('div');
+            secTitle.style.cssText = 'font-size:13px;font-weight:bold;margin-bottom:6px;margin-top:12px;color:' + sec.color + ';';
+            secTitle.textContent = sec.label;
+            contentArea.appendChild(secTitle);
+
+            sec.items.forEach(item => {
+                const li = document.createElement('div');
+                li.style.cssText = 'font-size:13px;color:#ccc;margin-bottom:5px;padding-left:12px;position:relative;';
+                li.innerHTML = '<span style="position:absolute;left:0;color:' + sec.color + ';">•</span>' + item;
+                contentArea.appendChild(li);
+            });
+        });
+
+        // 更新 tab 高亮
+        Array.from(tabCol.children).forEach((btn, i) => {
+            btn.style.background = i === idx ? 'rgba(255,215,0,0.1)' : 'transparent';
+            btn.style.borderLeft = i === idx ? '3px solid #FFD700' : '3px solid transparent';
+            btn.style.color = i === idx ? '#FFD700' : '#aaa';
+        });
+    }
+
+    notes.forEach((note, idx) => {
+        const isUnread = note.version !== lastSeen &&
+            notes.indexOf(note) < notes.findIndex(n => n.version === lastSeen) ||
+            lastSeen === '';
+        // 判斷是否為未讀（比 lastSeen 更新的版本）
+        const lastSeenIdx = notes.findIndex(n => n.version === lastSeen);
+        const unread = lastSeenIdx === -1 ? true : idx < lastSeenIdx;
+
+        const tab = document.createElement('div');
+        tab.style.cssText = [
+            'padding:10px 14px', 'cursor:pointer', 'font-size:12px',
+            'border-left:3px solid transparent', 'color:#aaa',
+            'transition:all 0.15s', 'line-height:1.4',
+            'pointer-events:all'
+        ].join(';');
+
+        const tabDate = document.createElement('div');
+        tabDate.style.cssText = 'font-size:11px;color:#555;margin-top:2px;';
+        tabDate.textContent = note.date;
+
+        const tabVer = document.createElement('div');
+        tabVer.style.cssText = 'display:flex;align-items:center;gap:5px;';
+        tabVer.textContent = note.version;
+
+        if (unread) {
+            const dot = document.createElement('span');
+            dot.style.cssText = [
+                'width:7px', 'height:7px', 'border-radius:50%',
+                'background:#FF4444', 'display:inline-block', 'flex-shrink:0'
+            ].join(';');
+            tabVer.appendChild(dot);
+            tab.style.background = 'rgba(255,68,68,0.06)';
+        }
+
+        tab.appendChild(tabVer);
+        tab.appendChild(tabDate);
+        tab.onclick = () => renderContent(idx);
+        tabCol.appendChild(tab);
+    });
+
+    body.appendChild(tabCol);
+    body.appendChild(contentArea);
+    panel.appendChild(body);
+    overlay.appendChild(panel);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    document.getElementById('game-container').appendChild(overlay);
+
+    // 預設顯示第一個（最新版本）
+    if (notes.length > 0) renderContent(0);
+}
+
+function checkPatchNotesPopup() {
+    // 新玩家不彈出
+    if (!localStorage.getItem('hasPlayedBefore')) return;
+    if (typeof PATCH_NOTES === 'undefined' || PATCH_NOTES.length === 0) return;
+    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    if (lastSeen === PATCH_NOTES[0].version) return;
+    // 有未讀版本，自動彈出
+    setTimeout(() => showPatchNotes(), 400);
 }
 
 function showGuideStory() {

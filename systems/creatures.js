@@ -306,25 +306,27 @@ function updateNeutralCreatures() {
             if (now >= (creature._nextBehaviorTime || 0)) {
                 creature._nextBehaviorTime = now + 5000 + Math.random() * 10000;
                 const roll = Math.random();
-                if (roll < 0.3) {
-                    // 切換為休息（1.5 秒，速度 0~30%）
+                if (roll < 0.2) {
+                    // 切換為休息（20%，原 30%）
                     creature.isResting = true;
                     creature.state     = 'resting';
                     creature._restEndTime = now + 1500;
                     creature._restSpeed   = creature.speed * Math.random() * 0.3;
-                } else if (roll < 0.6) {
-                    creature._seekingFruit = true; // 切換為探索最近果子
+                } else if (roll < 0.8) {
+                    // 探索果子（60%，原 30%）
+                    creature._seekingFruit = true;
                 }
+                // 剩餘 20% 繼續漫遊（原 40%）
             }
 
-            // 探索最近果子（範圍 400px）
+            // 探索最近果子（範圍 800px）
             if (creature._seekingFruit) {
                 let closest = null, closestDist = Infinity;
                 for (const f of gameState.fruits) {
                     const d = wrappedDistance(creature.x, creature.y, f.x, f.y);
                     if (d < closestDist) { closestDist = d; closest = f; }
                 }
-                if (closest && closestDist < 400) {
+                if (closest && closestDist < 800) {
                     const { dx: fdx, dy: fdy } = wrappedDelta(creature.x, creature.y, closest.x, closest.y);
                     creature._moveAngle = Math.atan2(fdy, fdx);
                     if (closestDist < creature.radius + 6) {

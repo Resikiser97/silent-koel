@@ -87,6 +87,8 @@ function updateBoss() {
 function showVictory() {
     if (gameState.gameOver) return;
     pausePlayTimer();
+    gameState.topBarTarget = null;
+    gameState.topBarFadeTimer = 0;
     gameState.gameOver = true;
     gameState.victory = true;
     AudioManager.stopMusic();
