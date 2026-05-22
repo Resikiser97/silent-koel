@@ -2,6 +2,38 @@
 
 ---
 
+## v0.46.0 - 2026-05-22
+
+### 新增
+
+- **生態特性系統**（`systems/creatures.js`、`systems/player.js`、`systems/spawning.js`）：
+  - **猞猁（森林）**：在森林內 50% 暴擊機率（×2 baseDmg，對玩家施加 -30% 速度 3 秒）；離開森林 ≥3 秒後降為 25% / ×1.5 / -15% 1.5 秒；移動速度森林內 ×1.2
+  - **鱷魚（水潭）**：水潭內攻擊 ×1.2、移動 ×1.3、20% 機率觸發「死亡翻滾」（對玩家施加 1 秒暈眩，`p._stunUntil`）；離水潭後加成歸零
+  - **鬣狗（沙漠）**：生成時隨機分配 packGroup（1~3）；每 2 秒掃描同組存活 packMates（600px 內）；每隻 packMate +20% 攻擊、+5% 速度；鎖定目標時警報同組出動（`_alertHyenaPack`）；離沙漠 ≥3 秒攻擊/速度均 ×0.5
+  - **玩家暈眩**：`updatePlayerMovement()` 加入 `p._stunUntil` 判斷，暈眩期間無法移動
+  - **玩家減速**：`updatePlayerMovement()` 加入 `p._lynxSlowUntil` / `p._lynxSlowAmt` 減速效果
+  - **肉食者逃離巨人**（`_shouldFleeFromGiant`）：目標為 Alpha 一律逃；普通巨人 HP > 肉食者 HP×3 → 逃；`fleeing_giant` 狀態持續 3 秒後尋找非巨人化草食性
+  - **生態區回歸**：肉食者離開自身生態區時，以 1.3 倍速朝最近生態區點回歸；`_leftBiomeTime` 同時作為各物種加成失效計時
+
+- **殺手 killerLevel 計數器**（`systems/creatures.js`、`systems/combat.js`、`systems/ui.js`）：
+  - 殺手化後每吃一具屍體 `killerLevel++`；頭上顯示「[物種名] 殺手Lv[N]」（橙色粗體）
+  - 擊殺XP公式改為 `100 + killerLevel×5 + 獵人本能×10`（原為 `baseDamage×2×1.1^n`）
+  - 擊殺掉落屍體數：3 份 → 2 份
+
+### 調整
+
+- **巨人化 aggroRange**：150 → 400（`_triggerGiantization`）
+- **巨人化 guardianRange**：新增 1000px — 偵測 guardianRange 內組員被敵意生物威脅時，切換為 guardianTarget 優先攻擊
+- **巨人化 HP 低血逃跑**：HP ≤ 30% 時逃往最近果子；每吃一顆 +10% maxHP（`_updateGiantFlee`）
+- **巨人化隊伍上限動態化**：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（`_getPackLimit`）
+- **Alpha aggroRange**：300 → 600（`_triggerAlpha`）
+- **Alpha guardianRange**：新增 1500px
+- **Alpha HP 分享回血**：HP ≥ 80% → 每秒分享 1% maxHP 給最低血量組員；HP < 80% → 自回 2%（不分享）
+- **肉食性進化固定值覆蓋**（`config/evolution.js`、`systems/evolution.js`）：改為固定值覆蓋（非累計），各等級攻擊加成 2/5/9/14/20，吃屍體 XP 5/8/12/15/20，吃屍體時間 3/2.5/2/1.5/1 秒，Lv3+ 攻速 +5%/+10%/+15%
+- **草食性連吃機率**：吃完一顆果子有 70%（普通）/ 90%（有同族巨人在 500px 內）機率繼續吃附近果子（原為每次獨立觸發）
+
+---
+
 ## v0.45.0 - 2026-05-22
 
 ### 新增

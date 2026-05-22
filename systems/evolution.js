@@ -34,9 +34,18 @@ function applyEvolutionLevelEffect(type, newLevel) {
             p.attackRange += rangeIncrease;
         }
     } else if (type === 'carnivore') {
+        // 固定值覆蓋：先扣掉上一級的值，再加新的值
+        const prevLv = newLevel - 1;
+        if (prevLv > 0) {
+            const prevData = EVOLUTION_PATHS.carnivore.levels[prevLv - 1];
+            p.attack -= prevData.attackAdd;
+            if (prevData.attackSpeedBonus) {
+                p.attackSpeed /= (1 + prevData.attackSpeedBonus);
+            }
+        }
         p.attack += lvData.attackAdd;
-        if (lvData.attackSpeedBonusAdd) {
-            p.attackSpeed *= (1 + lvData.attackSpeedBonusAdd);
+        if (lvData.attackSpeedBonus) {
+            p.attackSpeed *= (1 + lvData.attackSpeedBonus);
         }
     } else if (type === 'omnivore') {
         p.speed += lvData.speedBonus;
@@ -70,10 +79,11 @@ function applyEvolutionEffects() {
             p.attackRange += rangeIncrease;
         }
     }
-    for (let i = 0; i < ev.carnivore; i++) {
-        const lv = EVOLUTION_PATHS.carnivore.levels[i];
+    // 肉食性為固定值：只套用最高等級的數值（非累加）
+    if (ev.carnivore > 0) {
+        const lv = EVOLUTION_PATHS.carnivore.levels[ev.carnivore - 1];
         p.attack += lv.attackAdd;
-        if (lv.attackSpeedBonusAdd) p.attackSpeed *= (1 + lv.attackSpeedBonusAdd);
+        if (lv.attackSpeedBonus) p.attackSpeed *= (1 + lv.attackSpeedBonus);
     }
     for (let i = 0; i < ev.omnivore; i++) {
         p.speed += EVOLUTION_PATHS.omnivore.levels[i].speedBonus;

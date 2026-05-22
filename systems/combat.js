@@ -96,15 +96,14 @@ function handleGiantKill(c) {
 }
 
 function handleKillerKill(creature) {
-    const baseXP = (creature.baseDamage || 5) * 2;
-    const xpMultiplier = Math.pow(1.1, creature.killerCorpseEaten || 0);
-    const finalXP = Math.round(baseXP * xpMultiplier) + (gameState.playerSkills.hunter || 0) * 10;
+    // 固定100 + 殺手Lv×5 + 獵人本能加成
+    const killerLv = creature.killerLevel || 0;
+    const finalXP = 100 + killerLv * 5 + (gameState.playerSkills.hunter || 0) * 10;
     addXP(finalXP);
     showXPPopup(creature.x, creature.y, finalXP);
 
-    // 圓形散落：3份1倍屍體
+    // 圓形散落：2份1倍屍體
     spawnLootCircle(creature.x, creature.y, [
-        { type: 'corpse', data: { multiplier: 1 } },
         { type: 'corpse', data: { multiplier: 1 } },
         { type: 'corpse', data: { multiplier: 1 } },
     ]);
@@ -138,6 +137,8 @@ function handleKill(c, isHostile) {
 function playerAttack() {
     const p = gameState.player;
     const now = Date.now();
+    // 鱷魚死亡翻滾硬控：無法攻擊
+    if (p._stunUntil && now < p._stunUntil) return;
     const cooldownMs = Math.round(1000 / p.attackSpeed);
     if (now - p.attackTimer < cooldownMs) return;
     p.attackTimer = now;
@@ -177,8 +178,8 @@ function playerAttack() {
         anyHit = true;
         if (isCrit) anyCrit = true;
 
-        // 追蹤特殊目標（精英/Boss/巨人化/Alpha），毒傷tick不更新此值
-        if (isElite || isBoss || c.isGiantized) gameState.topBarTarget = c;
+        // 追蹤特殊目標（精英/Boss/巨人化/Alpha/殺手化），毒傷tick不更新此值
+        if (isElite || isBoss || c.isGiantized || c.isKiller) gameState.topBarTarget = c;
 
         c.hp -= dmg;
         showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FF4444');

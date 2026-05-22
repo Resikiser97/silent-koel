@@ -735,7 +735,7 @@ function drawTopBarUI() {
     }
 
     // 決定顯示名稱與血條顏色
-    let displayName = target.name || '目標';
+    let displayName = _getCreatureDisplayName(target) || '目標';
     let barColor    = '#AA22CC'; // 預設：精英紫色
     if (target === gameState.boss) {
         displayName = target.name || 'Boss';
@@ -744,11 +744,13 @@ function drawTopBarUI() {
         displayName = '★★ 精英 ' + (target.name || '');
         barColor    = '#AA22CC';
     } else if (target.isAlpha) {
-        displayName = (target.name || '') + '（Alpha）';
+        displayName = _getCreatureDisplayName(target) + '（Alpha）';
         barColor    = '#FFD700';
     } else if (target.isGiantized) {
-        displayName = (target.name || '') + '（巨人化）';
+        displayName = _getCreatureDisplayName(target) + '（巨人化）';
         barColor    = '#FF8800';
+    } else if (target.isKiller) {
+        barColor    = '#FF8800'; // 殺手化橙色血條
     }
 
     // 繪製 UI（頂部中央，寬400，高50）

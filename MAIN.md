@@ -32,15 +32,19 @@ systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeF
                           showXPPopup, checkTreasureCollision, updatePassiveOrgans
                           checkXPMilestone, addXP, checkLevelUp
                           findBestPerceptionPath
+systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTutorialStump，handleTutorialStumpKill
+                          （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
 systems/combat.js         showFloatingText, applyDamageToPlayer, handleKill, playerAttack
                           updateStatusEffects, updateCorpseEating, drawCorpseEatingBars
                           updateBoneEating, _addBoneMaterial, _checkPoisonSacUpgrade
                           _spawnBone, drawBones
+                          （playerAttack() 將 tutorialStump 加入攻擊目標；v0.45.0）
 systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, checkComboEffects
                           getOrganSlotsUsed, applyHiddenOrganEffects, applyOrganEffects
                           checkOrganUpgrade, showOrganSelection, drawOrganUI
                           handleEliteKill, showHiddenOrganSelection
                           _drawCompendiumBtn（繪製 📖 按鈕，設定 _compendiumBtnRegion）
+                          （showOrganSelection() 偵測 tutorialOrganPhase，鎖定第一張攻擊器官；v0.45.0）
 systems/mutation.js       initMutationData, saveMutationData, addMutationPoints
                           getMutationUpgradeCost, upgradeMutation
                           applyMutationEffects, applyAllMutationBonuses
@@ -194,14 +198,65 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - 每多吃 1 具：damage/speed/maxHp/radius 各再 +10% 基礎值（`killerCorpseEaten` 計數）
 - 兩個計數疊加（`corpseEaten + killerCorpseEaten`）
 
-### 擊殺獎勵（`handleKillerKill`，`systems/combat.js`）
-- XP：`baseDamage * 2`（乘上 `1.1^killerCorpseEaten`）+ 獵人本能加成
-- `spawnLootCircle`：3 份 1 倍屍體
+### killerLevel 計數器（v0.40.0）
+- 殺手化觸發時：`killerLevel = 0`
+- 殺手化後每吃一具屍體：`killerLevel++`
+- `_getCreatureDisplayName` 顯示「[物種名] 殺手Lv[N]」（N ≥ 1 時顯示）
+
+### 擊殺獎勵（`handleKillerKill`，`systems/combat.js`）（v0.40.0 更新）
+- XP：`100 + killerLevel × 5 + 獵人本能 × 10`
+- `spawnLootCircle`：2 份 1 倍屍體（原為 3 份）
 - 100% 掉落 1 個變異點；`killerCorpseEaten = N` → N% 機率額外掉 1~N 個
 - 殺手本身屍體正常生成
 
 ### 死亡路由
 - `handleKill(c, isHostile)` 開頭檢查 `c.isKiller`，若是則路由至 `handleKillerKill(c)`
+
+---
+
+## 生態特性系統（v0.40.0，僅普通地圖）
+
+每個生態區肉食性物種各有專屬加成，在生態區內強化、離開生態區3秒後加成消失（鱷魚為立即失去）。
+
+### 猞猁（lynx）— 森林生態區
+| 狀態 | 暴擊機率 | 暴擊倍率 | 玩家減速 | 減速持續 | 移動速度 |
+|------|----------|----------|----------|----------|----------|
+| 在森林 | 50% | ×2 baseDmg | -30% | 3 秒 | ×1.2 |
+| 離森林 ≥3s | 25% | ×1.5 baseDmg | -15% | 1.5 秒 | ×1.0 |
+
+- 暴擊觸發：`_applyLynxBiomeBonus` 計算 `_critChance`；命中玩家時隨機判定，命中後設定 `p._lynxSlowUntil`、`p._lynxSlowAmt`
+- 玩家被減速期間移動速度乘以 `(1 - lynxSlowAmt)`（`updatePlayerMovement()` 判斷）
+
+### 鱷魚（croc）— 水潭生態區
+| 狀態 | 攻擊加成 | 移動速度 | 死亡翻滾機率 |
+|------|----------|----------|-------------|
+| 在水潭 | ×1.2 | ×1.3 | 20% |
+| 離水潭 | ×1.0 | ×1.0 | 0% |
+
+- 死亡翻滾觸發：對玩家施加 1 秒暈眩（`p._stunUntil = now + 1000`），期間 `updatePlayerMovement()` 直接 return
+- `_applyCrocBiomeBonus` 同時設定 `_biomeAtkMult`、`_biomeSpeedMult`、`_deathRollChance`
+
+### 鬣狗（hyena）— 沙漠生態區
+- 生成時隨機分配 `packGroup`（1~3），同組鬣狗為 `packMates`
+- `_updateHyenaPack`：每 2 秒掃描 600px 內同 biome 同 packGroup 存活成員，更新 `packMates` 陣列
+- 攻擊加成：每多一隻存活 packMate → 攻擊 +20%，速度 +5%
+- `_alertHyenaPack`：鬣狗鎖定目標瞬間，通知 600px 內所有 packMates 切換為 chasing 同一目標
+
+| 狀態 | 基礎攻擊 | 基礎速度 |
+|------|----------|----------|
+| 在沙漠 | ×1.0 × packBonus | ×1.1 × packBonus |
+| 離沙漠 ≥3s | ×0.5 × packBonus | ×0.5 × packBonus |
+
+### 肉食者逃離巨人（`_shouldFleeFromGiant`）
+- 目標為 **Alpha**：一律逃跑
+- 目標為普通巨人：巨人 HP > 肉食者 HP × 3 → 逃跑
+- 逃跑狀態 `fleeing_giant`：往離最近巨人反方向跑 3 秒，之後切換 `_seekingPrey = true`、`_seekNonGiant = true`（只尋找非巨人化草食性）
+
+### 生態區回歸（biome home-return）
+- 每幀偵測 `_isInHomeBiome(creature)`；不在生態區時：`_leftBiomeTime` 開始計時
+- 每 2 秒更新一個回歸目標點（`_findNearestBiomePoint` 隨機採樣 30 點）
+- 回歸時以 1.3 倍速度移動；回到生態區後清除 `_leftBiomeTime`、`_returnTarget`
+- `_leftBiomeTime` 同時作為猞猁/鬣狗生態區加成的失效計時器
 
 ---
 
@@ -228,18 +283,21 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - 移除舊版激進化（`diet=aggressive`）邏輯，改由巨人化取代
 
 ### 巨人化數值（在原本數值基礎上修改）
-- 攻擊力 +20，血量 ×10，體積 ×1.5，aggroRange 150
+- 攻擊力 +20，血量 ×10，體積 ×1.5，aggroRange 400（v0.40.0 由 150 調整）
+- guardianRange 1000：偵測到 guardianRange 內的組員被敵意生物鎖定時，優先以該敵意生物為攻擊目標（v0.40.0）
 - 每秒回復 1% maxHP（`giantRegenTimer` 計時）
-- 不再吃果子
+- HP ≤ 30% 時：中斷追擊，逃往最近果子方向；每吃1顆果子回復 +10% maxHP（`_updateGiantFlee`）
+- 不再吃果子（低血量逃跑除外）
 
 ### 組隊（同族同生態限定）
 - 巨人化後自動成為隊長（`packLeader = true`）
-- 每3秒嘗試招募 800px 內同族草食性，20% 成功率，上限5隻（含隊長）
+- 每3秒嘗試招募 800px 內同族草食性，20% 成功率
+- 隊伍上限動態計算（v0.40.0）：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（含隊長）
 - 超出 800px 自動掉隊，隊員距離 >600px 時巨人化暫停移動等待
 - 隊員超過 200px 時跟隨隊長
 
 ### 行為
-- 優先攻擊：aggroRange 內的敵意生物 / 玩家（草食性Lv4+除外）
+- 優先攻擊：guardianRange 內威脅組員的敵意生物（最優先）→ aggroRange 內的敵意生物 / 玩家（草食性Lv4+除外）
 - 無目標時：每3~5秒選最近果子作為移動目標，帶領隊伍前進
 
 ### 擊殺獎勵（`handleGiantKill`，`systems/combat.js`）
@@ -257,8 +315,10 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - 已有 Alpha 時不再觸發新的
 
 ### Alpha數值（巨人化基礎上再計算）
-- 攻擊力 ×2，血量 ×3，體積 ×1.5，aggroRange 300
-- 跟隨範圍 `packFollowRange: 1000`，每秒回復 2% maxHP
+- 攻擊力 ×2，血量 ×3，體積 ×1.5，aggroRange 600（v0.40.0 由 300 調整）
+- guardianRange 1500（v0.40.0）
+- 跟隨範圍 `packFollowRange: 1000`
+- HP 分享回血（v0.40.0）：自身 HP ≥ 80% 時每秒分享 1% maxHP 給 HP 最低的受傷組員；自身 HP < 80% 時每秒自回 2% maxHP（不分享）
 
 ### 誕生公告
 - `showAlphaAnnouncement(name)`：全屏顯示3秒，2.5秒後淡出
@@ -458,6 +518,58 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ### 初始化流程
 `window.onload` → `initMutationData()` → `applyMutationEffects()` 設定倍率
 `initializeGame()` → `applySkillBonuses()` → `applyEvolutionEffects()` → `applyAllMutationBonuses()` 一次性套用
+
+---
+
+## 新手教學系統（v0.43.0 / v0.44.0 / v0.45.0）
+
+- **檔案**：`systems/tutorial.js`（IIFE 模組，掛至 `window`）
+- **載入時機**：index.html 中位於 `combat.js` / `organs.js` 之前（v0.45.0 調整，確保兩者可呼叫教學函式）
+
+### 第一階段：移動教學（v0.43.0）
+
+觸發條件：`initializeGame()` 結束後，若 localStorage 無 `tutorialCompleted`，呼叫 `showTutorial()`。
+
+三步驟流程：
+
+| 步驟 | 狀態 | 內容 |
+|------|------|------|
+| 1 | 凍結（`tutorialOpen = true`） | 全螢幕暗色遮罩 + 玩家白色光圈脈衝 + 歡迎提示框 |
+| 2 | 解凍 | 金色光暈 + 閃爍 ↓ 箭頭標記最近果子；紅色虛線引導線（全程顯示）；XP 增加即進入步驟三 |
+| 3 | 凍結 | 遮罩重現；日夜指示器金色邊框閃爍；日夜機制與勝利條件說明；按鈕結束並寫入 `localStorage.tutorialCompleted` |
+
+- `gameState.tutorialOpen`：整合至 `isGamePaused()`，教學期間暫停遊戲邏輯
+
+### 教學設定開關（v0.44.0）
+
+`showSettings()` 輔助功能區塊新增「新手教學」開關：
+- 開啟（綠色）= 移除 `tutorialCompleted`，下一場觸發教學
+- 關閉（灰色）= 寫入 `tutorialCompleted`，教學不再觸發
+- 開關狀態即時反映 localStorage 現況
+
+### 第二階段：戰鬥教學（v0.45.0）
+
+觸發條件：玩家第一次升級時（`showOrganSelection()` 偵測到 `tutorialCompleted` 存在且 `tutorialCombatDone` 不存在）
+
+流程：
+1. 器官選擇鎖定第一張攻擊器官（`tutorialOrganPhase = true`），其他卡片灰暗禁用
+2. 選完後：`spawnTutorialStump()` 在玩家正前方 150px 生成棕色木樁（HP 30）+ 顯示戰鬥提示框
+3. 木樁繪製於 `drawGame()` 7c 步驟；`playerAttack()` 將木樁加入攻擊目標
+4. 擊殺木樁 → `handleTutorialStumpKill()`：凍結 0.5 秒 → 顯示「⚔️ 攻擊學會了！」（2 秒消失）→ 寫入 `localStorage.tutorialCombatDone`
+
+**新增 gameState 旗標**（均在 `initializeGame()` 重置）：
+
+| 旗標 | 說明 |
+|------|------|
+| `tutorialOpen` | 教學凍結中（整合至 `isGamePaused()`） |
+| `tutorialOrganPhase` | 器官選擇鎖定模式 |
+| `tutorialCombatActive` | 戰鬥教學進行中 |
+| `tutorialStump` | 教學木樁物件（null 表示不存在） |
+
+**公開函式（掛至 window）**：
+- `showTutorial()` — 第一階段入口
+- `spawnTutorialStump()` — 生成教學木樁 + 顯示戰鬥提示框
+- `handleTutorialStumpKill()` — 木樁死亡處理（清除 → 凍結 → 完成訊息 → 解凍）
 
 ---
 

@@ -7,6 +7,11 @@
 
 function updatePlayerMovement() {
     const p = gameState.player;
+    const now = Date.now();
+
+    // 鱷魚死亡翻滾：暈眩期間無法移動
+    if (p._stunUntil && now < p._stunUntil) return;
+
     const sk = gameState.settings.keys;
     let dx = 0, dy = 0;
     if (gameState.keys[sk.up]   || gameState.keys['arrowup'])    dy -= p.speed;
@@ -18,6 +23,14 @@ function updatePlayerMovement() {
         dx += mi.dx * p.speed;
         dy += mi.dy * p.speed;
     }
+
+    // 猞猁暴擊減速效果
+    if (p._lynxSlowUntil && now < p._lynxSlowUntil) {
+        const slow = p._lynxSlowAmt || 0;
+        dx *= (1 - slow);
+        dy *= (1 - slow);
+    }
+
     if (dx === 0 && dy === 0) return;
     p.x = ((p.x + dx) % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH;
     p.y = ((p.y + dy) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT;

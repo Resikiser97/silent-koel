@@ -17,11 +17,11 @@ const EVOLUTION_PATHS = {
     carnivore: {
         id: 'carnivore', name: '肉食性', icon: '🥩', maxLevel: 5,
         levels: [
-            { level: 1, attackAdd: 2, eatXP: 20, eatTime: 3000, desc: '可吃屍體（20XP，3秒），攻擊+2' },
-            { level: 2, attackAdd: 4, eatXP: 20, eatTime: 2500, desc: '屍體累計40XP，2.5秒，攻擊+4' },
-            { level: 3, attackAdd: 6, eatXP: 20, eatTime: 2000, attackSpeedBonusAdd: 0.05, desc: '屍體累計60XP，2秒，攻擊+6，攻速+5%' },
-            { level: 4, attackAdd: 8, eatXP: 20, eatTime: 1500, attackSpeedBonusAdd: 0.10, desc: '屍體累計80XP，1.5秒，攻擊+8，攻速累計+15%' },
-            { level: 5, attackAdd: 10, eatXP: 20, eatTime: 1000, attackSpeedBonusAdd: 0.15, desc: '屍體累計100XP，1秒，攻擊+10，攻速累計+30%' }
+            { level: 1, attackAdd: 2,  eatXP: 5,  eatTime: 3000, desc: '可吃屍體（5XP，3秒），攻擊+2' },
+            { level: 2, attackAdd: 5,  eatXP: 8,  eatTime: 2500, desc: '攻擊+5，屍體8XP，2.5秒' },
+            { level: 3, attackAdd: 9,  eatXP: 12, eatTime: 2000, attackSpeedBonus: 0.05, desc: '攻擊+9，屍體12XP，2秒，攻速+5%' },
+            { level: 4, attackAdd: 14, eatXP: 15, eatTime: 1500, attackSpeedBonus: 0.10, desc: '攻擊+14，屍體15XP，1.5秒，攻速+10%' },
+            { level: 5, attackAdd: 20, eatXP: 20, eatTime: 1000, attackSpeedBonus: 0.15, desc: '攻擊+20，屍體20XP，1秒，攻速+15%' },
         ]
     },
     omnivore: {

@@ -129,16 +129,46 @@ Goblinnest（單人獨立開發，AI 輔助）
 
 ### 排行榜系統
 - 後端：Supabase（免費，超出額度自動暫停不收費）
-- 表欄位：`id, name, score, level, play_time, is_victory, boss_kill_time, created_at, version, version_order`
-- `fetchVictoryRecords()`：勝利記錄，排序 `version_order.desc → play_time.asc → boss_kill_time.asc`
-- `fetchDefeatRecords(limit)`：失敗記錄，排序 `version_order.desc → play_time.desc → score.desc`
+- 表欄位：`id, name, score, level, play_time, is_victory, boss_kill_time, created_at, version, version_order, difficulty`
+- `fetchVictoryRecords(difficulty)`：勝利記錄，含難度篩選，排序 `version_order.desc → play_time.asc → boss_kill_time.asc`
+- `fetchDefeatRecords(limit, difficulty)`：失敗記錄，含難度篩選，排序 `version_order.desc → play_time.desc → score.desc`
+- `fetchAvailableDifficulties()`：查詢有資料的難度陣列（前端去重），供切換按鈕使用
+- 分數上傳含 `difficulty` 欄位（`gameState.lastDifficulty || 'easy'`）
 - 使用開發者模式的記錄不上傳（`gameState.devModeUsed = true`）
-- 首頁右側 TOP10 浮窗
+- 首頁右側 TOP10 浮窗（v0.40.0 起支援難度切換按鈕，`_top10Difficulty` 模組變數）
+- 排行榜面板（`showLeaderboard()`）亦支援難度切換，`_lbDifficulty` 模組變數；兩者保持同步
 
 ### 真實遊玩時間（realPlayTime）
 - `gameState.realPlayTime`：累積毫秒數，上傳時 `Math.floor(realPlayTime / 1000)` 轉秒
 - `pausePlayTimer()` / `resumePlayTimer()`：累積式計時，只在真正遊玩時累加
 - 技能點時間獎勵使用 `gameState.timeRemaining`（倒數計時），不使用 `realPlayTime`
+
+### 版本更新公告系統（v0.42.0 新增）
+- `config/patchnotes.js`：全域常數 `PATCH_NOTES`（陣列），最新版本置頂；欄位 `{ version, date, added[], fixed[], changed[] }`
+- 首頁左上角 📋 更新按鈕（`#patch-notes-btn`，故事書按鈕正下方）→ `showPatchNotes()`
+- 未讀標記：`lastSeenPatchVersion !== PATCH_NOTES[0].version` 時首頁 400ms 後自動彈出（新玩家跳過）
+- `checkPatchNotesPopup()`：在 `showStartScreen()` 末尾呼叫
+
+### 新手教學系統（v0.43.0 / v0.44.0 / v0.45.0 新增）
+
+**第一階段（移動教學，v0.43.0）**
+- `systems/tutorial.js`（IIFE 模組）；`showTutorial()` 公開入口
+- 觸發：`initializeGame()` 結束後，無 `localStorage.tutorialCompleted` 時啟動
+- 三步驟：①凍結+歡迎介面 → ②解凍+引導吃果子（金色光暈+虛線引導） → ③凍結+日夜說明
+- 完成後寫入 `localStorage.tutorialCompleted`
+
+**設定開關（v0.44.0）**
+- `showSettings()` 輔助功能區塊新增「新手教學」開關，讀寫 `localStorage.tutorialCompleted`
+
+**第二階段（戰鬥教學，v0.45.0）**
+- 觸發：玩家第一次升級且 `tutorialCompleted` 存在、`tutorialCombatDone` 不存在
+- `showOrganSelection()` 鎖定第一張攻擊器官（`tutorialOrganPhase = true`）
+- 選完 → `spawnTutorialStump()`：玩家正前方 150px 生成棕色木樁（HP 30）
+- `playerAttack()` 將木樁加入攻擊目標；死亡 → `handleTutorialStumpKill()`
+- 完成後寫入 `localStorage.tutorialCombatDone`
+
+**新增 gameState 旗標**（均在 `initializeGame()` 重置）：
+`tutorialOpen`（整合至 `isGamePaused()`）、`tutorialOrganPhase`、`tutorialCombatActive`、`tutorialStump`
 
 ### 突變系統（v0.39.0 新增，systems/mutation.js）
 - 突變面板：`showMutationPanel()`，開啟時暫停遊戲（`mutationPanelOpen = true`）
@@ -206,6 +236,7 @@ systems/
   map.js              → generateTerrain / buildTerrainCanvas / drawTerrain（4D Tileable Noise）
   spawning.js         → 生物/果子/樹木生成
   player.js           → updatePlayerMovement / checkFruitCollision / 靈敏知覺算法
+  tutorial.js         → showTutorial / spawnTutorialStump / handleTutorialStumpKill（新手教學 IIFE）
   combat.js           → playerAttack / applyDamageToPlayer / updateStatusEffects / 白骨系統
   organs.js           → showOrganSelection / handleEliteKill / applyOrganEffects
   evolution.js        → buildSkillTreeOverlay / upgradeSkill / applyEvolutionEffects / updateCorpseEating
@@ -243,7 +274,7 @@ map/
 - 每次 commit 後必須執行 git push origin master
 
 ### 版本與部署
-- 目前版本：**v0.42.0**
+- 目前版本：**v0.45.0**
 
 ### Branch 工作流程
 - `master`：主開發分支，所有日常開發在此進行
@@ -266,7 +297,7 @@ map/
 6. 開發者模式暗號：`77777778`，使用後 `gameState.devModeUsed = true` 禁止上傳排行榜
 7. `realPlayTime` 是毫秒，上傳時用 `Math.floor(realPlayTime / 1000)` 轉秒
 8. `resumePlayTimer()` 無條件啟動；`pausePlayTimer()` 有檢查 `_playTimerStart !== null`
-9. 手機版 `onStart` handler 邏輯：HTML UI 元素觸點 → `continue`；器官 tooltip 命中 → tooltip + `continue`；其他 gameCanvas 觸點 → 搖桿啟動
+9. 手機版 `onStart` handler 邏輯：HTML UI 元素觸點 → `continue`；器官 tooltip 命中 → 顯示 tooltip（若 `showOrganTooltip` 開啟）→ **繼續執行搖桿啟動邏輯**（v0.41.2 起移除 continue，不造成死區）；其他 gameCanvas 觸點 → 搖桿啟動
 10. `gameSettings.autoAttack` 任何版本更新都**不重置**（不受 `SAVE_VERSION` 控制）
 11. 毒傷 tick 使用 `c.lastPoisonTick += 1000`（不是 `= now`），避免累積誤差
 
@@ -275,7 +306,7 @@ map/
 ## 四、接下來的下一步行動
 
 ### 未來待開發功能
-- [ ] 新手教學系統（第一次玩時觸發；攻擊區「無邊框只有淡 ⚔️」的視覺需作為提示素材）
+- [x] 新手教學系統（v0.43.0 移動教學 / v0.44.0 設定開關 / v0.45.0 戰鬥教學，共三版完成）
 - [ ] 海洋和沙漠專屬生物差異化（目前只有顏色不同）
 - [ ] 角色美術素材替換（目前用圓形代替）
 - [ ] 遊戲封面圖（itch.io 上架需要）

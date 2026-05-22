@@ -3,6 +3,17 @@
 //            updateHostileCreatures / drawCorpses / drawHostileCreatures
 // =============================================================
 
+// ── 草食性連吃：附近500px是否有同族巨人化 ──
+function _hasGiantizedNearby(creature, range) {
+    for (const c of gameState.neutralCreatures) {
+        if (!c.isGiantized) continue;
+        if (c.biome !== creature.biome) continue;
+        if (c.speciesId !== creature.speciesId) continue;
+        if (wrappedDistance(creature.x, creature.y, c.x, c.y) < range) return true;
+    }
+    return false;
+}
+
 // ── 肉系吃屍體成長（每具+10%基礎值，不累乘）──
 function _carnivoreEatCorpse(creature, corpse) {
     creature.corpseEaten++;
@@ -20,6 +31,7 @@ function _carnivoreEatCorpse(creature, corpse) {
 
     if (creature.isKiller) {
         // 殺手化後繼續吃：killerCorpseEaten 計數，再疊加+10%基礎值
+        creature.killerLevel = (creature.killerLevel || 0) + 1;
         creature.killerCorpseEaten++;
         const kBonus = creature.killerCorpseEaten * 0.1;
         creature.damage  += creature.baseDamage * kBonus;
@@ -33,11 +45,30 @@ function _carnivoreEatCorpse(creature, corpse) {
         // 觸發殺手化
         _triggerKiller(creature);
     }
+
+    // 鬣狗：分食系統（吃完屍體時，同具屍體的組員各+1計數）
+    if (creature.speciesId === 'hyena') {
+        for (const mate of (creature.packMates || [])) {
+            if (mate.hp <= 0) continue;
+            if (mate.eatTarget === creature.eatTarget) {
+                mate.corpseEaten = (mate.corpseEaten || 0) + 1;
+                if (mate.isKiller) {
+                    mate.killerLevel = (mate.killerLevel || 0) + 1;
+                }
+                if (!mate.isKiller && mate.corpseEaten >= 5 &&
+                    gameState.currentMap && gameState.currentMap.features &&
+                    gameState.currentMap.features.killer) {
+                    _triggerKiller(mate);
+                }
+            }
+        }
+    }
 }
 
 // ── 殺手化觸發（吃滿5具）──
 function _triggerKiller(creature) {
-    creature.isKiller         = true;
+    creature.isKiller          = true;
+    creature.killerLevel       = 0;
     creature.killerCorpseEaten = 0;
     creature.aggroRange       = creature.aggroRange * 2;
     creature.damage           = creature.baseDamage * (1 + 0.5 + 0.1 * creature.corpseEaten);
@@ -54,7 +85,8 @@ function _triggerGiantization(creature) {
     creature.maxHp            = prevMaxHp * 10;
     creature.hp               = creature.maxHp;
     creature.radius           = creature.radius * 1.5;
-    creature.aggroRange       = 150;
+    creature.aggroRange       = 400;
+    creature.guardianRange    = 1000;
     creature.diet             = 'herbivore';
     creature.canFight         = true;
     creature.fruitsEaten      = 0;
@@ -81,11 +113,229 @@ function _triggerAlpha(creature) {
     creature.maxHp            = creature.maxHp * 3;
     creature.hp               = creature.maxHp;
     creature.radius           = creature.radius * 1.5;
-    creature.aggroRange       = 300;
+    creature.aggroRange       = 600;
+    creature.guardianRange    = 1500;
     creature.packFollowRange  = 1000;
     creature.giantRegenRate   = 0.02;
     gameState.alphaCreature   = creature;
     showAlphaAnnouncement(creature.name);
+}
+
+// ── GuardianRange：巨人/Alpha 保護同族草食性 ──
+function _checkGuardianRange(giant) {
+    const range = giant.guardianRange || 1000;
+    for (const neutral of gameState.neutralCreatures) {
+        if (neutral.hp <= 0) continue;
+        if (neutral.biome !== giant.biome) continue;
+        if (neutral.speciesId !== giant.speciesId) continue;
+        if (wrappedDistance(giant.x, giant.y, neutral.x, neutral.y) > range) continue;
+
+        // 檢查這個草食性附近是否有肉食者
+        for (const hostile of gameState.hostileCreatures) {
+            if (hostile.hp <= 0) continue;
+            if (wrappedDistance(neutral.x, neutral.y, hostile.x, hostile.y) < 150) {
+                // 立刻把巨人的target設為這個肉食者，進入攻擊狀態
+                giant.guardianTarget = hostile;
+                giant.state = 'attacking';
+                return;
+            }
+        }
+    }
+    // 沒有威脅，清除已死亡的 guardianTarget
+    if (giant.guardianTarget && giant.guardianTarget.hp <= 0) {
+        giant.guardianTarget = null;
+    }
+}
+
+// ── 隊伍上限動態計算 ──
+function _getPackLimit(leader) {
+    let limit = 5;
+    // 隊伍內每多1隻巨人化（含Alpha）+1上限
+    if (leader.packMembers) {
+        for (const m of leader.packMembers) {
+            if (m.isGiantized || m.isAlpha) limit++;
+        }
+    }
+    if (leader.isGiantized || leader.isAlpha) limit++; // 隊長本身
+    return Math.min(limit, 8); // cap最多8隻
+}
+
+// ── 巨人化/Alpha 低血量逃跑條件檢查（每秒評估一次）──
+function _checkGiantFleeCondition(creature) {
+    const hpRatio = creature.hp / creature.maxHp;
+    if (hpRatio >= 0.3) return; // 血量足夠，不逃
+
+    // 線性插值計算逃跑機率
+    // 血量30% → 60%逃跑機率；血量10% → 80%逃跑機率；10%以下固定80%
+    let fleeProbability;
+    if (hpRatio <= 0.1) {
+        fleeProbability = 0.8;
+    } else {
+        // 線性插值：hpRatio從0.3到0.1，fleeProbability從0.6到0.8
+        fleeProbability = 0.6 + (0.3 - hpRatio) / (0.3 - 0.1) * (0.8 - 0.6);
+    }
+
+    // 每秒評估一次（避免每幀觸發）
+    const now = Date.now();
+    if (now - (creature._fleeCheckTimer || 0) < 1000) return;
+    creature._fleeCheckTimer = now;
+
+    if (Math.random() < fleeProbability) {
+        creature.state = 'fleeing';
+        creature.isFleeing = true;
+    }
+}
+
+// ── 巨人化/Alpha 逃跑更新（朝最近果子移動，吃到回10% maxHP）──
+function _updateGiantFlee(creature) {
+    if (!creature.isFleeing) return;
+
+    // 尋找最近果子
+    let closest = null, closestDist = Infinity;
+    for (const f of gameState.fruits) {
+        const d = wrappedDistance(creature.x, creature.y, f.x, f.y);
+        if (d < closestDist) { closestDist = d; closest = f; }
+    }
+
+    if (closest) {
+        const { dx, dy } = wrappedDelta(creature.x, creature.y, closest.x, closest.y);
+        creature._moveAngle = Math.atan2(dy, dx);
+        moveCreature(creature,
+            creature.x + Math.cos(creature._moveAngle) * creature.speed,
+            creature.y + Math.sin(creature._moveAngle) * creature.speed);
+
+        // 吃到果子：回復10% maxHP
+        if (closestDist < creature.radius + 6) {
+            const idx = gameState.fruits.indexOf(closest);
+            if (idx !== -1) gameState.fruits.splice(idx, 1);
+            creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * 0.1);
+        }
+    }
+
+    // 血量回到30%以上停止逃跑
+    if (creature.hp / creature.maxHp >= 0.3) {
+        creature.isFleeing = false;
+        creature.state = 'wandering';
+    }
+}
+
+// ── 取得生物顯示名稱（含殺手等級）──
+function _getCreatureDisplayName(creature) {
+    if (!creature) return '';
+    const baseName = creature.name || creature.speciesId || '未知';
+    if (creature.isKiller) {
+        return baseName + ' 殺手Lv' + (creature.killerLevel || 0);
+    }
+    return baseName;
+}
+
+// ── 生態區判斷 ──
+function _isInHomeBiome(creature) {
+    if (!creature.biome) return true;
+    return getBiome(creature.x, creature.y) === creature.biome;
+}
+
+// ── 尋找最近生態區邊緣點（每2秒更新目標點）──
+function _findNearestBiomePoint(biome, x, y) {
+    let best = null, bestDist = Infinity;
+    for (let i = 0; i < 30; i++) {
+        const sx = 50 + Math.random() * (MAP_WIDTH  - 100);
+        const sy = 50 + Math.random() * (MAP_HEIGHT - 100);
+        if (getBiome(sx, sy) !== biome) continue;
+        const d = wrappedDistance(x, y, sx, sy);
+        if (d < bestDist) { bestDist = d; best = { x: sx, y: sy }; }
+    }
+    return best;
+}
+
+// ── 肉食者是否應逃離巨人 ──
+function _shouldFleeFromGiant(carnivore, giant) {
+    if (giant.isAlpha) return true; // Alpha一律逃跑
+    return giant.hp > carnivore.hp * 3; // 普通巨人：HP > 食肉者×3 → 逃跑
+}
+
+// ── 猞猁生態區加成 ──
+function _applyLynxBiomeBonus(lynx) {
+    const inForest = _isInHomeBiome(lynx);
+    const outSecs = lynx._leftBiomeTime
+        ? (Date.now() - lynx._leftBiomeTime) / 1000 : 0;
+    const lostBonus = !inForest && outSecs >= 3;
+    lynx._biomeSpeedMult = lostBonus ? 1.0 : 1.2;
+    if (!lostBonus) {
+        lynx._critChance  = 0.5;
+        lynx._critMult    = 2.0;
+        lynx._critSlowAmt = 0.3;
+        lynx._critSlowDur = 3000;
+        lynx._critText    = '喵嗚咬死你！';
+    } else {
+        lynx._critChance  = 0.25;
+        lynx._critMult    = 1.5;
+        lynx._critSlowAmt = 0.15;
+        lynx._critSlowDur = 1500;
+        lynx._critText    = '喵嗚咬死你！';
+    }
+}
+
+// ── 鱷魚生態區加成 ──
+function _applyCrocBiomeBonus(croc) {
+    const inOcean = _isInHomeBiome(croc);
+    const outSecs = croc._leftBiomeTime
+        ? (Date.now() - croc._leftBiomeTime) / 1000 : 0;
+    const hasBonus = inOcean || outSecs < 3;
+    croc._biomeAtkMult    = hasBonus ? 1.2 : 1.0;
+    croc._biomeSpeedMult  = hasBonus ? 1.3 : 1.0;
+    croc._deathRollChance = hasBonus ? 0.2 : 0.0;
+}
+
+// ── 鬣狗組隊掃描（每2秒）──
+function _updateHyenaPack(hyena) {
+    const now = Date.now();
+    if (now - (hyena._packScanTimer || 0) < 2000) return;
+    hyena._packScanTimer = now;
+    hyena.packMates = [];
+    for (const other of gameState.hostileCreatures) {
+        if (other === hyena || other.hp <= 0) continue;
+        if (other.speciesId !== 'hyena') continue;
+        if (other.packGroup !== hyena.packGroup) continue;
+        if (other.biome !== hyena.biome) continue;
+        if (wrappedDistance(hyena.x, hyena.y, other.x, other.y) > 600) continue;
+        hyena.packMates.push(other);
+    }
+}
+
+// ── 鬣狗組隊加成 ──
+function _getHyenaPackBonus(hyena) {
+    const count = (hyena.packMates || []).filter(m => m.hp > 0).length;
+    return {
+        atkMult:   1.0 + count * 0.2,
+        speedMult: 1.0 + count * 0.05,
+    };
+}
+
+// ── 鬣狗生態區 + 組隊合併加成 ──
+function _applyHyenaBiomeBonus(hyena) {
+    const inDesert = _isInHomeBiome(hyena);
+    const outSecs  = hyena._leftBiomeTime
+        ? (Date.now() - hyena._leftBiomeTime) / 1000 : 0;
+    const lostBonus = !inDesert && outSecs >= 3;
+    hyena._biomeSpeedMult = lostBonus ? 0.5 : 1.1;
+    hyena._biomeAtkMult   = lostBonus ? 0.5 : 1.0;
+    const pack = _getHyenaPackBonus(hyena);
+    hyena._finalAtkMult   = hyena._biomeAtkMult   * pack.atkMult;
+    hyena._finalSpeedMult = hyena._biomeSpeedMult * pack.speedMult;
+}
+
+// ── 鬣狗警報：通知600px內同組成員 ──
+function _alertHyenaPack(hyena, target) {
+    for (const mate of (hyena.packMates || [])) {
+        if (mate.hp <= 0) continue;
+        if (wrappedDistance(hyena.x, hyena.y, mate.x, mate.y) > 600) continue;
+        if (!mate.target || mate.target.hp <= 0) {
+            mate.target     = target;
+            mate.state      = 'chasing';
+            mate.targetType = (target === gameState.player) ? 'player' : 'neutral';
+        }
+    }
 }
 
 function updateNeutralCreatures() {
@@ -150,24 +400,70 @@ function updateNeutralCreatures() {
         if (creature.biome) {
             // ── 巨人化行為（優先處理）────────────────────────────
             if (creature.isGiantized) {
-                // 每秒回血（Alpha 2%，普通巨人化 1%）
-                const regenRate = creature.isAlpha ? (creature.giantRegenRate || 0.02) : 0.01;
-                if (now - (creature.giantRegenTimer || 0) >= 1000) {
-                    creature.giantRegenTimer = now;
-                    creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * regenRate);
+                // 低血量逃跑條件檢查（每秒評估）
+                _checkGiantFleeCondition(creature);
+                if (creature.isFleeing) {
+                    _updateGiantFlee(creature);
+                    continue;
                 }
 
-                // 搜尋攻擊目標（敵意生物 / 玩家，草食性Lv4+除外）
-                let giantTarget = null, giantTargetDist = creature.aggroRange;
-                const giantHerbLv = p.evolution.herbivore || 0;
-                if (giantHerbLv < 4) {
-                    const dp = wrappedDistance(creature.x, creature.y, p.x, p.y);
-                    if (dp < giantTargetDist) { giantTarget = p; giantTargetDist = dp; }
+                // 每秒回血（Alpha 特殊邏輯，普通巨人化 1%）
+                if (creature.isAlpha) {
+                    if (now - (creature.giantRegenTimer || 0) >= 1000) {
+                        creature.giantRegenTimer = now;
+                        if (creature.hp / creature.maxHp >= 0.8) {
+                            // 血量≥80%：自身回復1%，剩餘1%平分給GuardianRange內組隊受傷草食性
+                            creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * 0.01);
+                            const injured = [];
+                            const members = creature.packMembers || [];
+                            for (const m of members) {
+                                if (m.hp <= 0) continue;
+                                if (m.hp >= m.maxHp) continue; // 未受傷跳過
+                                if (wrappedDistance(creature.x, creature.y, m.x, m.y) > (creature.guardianRange || 1500)) continue;
+                                injured.push(m);
+                            }
+                            if (injured.length > 0) {
+                                const totalHeal = creature.maxHp * 0.01;
+                                const healPerMember = Math.floor(totalHeal / injured.length);
+                                if (healPerMember > 0) {
+                                    for (const m of injured) {
+                                        m.hp = Math.min(m.maxHp, m.hp + healPerMember);
+                                    }
+                                }
+                            }
+                        } else {
+                            // 血量<80%：優先自保，只回復自身2%
+                            creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * 0.02);
+                        }
+                    }
+                } else {
+                    // 普通巨人化：每秒回血1%
+                    if (now - (creature.giantRegenTimer || 0) >= 1000) {
+                        creature.giantRegenTimer = now;
+                        creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * 0.01);
+                    }
                 }
-                for (const h of gameState.hostileCreatures) {
-                    if (h.hp <= 0) continue;
-                    const d = wrappedDistance(creature.x, creature.y, h.x, h.y);
-                    if (d < giantTargetDist) { giantTarget = h; giantTargetDist = d; }
+
+                // GuardianRange 檢查（可能設定 guardianTarget）
+                _checkGuardianRange(creature);
+
+                // 搜尋攻擊目標（guardianTarget 優先 > 敵意生物 > 玩家，草食性Lv4+除外）
+                let giantTarget = null, giantTargetDist = creature.aggroRange;
+                if (creature.guardianTarget && creature.guardianTarget.hp > 0) {
+                    // guardianTarget 優先，忽略 aggroRange 限制
+                    giantTarget = creature.guardianTarget;
+                } else {
+                    creature.guardianTarget = null;
+                    const giantHerbLv = p.evolution.herbivore || 0;
+                    if (giantHerbLv < 4) {
+                        const dp = wrappedDistance(creature.x, creature.y, p.x, p.y);
+                        if (dp < giantTargetDist) { giantTarget = p; giantTargetDist = dp; }
+                    }
+                    for (const h of gameState.hostileCreatures) {
+                        if (h.hp <= 0) continue;
+                        const d = wrappedDistance(creature.x, creature.y, h.x, h.y);
+                        if (d < giantTargetDist) { giantTarget = h; giantTargetDist = d; }
+                    }
                 }
 
                 if (giantTarget) {
@@ -206,10 +502,11 @@ function updateNeutralCreatures() {
                             if (d > followRange) { m.packLeaderRef = null; return false; }
                             return true;
                         });
-                        // 招募新隊員（同族同生態，20%機率，上限5隻含隊長）
-                        if (creature.packMembers.length < 4) {
+                        // 招募新隊員（同族同生態，20%機率，上限動態含隊長）
+                        const packLimit = _getPackLimit(creature);
+                        if (creature.packMembers.length < packLimit - 1) {
                             for (const n of gameState.neutralCreatures) {
-                                if (creature.packMembers.length >= 4) break;
+                                if (creature.packMembers.length >= packLimit - 1) break;
                                 if (n === creature || n.hp <= 0 || n.packLeaderRef || n.isGiantized) continue;
                                 if (n.biome !== creature.biome || n.speciesId !== creature.speciesId) continue;
                                 const d = wrappedDistance(creature.x, creature.y, n.x, n.y);
@@ -340,7 +637,17 @@ function updateNeutralCreatures() {
                         if (creature.fruitsEaten >= 5 && featureGiant) {
                             _triggerGiantization(creature);
                         }
-                        creature._seekingFruit = false;
+                        // 吃到果子後的連吃機率：70%繼續找下一顆
+                        // 附近500px有同族巨人化 → 提升到90%
+                        let continueChance = 0.7;
+                        if (_hasGiantizedNearby(creature, 500)) {
+                            continueChance = 0.9;
+                        }
+                        if (Math.random() < continueChance) {
+                            creature._fruitTarget = null; // 清空目標讓他找新的，_seekingFruit保持true
+                        } else {
+                            creature._seekingFruit = false;
+                        }
                     }
                 } else {
                     creature._seekingFruit = false;
@@ -487,6 +794,16 @@ function updateHostileCreatures() {
         if (creature.hp <= 0) continue;
         if (creature.stunnedUntil && now < creature.stunnedUntil) continue;
 
+        // ── 生態區追蹤 + 鬣狗組隊更新 ──
+        if (creature.biome) {
+            if (_isInHomeBiome(creature)) {
+                creature._leftBiomeTime = null;
+            } else {
+                if (!creature._leftBiomeTime) creature._leftBiomeTime = now;
+            }
+            if (creature.speciesId === 'hyena') _updateHyenaPack(creature);
+        }
+
         // ── 殺手化：每5秒回復1% maxHP ──────────────────────────────
         if (creature.isKiller) {
             if (now - (creature.killerRegenTimer || 0) >= 5000) {
@@ -578,11 +895,24 @@ function updateHostileCreatures() {
             }
         }
 
+        // 評估是否需要逃離巨人（目標為巨人化/Alpha時）
+        if (bestTarget && (bestTarget.isGiantized || bestTarget.isAlpha)) {
+            if (_shouldFleeFromGiant(creature, bestTarget)) {
+                creature.state          = 'fleeing_giant';
+                creature._fleeGiantTimer = now;
+                creature.target         = null;
+                creature.targetType     = null;
+                bestTarget              = null;
+            }
+        }
+
         // 狀態切換
         if (bestTarget !== null) {
             creature.state = 'chasing';
             creature.target = bestTarget;
             creature.targetType = bestType;
+            // 鬣狗：警報同組出動
+            if (creature.speciesId === 'hyena') _alertHyenaPack(creature, bestTarget);
         } else if (creature.state === 'chasing') {
             const t = creature.target;
             const d = t ? wrappedDistance(creature.x, creature.y, t.x, t.y) : Infinity;
@@ -591,6 +921,30 @@ function updateHostileCreatures() {
                 creature.target = null;
                 creature.targetType = null;
             }
+        }
+
+        // ── 逃離巨人狀態 ──
+        if (creature.state === 'fleeing_giant') {
+            // 往離最近巨人的反方向跑
+            let nearestGiant = null, nearestGiantDist = Infinity;
+            for (const n of gameState.neutralCreatures) {
+                if (!n.isGiantized || n.hp <= 0) continue;
+                const d = wrappedDistance(creature.x, creature.y, n.x, n.y);
+                if (d < nearestGiantDist) { nearestGiantDist = d; nearestGiant = n; }
+            }
+            if (nearestGiant) {
+                const { dx: fdx, dy: fdy } = wrappedDelta(nearestGiant.x, nearestGiant.y, creature.x, creature.y);
+                creature._moveAngle = Math.atan2(fdy, fdx);
+                moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * creature.speed,
+                                       creature.y + Math.sin(creature._moveAngle) * creature.speed);
+            }
+            // 3秒後：切換為尋找落單草食性（非巨人化）
+            if (now - (creature._fleeGiantTimer || 0) >= 3000) {
+                creature.state      = 'patrolling';
+                creature._seekingPrey   = true;
+                creature._seekNonGiant  = true;
+            }
+            continue;
         }
 
         // 追擊與攻擊
@@ -602,7 +956,27 @@ function updateHostileCreatures() {
             if (dist <= creature.attackRange) {
                 if (now - creature.attackCooldown >= 1000) {
                     if (creature.targetType === 'player') {
-                        applyDamageToPlayer(creature.damage, creature);
+                        let dmg = creature.damage;
+                        if (creature.speciesId === 'lynx') {
+                            _applyLynxBiomeBonus(creature);
+                            if (Math.random() < (creature._critChance || 0)) {
+                                dmg = creature.baseDamage * (creature._critMult || 1.0);
+                                showFloatingText(p.x, p.y - 30, creature._critText || '暴擊！', '#FF4400');
+                                p._lynxSlowUntil = now + (creature._critSlowDur || 0);
+                                p._lynxSlowAmt   = creature._critSlowAmt || 0;
+                            }
+                        } else if (creature.speciesId === 'croc') {
+                            _applyCrocBiomeBonus(creature);
+                            dmg = creature.damage * (creature._biomeAtkMult || 1.0);
+                            if (Math.random() < (creature._deathRollChance || 0)) {
+                                showFloatingText(p.x, p.y - 30, '死亡翻滾！！', '#FF6600');
+                                p._stunUntil = now + 1000;
+                            }
+                        } else if (creature.speciesId === 'hyena') {
+                            _applyHyenaBiomeBonus(creature);
+                            dmg = creature.damage * (creature._finalAtkMult || 1.0);
+                        }
+                        applyDamageToPlayer(dmg, creature);
                     } else if (creature.targetType === 'neutral') {
                         creature.target.hp -= creature.damage;
                         if (creature.target.hp <= 0) {
@@ -634,7 +1008,19 @@ function updateHostileCreatures() {
                 }
             } else {
                 const angle = Math.atan2(dy, dx);
-                moveCreature(creature, creature.x + Math.cos(angle) * creature.speed, creature.y + Math.sin(angle) * creature.speed);
+                // 物種移動速度加成（生態區）
+                let chaseSpeed = creature.speed;
+                if (creature.speciesId === 'lynx') {
+                    _applyLynxBiomeBonus(creature);
+                    chaseSpeed = creature.speed * (creature._biomeSpeedMult || 1.0);
+                } else if (creature.speciesId === 'croc') {
+                    _applyCrocBiomeBonus(creature);
+                    chaseSpeed = creature.speed * (creature._biomeSpeedMult || 1.0);
+                } else if (creature.speciesId === 'hyena') {
+                    _applyHyenaBiomeBonus(creature);
+                    chaseSpeed = creature.speed * (creature._finalSpeedMult || 1.0);
+                }
+                moveCreature(creature, creature.x + Math.cos(angle) * chaseSpeed, creature.y + Math.sin(angle) * chaseSpeed);
             }
             continue;
         }
@@ -671,22 +1057,63 @@ function updateHostileCreatures() {
                 let closest = null, closestDist = Infinity;
                 for (const n of gameState.neutralCreatures) {
                     if (n.hp <= 0) continue;
+                    // 逃離巨人後尋找獵物：跳過巨人化個體
+                    if (creature._seekNonGiant && n.isGiantized) continue;
                     const d = wrappedDistance(creature.x, creature.y, n.x, n.y);
                     if (d < closestDist) { closestDist = d; closest = n; }
                 }
                 if (closest && closestDist < 500) {
                     const { dx, dy } = wrappedDelta(creature.x, creature.y, closest.x, closest.y);
                     creature._moveAngle = Math.atan2(dy, dx);
-                    if (closestDist < creature.radius + closest.radius + 5) creature._seekingPrey = false;
+                    if (closestDist < creature.radius + closest.radius + 5) {
+                        creature._seekingPrey = false;
+                        creature._seekNonGiant = false;
+                    }
                 } else {
-                    creature._seekingPrey = false;
+                    creature._seekingPrey  = false;
+                    creature._seekNonGiant = false;
+                }
+            }
+
+            // 不在生態區：朝生態區方向回歸（1.3倍速）
+            if (!_isInHomeBiome(creature)) {
+                if (!creature._leftBiomeTime) creature._leftBiomeTime = now;
+                if (!creature._returnTarget || now - (creature._returnTargetTime || 0) > 2000) {
+                    creature._returnTarget     = _findNearestBiomePoint(creature.biome, creature.x, creature.y);
+                    creature._returnTargetTime = now;
+                }
+                if (creature._returnTarget) {
+                    const { dx: rdx, dy: rdy } = wrappedDelta(creature.x, creature.y, creature._returnTarget.x, creature._returnTarget.y);
+                    creature._moveAngle = Math.atan2(rdy, rdx);
+                }
+                moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * creature.speed * 1.3,
+                                       creature.y + Math.sin(creature._moveAngle) * creature.speed * 1.3);
+                continue;
+            } else {
+                // 回到生態區：清除計時
+                if (creature._leftBiomeTime) {
+                    creature._leftBiomeTime    = null;
+                    creature._returnTarget     = null;
+                    creature._returnTargetTime = null;
                 }
             }
 
             // 漫遊：每幀小幅偏移角度（模擬 Perlin Noise 平滑）
             creature._moveAngle = (creature._moveAngle || 0) + (Math.random() - 0.5) * 0.12;
-            moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * creature.speed,
-                                   creature.y + Math.sin(creature._moveAngle) * creature.speed);
+            // 物種漫遊速度加成
+            let wanderSpeed = creature.speed;
+            if (creature.speciesId === 'lynx') {
+                _applyLynxBiomeBonus(creature);
+                wanderSpeed = creature.speed * (creature._biomeSpeedMult || 1.0);
+            } else if (creature.speciesId === 'croc') {
+                _applyCrocBiomeBonus(creature);
+                wanderSpeed = creature.speed * (creature._biomeSpeedMult || 1.0);
+            } else if (creature.speciesId === 'hyena') {
+                _applyHyenaBiomeBonus(creature);
+                wanderSpeed = creature.speed * (creature._finalSpeedMult || 1.0);
+            }
+            moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * wanderSpeed,
+                                   creature.y + Math.sin(creature._moveAngle) * wanderSpeed);
             continue;
         }
 
@@ -736,13 +1163,14 @@ function drawHostileCreatures() {
         ctx.fillRect(barX, barY, barW, barH);
         ctx.fillStyle = '#00CC00';
         ctx.fillRect(barX, barY, barW * (creature.hp / (creature.maxHp || 50)), barH);
-        if (creature.name) {
+        const hostileDisplayName = _getCreatureDisplayName(creature);
+        if (hostileDisplayName) {
             ctx.save();
             ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = '12px Arial';
+            ctx.fillStyle = creature.isKiller ? '#FF8800' : '#FFFFFF';
+            ctx.font = creature.isKiller ? 'bold 12px Arial' : '12px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(creature.name, s.x, s.y - creature.radius - 10);
+            ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius - 10);
             ctx.restore();
         }
     }

@@ -354,11 +354,11 @@ LANG['en'] = {
             'HP +25, Fruit XP +4, Size +20%, neutrals fully friendly'
         ]},
         carnivore: { name: 'Carnivore', levels: [
-            'Can eat corpses (20 XP, 3s), Atk +2',
-            'Corpse total 40 XP, 2.5s, Atk +4',
-            'Corpse total 60 XP, 2s, Atk +6, Atk Speed +5%',
-            'Corpse total 80 XP, 1.5s, Atk +8, Atk Speed total +15%',
-            'Corpse total 100 XP, 1s, Atk +10, Atk Speed total +30%'
+            'Can eat corpses (5 XP, 3s), Atk +2',
+            'Atk +5, Corpse 8 XP, 2.5s',
+            'Atk +9, Corpse 12 XP, 2s, Atk Speed +5%',
+            'Atk +14, Corpse 15 XP, 1.5s, Atk Speed +10%',
+            'Atk +20, Corpse 20 XP, 1s, Atk Speed +15%'
         ]},
         omnivore:  { name: 'Omnivore', levels: [
             'Speed +0.4, gain Poison Sac, devour bones in 1s, +1 Bone Material',
