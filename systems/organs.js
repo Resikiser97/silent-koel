@@ -351,8 +351,10 @@ function drawOrganUI() {
     if (hiddenOrgans.length > 0) {
         const sepBase = normalOrgans.length + 1 + sacRow;
         hiddenOrgans.forEach((organ, j) => {
+            // hit region 對齊繪製位置：文字繪製在 (sepBase+2+j)*lineH - 4，
+            // 與普通器官相同規律，hit region 放在文字行的前一格（+1 而非 +2）
             _organHitRegions.push({
-                x: _hrX, y: boxY + padY + (sepBase + 2 + j) * lineH, w: _hrW, h: lineH,
+                x: _hrX, y: boxY + padY + (sepBase + 1 + j) * lineH, w: _hrW, h: lineH,
                 data: {
                     name: organ.name,
                     desc: HIDDEN_ORGANS[organ.id] ? HIDDEN_ORGANS[organ.id].desc : (organ.desc || ''),

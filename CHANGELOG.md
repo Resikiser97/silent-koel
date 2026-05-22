@@ -2,6 +2,15 @@
 
 ---
 
+## v0.41.1 - 2026-05-22
+
+### 修正
+- **器官提示開關同時管控桌機版**（`main.js`）：`mousemove` 事件在 `showTooltip` 呼叫前加入 `showOrganTooltip` 判斷，開關關閉時立即呼叫 `hideTooltip()` 並返回
+- **隱藏器官 tooltip 無法點擊**（`systems/organs.js`）：`_organHitRegions` 隱藏器官的 y 座標從 `(sepBase + 2 + j) * lineH` 修正為 `(sepBase + 1 + j) * lineH`，使 hit region 與畫面上實際文字位置對齊（與普通器官公式一致）
+- **器官提示開關在桌機版不顯示**（`systems/ui.js`）：移除 `showSettings()` 中包住 organTooltip toggle 的 `if (gameState.isMobile)` 條件，桌機版與手機版均可操作
+
+---
+
 ## v0.41.0 - 2026-05-22
 
 ### 新增

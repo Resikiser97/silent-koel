@@ -183,6 +183,8 @@ function initializeGame() {
         const scaleY = canvas.height / rect.height;
         const mx = (e.clientX - rect.left) * scaleX;
         const my = (e.clientY - rect.top)  * scaleY;
+        // 器官提示開關關閉時，直接隱藏並返回
+        if (!gameState.settings.showOrganTooltip) { hideTooltip(); return; }
         for (const r of _organHitRegions) {
             if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) {
                 const d = Object.assign({}, r.data);

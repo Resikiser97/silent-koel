@@ -1577,30 +1577,28 @@ function showSettings(fromHome) {
         accSec.appendChild(aaHint);
     }
 
-    // ── 器官提示 toggle（只在手機版顯示）
-    if (gameState.isMobile) {
-        const otRow = document.createElement('div');
-        otRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
-        const otTog = document.createElement('button');
-        otTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
-        const refreshOtTog = () => {
-            const on = gameState.settings.showOrganTooltip;
-            otTog.textContent = on ? t('on') : t('off');
-            otTog.style.background = on ? '#2a8a2a' : '#555';
-        };
+    // ── 器官提示 toggle（桌機版與手機版均顯示）
+    const otRow = document.createElement('div');
+    otRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const otTog = document.createElement('button');
+    otTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshOtTog = () => {
+        const on = gameState.settings.showOrganTooltip;
+        otTog.textContent = on ? t('on') : t('off');
+        otTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshOtTog();
+    otTog.onclick = () => {
+        gameState.settings.showOrganTooltip = !gameState.settings.showOrganTooltip;
         refreshOtTog();
-        otTog.onclick = () => {
-            gameState.settings.showOrganTooltip = !gameState.settings.showOrganTooltip;
-            refreshOtTog();
-            saveSettings();
-        };
-        const otLbl = document.createElement('div');
-        otLbl.style.cssText = 'font-size:13px;';
-        otLbl.textContent = t('organTooltip');
-        otRow.appendChild(otTog);
-        otRow.appendChild(otLbl);
-        accSec.appendChild(otRow);
-    }
+        saveSettings();
+    };
+    const otLbl = document.createElement('div');
+    otLbl.style.cssText = 'font-size:13px;';
+    otLbl.textContent = t('organTooltip');
+    otRow.appendChild(otTog);
+    otRow.appendChild(otLbl);
+    accSec.appendChild(otRow);
 
     const keyAccWrapper = document.createElement('div');
     keyAccWrapper.style.cssText = 'display:flex;flex-direction:row;gap:8px;margin-bottom:14px;';
