@@ -2,6 +2,21 @@
 
 ---
 
+## v0.40.0 - 2026-05-22
+
+### 新增
+- **排行榜難度切換**（`config/supabase.js`、`systems/ui.js`）：`fetchVictoryRecords`、`fetchDefeatRecords`、`fetchTop10` 新增 `difficulty` 篩選參數；新增 `fetchAvailableDifficulties()` 查詢有資料的難度陣列（前端去重）
+- **排行榜難度切換按鈕**（`systems/ui.js` `showLeaderboard()`）：標題列旁加入切換按鈕，點擊循環切換有資料的難度，顯示語言包文字（`diffEasy`/`diffNormal`等）；切換時同步更新 `_top10Difficulty`
+- **TOP10 難度切換按鈕**（`systems/ui.js` `showStartScreen()`）：標題右側加入小切換按鈕，透過 `fetchAvailableDifficulties()` 循環切換；切換時同步更新 `_lbDifficulty`
+- **模組級難度狀態**（`systems/ui.js`）：`_lbDifficulty`、`_top10Difficulty` 兩個模組變數保持同步；`_diffKey()` 輔助函式轉換語言包 key
+- **分數上傳含難度欄位**（`systems/ui.js` `showScoreSubmitPopup()`）：上傳資料加入 `difficulty: gameState.lastDifficulty || 'easy'`
+- **index.html fallback 更新**：`fetchVictoryRecords`/`fetchDefeatRecords`/`fetchTop10` 簽名同步；新增 `fetchAvailableDifficulties` fallback（回傳空陣列）
+
+### 調整
+- **TOP10 浮窗縮放**（`systems/ui.js`）：桌機版 transform 從 `translateY(-50%)` 改為 `translateY(-50%) scale(0.65)`，縮小版面不遮擋主選單；手機版維持 `scale(0.55)`
+
+---
+
 ## v0.39.0 - 2026-05-22
 
 ### 新增

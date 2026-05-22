@@ -4,6 +4,12 @@
 //           showGuide / hideGuide / showStartScreen
 // =============================================================
 
+// ── 排行榜難度狀態（模組級，跨面板同步）
+let _lbDifficulty   = 'easy'; // 全屏排行榜目前選擇的難度
+let _top10Difficulty = 'easy'; // TOP10 浮窗目前選擇的難度
+/** 難度 ID → 語言包 key，例如 'easy' → 'diffEasy' */
+function _diffKey(d) { return 'diff' + d.charAt(0).toUpperCase() + d.slice(1); }
+
 // ── 小地圖全域變數
 let _minimapTerrainCanvas  = null;
 let _minimapTerrainSeed    = -1;
@@ -2368,42 +2374,70 @@ function showStartScreen() {
 
     const top10Panel = document.createElement('div');
     top10Panel.id = 'top10-panel';
-    const _top10Transform = gameState.isMobile
+    // 桌機版縮小至 scale(0.65) 並保持垂直置中；手機版維持原本 scale(0.55)
+    const _top10PanelTransform = gameState.isMobile
         ? 'scale(0.55)'
-        : 'translateY(-50%)';
+        : 'translateY(-50%) scale(0.65)';
     const _top10TransformOrigin = gameState.isMobile ? 'top right' : 'right center';
     const _top10Top = gameState.isMobile ? '16px' : '50%';
-    top10Panel.style.cssText = 'position:absolute;right:16px;top:' + _top10Top + ';transform:' + _top10Transform + ';transform-origin:' + _top10TransformOrigin + ';width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';
+    top10Panel.style.cssText = 'position:absolute;right:16px;top:' + _top10Top + ';transform:' + _top10PanelTransform + ';transform-origin:' + _top10TransformOrigin + ';width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';
+
+    // 標題列（含難度切換按鈕）
+    const top10TitleRow = document.createElement('div');
+    top10TitleRow.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;';
     const top10Title = document.createElement('div');
-    top10Title.style.cssText = 'color:#FFD700;font-weight:bold;margin-bottom:8px;text-align:center;font-size:14px;';
+    top10Title.style.cssText = 'color:#FFD700;font-weight:bold;font-size:14px;';
     top10Title.textContent = t('lbTop10Title');
-    top10Panel.appendChild(top10Title);
+    const top10DiffBtn = document.createElement('button');
+    top10DiffBtn.style.cssText = 'background:rgba(255,255,255,0.12);border:1px solid #666;color:#FFD700;padding:2px 7px;border-radius:4px;cursor:pointer;font-size:11px;pointer-events:all;flex-shrink:0;';
+    top10DiffBtn.textContent = t(_diffKey(_top10Difficulty));
+    top10TitleRow.appendChild(top10Title);
+    top10TitleRow.appendChild(top10DiffBtn);
+    top10Panel.appendChild(top10TitleRow);
+
     const top10List = document.createElement('div');
     top10List.id = 'top10-list';
     top10List.innerHTML = t('lbLoading');
     top10Panel.appendChild(top10List);
     overlay.appendChild(top10Panel);
 
-    fetchTop10().then(rows => {
-        if (!rows || rows.length === 0) { top10List.textContent = t('lbError'); return; }
-        top10List.innerHTML = '';
-        rows.forEach((row, i) => {
-            const rank = i + 1;
-            const name = row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name;
-            const mm = String(Math.floor(row.play_time / 60)).padStart(2, '0');
-            const ss = String(row.play_time % 60).padStart(2, '0');
-            const timeStr = mm + ':' + ss;
-            const result = row.is_victory ? t('lbVictoryIcon') : t('lbDefeatIcon');
-            const rankIcon = getRankIcon(rank);
-            const row_el = document.createElement('div');
-            row_el.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
-            row_el.innerHTML = '<span style="min-width:28px;text-align:center;">' + rankIcon + '</span>' +
-                '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</span>' +
-                '<span style="color:#aaa;">' + timeStr + '</span>' +
-                '<span>' + result + '</span>';
-            top10List.appendChild(row_el);
-        });
-    }).catch(() => { top10List.textContent = t('lbError'); });
+    function loadTop10() {
+        top10List.innerHTML = t('lbLoading');
+        fetchTop10(_top10Difficulty).then(rows => {
+            if (!rows || rows.length === 0) { top10List.textContent = t('lbError'); return; }
+            top10List.innerHTML = '';
+            rows.forEach((row, i) => {
+                const rank = i + 1;
+                const name = row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name;
+                const mm = String(Math.floor(row.play_time / 60)).padStart(2, '0');
+                const ss = String(row.play_time % 60).padStart(2, '0');
+                const timeStr = mm + ':' + ss;
+                const result = row.is_victory ? t('lbVictoryIcon') : t('lbDefeatIcon');
+                const rankIcon = getRankIcon(rank);
+                const row_el = document.createElement('div');
+                row_el.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
+                row_el.innerHTML = '<span style="min-width:28px;text-align:center;">' + rankIcon + '</span>' +
+                    '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</span>' +
+                    '<span style="color:#aaa;">' + timeStr + '</span>' +
+                    '<span>' + result + '</span>';
+                top10List.appendChild(row_el);
+            });
+        }).catch(() => { top10List.textContent = t('lbError'); });
+    }
+
+    // 難度切換：取得有資料的難度後循環，與全屏排行榜同步
+    top10DiffBtn.onclick = () => {
+        fetchAvailableDifficulties().then(function(diffs) {
+            const availDiffs = (diffs && diffs.length > 0) ? diffs : ['easy'];
+            const idx = availDiffs.indexOf(_top10Difficulty);
+            _top10Difficulty = availDiffs[(idx + 1) % availDiffs.length];
+            _lbDifficulty = _top10Difficulty;
+            top10DiffBtn.textContent = t(_diffKey(_top10Difficulty));
+            loadTop10();
+        }).catch(() => { loadTop10(); });
+    };
+
+    loadTop10();
 
     const bookBtn = document.createElement('div');
     bookBtn.id = 'story-book-btn';
@@ -2999,15 +3033,24 @@ function showLeaderboard() {
     let currentPage = 1;
     const PAGE_SIZE = 20;
     let allRows = [];
+    let _availDiffs = ['easy']; // 有資料的難度陣列
 
     const overlay = document.createElement('div');
     overlay.id = 'leaderboard-overlay';
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;z-index:500;color:white;font-family:Arial,sans-serif;overflow:hidden;';
 
+    // 標題列（含難度切換按鈕）
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:12px;margin:20px 0 12px;flex-shrink:0;';
     const titleEl = document.createElement('div');
-    titleEl.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;margin:20px 0 12px;';
+    titleEl.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;';
     titleEl.textContent = t('lbFullTitle');
-    overlay.appendChild(titleEl);
+    const lbDiffBtn = document.createElement('button');
+    lbDiffBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:1px solid #666;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:13px;pointer-events:all;';
+    lbDiffBtn.textContent = t(_diffKey(_lbDifficulty));
+    titleBar.appendChild(titleEl);
+    titleBar.appendChild(lbDiffBtn);
+    overlay.appendChild(titleBar);
 
     const tableWrap = document.createElement('div');
     tableWrap.style.cssText = 'width:90%;max-width:860px;overflow-y:auto;flex:1;';
@@ -3092,6 +3135,36 @@ function showLeaderboard() {
         nextBtn.style.opacity = page >= totalPages ? '0.4' : '1';
     }
 
+    // 依目前 _lbDifficulty 重新從 Supabase 載入資料
+    function loadAllRows() {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
+        allRows = [];
+        currentPage = 1;
+        fetchVictoryRecords(_lbDifficulty).then(function(victoryRows) {
+            const vRows = victoryRows || [];
+            const defeatLimit = Math.max(0, 100 - vRows.length);
+            if (defeatLimit > 0) {
+                return fetchDefeatRecords(defeatLimit, _lbDifficulty).then(function(defeatRows) {
+                    allRows = vRows.concat(defeatRows || []);
+                });
+            }
+            allRows = vRows;
+        }).then(function() {
+            loadPage(1);
+        }).catch(function() {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
+        });
+    }
+
+    // 難度切換按鈕：循環切換，並與 TOP10 浮窗同步
+    lbDiffBtn.onclick = () => {
+        const idx = _availDiffs.indexOf(_lbDifficulty);
+        _lbDifficulty = _availDiffs[(idx + 1) % _availDiffs.length];
+        _top10Difficulty = _lbDifficulty;
+        lbDiffBtn.textContent = t(_diffKey(_lbDifficulty));
+        loadAllRows();
+    };
+
     prevBtn.onclick = () => { if (currentPage > 1) loadPage(currentPage - 1); };
     nextBtn.onclick = () => { if (!nextBtn.disabled) loadPage(currentPage + 1); };
 
@@ -3123,20 +3196,23 @@ function showLeaderboard() {
     if (_lbMaxH < 900) overlay.style.height = _lbMaxH + 'px';
 
     _lbGc.appendChild(overlay);
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
-    fetchVictoryRecords().then(function(victoryRows) {
-        const vRows = victoryRows || [];
-        const defeatLimit = Math.max(0, 100 - vRows.length);
-        if (defeatLimit > 0) {
-            return fetchDefeatRecords(defeatLimit).then(function(defeatRows) {
-                allRows = vRows.concat(defeatRows || []);
-            });
+
+    // 先取得有資料的難度陣列，確保 _lbDifficulty 有效後再載入
+    fetchAvailableDifficulties().then(function(diffs) {
+        if (diffs && diffs.length > 0) {
+            _availDiffs = diffs;
+        } else {
+            _availDiffs = ['easy'];
         }
-        allRows = vRows;
-    }).then(function() {
-        loadPage(1);
+        if (!_availDiffs.includes(_lbDifficulty)) {
+            _lbDifficulty = _availDiffs[0];
+            _top10Difficulty = _lbDifficulty;
+            lbDiffBtn.textContent = t(_diffKey(_lbDifficulty));
+        }
+        loadAllRows();
     }).catch(function() {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
+        _availDiffs = ['easy'];
+        loadAllRows();
     });
 }
 
@@ -3196,7 +3272,8 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             is_victory: isVictory,
             boss_kill_time: bossKillTime !== null && bossKillTime !== undefined ? Math.floor(bossKillTime) : null,
             version: GAME_INFO.version,
-            version_order: Math.floor(parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4)))
+            version_order: Math.floor(parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4))),
+            difficulty: gameState.lastDifficulty || 'easy',
         };
         submitScore(data).then(() => {
             statusMsg.textContent = t('lbSubmitOk');

@@ -29,23 +29,41 @@ async function submitScore(data) {
     return supabaseQuery('leaderboard', 'POST', data);
 }
 
-async function fetchVictoryRecords() {
+async function fetchVictoryRecords(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=*&is_victory=eq.true&order=version_order.desc,play_time.asc,boss_kill_time.asc&limit=100'
+        '?select=*&is_victory=eq.true' + diffFilter + '&order=version_order.desc,play_time.asc,boss_kill_time.asc&limit=100'
     );
 }
 
-async function fetchDefeatRecords(limit) {
+async function fetchDefeatRecords(limit, difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=*&is_victory=eq.false&order=version_order.desc,play_time.desc,score.desc&limit=' + limit
+        '?select=*&is_victory=eq.false' + diffFilter + '&order=version_order.desc,play_time.desc,score.desc&limit=' + limit
     );
 }
 
-async function fetchTop10() {
+async function fetchTop10(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,score,play_time,is_victory,version_order&order=version_order.desc,is_victory.desc,play_time.asc,boss_kill_time.asc&limit=10'
+        '?select=name,score,play_time,is_victory,version_order' + diffFilter + '&order=version_order.desc,is_victory.desc,play_time.asc,boss_kill_time.asc&limit=10'
     );
+}
+
+// 取得排行榜中有資料的難度陣列（去重後排序）
+async function fetchAvailableDifficulties() {
+    const rows = await supabaseQuery('leaderboard', 'GET', null, '?select=difficulty&order=difficulty.asc');
+    if (!rows || rows.length === 0) return [];
+    const seen = new Set();
+    const result = [];
+    for (const r of rows) {
+        if (r.difficulty && !seen.has(r.difficulty)) {
+            seen.add(r.difficulty);
+            result.push(r.difficulty);
+        }
+    }
+    return result;
 }

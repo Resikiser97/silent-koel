@@ -302,9 +302,10 @@ function getRankIcon(rank) {
 }
 
 if (typeof fetchTop10 === 'undefined') {
-    function fetchTop10() { return Promise.reject(new Error('no supabase')); }
-    function fetchVictoryRecords() { return Promise.reject(new Error('no supabase')); }
-    function fetchDefeatRecords() { return Promise.reject(new Error('no supabase')); }
+    function fetchTop10(difficulty) { return Promise.reject(new Error('no supabase')); }
+    function fetchVictoryRecords(difficulty) { return Promise.reject(new Error('no supabase')); }
+    function fetchDefeatRecords(limit, difficulty) { return Promise.reject(new Error('no supabase')); }
+    function fetchAvailableDifficulties() { return Promise.resolve([]); }
     function submitScore() { return Promise.reject(new Error('no supabase')); }
 }
 </script>
