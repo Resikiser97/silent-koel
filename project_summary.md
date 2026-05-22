@@ -251,17 +251,16 @@ map/
 
 ### 重要提醒給接手的 AI
 1. **開始任何工作前先讀取** `MAIN.md` 和 `CHANGELOG.md`（`.claude/instructions.md` 會自動觸發）
-2. 所有速度數值已乘以 3.0（針對 180Hz 螢幕校正，60FPS Fixed Timestep）
+2. 所有速度數值已乘以 3.0（歷史補丁，Fixed Timestep 加入前為修正高刷新率螢幕速度偏快問題；現已基於此基準調整完畢，×3.0 不得移除，lang/zh-TW.js 速度描述與實際數值已一致，✅ 文案 Fixed，無需再處理）
 3. 手機邏輯解析度由 `MOBILE_GAME_SCALE = 0.7` 控制，不是固定值，不要寫死
 4. 手機版用 `gameState.isMobile` 和 `gameState.orientation` 判斷裝置和方向
 5. 排行榜使用 Supabase，API 設定在 `config/supabase.js`
 6. 開發者模式暗號：`77777778`，使用後 `gameState.devModeUsed = true` 禁止上傳排行榜
 7. `realPlayTime` 是毫秒，上傳時用 `Math.floor(realPlayTime / 1000)` 轉秒
 8. `resumePlayTimer()` 無條件啟動；`pausePlayTimer()` 有檢查 `_playTimerStart !== null`
-9. `lang/zh-TW.js` 速度描述與實際數值不一致（180Hz 歷史遺留），之後統一大改
-10. 手機版 `onStart` handler 邏輯：HTML UI 元素觸點 → `continue`；器官 tooltip 命中 → tooltip + `continue`；其他 gameCanvas 觸點 → 搖桿啟動
-11. `gameSettings.autoAttack` 任何版本更新都**不重置**（不受 `SAVE_VERSION` 控制）
-12. 毒傷 tick 使用 `c.lastPoisonTick += 1000`（不是 `= now`），避免累積誤差
+9. 手機版 `onStart` handler 邏輯：HTML UI 元素觸點 → `continue`；器官 tooltip 命中 → tooltip + `continue`；其他 gameCanvas 觸點 → 搖桿啟動
+10. `gameSettings.autoAttack` 任何版本更新都**不重置**（不受 `SAVE_VERSION` 控制）
+11. 毒傷 tick 使用 `c.lastPoisonTick += 1000`（不是 `= now`），避免累積誤差
 
 ---
 
@@ -274,4 +273,3 @@ map/
 - [ ] 遊戲封面圖（itch.io 上架需要）
 - [ ] itch.io 上架
 - [ ] 普通／困難／地獄難度地圖
-- [ ] `lang/zh-TW.js` 速度描述統一大改（180Hz 歷史遺留問題）

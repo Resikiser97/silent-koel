@@ -14,7 +14,7 @@
 - 不使用 ES Modules，全部用傳統 script 標籤
 
 ## 關鍵技術陷阱（必須記住，高頻犯錯）
-- 所有速度數值已乘以 3.0（180Hz 螢幕校正歷史遺留，不要動）
+- 所有速度數值已乘以 3.0（歷史補丁，不要動；lang/zh-TW.js 速度描述已與實際數值一致，✅ 文案 Fixed，無需再處理）
 - `MOBILE_GAME_SCALE = 0.7` 控制手機縮放，不要寫死數值
 - 手機版用 `gameState.isMobile` 和 `gameState.orientation` 判斷
 - `realPlayTime` 是毫秒，上傳排行榜時用 `Math.floor(realPlayTime / 1000)` 轉秒
@@ -24,7 +24,6 @@
 - `showHiddenOrganSelection()` 必須在 `addXP()` 之前呼叫，否則界面疊層
 - `gameState.organSelectionActive = false` 必須在 `showOrganSelection()` 之前設定
 - 開發者模式暗號：`77777778`，使用後 `gameState.devModeUsed = true` 禁止上傳排行榜
-- `lang/zh-TW.js` 速度描述與實際數值不一致（180Hz 歷史遺留），未來統一大改前不要動
 
 ## commit 後自動執行：sync-docs 流程
 
