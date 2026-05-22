@@ -321,12 +321,12 @@ function _attachJoystickListeners() {
                     r => canvasX >= r.x && canvasX <= r.x + r.w && canvasY >= r.y && canvasY <= r.y + r.h
                 );
                 if (hit) {
-                    // 器官提示開關關閉時，不顯示 tooltip，但仍 continue 避免觸發搖桿
                     if (gameState.settings.showOrganTooltip) {
                         showTooltip(hit.data, touch.clientX, touch.clientY);
                         setTimeout(hideTooltip, 500);
                     }
-                    continue;
+                    // 不論 tooltip 開關狀態，都繼續往下執行搖桿啟動邏輯
+                    // （移除 continue，避免器官區域成為移動死區）
                 }
             }
 

@@ -2,6 +2,13 @@
 
 ---
 
+## v0.41.2 - 2026-05-22
+
+### 修正
+- **器官區域觸碰造成移動死區**（`systems/ui.js`）：`_attachJoystickListeners` `onStart` handler 中，命中 `_organHitRegions` 時移除 `continue`，讓觸碰在顯示（或略過）tooltip 後繼續執行搖桿啟動邏輯；`showOrganTooltip` 關閉時左下角器官區域不再成為無法移動的死區
+
+---
+
 ## v0.41.1 - 2026-05-22
 
 ### 修正
