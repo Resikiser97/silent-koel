@@ -334,8 +334,6 @@ function drawCreatureShape(ctx, creature, sx, sy) {
 
     // 特殊狀態光暈（不跟旋轉，固定在世界座標）
     _drawCreatureGlow(ctx, creature, sx, sy);
-    // ⚠️ 測試用：方向指示三角形，確認無誤後移除
-    _drawDirectionArrow(ctx, creature, sx, sy);
 }
 
 // ── 測試用：方向指示三角形（確認無誤後移除）────────────────────
