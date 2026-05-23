@@ -149,6 +149,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ### 繪圖規格文件
 
 - 詳見 `docs/creature_shapes.md`（完整程式碼 + 設計備注）
+- 詳見 `docs/ANIMATION_GUIDE.md`（Boss / 生物動畫實作指南：踏步、攻擊、特效、Z 軸順序、未來開發者說明）
 
 ---
 
