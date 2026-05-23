@@ -43,55 +43,96 @@ function drawBossShape(ctx, boss, sx, sy) {
 }
 
 // ── 黑熊（forest）──────────────────────────────────────────────
+// 手臂狀態：閒置垂下 / 追擊舉高 / 攻擊揮砍（單臂 / 雙臂 X）
 function _drawBear(ctx, r, t, boss) {
     const C = BOSS_COLORS.bear;
-    const speedMult = (boss && boss.state === 'chasing') ? 1.9 : 1.0;
+    const isChasing = boss && boss.state === 'chasing';
+    const speedMult = isChasing ? 1.9 : 1.0;
     const period    = 450 / speedMult;
 
-    // 踏步動畫：sin > 0 踩下（放大+往下位移），sin < 0 抬起（縮小）
-    // 左右腿相位差 π → 一腳踩下另一腳抬起
+    // 踏步動畫（腿）
     const stompL = Math.sin(t / period);
     const stompR = Math.sin(t / period + Math.PI);
-    const scaleL = 1.0 + stompL * 0.38;   // 0.62 ~ 1.38
+    const scaleL = 1.0 + stompL * 0.38;
     const scaleR = 1.0 + stompR * 0.38;
-    const offL   = stompL * r * 0.09;     // 踩下時輕微往下偏
+    const offL   = stompL * r * 0.09;
     const offR   = stompR * r * 0.09;
 
+    // 攻擊動畫偵測（350ms 快速弧線）
+    const sinceAtk = boss ? Math.max(0, t - (boss.attackCooldown || 0)) : 99999;
+    const isAtk    = sinceAtk < 350 && boss && boss.attackCooldown > 0;
+    const atkPhase = isAtk ? Math.sin(sinceAtk / 350 * Math.PI) : 0;
+    const isCrit   = !!(boss && boss.lastAttackCrit);
+    const atkLeg   = (boss && boss.lastAttackLeg) || 'left';
+    // atkLeg==='left'：左腳踩地 → 右臂(side=+1)攻擊，軌跡呈 "/"
+    // atkLeg==='right'：右腳踩地 → 左臂(side=-1)攻擊，軌跡呈 "\"
+
+    // 計算單臂的肩膀位置 + 旋轉角，依狀態決定
+    // side: -1=左臂, +1=右臂；phase: atkPhase（0~1）
+    const getArm = (side, phase) => {
+        // 此臂是否為本次攻擊的揮砍臂
+        const isAtkArm = isAtk && (isCrit || ((atkLeg === 'left') === (side > 0)));
+        if (isAtkArm) {
+            // 從舉高位斜向對角橫掃（"/"或"\"軌跡由殘影呈現）
+            return {
+                sx:    side * r * (0.70 - phase * 0.50),  // 向中線推進
+                sy:    -r * 0.40 + phase * r * 0.55,      // 從高位下落
+                angle: side * (0.70 - phase * 2.00)       // 大幅旋轉產生揮砍感
+            };
+        } else if (isChasing) {
+            // 追擊：雙臂高舉，像熊爪蓄力
+            return { sx: side * r * 0.70, sy: -r * 0.40, angle: side * 0.70 };
+        } else {
+            // 閒置：自然垂下，略向外傾
+            return { sx: side * r * 0.70, sy: r * 0.10, angle: -side * 0.15 };
+        }
+    };
+
+    // 繪製單臂（含 globalAlpha 控制殘影）
+    const drawArm = (side, phase, alpha) => {
+        const { sx, sy, angle } = getArm(side, phase);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle   = C.limbs;
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.ellipse(0, r * 0.48, r * 0.24, r * 0.48, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    };
+
     // ── 後腿（先畫，被身體蓋住根部）──
+    ctx.globalAlpha = 1.0;
     ctx.fillStyle = C.limbs;
     ctx.beginPath();
     ctx.ellipse(-r * 0.52, r * 0.68 + offL, r * 0.27, r * 0.55 * scaleL, 0, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.fillStyle = C.limbs;
     ctx.beginPath();
     ctx.ellipse( r * 0.52, r * 0.68 + offR, r * 0.27, r * 0.55 * scaleR, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // ── 身體主橢圓 ──
+    ctx.globalAlpha = 1.0;
     ctx.fillStyle = C.body;
     ctx.beginPath();
     ctx.ellipse(0, r * 0.2, r * 1.2, r * 0.75, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // ── 前臂（固定，不動）──
-    ctx.fillStyle = C.limbs;
-    ctx.save();
-    ctx.translate(-r * 0.7, r * 0.1);
-    ctx.rotate(0.15);
-    ctx.beginPath();
-    ctx.ellipse(0, r * 0.48, r * 0.24, r * 0.48, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    // ── 前臂殘影（攻擊時才畫，製造快速掃擊的殘影感）──
+    if (isAtk) {
+        const tPhases = [Math.max(0, atkPhase - 0.35), Math.max(0, atkPhase - 0.18)];
+        const tAlphas = [0.10, 0.22];
+        for (let ti = 0; ti < 2; ti++) {
+            if (isCrit || atkLeg === 'right') drawArm(-1, tPhases[ti], tAlphas[ti]);
+            if (isCrit || atkLeg === 'left')  drawArm( 1, tPhases[ti], tAlphas[ti]);
+        }
+    }
 
-    ctx.save();
-    ctx.translate(r * 0.7, r * 0.1);
-    ctx.rotate(-0.15);
-    ctx.fillStyle = C.limbs;
-    ctx.beginPath();
-    ctx.ellipse(0, r * 0.48, r * 0.24, r * 0.48, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    // ── 前臂主體 ──
+    drawArm(-1, atkPhase, 1.0);
+    drawArm( 1, atkPhase, 1.0);
+    ctx.globalAlpha = 1.0;
 
     // ── 頭部 ──
     ctx.fillStyle = C.head;
@@ -99,6 +140,7 @@ function _drawBear(ctx, r, t, boss) {
     ctx.ellipse(0, -r * 0.6, r * 0.75, r * 0.65, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // 耳朵
     ctx.fillStyle = C.body;
     ctx.beginPath();
     ctx.arc(-r * 0.5, -r * 1.15, r * 0.28, 0, Math.PI * 2);
@@ -135,6 +177,11 @@ function _drawShark(ctx, r, t, boss) {
     const speedMult = (boss && boss.state === 'chasing') ? 1.9 : 1.0;
     const period    = 550 / speedMult;
     const tailSwing = Math.sin(t / period) * 0.5;
+
+    // 面向玩家：玩家在左側則水平翻轉，讓頭永遠朝向目標
+    // 原始繪圖頭在右（+x），尾在左（-x），翻轉後頭在左
+    const facingLeft = gameState.player && gameState.player.x < (boss ? boss.x : 0);
+    if (facingLeft) ctx.scale(-1, 1);
 
     // 尾巴（左側，先畫）
     ctx.save();
@@ -404,6 +451,8 @@ function spawnBoss() {
         speed: cfg.speed, damage: cfg.damage,
         aggroRange: cfg.aggroRange, attackRange: cfg.attackRange,
         attackCooldown: 0, state: 'patrolling',
+        lastAttackCrit: false,   // 熊：上一擊是否暴擊
+        lastAttackLeg:  'left',  // 熊：攻擊時哪腳在地（'left'|'right'）
         wanderTarget: null, lastWanderTime: Date.now(),
         name: cfg.name, label: cfg.label,
         color: cfg.color, colorChasing: cfg.colorChasing,
@@ -535,8 +584,21 @@ function updateBoss() {
     if (boss.state === 'chasing') {
         if (dist <= boss.attackRange) {
             if (now - boss.attackCooldown >= 1500) {
-                applyDamageToPlayer(boss.damage, boss);
+                let dmg = boss.damage;
+                let isCrit = false;
+                // 黑熊有 25% 暴擊，傷害 ×1.5，觸發雙臂 X 攻擊動畫
+                if (boss.biome === 'forest' && Math.random() < 0.25) {
+                    dmg = Math.round(dmg * 1.5);
+                    isCrit = true;
+                }
+                applyDamageToPlayer(dmg, boss);
                 boss.attackCooldown = now;
+                if (boss.biome === 'forest') {
+                    boss.lastAttackCrit = isCrit;
+                    // 記錄哪腳踩地（追擊速度下的踏步相位）
+                    const atkPeriod = 450 / 1.9;
+                    boss.lastAttackLeg = Math.sin(now / atkPeriod) > 0 ? 'left' : 'right';
+                }
             }
         } else {
             const angle = Math.atan2(dy, dx);
