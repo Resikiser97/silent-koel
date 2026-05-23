@@ -475,37 +475,8 @@ function drawGame() {
     // 6. 繪製敵意生物
     drawHostileCreatures();
 
-    // 7. 繪製 Boss
-    if (gameState.boss && gameState.boss.hp > 0) {
-        const boss = gameState.boss;
-        const bs = worldToScreen(boss.x, boss.y);
-        if (bs.x >= -50 && bs.x <= VIEW_W + 50 && bs.y >= -50 && bs.y <= VIEW_H + 50) {
-            const flicker = Math.sin(Date.now() * 0.006) * 0.4 + 0.7;
-            ctx.save();
-            ctx.shadowColor = boss.glowColor || '#8B4513';
-            ctx.shadowBlur = 10 + flicker * 12;
-            ctx.globalAlpha = 0.85 + flicker * 0.15;
-            ctx.fillStyle = boss.state === 'chasing' ? (boss.colorChasing || '#2A0D00') : (boss.color || '#3B1E08');
-            ctx.beginPath();
-            ctx.arc(bs.x, bs.y, boss.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            ctx.save();
-            ctx.shadowColor = '#000000'; ctx.shadowBlur = 4;
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(boss.name || boss.label || 'Boss', bs.x, bs.y - boss.radius - 32);
-            ctx.restore();
-            const bBarW = 50, bBarH = 6;
-            const bBarX = bs.x - bBarW / 2;
-            const bBarY = bs.y - boss.radius - 24;
-            ctx.fillStyle = '#550000';
-            ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
-            ctx.fillStyle = '#FF4400';
-            ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
-        }
-    }
+    // 7. 繪製 Boss（純 Canvas 幾何形狀，見 systems/boss.js drawBoss）
+    drawBoss();
 
     // 7b. 繪製精英怪
     drawEliteCreature();
