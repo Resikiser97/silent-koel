@@ -2,6 +2,21 @@
 
 ---
 
+## v0.48.0 - 2026-05-23
+
+### 新增
+
+- **生物視覺差異化**（`systems/creatures.js`）：六種生態生物各有獨立幾何形狀，moose/beetle/croc 完整旋轉（跟隨 `_moveAngle`），camel/lynx 只左右翻轉（`ctx.scale(-1,1)`），hyena 永遠朝上不旋轉
+- **生物顏色固定**（`systems/creatures.js`）：新增 `CREATURE_COLORS` 常數，各物種使用固定辨識色（駝鹿深棕 `#8B4513`、甲蟲青綠 `#1ABC9C`、駱駝淺沙 `#E8C87A`、猞猁灰褐 `#A0826D`、鱷魚橄欖綠 `#6B8E23`、鬣狗深咖 `#8B6914`）
+- **特殊狀態光暈**（`systems/creatures.js`）：Alpha 金色、巨人化橙色、殺手化依 killerLevel 漸層深紅；光暈以世界座標繪製，不跟旋轉
+- **繪圖規格文件**（`docs/creature_shapes.md`）：記錄所有物種旋轉模式、顏色常數、形狀函式完整程式碼與設計備注
+
+### 修復
+
+- **追擊狀態下 `_moveAngle` 未更新**（`systems/creatures.js`）：aggressive 追擊、giant 追擊、biome flee、非 biome flee/跟隨果子、hostile 主追擊等 6 處移動邏輯均補上 `creature._moveAngle = angle`，確保旋轉方向即時正確
+
+---
+
 ## 功能新增 - 2026-05-23（不更新版本號）
 
 ### 新增

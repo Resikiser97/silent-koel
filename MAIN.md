@@ -109,6 +109,49 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
+## 生物視覺系統（v0.48.0）
+
+### 旋轉模式
+
+| speciesId | 旋轉模式 |
+|---|---|
+| moose  | 完整旋轉（跟 `_moveAngle`） |
+| beetle | 完整旋轉（跟 `_moveAngle`） |
+| croc   | 完整旋轉（跟 `_moveAngle`） |
+| camel  | 只左右翻轉（`ctx.scale(-1,1)`，cos 正朝右，cos 負朝左） |
+| lynx   | 只左右翻轉（同駱駝） |
+| hyena  | 完全不旋轉，永遠朝上 |
+
+- 主分派函式 `drawCreatureShape(ctx, creature, sx, sy)`：以 `ctx.translate(sx,sy)` 定位，各物種依旋轉模式套用 `ctx.rotate(angle)` 或 `ctx.scale(-1,1)`，再呼叫對應私有形狀函式
+- 所有形狀以 `(0,0)` 為中心，`angle=0` 時頭朝右（+x），尾朝左（-x）
+
+### 顏色常數 `CREATURE_COLORS`
+
+| 物種 | 顏色碼 | 說明 |
+|------|--------|------|
+| moose | `#8B4513` | 深棕 |
+| beetle | `#1ABC9C` | 青綠 |
+| camel | `#E8C87A` | 淺沙白 |
+| lynx | `#A0826D` | 灰褐 |
+| croc | `#6B8E23` | 橄欖綠 |
+| hyena | `#8B6914` | 深咖啡 |
+| giantized | `#FF8C00` | 巨人化光暈橙 |
+| alpha | `#FFD700` | Alpha 光暈金 |
+| killerBase | `#CC2200` | 殺手化光暈深紅 |
+
+### 特殊狀態光暈 `_drawCreatureGlow`
+
+- 在 `ctx.restore()` 之後以世界座標 `(sx, sy)` 繪製，不跟旋轉
+- Alpha → 金色光圈（radius+6）
+- 巨人化 → 橙色光圈（radius+4）
+- 殺手化 → `killerLevel` 越高越深紅（radius+2）
+
+### 繪圖規格文件
+
+- 詳見 `docs/creature_shapes.md`（完整程式碼 + 設計備注）
+
+---
+
 ## 生態生物系統（v0.36.0）
 
 ### 生物命名
