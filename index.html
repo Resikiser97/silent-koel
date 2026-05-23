@@ -163,6 +163,15 @@
             0%, 100% { box-shadow: 0 0 4px currentColor; }
             50% { box-shadow: 0 0 12px currentColor; }
         }
+        /* 變異器官脈動動畫 */
+        @keyframes mutationPulse {
+            0%   { transform: scale(1);    color: inherit; }
+            50%  { transform: scale(1.15); color: #FFD700; }
+            100% { transform: scale(1);    color: inherit; }
+        }
+        .mutation-pulse {
+            animation: mutationPulse 0.8s ease-in-out infinite;
+        }
         /* 排行榜皇冠 */
         .crown-gold, .crown-silver, .crown-bronze {
             display: inline-flex;
@@ -217,7 +226,7 @@
         <div id="minimap-container">
             <canvas id="minimapCanvas" width="300" height="300"></canvas>
             <div id="minimap-info">
-                <span id="minimap-biome">🌲 森林</span><span id="minimap-playtime" style="margin-left:6px;">⏱ 00:00</span>
+                <span id="minimap-biome">🌲 森林</span><span id="minimap-playtime" style="margin-left:6px;">⏱ 00:00</span><span id="minimap-difficulty" style="font-size:11px;color:#aaa;margin-left:6px;"></span>
                 <span style="display:flex;align-items:center;gap:4px;margin-left:auto;">
                     <canvas id="sunmoonCanvas" width="24" height="24"></canvas>
                     <span id="minimap-time">00:00</span>

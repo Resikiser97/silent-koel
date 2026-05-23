@@ -26,6 +26,10 @@ async function supabaseQuery(table, method, body = null, params = '') {
 }
 
 async function submitScore(data) {
+    // 確保趣味統計欄位存在（九）
+    if (data.giant_kills === undefined) data.giant_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.giantKills || 0) : 0;
+    if (data.killer_kills === undefined) data.killer_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.killerKills || 0) : 0;
+    if (data.killer_max_level === undefined) data.killer_max_level = (gameState && gameState.sessionStats) ? (gameState.sessionStats.killerMaxLevel || 0) : 0;
     return supabaseQuery('leaderboard', 'POST', data);
 }
 
@@ -50,6 +54,48 @@ async function fetchTop10(difficulty) {
     return supabaseQuery(
         'leaderboard', 'GET', null,
         '?select=name,score,play_time,is_victory,version_order' + diffFilter + '&order=version_order.desc,is_victory.desc,play_time.asc,boss_kill_time.asc&limit=10'
+    );
+}
+
+// ── 趣味排行榜（九）：各類特殊統計
+// 最速通關（勝利，boss_kill_time 最短）
+async function fetchFunSpeedVictory(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,boss_kill_time,play_time,version,created_at' + diffFilter + '&is_victory=eq.true&boss_kill_time=not.is.null&order=boss_kill_time.asc&limit=10'
+    );
+}
+// 最速死亡（失敗，play_time 最短）
+async function fetchFunSpeedDeath(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,play_time,score,version,created_at' + diffFilter + '&is_victory=eq.false&order=play_time.asc&limit=10'
+    );
+}
+// 巨人獵人（giant_kills 最多）
+async function fetchFunGiantKills(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,giant_kills,version,created_at' + diffFilter + '&giant_kills=gt.0&order=giant_kills.desc&limit=10'
+    );
+}
+// 殺手獵人（killer_kills 最多）
+async function fetchFunKillerKills(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,killer_kills,version,created_at' + diffFilter + '&killer_kills=gt.0&order=killer_kills.desc&limit=10'
+    );
+}
+// 殺手克星（killer_max_level 最高）
+async function fetchFunKillerMaxLevel(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,killer_max_level,version,created_at' + diffFilter + '&killer_max_level=gt.0&order=killer_max_level.desc&limit=10'
     );
 }
 

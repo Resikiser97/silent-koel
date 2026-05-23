@@ -2,6 +2,52 @@
 
 ---
 
+## v0.47.0 - 2026-05-23
+
+### 修正（Bug Fix）
+- **B1：再來一局保留難度** — `showMapSelect()` 選完難度後存入 `localStorage('lastDifficulty')`；`initializeGame()` 若 `currentMap` 為 null（頁面重整後）從 localStorage 恢復難度與地圖物件
+- **B8：技能樹防呆** — `buildSkillTreeOverlay()` 入口加入 `if (!gameState.player || !gameState.playerSkills) return;` 防止空白畫面
+
+### 調整
+- **攻速公式改為加法**（`systems/combat.js`、`systems/organs.js`、`systems/evolution.js`、`config/organs.js`）：
+  - 新公式 `interval = 1000ms / (1 + totalBonus)`；玩家新增 `attackSpeedBonus: 0` 欄位累積加法加成
+  - `boxingGloves` effects 改為 `attackSpeedBonus: 0.10/0.15/0.15`（原為乘法 `attackSpeedMult`）
+  - 肉食性進化 `attackSpeedBonus` 累積至 `p.attackSpeedBonus`（原為 `p.attackSpeed *=`）
+- **怪物命中判定擴大**（`systems/combat.js`）：攻擊命中條件改為 `distance < attackRange + radius * 0.5`，大型敵人更易被擊中
+- **精英獎勵調整**（`systems/organs.js`）：夜晚技能點 `[1, 1, 2]`（原為 `Math.round((phase+1)/2)`，即 1/2/3）
+- **Boss 獎勵調整**（`systems/boss.js`）：擊殺 Boss 獎勵 +3 技能點（原 +5）
+- **生態 Emoji 前綴**（`config/creatures.js`、`map/normalmap.js`、`map/easymap.js`、`lang/zh-TW.js`、`lang/en.js`）：
+  - 所有生物名稱加入 🌿（森林）🌊（海洋）🏜️（沙漠）前綴
+  - Boss 名稱同步更新，毒傷免疫判斷改為 `c.name.includes('蠍王')`
+
+### 新增
+- **普通 Boss 平衡改版**（`systems/boss.js`、`map/normalmap.js`）：
+  - 普通難度 Boss 速度翻倍（黑熊 9.0、大白鯊 11.7、蠍王 10.8）
+  - 通用回血：每 3 秒回復最大HP 2%（原 10 秒 10%）
+  - 黑熊：<40% HP 觸發狂暴（速度×1.5、傷害×1.3、發光提示）
+  - 大白鯊：每 4 秒對 500px 內玩家發動衝刺攻擊（0.6 秒警告 → 0.8 秒衝刺，造成 1.5 倍傷害）
+  - 沙漠蠍王：每 5 秒在 300px 內釋放毒霧（4 秒每秒毒傷）；<40% HP 觸發沙暴（玩家移速 -40% 持續 6 秒）
+  - 簡單模式 Boss 新增 radius/attackRange 欄位
+- **變異器官 UI 改版**（`systems/hud.js`、`index.html`）：
+  - 文字改為「變異器官 ⚗️ Lv.X」
+  - 有可升級點數時 `#mutation-icon-row` 套用 `mutation-pulse` CSS 動畫（0.8s 彈跳）
+- **小地圖難度標籤**（`systems/hud.js`、`index.html`）：小地圖下方新增 `#minimap-difficulty` 顯示 `⚔️ 普通`/`🌿 簡單`
+- **趣味排行榜**（`systems/leaderboard.js`、`config/supabase.js`、`systems/gameState.js`、`systems/combat.js`）：
+  - 新增 5 種趣味統計：🏃最速通關 / 💀最速死亡 / 👾巨人獵人 / 🔪殺手獵人 / ⭐殺手克星
+  - 全屏排行榜新增「🎲 種類」切換按鈕
+  - 新增 Supabase 查詢函式：`fetchFunSpeedVictory/Death/GiantKills/KillerKills/KillerMaxLevel`
+  - `sessionStats.giantKills/killerKills/killerMaxLevel` 即時追蹤；`submitScore()` 自動帶入
+- **Alpha 小地圖標記**（`systems/hud.js`）：Alpha 怪在小地圖上顯示金色閃爍圓點 + α 文字
+- **隊伍滿員擴張**（`systems/creatures.js`）：巨人化隊伍達 8 人時，果子搜索半徑從 800px 擴展至 2000px
+- **變異商店技能點兌換**（`systems/mutation.js`、`lang/zh-TW.js`、`lang/en.js`）：
+  - 變異面板下方新增「100 技能點 → 10 變異點」兌換按鈕
+  - 新增語言 key：`mutationExchange`、`mutationExchangeHint`
+- **公告紅點**（`systems/ui.js`）：首頁公告按鈕有未讀版本時顯示紅點；開啟公告後消失
+- **沙暴玩家減速**（`systems/player.js`）：蠍王沙暴期間玩家移速 -40%（`p._inSandstorm` 旗標）
+- **語言新增**（`lang/zh-TW.js`、`lang/en.js`）：`venomFloat`（毒霧浮動文字）
+
+---
+
 ## v0.46.0 - 2026-05-22
 
 ### 新增

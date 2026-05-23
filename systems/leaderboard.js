@@ -40,8 +40,13 @@ function showLeaderboard() {
     const lbDiffBtn = document.createElement('button');
     lbDiffBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:1px solid #666;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:13px;pointer-events:all;';
     lbDiffBtn.textContent = t(_diffKey(_lbDifficulty));
+    // 趣味排行榜切換按鈕（九）
+    const funLbBtn = document.createElement('button');
+    funLbBtn.style.cssText = 'background:rgba(255,180,0,0.15);border:1px solid #aa8822;color:#FFD700;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:13px;pointer-events:all;margin-left:6px;';
+    funLbBtn.textContent = '🎲 種類';
     titleBar.appendChild(titleEl);
     titleBar.appendChild(lbDiffBtn);
+    titleBar.appendChild(funLbBtn);
     overlay.appendChild(titleBar);
 
     const tableWrap = document.createElement('div');
@@ -155,6 +160,12 @@ function showLeaderboard() {
         _top10Difficulty = _lbDifficulty;
         lbDiffBtn.textContent = t(_diffKey(_lbDifficulty));
         loadAllRows();
+    };
+
+    // 趣味排行榜按鈕（九）
+    funLbBtn.onclick = () => {
+        closeLb();
+        showFunLeaderboard(_lbDifficulty);
     };
 
     prevBtn.onclick = () => { if (currentPage > 1) loadPage(currentPage - 1); };
@@ -283,4 +294,123 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
 
     document.getElementById('game-container').appendChild(popup);
     setTimeout(() => input.focus(), 50);
+}
+
+// =============================================================
+// 趣味排行榜（九）
+// =============================================================
+function showFunLeaderboard(difficulty) {
+    applyDeviceMode();
+    difficulty = difficulty || 'easy';
+    const overlay = document.createElement('div');
+    overlay.id = 'fun-lb-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;align-items:center;z-index:500;color:white;font-family:Arial,sans-serif;overflow:hidden;';
+
+    // 標題
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = 'display:flex;align-items:center;gap:12px;margin:20px 0 12px;flex-shrink:0;';
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-size:20px;font-weight:bold;color:#FFD700;';
+    titleEl.textContent = '🎲 趣味排行榜';
+    titleBar.appendChild(titleEl);
+    overlay.appendChild(titleBar);
+
+    // 類別按鈕列
+    const categories = [
+        { key: 'speed',   label: '🏃 最速通關', fetchFn: () => fetchFunSpeedVictory(difficulty), colName: 'boss_kill_time', colLabel: '擊殺Boss(秒)', format: v => String(v) + 's' },
+        { key: 'death',   label: '💀 最速死亡', fetchFn: () => fetchFunSpeedDeath(difficulty),  colName: 'play_time',      colLabel: '遊玩時間(秒)', format: v => String(v) + 's' },
+        { key: 'giant',   label: '👾 巨人獵人', fetchFn: () => fetchFunGiantKills(difficulty),  colName: 'giant_kills',    colLabel: '巨人擊殺', format: v => String(v) },
+        { key: 'killer',  label: '🔪 殺手獵人', fetchFn: () => fetchFunKillerKills(difficulty), colName: 'killer_kills',   colLabel: '殺手擊殺', format: v => String(v) },
+        { key: 'kmaxlv',  label: '⭐ 殺手克星', fetchFn: () => fetchFunKillerMaxLevel(difficulty), colName: 'killer_max_level', colLabel: '最高殺手Lv', format: v => 'Lv.' + v },
+    ];
+    let currentCat = categories[0];
+
+    const catRow = document.createElement('div');
+    catRow.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;flex-shrink:0;';
+    const catBtns = {};
+    categories.forEach(cat => {
+        const b = document.createElement('button');
+        b.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid #555;color:white;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:12px;pointer-events:all;';
+        b.textContent = cat.label;
+        b.onclick = () => {
+            currentCat = cat;
+            Object.values(catBtns).forEach(x => { x.style.background = 'rgba(255,255,255,0.08)'; x.style.borderColor = '#555'; });
+            b.style.background = 'rgba(255,215,0,0.18)'; b.style.borderColor = '#FFD700';
+            loadFunRows();
+        };
+        catRow.appendChild(b);
+        catBtns[cat.key] = b;
+    });
+    overlay.appendChild(catRow);
+
+    const tableWrap = document.createElement('div');
+    tableWrap.style.cssText = 'width:90%;max-width:600px;overflow-y:auto;flex:1;';
+    overlay.appendChild(tableWrap);
+    const table = document.createElement('table');
+    table.style.cssText = 'width:100%;border-collapse:collapse;font-size:13px;';
+    tableWrap.appendChild(table);
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['排名','名字','數值','版本','日期'].forEach(h => {
+        const th = document.createElement('th');
+        th.style.cssText = 'padding:6px 8px;border-bottom:1px solid #444;color:#FFD700;text-align:left;position:sticky;top:0;background:#111;';
+        th.textContent = h;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    tbody.id = 'fun-lb-tbody';
+    table.appendChild(tbody);
+
+    function loadFunRows() {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">讀取中...</td></tr>';
+        // update value column header
+        headerRow.cells[2].textContent = currentCat.colLabel;
+        currentCat.fetchFn().then(rows => {
+            tbody.innerHTML = '';
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">暫無記錄</td></tr>';
+                return;
+            }
+            rows.forEach((row, i) => {
+                const rank = i + 1;
+                const tr = document.createElement('tr');
+                if (rank <= 3) tr.style.background = ['rgba(255,215,0,0.12)', 'rgba(192,192,192,0.12)', 'rgba(205,127,50,0.12)'][rank - 1];
+                const dateStr = row.created_at ? row.created_at.slice(0, 10) : '—';
+                const nameStr = row.name ? (row.name.length > 16 ? row.name.slice(0, 16) + '…' : row.name) : '—';
+                const valStr = currentCat.format(row[currentCat.colName]);
+                [getRankIcon(rank), nameStr, valStr, row.version || '—', dateStr].forEach(v => {
+                    const td = document.createElement('td');
+                    td.style.cssText = 'padding:6px 8px;border-bottom:1px solid #222;';
+                    td.innerHTML = String(v);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }).catch(() => {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#f66;">載入失敗</td></tr>';
+        });
+    }
+
+    // 關閉+返回按鈕
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:12px;padding:12px;flex-shrink:0;';
+    const backBtn = document.createElement('button');
+    backBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:1px solid #666;color:white;padding:6px 20px;border-radius:4px;cursor:pointer;font-size:13px;';
+    backBtn.textContent = '← 一般排行';
+    backBtn.onclick = () => { overlay.remove(); showLeaderboard(); };
+    const closeBtn2 = document.createElement('button');
+    closeBtn2.style.cssText = 'background:rgba(180,0,0,0.4);border:1px solid #aa4444;color:white;padding:6px 20px;border-radius:4px;cursor:pointer;font-size:13px;';
+    closeBtn2.textContent = t('close') || '關閉';
+    closeBtn2.onclick = () => overlay.remove();
+    btnRow.appendChild(backBtn);
+    btnRow.appendChild(closeBtn2);
+    overlay.appendChild(btnRow);
+
+    document.getElementById('game-container').appendChild(overlay);
+
+    // 預設選中第一類
+    catBtns[categories[0].key].click();
+    console.log('[v0.47.0] 九：趣味排行榜已開啟');
 }

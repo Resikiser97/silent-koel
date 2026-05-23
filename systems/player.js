@@ -31,6 +31,12 @@ function updatePlayerMovement() {
         dy *= (1 - slow);
     }
 
+    // 蠍王沙暴減速 -40%（六）
+    if (p._inSandstorm) {
+        dx *= 0.6;
+        dy *= 0.6;
+    }
+
     if (dx === 0 && dy === 0) return;
     p.x = ((p.x + dx) % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH;
     p.y = ((p.y + dy) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT;

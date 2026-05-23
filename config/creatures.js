@@ -29,34 +29,34 @@ const ELITE_CONFIG = {
 // =============================================================
 const BIOME_CREATURES = {
     forest: {
-        herbivore: { id: 'moose',  name: '駝鹿',     nameEn: 'Moose'         },
-        carnivore: { id: 'lynx',   name: '猞猁',     nameEn: 'Lynx'          },
+        herbivore: { id: 'moose',  name: '🌿 駝鹿',     nameEn: '🌿 Moose'         },
+        carnivore: { id: 'lynx',   name: '🌿 猞猁',     nameEn: '🌿 Lynx'          },
     },
     ocean: {
-        herbivore: { id: 'beetle', name: '巨型甲虫', nameEn: 'Giant Beetle'  },
-        carnivore: { id: 'croc',   name: '鱷魚',     nameEn: 'Crocodile'     },
+        herbivore: { id: 'beetle', name: '🌊 巨型甲虫', nameEn: '🌊 Giant Beetle'  },
+        carnivore: { id: 'croc',   name: '🌊 鱷魚',     nameEn: '🌊 Crocodile'     },
     },
     desert: {
-        herbivore: { id: 'camel',  name: '駱駝',     nameEn: 'Camel'         },
-        carnivore: { id: 'hyena',  name: '鬣狗',     nameEn: 'Hyena'         },
+        herbivore: { id: 'camel',  name: '🏜️ 駱駝',    nameEn: '🏜️ Camel'         },
+        carnivore: { id: 'hyena',  name: '🏜️ 鬣狗',    nameEn: '🏜️ Hyena'         },
     },
 };
 
 const BOSS_CONFIG = {
     forest: {
-        name: '黑熊',    label: '⚠️黑熊',
+        name: '🌿 黑熊',    label: '⚠️🌿黑熊',
         radius: 25, hp: 500,  speed: 3.0, damage: 15, aggroRange: 99999, attackRange: 30,
         color: '#3B1E08', colorChasing: '#2A0D00', glowColor: '#8B4513',
         spawnX: null, spawnY: null
     },
     ocean: {
-        name: '大白鯊',  label: '🦈大白鯊',
+        name: '🌊 大白鯊',  label: '🦈🌊大白鯊',
         radius: 30, hp: 600,  speed: 3.9, damage: 18, aggroRange: 99999, attackRange: 35,
         color: '#003388', colorChasing: '#001A44', glowColor: '#1a3a5c',
         spawnX: 6500, spawnY: 6500
     },
     desert: {
-        name: '沙漠蠍王', label: '🦂蠍王',
+        name: '🏜️ 沙漠蠍王', label: '🦂🏜️蠍王',
         radius: 28, hp: 550,  speed: 3.6, damage: 20, aggroRange: 99999, attackRange: 32,
         color: '#8B7355', colorChasing: '#5C4A2A', glowColor: '#8B6914',
         spawnX: 2000, spawnY: 2000

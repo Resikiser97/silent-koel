@@ -217,6 +217,19 @@ function _drawMinimapEntities(mctx) {
         mctx.lineWidth = 1;
     }
 
+    // Alpha 怪（金色閃爍 + α 文字）
+    if (gameState.alphaCreature && gameState.alphaCreature.hp > 0 && isRevealed(gameState.alphaCreature.x, gameState.alphaCreature.y)) {
+        const m = toMM(gameState.alphaCreature.x, gameState.alphaCreature.y);
+        const pulse = Math.sin(Date.now() / 300) > 0;
+        mctx.fillStyle = pulse ? '#FFD700' : '#FFA500';
+        mctx.beginPath(); mctx.arc(m.x, m.y, 4, 0, Math.PI * 2); mctx.fill();
+        mctx.fillStyle = '#FFD700';
+        mctx.font = 'bold 8px Arial';
+        mctx.textBaseline = 'alphabetic';
+        mctx.fillText('α', m.x + 3, m.y - 3);
+        mctx.font = '10px Arial';
+    }
+
     // 玩家（白/綠交替閃爍，帶黑色描邊）
     const pm   = toMM(gameState.player.x, gameState.player.y);
     const blink = Math.floor(Date.now() / 500) % 2 === 0;
@@ -927,13 +940,31 @@ function updateUI() {
         if (mutLvEl) {
             const totalLv = (mutData.levels.fang || 0) + (mutData.levels.tail || 0) +
                             (mutData.levels.wing || 0) + (mutData.levels.eye  || 0);
-            mutLvEl.textContent = 'Lv.' + totalLv;
+            mutLvEl.textContent = '變異器官 ⚗️ Lv.' + totalLv;
         }
         const mutDotEl = document.getElementById('mutation-red-dot');
         if (mutDotEl) {
             mutDotEl.style.display = mutData.hasNewPoints ? 'inline-block' : 'none';
         }
+        // 可升級時脈動動畫
+        const mutRowEl = document.getElementById('mutation-icon-row');
+        if (mutRowEl) {
+            if (mutData.hasNewPoints) {
+                mutRowEl.classList.add('mutation-pulse');
+            } else {
+                mutRowEl.classList.remove('mutation-pulse');
+            }
+        }
     }
+
+    // 小地圖難度標籤（八）
+    const diffEl = document.getElementById('minimap-difficulty');
+    if (diffEl) {
+        diffEl.textContent = gameState.currentMap
+            ? (gameState.currentMap.name === '普通' ? '⚔️ 普通' : '🌿 簡單')
+            : '🌿 簡單';
+    }
+    console.log && false; // [v0.47.0] 七+八+十: HUD 更新完成
 }
 
 function drawTreasures() {

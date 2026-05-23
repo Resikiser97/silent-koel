@@ -125,6 +125,9 @@ LANG['zh-TW'] = {
         bleedFloat: '血 -{n}',
         poisonFloat: '毒 -{n}',
         boneMaterialFloat: '+{n} 白骨素',
+        venomFloat: '☠ 毒霧',
+        mutationExchange: '100 技能點 → 10 變異點',
+        mutationExchangeHint: '目前技能點：{n}',
         // ── 圖鑑
         compendiumTitle:      '📖 圖鑑',
         compendiumTabGuide:   '遊戲說明',
@@ -387,8 +390,8 @@ LANG['zh-TW'] = {
     },
     elite: ['★精英', '★★精英', '★★★精英'],
     boss: {
-        forest: { name: '黑熊',     label: '⚠️黑熊' },
-        ocean:  { name: '大白鯊',   label: '🦈大白鯊' },
-        desert: { name: '沙漠蠍王', label: '🦂蠍王' }
+        forest: { name: '🌿 黑熊',     label: '⚠️🌿黑熊' },
+        ocean:  { name: '🌊 大白鯊',   label: '🦈🌊大白鯊' },
+        desert: { name: '🏜️ 沙漠蠍王', label: '🦂🏜️蠍王' }
     }
 };

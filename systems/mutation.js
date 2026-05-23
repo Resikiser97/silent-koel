@@ -317,10 +317,42 @@ function showMutationPanel() {
         panel.appendChild(row);
     });
 
+    // 技能點兌換變異點（十一）
+    const exchangeHint = document.createElement('div');
+    exchangeHint.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-top:12px;';
+    exchangeHint.textContent = t('mutationExchangeHint', { n: gameState.skillPoints || 0 });
+    panel.appendChild(exchangeHint);
+
+    const exchangeBtn = document.createElement('button');
+    exchangeBtn.style.cssText = [
+        'display:block', 'width:100%', 'margin-top:6px',
+        'font-size:13px', 'padding:7px', 'cursor:pointer',
+        'border:1px solid #8a6a2a', 'background:rgba(180,120,20,0.2)',
+        'color:#FFD700', 'border-radius:6px'
+    ].join(';');
+    exchangeBtn.textContent = t('mutationExchange') || '100 技能點 → 10 變異點';
+    const canExchange = (gameState.skillPoints || 0) >= 100;
+    exchangeBtn.disabled = !canExchange;
+    exchangeBtn.style.opacity = canExchange ? '1' : '0.5';
+    if (canExchange) {
+        exchangeBtn.onclick = () => {
+            if ((gameState.skillPoints || 0) < 100) return;
+            gameState.skillPoints -= 100;
+            gameState.mutationData.points += 10;
+            gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + 10;
+            localStorage.setItem('skillPoints', String(gameState.skillPoints));
+            saveMutationData();
+            overlay.remove();
+            gameState.mutationPanelOpen = false;
+            showMutationPanel();
+        };
+    }
+    panel.appendChild(exchangeBtn);
+
     // 關閉按鈕
     const closeBtn = document.createElement('button');
     closeBtn.style.cssText = [
-        'display:block', 'width:100%', 'margin-top:16px',
+        'display:block', 'width:100%', 'margin-top:10px',
         'font-size:14px', 'padding:8px', 'cursor:pointer',
         'border:1px solid #555', 'background:rgba(255,255,255,0.08)',
         'color:white', 'border-radius:6px'
@@ -334,4 +366,5 @@ function showMutationPanel() {
 
     overlay.appendChild(panel);
     document.getElementById('game-container').appendChild(overlay);
+    console.log('[v0.47.0] 十一：變異商店兌換按鈕已加入');
 }

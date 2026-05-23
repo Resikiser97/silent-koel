@@ -121,6 +121,9 @@ LANG['en'] = {
         bleedFloat: 'Bleed -{n}',
         poisonFloat: 'Poison -{n}',
         boneMaterialFloat: '+{n} Bone Material',
+        venomFloat: '☠ Venom Cloud',
+        mutationExchange: '100 Skill Pts → 10 Mutation Pts',
+        mutationExchangeHint: 'Current skill points: {n}',
         // ── Compendium
         compendiumTitle:      '📖 Compendium',
         compendiumTabGuide:   'Guide',
@@ -378,8 +381,8 @@ LANG['en'] = {
     },
     elite: ['★Elite', '★★Elite', '★★★Elite'],
     boss: {
-        forest: { name: 'Black Bear',           label: '⚠️ Black Bear' },
-        ocean:  { name: 'Great White Shark',    label: '🦈 Great White' },
-        desert: { name: 'Desert Scorpion King', label: '🦂 Scorpion King' }
+        forest: { name: '🌿 Black Bear',           label: '⚠️🌿 Black Bear' },
+        ocean:  { name: '🌊 Great White Shark',    label: '🦈🌊 Great White' },
+        desert: { name: '🏜️ Desert Scorpion King', label: '🦂🏜️ Scorpion King' }
     }
 };

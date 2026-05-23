@@ -1133,6 +1133,7 @@ function showMapSelect() {
         const selDiff = diffs.find(d => d.id === selectedDiff);
         gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         gameState.lastDifficulty = selectedDiff;
+        localStorage.setItem('lastDifficulty', selectedDiff); // B1: 儲存難度供重整頁面後恢復
         overlay.remove();
         let hasOrgans = false;
         try {
@@ -1331,6 +1332,17 @@ function showStartScreen() {
         z-index: 201;
     `;
     patchBtn.innerHTML = '<div style="font-size:28px;line-height:1;">📋</div><div style="font-size:11px;color:#FFF5DC;letter-spacing:1px;margin-top:3px;">更新</div>';
+    // B12: 未讀版本時顯示紅點
+    if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
+        const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+        if (lastSeen !== PATCH_NOTES[0].version) {
+            const redDot = document.createElement('div');
+            redDot.id = 'patch-red-dot';
+            redDot.style.cssText = 'position:absolute;top:6px;right:8px;width:10px;height:10px;background:#ff3333;border-radius:50%;border:1.5px solid #fff;';
+            patchBtn.style.position = 'absolute'; // already set
+            patchBtn.appendChild(redDot);
+        }
+    }
     patchBtn.onmouseenter = () => {
         patchBtn.style.background = 'rgba(255, 220, 130, 0.28)';
         patchBtn.style.transform = 'scale(1.08)';
@@ -1362,6 +1374,9 @@ function showPatchNotes() {
     if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
         localStorage.setItem('lastSeenPatchVersion', PATCH_NOTES[0].version);
     }
+    // B12: 移除紅點
+    const _rd = document.getElementById('patch-red-dot');
+    if (_rd) _rd.remove();
 
     const overlay = document.createElement('div');
     overlay.id = 'patch-notes-overlay';

@@ -113,7 +113,7 @@ function initializeGame() {
     Object.assign(gameState.player, {
         x: 4000, y: 4000, radius: 10, speed: 4.5, color: 'black',
         organs: [], hiddenOrgans: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5, rerollsRemaining: 0,
-        attack: 0, attackSpeed: 1.0, attackRange: 50,
+        attack: 0, attackSpeed: 1.0, attackSpeedBonus: 0, attackRange: 50,
         critChance: 0, critMultiplier: 1.5,
         damageReduction: 0, thornDamage: 0, thornPlayerAtkReflect: false,
         brainActive: false, brainTimer: 0, brainInterval: 5000, brainRange: 100, brainDmg: 8,
@@ -127,6 +127,17 @@ function initializeGame() {
         evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' }
     });
     gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };
+    gameState.sessionStats = { giantKills: 0, killerKills: 0, killerMaxLevel: 0 };
+
+    // B1: 再來一局保留難度 — 若 currentMap 為 null（頁面重整後），從 localStorage 恢復
+    if (!gameState.currentMap) {
+        const savedDiff = localStorage.getItem('lastDifficulty') || 'easy';
+        gameState.lastDifficulty = savedDiff;
+        gameState.currentMap = (savedDiff === 'normal' && typeof NORMAL_MAP !== 'undefined')
+            ? NORMAL_MAP
+            : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
+        console.log('[v0.47.0 B1] currentMap restored:', gameState.currentMap ? gameState.currentMap.name : 'null');
+    }
 
     gameState.mutationPanelOpen    = false;
     gameState.tutorialOpen         = false;
@@ -137,6 +148,7 @@ function initializeGame() {
 
     gameState.gameStarted = true;
     console.log("--- 遊戲初始化開始 ---");
+    console.log('[v0.47.0] B1+B8+二+三+四+五+六+七+八+九+十+十一+十二 全部套用');
 
     // 1. 設定地圖種子並生成 Noise 地形
     gameState.mapSeed = Math.random() * 65536;

@@ -531,10 +531,13 @@ function updateNeutralCreatures() {
                 if (!creature._fruitTarget || !gameState.fruits.includes(creature._fruitTarget) ||
                     now >= (creature._fruitTargetTimer || 0)) {
                     creature._fruitTargetTimer = now + 3000 + Math.random() * 2000;
+                    // 隊伍滿員（8人）時搜索半徑擴展至 2000px，否則 800px
+                    const giantGroupSize = 1 + (creature.packMembers ? creature.packMembers.filter(m => m.hp > 0).length : 0);
+                    const fruitSearchRadius = giantGroupSize >= 8 ? 2000 : 800;
                     let gfClosest = null, gfDist = Infinity;
                     for (const f of gameState.fruits) {
                         const d = wrappedDistance(creature.x, creature.y, f.x, f.y);
-                        if (d < gfDist) { gfDist = d; gfClosest = f; }
+                        if (d < fruitSearchRadius && d < gfDist) { gfDist = d; gfClosest = f; }
                     }
                     creature._fruitTarget = gfClosest;
                 }

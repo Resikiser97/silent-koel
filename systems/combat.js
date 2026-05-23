@@ -86,6 +86,9 @@ function handleGiantKill(c) {
         addMutationPoints(extra);
     }
 
+    // 記錄巨人化擊殺數
+    if (gameState.sessionStats) gameState.sessionStats.giantKills = (gameState.sessionStats.giantKills || 0) + 1;
+
     // 清理隊伍與UI追蹤狀態
     if (c.isAlpha && gameState.alphaCreature === c) gameState.alphaCreature = null;
     if (c.packMembers) {
@@ -119,6 +122,14 @@ function handleKillerKill(creature) {
         }
     }
 
+    // 記錄殺手化擊殺數與最高等級
+    if (gameState.sessionStats) {
+        gameState.sessionStats.killerKills = (gameState.sessionStats.killerKills || 0) + 1;
+        if ((creature.killerLevel || 0) > (gameState.sessionStats.killerMaxLevel || 0)) {
+            gameState.sessionStats.killerMaxLevel = creature.killerLevel || 0;
+        }
+    }
+
     // 殺手本身屍體
     gameState.corpses.push({ x: creature.x, y: creature.y, radius: creature.radius, spawnTime: Date.now() });
 }
@@ -139,8 +150,10 @@ function playerAttack() {
     const now = Date.now();
     // 鱷魚死亡翻滾硬控：無法攻擊
     if (p._stunUntil && now < p._stunUntil) return;
-    const cooldownMs = Math.round(1000 / p.attackSpeed);
-    if (now - p.attackTimer < cooldownMs) return;
+    // 攻速：加法公式 interval = 1000ms / (1 + totalBonus)
+    const totalBonus = (p.attackSpeedBonus || 0);
+    const attackInterval = Math.round(1000 / (1 + totalBonus));
+    if (now - p.attackTimer < attackInterval) return;
     p.attackTimer = now;
 
     const hasPoison = getOrganLevel('poisonStinger') > 0 ||
@@ -167,7 +180,8 @@ function playerAttack() {
 
     for (const { c, hostile, isBoss, isElite } of targets) {
         if (c.hp <= 0) continue;
-        if (wrappedDistance(p.x, p.y, c.x, c.y) > p.attackRange) continue;
+        // Hitbox：怪物半徑計入一半，讓大型敵人更容易被命中
+        if (wrappedDistance(p.x, p.y, c.x, c.y) >= p.attackRange + (c.radius || 0) * 0.5) continue;
 
         let dmg = p.attack;
         let isCrit = false;
@@ -281,7 +295,7 @@ function updateStatusEffects() {
             let poisonResist = 0;
             if (isElite) poisonResist = 0.2;
             if (isBoss)  poisonResist = 0.3;
-            if (isBoss && c.name === '沙漠蠍王') poisonResist = 0.5;
+            if (isBoss && c.name && c.name.includes('蠍王')) poisonResist = 0.5;
             const actualPoison = Math.round(poisonAmt * (1 - poisonResist));
             const hpBefore = c.hp;
             c.hp -= actualPoison;

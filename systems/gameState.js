@@ -18,7 +18,7 @@ const gameState = {
     player: {
         x: 4000, y: 4000, radius: 10, speed: 4.5, color: 'black',
         organs: [], hiddenOrgans: [], organSlots: 5, organSlotsUsed: 0, nextEvolutionAt: 5, rerollsRemaining: 0,
-        attack: 0, attackSpeed: 1.0, attackRange: 50,
+        attack: 0, attackSpeed: 1.0, attackSpeedBonus: 0, attackRange: 50,
         critChance: 0, critMultiplier: 1.5,
         damageReduction: 0, thornDamage: 0, thornPlayerAtkReflect: false,
         brainActive: false, brainTimer: 0, brainInterval: 5000, brainRange: 100, brainDmg: 8,
@@ -80,6 +80,7 @@ const gameState = {
     boss: null,
     bossSpawned: false,
     bossBellPlayed: false,
+    sessionStats: { giantKills: 0, killerKills: 0, killerMaxLevel: 0 },
     sessionSkillPoints: { elite: 0, boss: 0 },
     eliteCreature: null,
     eliteJustKilled: false,

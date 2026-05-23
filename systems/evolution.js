@@ -40,12 +40,12 @@ function applyEvolutionLevelEffect(type, newLevel) {
             const prevData = EVOLUTION_PATHS.carnivore.levels[prevLv - 1];
             p.attack -= prevData.attackAdd;
             if (prevData.attackSpeedBonus) {
-                p.attackSpeed /= (1 + prevData.attackSpeedBonus);
+                p.attackSpeedBonus = (p.attackSpeedBonus || 0) - prevData.attackSpeedBonus;
             }
         }
         p.attack += lvData.attackAdd;
         if (lvData.attackSpeedBonus) {
-            p.attackSpeed *= (1 + lvData.attackSpeedBonus);
+            p.attackSpeedBonus = (p.attackSpeedBonus || 0) + lvData.attackSpeedBonus;
         }
     } else if (type === 'omnivore') {
         p.speed += lvData.speedBonus;
@@ -83,7 +83,7 @@ function applyEvolutionEffects() {
     if (ev.carnivore > 0) {
         const lv = EVOLUTION_PATHS.carnivore.levels[ev.carnivore - 1];
         p.attack += lv.attackAdd;
-        if (lv.attackSpeedBonus) p.attackSpeed *= (1 + lv.attackSpeedBonus);
+        if (lv.attackSpeedBonus) p.attackSpeedBonus = (p.attackSpeedBonus || 0) + lv.attackSpeedBonus;
     }
     for (let i = 0; i < ev.omnivore; i++) {
         p.speed += EVOLUTION_PATHS.omnivore.levels[i].speedBonus;
@@ -262,6 +262,8 @@ function showSkillTree(cause) {
 }
 
 function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
+    // B8 防呆：玩家或技能資料尚未初始化時直接返回
+    if (!gameState.player || !gameState.playerSkills) return;
     const effectiveMode = (mode != null && mode !== '') ? mode
         : (fromHome ? 'fromHome' : (startAfter ? 'forceStart' : _skillTreeMode));
     _skillTreeMode = effectiveMode;

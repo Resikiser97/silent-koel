@@ -80,7 +80,7 @@ function applyOrganEffects(organ) {
     const fx = lv.effects;
 
     if (fx.attackAdd)              p.attack += fx.attackAdd;
-    if (fx.attackSpeedMult)        p.attackSpeed *= fx.attackSpeedMult;
+    if (fx.attackSpeedBonus)       p.attackSpeedBonus = (p.attackSpeedBonus || 0) + fx.attackSpeedBonus;
     if (fx.speedAdd)               p.speed = Math.max(0.3, p.speed + fx.speedAdd);
     if (fx.damageReductionAdd)     p.damageReduction = Math.min(0.9, p.damageReduction + fx.damageReductionAdd);
     if (fx.hpMaxAdd) {
@@ -496,10 +496,11 @@ function handleEliteKill(elite) {
     }
     addXP(xp);
     showXPPopup(gameState.player.x, gameState.player.y, xp);
-    const eliteNightNum = Math.round((gameState.currentPhaseIndex + 1) / 2);
-    gameState.skillPoints += eliteNightNum;
+    const nightIndex = Math.floor(gameState.currentPhaseIndex / 2);
+    const eliteSkillPts = [1, 1, 2][nightIndex] || 1;
+    gameState.skillPoints += eliteSkillPts;
     if (!gameState.sessionSkillPoints) gameState.sessionSkillPoints = { elite: 0, boss: 0 };
-    gameState.sessionSkillPoints.elite += eliteNightNum;
+    gameState.sessionSkillPoints.elite += eliteSkillPts;
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
     gameState.timeRemaining = nextDayTime;

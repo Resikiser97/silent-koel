@@ -20,11 +20,11 @@ const ORGANS = {
         id: 'boxingGloves', name: '搏擊拳套', type: 'attack', maxLevel: 3,
         levels: [
             { desc: '攻擊+5，攻速+10%',
-              effects: { attackAdd: 5, attackSpeedMult: 1.10 } },
+              effects: { attackAdd: 5, attackSpeedBonus: 0.10 } },
             { desc: '攻擊+2，攻速+15%',
-              effects: { attackAdd: 2, attackSpeedMult: 1.15 } },
+              effects: { attackAdd: 2, attackSpeedBonus: 0.15 } },
             { desc: '攻擊+3，攻速+15%',
-              effects: { attackAdd: 3, attackSpeedMult: 1.15 } }
+              effects: { attackAdd: 3, attackSpeedBonus: 0.15 } }
         ]
     },
     poisonStinger: {

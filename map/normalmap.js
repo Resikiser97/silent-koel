@@ -34,9 +34,9 @@ const NORMAL_MAP = {
     ],
 
     bosses: [
-        { biome: 'forest', name: '黑熊',     hp: 1500, speed: 4.5,  damage: 30, radius: 33, attackRange: 40 },
-        { biome: 'ocean',  name: '大白鯊',   hp: 1800, speed: 5.85, damage: 36, radius: 40, attackRange: 47 },
-        { biome: 'desert', name: '沙漠蠍王', hp: 1650, speed: 5.4,  damage: 40, radius: 37, attackRange: 43 },
+        { biome: 'forest', name: '🌿 黑熊',     hp: 1500, speed: 9.0,  damage: 30, radius: 33, attackRange: 40 },
+        { biome: 'ocean',  name: '🌊 大白鯊',   hp: 1800, speed: 11.7, damage: 36, radius: 40, attackRange: 47 },
+        { biome: 'desert', name: '🏜️ 沙漠蠍王', hp: 1650, speed: 10.8, damage: 40, radius: 37, attackRange: 43 },
     ],
 
     // 普通地圖專屬系統開關
