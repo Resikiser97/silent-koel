@@ -66,7 +66,7 @@ systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayT
                           updateDayNightCycle, showGameOver
 systems/leaderboard.js    _lbDifficulty, _top10Difficulty, _diffKey
                           showLeaderboard, showScoreSubmitPopup
-                          showFunLeaderboard（趣味排行榜，v0.47.0）
+                          showFunLeaderboard（趣味排行榜，v0.47.0；👑 最高等級分類 v0.51.0）
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
 systems/hud.js            drawGame, updateUI, drawTopBarUI
@@ -350,9 +350,17 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 | 離沙漠 ≥3s | ×0.5 × packBonus | ×0.5 × packBonus |
 
 ### 肉食者逃離巨人（`_shouldFleeFromGiant`）
-- 目標為 **Alpha**：一律逃跑
-- 目標為普通巨人：巨人 HP > 肉食者 HP × 3 → 逃跑
+- **殺手化生物**：`_shouldFleeFromGiant` 直接返回 `false`，永遠不迴避巨人
+- 目標為 **Alpha**（非殺手）：一律逃跑
+- 目標為普通巨人（非殺手）：巨人 HP > 肉食者 HP × 3 → 逃跑
 - 逃跑狀態 `fleeing_giant`：往離最近巨人反方向跑 3 秒，之後切換 `_seekingPrey = true`、`_seekNonGiant = true`（只尋找非巨人化草食性）
+
+### 殺手戰術邏輯（v0.51.0，`updateHostileCreatures`）
+- 殺手化生物遭遇巨人/Alpha 時進入獨立戰術判斷
+- **撤退條件**：自身 HP < 70% 且 巨人 HP > 70%（雙向不利）
+  - 若 aggroRange 內有落單非巨人化草食性 → 轉移攻擊目標
+  - 否則進入 `fleeing_giant` 暫時撤退
+- **正常攻擊**：不滿足撤退條件時（殺手狀態良好）→ 繼續攻擊巨人
 
 ### 生態區回歸（biome home-return）
 - 每幀偵測 `_isInHomeBiome(creature)`；不在生態區時：`_leftBiomeTime` 開始計時
@@ -430,6 +438,12 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - XP：200（+獵人本能加成）
 - `spawnLootCircle`：2個2倍屍體 + 3具白骨
 - 100% 掉落1個變異點；額外20%機率掉 1~6個
+
+### Alpha 四條死亡路徑（v0.51.0 確認）
+1. **玩家擊殺** → `handleGiantKill(c)` → `if (c.isAlpha && gameState.alphaCreature === c) gameState.alphaCreature = null`
+2. **毒傷/流血 tick 死亡** → `updateStatusEffects()` 正確路由至 `handleGiantKill(c)`
+3. **`updateNeutralCreatures()` 巨人被敵意生物打死** → `updateHostileCreatures` 中已有完整清理
+4. **`updateHostileCreatures()` 肉食者打死中立巨人** → `creature.targetType === 'neutral'` 分支已有 `alphaCreature = null`
 
 ---
 

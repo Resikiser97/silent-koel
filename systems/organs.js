@@ -60,9 +60,10 @@ function applyHiddenOrganEffects(organ) {
         gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + fx.hpMaxAdd);
     }
     if (fx.radiusAdd) {
-        const rangeIncrease = Math.round(fx.radiusAdd / p.radius * p.attackRange);
-        p.radius += fx.radiusAdd;
-        p.attackRange += rangeIncrease;
+        const safeRadius    = Math.max(p.radius, 1);
+        const rangeIncrease = Math.round(fx.radiusAdd / safeRadius * p.attackRange);
+        p.radius            = Math.max(5, p.radius + fx.radiusAdd);
+        p.attackRange       = Math.max(10, p.attackRange + rangeIncrease);
     }
     if (fx.pickupRangeAdd)     p.pickupRange += fx.pickupRangeAdd;
     if (fx.critChanceAdd)      p.critChance += fx.critChanceAdd;
@@ -88,9 +89,10 @@ function applyOrganEffects(organ) {
         gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + fx.hpMaxAdd);
     }
     if (fx.radiusAdd) {
-        const rangeIncrease = Math.round(fx.radiusAdd / p.radius * p.attackRange);
-        p.radius += fx.radiusAdd;
-        p.attackRange += rangeIncrease;
+        const safeRadius    = Math.max(p.radius, 1);
+        const rangeIncrease = Math.round(fx.radiusAdd / safeRadius * p.attackRange);
+        p.radius            = Math.max(5, p.radius + fx.radiusAdd);
+        p.attackRange       = Math.max(10, p.attackRange + rangeIncrease);
     }
     if (fx.thornDamageAdd)         p.thornDamage += fx.thornDamageAdd;
     if (fx.critChanceAdd)          p.critChance += fx.critChanceAdd;

@@ -2,6 +2,38 @@
 
 ---
 
+## v0.51.0 - 2026-05-24
+
+### 修復
+
+- **遊戲卡死（負數 radius）**（`systems/organs.js`、`systems/evolution.js`、`systems/hud.js`）：
+  `applyOrganEffects` / `applyHiddenOrganEffects` 的 `radiusAdd` 加入 `Math.max(5, ...)` 保護，
+  同時確保 `rangeIncrease` 計算使用 `Math.max(p.radius, 1)` 避免除以零；
+  `applyEvolutionLevelEffect` / `applyEvolutionEffects` 同樣加入下限保護；
+  `drawGame` 繪製玩家前加入 `const drawRadius = Math.max(1, p.radius)` 防呆，
+  確保 `ctx.arc()` 永遠不會收到負數或零 radius
+- **initializeGame 再來一局殘留舊資料**（`main.js`）：
+  補齊 `fruits`、`corpses`、`bones`、`treasures`、`brainShockwaves`
+  五個陣列的清空重置，避免多局累積導致異常
+- **Alpha 死亡清除路徑補齊**（`systems/creatures.js`、`systems/combat.js`）：
+  確認並補齊四條死亡路徑（`handleGiantKill`、毒傷/流血、
+  `updateNeutralCreatures`、`updateHostileCreatures`）全部正確清除
+  `gameState.alphaCreature = null`
+- **殺手 100% 迴避巨人**（`systems/creatures.js`）：
+  `_shouldFleeFromGiant` 對殺手化生物直接返回 `false`；
+  新增殺手戰術邏輯：正常攻擊巨人，自身血量 < 70% 且巨人血量 > 70%
+  時優先轉移攻擊落單草食性，找不到才暫時撤退
+- **變異器官文本未顯示實際數值**（`systems/mutation.js`）：
+  面板四個器官描述改為動態讀取實際倍率，
+  顯示「當前 +N%（Lv.N，每級 +1%）」格式；等級為 0 時顯示尚未解鎖提示
+
+### 新增
+
+- **趣味排行榜「👑 最高等級」分類**（`config/supabase.js`、`systems/leaderboard.js`）：
+  新增 `fetchFunMaxLevel()` 查詢 `level` 欄位最高值，TOP10 顯示格式 `Lv.N`
+
+---
+
 ## v0.50.0 - 2026-05-24
 
 ### 新增

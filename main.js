@@ -105,6 +105,11 @@ function initializeGame() {
     gameState.dayNightMessage     = { text: '', timer: 0 };
     gameState.levelUpMessage      = { text: '', timer: 0 };
     gameState.sessionSkillPoints  = { elite: 0, boss: 0 };
+    gameState.fruits              = [];
+    gameState.corpses             = [];
+    gameState.bones               = [];
+    gameState.treasures           = [];
+    gameState.brainShockwaves     = [];
     gameState.neutralCreatures    = [];
     gameState.hostileCreatures    = [];
     gameState.camera              = { x: 3200, y: 3550 };

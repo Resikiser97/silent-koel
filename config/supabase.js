@@ -108,6 +108,16 @@ async function fetchFunBossKillSpeed(difficulty) {
     );
 }
 
+// 最高等級 TOP10
+async function fetchFunMaxLevel(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,level,version,created_at' + diffFilter +
+        '&level=not.is.null&order=level.desc&limit=10'
+    );
+}
+
 // 取得排行榜中有資料的難度陣列（去重後排序）
 async function fetchAvailableDifficulties() {
     const rows = await supabaseQuery('leaderboard', 'GET', null, '?select=difficulty&order=difficulty.asc&limit=1000');

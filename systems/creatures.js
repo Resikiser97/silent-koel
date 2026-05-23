@@ -604,9 +604,12 @@ function _findNearestBiomePoint(biome, x, y) {
 }
 
 // ── 肉食者是否應逃離巨人 ──
-function _shouldFleeFromGiant(carnivore, giant) {
-    if (giant.isAlpha) return true; // Alpha一律逃跑
-    return giant.hp > carnivore.hp * 3; // 普通巨人：HP > 食肉者×3 → 逃跑
+function _shouldFleeFromGiant(creature, target) {
+    // 殺手化：使用獨立戰術邏輯，此函式直接返回 false
+    if (creature.isKiller) return false;
+    // 非殺手：Alpha 一律逃，普通巨人 HP > 肉食者 HP × 3 才逃
+    if (target.isAlpha) return true;
+    return target.hp > creature.hp * 3;
 }
 
 // ── 猞猁生態區加成 ──
@@ -1266,14 +1269,48 @@ function updateHostileCreatures() {
             }
         }
 
-        // 評估是否需要逃離巨人（目標為巨人化/Alpha時）
-        if (bestTarget && (bestTarget.isGiantized || bestTarget.isAlpha)) {
+        // 殺手化特殊戰術：攻擊巨人，血量低且巨人血量高時撤退轉移目標
+        if (creature.isKiller && bestTarget && (bestTarget.isGiantized || bestTarget.isAlpha)) {
+            const killerHpRatio = creature.hp / creature.maxHp;
+            const giantHpRatio  = bestTarget.hp / bestTarget.maxHp;
+            const shouldRetreat = killerHpRatio < 0.7 && giantHpRatio > 0.7;
+
+            if (shouldRetreat) {
+                // 尋找落單非巨人化草食性作為替代目標
+                let altTarget = null;
+                let altDist   = Infinity;
+                for (const n of gameState.neutralCreatures) {
+                    if (n.hp <= 0 || n.isGiantized || n.isAlpha) continue;
+                    const d = wrappedDistance(creature.x, creature.y, n.x, n.y);
+                    if (d < creature.aggroRange && d < altDist) {
+                        altTarget = n;
+                        altDist   = d;
+                    }
+                }
+                if (altTarget) {
+                    bestTarget          = altTarget;
+                    creature.state      = 'chasing';
+                    creature.target     = altTarget;
+                    creature.targetType = 'neutral';
+                } else {
+                    creature.state           = 'fleeing_giant';
+                    creature._fleeGiantTimer = now;
+                    creature.target          = null;
+                    creature.targetType      = null;
+                    bestTarget               = null;
+                }
+            }
+            // 血量條件不符時（殺手狀態良好）：正常攻擊巨人，繼續往下執行
+        }
+
+        // 非殺手的巨人迴避判斷（原有邏輯）
+        if (!creature.isKiller && bestTarget && (bestTarget.isGiantized || bestTarget.isAlpha)) {
             if (_shouldFleeFromGiant(creature, bestTarget)) {
-                creature.state          = 'fleeing_giant';
+                creature.state           = 'fleeing_giant';
                 creature._fleeGiantTimer = now;
-                creature.target         = null;
-                creature.targetType     = null;
-                bestTarget              = null;
+                creature.target          = null;
+                creature.targetType      = null;
+                bestTarget               = null;
             }
         }
 

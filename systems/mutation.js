@@ -256,16 +256,41 @@ function showMutationPanel() {
     pointsEl.textContent = '可用變異點：' + data.points;
     panel.appendChild(pointsEl);
 
+    // 計算當前實際倍率（確保最新值）
+    applyMutationEffects();
+    const p = gameState.player;
+
+    // 動態生成四個器官描述
+    const fangLv    = data.levels.fang || 0;
+    const fangBonus = Math.round(((p.mutationAttackBonus || 1) - 1) * 100);
+    const fangDesc  = fangLv === 0
+        ? '尚未解鎖，升級後生效（每級 +1% 攻擊力）'
+        : `攻擊力 +${fangBonus}%（Lv.${fangLv}，每級 +1%）`;
+
+    const tailLv    = data.levels.tail || 0;
+    const tailBonus = Math.round(((p.mutationHpBonus || 1) - 1) * 100);
+    const tailDesc  = tailLv === 0
+        ? '尚未解鎖，升級後生效（每級 +1% HP上限）'
+        : `HP上限 +${tailBonus}%（Lv.${tailLv}，每級 +1%）`;
+
+    const wingLv    = data.levels.wing || 0;
+    const wingBonus = Math.round(((p.mutationSpeedBonus || 1) - 1) * 100);
+    const wingDesc  = wingLv === 0
+        ? '尚未解鎖，升級後生效（每級 +1% 移動速度）'
+        : `移動速度 +${wingBonus}%（Lv.${wingLv}，每級 +1%）`;
+
+    const eyeLv    = data.levels.eye || 0;
+    const eyeBonus = Math.round(((p.mutationXpBonus || 1) - 1) * 100);
+    const eyeDesc  = eyeLv === 0
+        ? '尚未解鎖，升級後生效（每級 +1% XP獲得）'
+        : `XP獲得 +${eyeBonus}%（Lv.${eyeLv}，每級 +1%）`;
+
     // ── 四個器官列表
     const MUTATION_ORGANS = [
-        { id: 'fang', icon: '🦷', name: '變異-憤怒的獠牙',
-          desc: (lv) => '每級+1%攻擊力（目前+' + lv + '%）' },
-        { id: 'tail', icon: '🐾', name: '變異-懦弱的尾巴',
-          desc: (lv) => '每級+1%最大HP（目前+' + lv + '%）' },
-        { id: 'wing', icon: '🪶', name: '變異-勇敢的翅膀',
-          desc: (lv) => '每級+1%速度（目前+' + lv + '%）' },
-        { id: 'eye',  icon: '👁️', name: '變異-好奇的眼睛',
-          desc: (lv) => '每級+1%XP倍數（目前+' + lv + '%）' },
+        { id: 'fang', icon: '🦷', name: '變異-憤怒的獠牙', desc: () => fangDesc },
+        { id: 'tail', icon: '🐾', name: '變異-懦弱的尾巴', desc: () => tailDesc },
+        { id: 'wing', icon: '🪶', name: '變異-勇敢的翅膀', desc: () => wingDesc },
+        { id: 'eye',  icon: '👁️', name: '變異-好奇的眼睛', desc: () => eyeDesc  },
     ];
 
     MUTATION_ORGANS.forEach(org => {
@@ -291,7 +316,7 @@ function showMutationPanel() {
         nameEl.textContent = org.name + '  Lv.' + lv;
         const descEl = document.createElement('div');
         descEl.style.cssText = 'font-size:11px;color:#aaa;margin-top:2px;';
-        descEl.textContent = org.desc(lv);
+        descEl.textContent = org.desc();
         info.appendChild(nameEl);
         info.appendChild(descEl);
         row.appendChild(info);

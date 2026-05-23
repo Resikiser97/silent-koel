@@ -530,15 +530,16 @@ function drawGame() {
     }
 
     // 9. 繪製玩家角色 (噪鵑)
+    const drawRadius = Math.max(1, p.radius);
     if (gameState.isNight) {
         ctx.fillStyle = 'rgba(0,255,136,0.9)';
         ctx.beginPath();
-        ctx.arc(ps.x, ps.y, p.radius + 3, 0, Math.PI * 2);
+        ctx.arc(ps.x, ps.y, drawRadius + 3, 0, Math.PI * 2);
         ctx.fill();
     }
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(ps.x, ps.y, p.radius, 0, Math.PI * 2);
+    ctx.arc(ps.x, ps.y, drawRadius, 0, Math.PI * 2);
     ctx.fill();
 
     drawEliteArrow();

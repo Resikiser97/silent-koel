@@ -141,10 +141,10 @@ Goblinnest（單人獨立開發，AI 輔助）
 - 使用開發者模式的記錄不上傳（`gameState.devModeUsed = true`）
 - 首頁右側 TOP10 浮窗（v0.40.0 起支援難度切換按鈕，`_top10Difficulty` 模組變數）
 - 排行榜面板（`showLeaderboard()`）亦支援難度切換，`_lbDifficulty` 模組變數；兩者保持同步
-- 趣味排行榜（v0.47.0）：`showFunLeaderboard(difficulty)`，6 類排名（最速通關、最速死亡、巨人獵人、殺手獵人、殺手克星、最快擊殺Boss）
+- 趣味排行榜（v0.47.0）：`showFunLeaderboard(difficulty)`，7 類排名（最速通關、最速死亡、巨人獵人、殺手獵人、殺手克星、最快擊殺Boss、最高等級）
   - `sessionStats` 新增欄位：`giantKills`（巨人獵人）、`killerKills`（殺手獵人）、`killerMaxLevel`（殺手克星）
   - 「🎲 種類」按鈕（`showLeaderboard()` 標題列）→ `showFunLeaderboard()`
-  - 新增 Supabase 查詢：`fetchFunSpeedVictory`、`fetchFunSpeedDeath`、`fetchFunGiantKills`、`fetchFunKillerKills`、`fetchFunKillerMaxLevel`、`fetchFunBossKillSpeed`
+  - 新增 Supabase 查詢：`fetchFunSpeedVictory`、`fetchFunSpeedDeath`、`fetchFunGiantKills`、`fetchFunKillerKills`、`fetchFunKillerMaxLevel`、`fetchFunBossKillSpeed`、`fetchFunMaxLevel`（v0.51.0）
 
 ### 真實遊玩時間（realPlayTime）
 - `gameState.realPlayTime`：累積毫秒數，上傳時 `Math.floor(realPlayTime / 1000)` 轉秒
@@ -232,6 +232,7 @@ config/
   supabase.js         → Supabase API（fetchVictoryRecords / fetchDefeatRecords / submitScore）
                         fetchFunSpeedVictory / fetchFunSpeedDeath / fetchFunGiantKills /
                         fetchFunKillerKills / fetchFunKillerMaxLevel / fetchFunBossKillSpeed（v0.47.0）
+                        fetchFunMaxLevel（v0.51.0）
 
 lang/
   zh-TW.js            → 繁體中文語言包
@@ -289,7 +290,7 @@ map/
 - 每次 commit 後必須執行 git push origin master
 
 ### 版本與部署
-- 目前版本：**v0.47.1**
+- 目前版本：**v0.51.0**
 
 ### Branch 工作流程
 - `master`：主開發分支，所有日常開發在此進行

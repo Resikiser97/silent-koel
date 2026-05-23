@@ -29,9 +29,9 @@ function applyEvolutionLevelEffect(type, newLevel) {
         gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + lvData.hpMaxAdd);
         if (lvData.radiusPercent) {
             const add = Math.round(p.radius * lvData.radiusPercent);
-            const rangeIncrease = Math.round(add / p.radius * p.attackRange);
-            p.radius += add;
-            p.attackRange += rangeIncrease;
+            const rangeIncrease = Math.round(add / Math.max(p.radius, 1) * p.attackRange);
+            p.radius = Math.max(5, p.radius + add);
+            p.attackRange = Math.max(10, p.attackRange + rangeIncrease);
         }
     } else if (type === 'carnivore') {
         // 固定值覆蓋：先扣掉上一級的值，再加新的值
@@ -74,9 +74,9 @@ function applyEvolutionEffects() {
         gameState.stats.hpMax += lv.hpMaxAdd;
         if (lv.radiusPercent) {
             const add = Math.round(p.radius * lv.radiusPercent);
-            const rangeIncrease = Math.round(add / p.radius * p.attackRange);
-            p.radius += add;
-            p.attackRange += rangeIncrease;
+            const rangeIncrease = Math.round(add / Math.max(p.radius, 1) * p.attackRange);
+            p.radius = Math.max(5, p.radius + add);
+            p.attackRange = Math.max(10, p.attackRange + rangeIncrease);
         }
     }
     // 肉食性為固定值：只套用最高等級的數值（非累加）
