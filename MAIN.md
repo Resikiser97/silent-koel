@@ -199,12 +199,12 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - 每多吃 1 具：damage/speed/maxHp/radius 各再 +10% 基礎值（`killerCorpseEaten` 計數）
 - 兩個計數疊加（`corpseEaten + killerCorpseEaten`）
 
-### killerLevel 計數器（v0.40.0）
+### killerLevel 計數器（v0.46.0）
 - 殺手化觸發時：`killerLevel = 0`
 - 殺手化後每吃一具屍體：`killerLevel++`
 - `_getCreatureDisplayName` 顯示「[物種名] 殺手Lv[N]」（N ≥ 1 時顯示）
 
-### 擊殺獎勵（`handleKillerKill`，`systems/combat.js`）（v0.40.0 更新）
+### 擊殺獎勵（`handleKillerKill`，`systems/combat.js`）（v0.46.0 更新）
 - XP：`100 + killerLevel × 5 + 獵人本能 × 10`
 - `spawnLootCircle`：2 份 1 倍屍體（原為 3 份）
 - 100% 掉落 1 個變異點；`killerCorpseEaten = N` → N% 機率額外掉 1~N 個
@@ -215,7 +215,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
-## 生態特性系統（v0.40.0，僅普通地圖）
+## 生態特性系統（v0.46.0，僅普通地圖）
 
 每個生態區肉食性物種各有專屬加成，在生態區內強化、離開生態區3秒後加成消失（鱷魚為立即失去）。
 
@@ -284,8 +284,8 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - 移除舊版激進化（`diet=aggressive`）邏輯，改由巨人化取代
 
 ### 巨人化數值（在原本數值基礎上修改）
-- 攻擊力 +20，血量 ×10，體積 ×1.5，aggroRange 400（v0.40.0 由 150 調整）
-- guardianRange 1000：偵測到 guardianRange 內的組員被敵意生物鎖定時，優先以該敵意生物為攻擊目標（v0.40.0）
+- 攻擊力 +20，血量 ×10，體積 ×1.5，aggroRange 400（v0.46.0 由 150 調整）
+- guardianRange 1000：偵測到 guardianRange 內的組員被敵意生物鎖定時，優先以該敵意生物為攻擊目標（v0.46.0）
 - 每秒回復 1% maxHP（`giantRegenTimer` 計時）
 - HP ≤ 30% 時：中斷追擊，逃往最近果子方向；每吃1顆果子回復 +10% maxHP（`_updateGiantFlee`）
 - 不再吃果子（低血量逃跑除外）
@@ -293,7 +293,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ### 組隊（同族同生態限定）
 - 巨人化後自動成為隊長（`packLeader = true`）
 - 每3秒嘗試招募 800px 內同族草食性，20% 成功率
-- 隊伍上限動態計算（v0.40.0）：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（含隊長）
+- 隊伍上限動態計算（v0.46.0）：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（含隊長）
 - 超出 800px 自動掉隊，隊員距離 >600px 時巨人化暫停移動等待
 - 隊員超過 200px 時跟隨隊長
 
@@ -316,10 +316,10 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - 已有 Alpha 時不再觸發新的
 
 ### Alpha數值（巨人化基礎上再計算）
-- 攻擊力 ×2，血量 ×3，體積 ×1.5，aggroRange 600（v0.40.0 由 300 調整）
-- guardianRange 1500（v0.40.0）
+- 攻擊力 ×2，血量 ×3，體積 ×1.5，aggroRange 600（v0.46.0 由 300 調整）
+- guardianRange 1500（v0.46.0）
 - 跟隨範圍 `packFollowRange: 1000`
-- HP 分享回血（v0.40.0）：自身 HP ≥ 80% 時每秒分享 1% maxHP 給 HP 最低的受傷組員；自身 HP < 80% 時每秒自回 2% maxHP（不分享）
+- HP 分享回血（v0.46.0）：自身 HP ≥ 80% 時每秒分享 1% maxHP 給 HP 最低的受傷組員；自身 HP < 80% 時每秒自回 2% maxHP（不分享）
 
 ### 誕生公告
 - `showAlphaAnnouncement(name)`：全屏顯示3秒，2.5秒後淡出
