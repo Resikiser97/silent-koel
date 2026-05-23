@@ -3,6 +3,216 @@
 //            updateHostileCreatures / drawCorpses / drawHostileCreatures
 // =============================================================
 
+// ── 物種固定顏色常數 ──────────────────────────────────────────
+const CREATURE_COLORS = {
+    // 草系
+    moose:     '#8B4513',   // 深棕
+    beetle:    '#1ABC9C',   // 青綠
+    camel:     '#E8C87A',   // 淺沙白
+    // 肉系
+    lynx:      '#A0826D',   // 灰褐
+    croc:      '#6B8E23',   // 橄欖綠
+    hyena:     '#8B6914',   // 深咖啡
+
+    // 特殊狀態（用於光暈/染色）
+    giantized: '#FF8C00',   // 橙色光暈
+    alpha:     '#FFD700',   // 金色光暈
+    killer0:   '#CC2200',   // 殺手化基礎深紅
+};
+
+// ── 取得物種固定顏色（不跟地形走）────────────────────────────
+function _getCreatureColor(creature) {
+    // 特殊狀態覆蓋顏色
+    if (creature.isAlpha)     return CREATURE_COLORS.alpha;
+    if (creature.isGiantized) return CREATURE_COLORS.giantized;
+    // 固定物種顏色
+    return CREATURE_COLORS[creature.speciesId] || '#888888';
+}
+
+// ── 特殊狀態光暈（疊加在本體圓形之後）────────────────────────
+function _drawCreatureGlow(ctx, creature, screenX, screenY) {
+    let glowColor = null;
+    let glowRadius = creature.radius;
+
+    if (creature.isAlpha) {
+        glowColor  = CREATURE_COLORS.alpha;
+        glowRadius = creature.radius + 6;
+    } else if (creature.isGiantized) {
+        glowColor  = CREATURE_COLORS.giantized;
+        glowRadius = creature.radius + 4;
+    } else if (creature.isKiller) {
+        // 殺手等級越高顏色越深（插值到更深紅）
+        const lv        = creature.killerLevel || 0;
+        const intensity = Math.min(lv / 10, 1.0);
+        // #CC2200 → #660000，level越高越深
+        const r = Math.round(204 - intensity * (204 - 102));
+        const g = Math.round(34  - intensity * 34);
+        glowColor  = `rgb(${r},${g},0)`;
+        glowRadius = creature.radius + 2;
+    }
+
+    if (!glowColor) return;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(screenX, screenY, glowRadius, 0, Math.PI * 2);
+    ctx.strokeStyle   = glowColor;
+    ctx.lineWidth     = 3;
+    ctx.globalAlpha   = 0.8;
+    ctx.stroke();
+    ctx.restore();
+}
+
+// ── 各物種獨立體型繪製 ────────────────────────────────────────
+
+// 駝鹿（moose）— 高挑橢圓 + 鹿角
+function _drawMoose(ctx, x, y, r) {
+    // 身體：高橢圓（高1.5倍，寬1倍）
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 頭部小圓（上方）
+    ctx.beginPath();
+    ctx.arc(x, y - r * 1.4, r * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 鹿角（兩條線）
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.3, y - r * 1.7);
+    ctx.lineTo(x - r * 0.6, y - r * 2.2);
+    ctx.moveTo(x + r * 0.3, y - r * 1.7);
+    ctx.lineTo(x + r * 0.6, y - r * 2.2);
+    ctx.stroke();
+}
+
+// 猞猁（lynx）— 低扁橢圓 + 三角耳
+function _drawLynx(ctx, x, y, r) {
+    // 身體：扁橢圓（寬1.4倍，高0.7倍）
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 1.4, r * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 左耳三角
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.6, y - r * 0.7);
+    ctx.lineTo(x - r * 0.9, y - r * 1.3);
+    ctx.lineTo(x - r * 0.3, y - r * 0.9);
+    ctx.closePath();
+    ctx.fill();
+
+    // 右耳三角
+    ctx.beginPath();
+    ctx.moveTo(x + r * 0.6, y - r * 0.7);
+    ctx.lineTo(x + r * 0.9, y - r * 1.3);
+    ctx.lineTo(x + r * 0.3, y - r * 0.9);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// 巨型甲虫（beetle）— 寬扁橢圓 + 甲殼線
+function _drawBeetle(ctx, x, y, r) {
+    // 身體：寬扁橢圓（寬1.4倍，高1倍）
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 1.4, r, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 甲殼中線
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x, y - r);
+    ctx.lineTo(x, y + r);
+    ctx.stroke();
+}
+
+// 鱷魚（croc）— 長橢圓 + 三角尾
+function _drawCroc(ctx, x, y, r) {
+    // 身體：長橢圓（寬2.5倍，高0.8倍）
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 2.5, r * 0.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 尾巴三角（右側）
+    ctx.beginPath();
+    ctx.moveTo(x + r * 2.5, y);
+    ctx.lineTo(x + r * 3.2, y - r * 0.5);
+    ctx.lineTo(x + r * 3.2, y + r * 0.5);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// 駱駝（camel）— 橢圓 + 駝峰 + 輪廓描邊
+function _drawCamel(ctx, x, y, r) {
+    // 身體橢圓
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 1.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 駝峰（背上小圓）
+    ctx.beginPath();
+    ctx.arc(x, y - r * 1.1, r * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 輪廓描邊（避免跟沙漠混色）
+    ctx.strokeStyle = '#8B6914';
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 1.3, 0, 0, Math.PI * 2);
+    ctx.stroke();
+}
+
+// 鬣狗（hyena）— 橢圓 + 豎耳
+function _drawHyena(ctx, x, y, r) {
+    // 身體橢圓
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 1.2, r * 0.9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 左豎耳（尖耳）
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.4, y - r * 0.9);
+    ctx.lineTo(x - r * 0.55, y - r * 1.5);
+    ctx.lineTo(x - r * 0.15, y - r * 1.0);
+    ctx.closePath();
+    ctx.fill();
+
+    // 右豎耳
+    ctx.beginPath();
+    ctx.moveTo(x + r * 0.4, y - r * 0.9);
+    ctx.lineTo(x + r * 0.55, y - r * 1.5);
+    ctx.lineTo(x + r * 0.15, y - r * 1.0);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// ── 主分派函式：依物種繪製對應體型 ──────────────────────────
+function drawCreatureShape(ctx, creature, screenX, screenY) {
+    ctx.save();
+    ctx.fillStyle = _getCreatureColor(creature);
+
+    switch (creature.speciesId) {
+        case 'moose':  _drawMoose(ctx, screenX, screenY, creature.radius);  break;
+        case 'beetle': _drawBeetle(ctx, screenX, screenY, creature.radius); break;
+        case 'camel':  _drawCamel(ctx, screenX, screenY, creature.radius);  break;
+        case 'lynx':   _drawLynx(ctx, screenX, screenY, creature.radius);   break;
+        case 'croc':   _drawCroc(ctx, screenX, screenY, creature.radius);   break;
+        case 'hyena':  _drawHyena(ctx, screenX, screenY, creature.radius);  break;
+        default:
+            // fallback：普通圓形
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, creature.radius, 0, Math.PI * 2);
+            ctx.fill();
+    }
+
+    ctx.restore();
+
+    // 疊加特殊狀態光暈
+    _drawCreatureGlow(ctx, creature, screenX, screenY);
+}
+
 // ── 草食性連吃：附近500px是否有同族巨人化 ──
 function _hasGiantizedNearby(creature, range) {
     for (const c of gameState.neutralCreatures) {
@@ -743,27 +953,34 @@ function drawNeutralCreatures() {
         const s = worldToScreen(creature.x, creature.y);
         if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
 
-        const nBiome = getBiome(creature.x, creature.y);
-        let baseC, aggrC, fleeC, fightC;
-        if (nBiome === 'ocean') {
-            baseC = '#4499CC'; aggrC = '#224488'; fleeC = '#88CCFF'; fightC = '#336699';
-        } else if (nBiome === 'desert') {
-            baseC = '#CC9944'; aggrC = '#884422'; fleeC = '#FFCC44'; fightC = '#AA6622';
+        // ── 使用物種固定顏色 + 獨立體型繪製 ──
+        if (creature.speciesId) {
+            // 生態生物：固定顏色 + 獨立體型
+            drawCreatureShape(ctx, creature, s.x, s.y);
         } else {
-            baseC = 'orange'; aggrC = '#CC4400'; fleeC = 'yellow'; fightC = '#CC5500';
+            // 非生態生物（舊邏輯 fallback）：地形染色 + 圓形
+            const nBiome = getBiome(creature.x, creature.y);
+            let baseC, aggrC, fleeC, fightC;
+            if (nBiome === 'ocean') {
+                baseC = '#4499CC'; aggrC = '#224488'; fleeC = '#88CCFF'; fightC = '#336699';
+            } else if (nBiome === 'desert') {
+                baseC = '#CC9944'; aggrC = '#884422'; fleeC = '#FFCC44'; fightC = '#AA6622';
+            } else {
+                baseC = 'orange'; aggrC = '#CC4400'; fleeC = 'yellow'; fightC = '#CC5500';
+            }
+            let color = baseC;
+            if (creature.isAlpha)                    color = '#FFD700';
+            else if (creature.isGiantized)           color = '#FF8800';
+            else if (creature.diet === 'aggressive') color = aggrC;
+            else if (creature.state === 'fleeing')   color = fleeC;
+            else if (creature.state === 'fighting')  color = fightC;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
+            ctx.fill();
         }
-        let color = baseC;
-        if (creature.isAlpha)                    color = '#FFD700'; // Alpha：金色
-        else if (creature.isGiantized)           color = '#FF8800'; // 巨人化：橙色
-        else if (creature.diet === 'aggressive') color = aggrC;
-        else if (creature.state === 'fleeing')   color = fleeC;
-        else if (creature.state === 'fighting')  color = fightC;
 
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
-        ctx.fill();
-
+        // ── 血條（名字在上、血條緊貼本體上緣）──
         const barW = 20, barH = 4;
         const barX = s.x - barW / 2;
         const barY = s.y - creature.radius - 8;
@@ -771,6 +988,7 @@ function drawNeutralCreatures() {
         ctx.fillRect(barX, barY, barW, barH);
         ctx.fillStyle = '#00CC00';
         ctx.fillRect(barX, barY, barW * (creature.hp / (creature.maxHp || 30)), barH);
+
         const displayName = creature.isAlpha     ? (creature.name || '') + '（Alpha）'
                           : creature.isGiantized ? (creature.name || '') + '（巨人化）'
                           : (creature.name || '');
@@ -1151,14 +1369,22 @@ function drawHostileCreatures() {
         const s = worldToScreen(creature.x, creature.y);
         if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
 
-        const hBiome = getBiome(creature.x, creature.y);
-        const hNormalC  = hBiome === 'ocean' ? '#CC4466' : (hBiome === 'desert' ? '#CC8800' : 'red');
-        const hChasingC = hBiome === 'ocean' ? '#882244' : (hBiome === 'desert' ? '#885500' : '#8B0000');
-        ctx.fillStyle = creature.state === 'chasing' ? hChasingC : hNormalC;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
-        ctx.fill();
+        // ── 使用物種固定顏色 + 獨立體型繪製 ──
+        if (creature.speciesId) {
+            // 生態生物：固定顏色 + 獨立體型（光暈在 drawCreatureShape 內呼叫）
+            drawCreatureShape(ctx, creature, s.x, s.y);
+        } else {
+            // 非生態生物（舊邏輯 fallback）：地形染色 + 圓形
+            const hBiome    = getBiome(creature.x, creature.y);
+            const hNormalC  = hBiome === 'ocean' ? '#CC4466' : (hBiome === 'desert' ? '#CC8800' : 'red');
+            const hChasingC = hBiome === 'ocean' ? '#882244' : (hBiome === 'desert' ? '#885500' : '#8B0000');
+            ctx.fillStyle   = creature.state === 'chasing' ? hChasingC : hNormalC;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
+        // ── 血條 ──
         const barW = 20, barH = 4;
         const barX = s.x - barW / 2;
         const barY = s.y - creature.radius - 8;
@@ -1166,13 +1392,14 @@ function drawHostileCreatures() {
         ctx.fillRect(barX, barY, barW, barH);
         ctx.fillStyle = '#00CC00';
         ctx.fillRect(barX, barY, barW * (creature.hp / (creature.maxHp || 50)), barH);
+
         const hostileDisplayName = _getCreatureDisplayName(creature);
         if (hostileDisplayName) {
             ctx.save();
             ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
-            ctx.fillStyle = creature.isKiller ? '#FF8800' : '#FFFFFF';
-            ctx.font = creature.isKiller ? 'bold 12px Arial' : '12px Arial';
-            ctx.textAlign = 'center';
+            ctx.fillStyle   = creature.isKiller ? '#FF8800' : '#FFFFFF';
+            ctx.font        = creature.isKiller  ? 'bold 12px Arial' : '12px Arial';
+            ctx.textAlign   = 'center';
             ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius - 10);
             ctx.restore();
         }
