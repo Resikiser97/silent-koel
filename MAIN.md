@@ -152,6 +152,14 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 |------|------|------|
 | `lastAttackCrit` | `false` | 黑熊暴擊旗標 |
 | `lastAttackLeg` | `'left'` | 黑熊最後攻擊腳（決定揮哪手） |
+| `_chargeArrow` | `null` | 大白鯊衝刺箭頭 `{ fromX, fromY, toX, toY }`（warning 瞬間鎖定，cooldown 清除） |
+
+### Boss 技能視覺特效（v0.50.0）
+
+- **大白鯊衝刺箭頭**：`_drawSharkChargeArrow(boss)`；warning=黃色+閃爍邊框，charging=紅色；寬度＝`boss.radius × 2`；世界座標透過 `worldToScreen` 轉換；在 `drawBoss()` 的 `drawBossShape` **前**呼叫
+- **蠍王毒霧**：`_poisonFogVisual { startTime, duration:4000, maxRadius:300 }`；`_drawScorpPoisonFog(boss, sx, sy)` 在 `drawBossShape` **後**呼叫；毒傷 tick 以動態半徑（`maxRadius × progress`）做 `wrappedDistance` 判斷，在圈外不受傷；視覺到期後 `updateBoss()` 自動清除
+- **蠍王沙暴**：`_sandStormVisual { startTime, duration:6000 }`；`_drawSandStormOverlay()` 在 `hud.js` 的 `drawBossArrow()` 後、UI 前呼叫；`radialGradient` 從中央透明到外圈 alpha 0.3，淡入淡出各 500ms
+- **黑熊暴擊文字**：`isCrit === true` 命中玩家時呼叫 `showFloatingText(boss.x, boss.y - boss.radius*2, 'X熊爪！', '#ff8800', 18)`
 
 ---
 

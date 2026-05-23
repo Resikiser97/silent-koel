@@ -544,6 +544,9 @@ function drawGame() {
     drawEliteArrow();
     drawBossArrow();
 
+    // 9e. 沙暴螢幕外圈遮罩（蠍王血量<40%觸發，所有世界物件後、UI前）
+    _drawSandStormOverlay();
+
     // 9b. 大腦衝能條（玩家正下方）
     if (p.brainActive) {
         const barW = p.radius * 2;
