@@ -7,7 +7,7 @@ const BOSS_COLORS = {
     bear: {
         body:  '#2a1808',
         head:  '#301c0a',
-        limbs: '#2a1808',
+        limbs: '#7a3d0c',   // 明顯淺於 body，確保手臂可見
         eye:   '#cc4400',
         pupil: '#1a0000',
     },
@@ -43,7 +43,8 @@ function drawBossShape(ctx, boss, sx, sy) {
 }
 
 // ── 黑熊（forest）──────────────────────────────────────────────
-// 手臂狀態：閒置垂下 / 追擊舉高 / 攻擊揮砍（單臂 / 雙臂 X）
+// 手臂三狀態：閒置垂下 / 追擊高舉（延伸至身體外側） / 攻擊橫掃＋爪痕特效
+// ⚠️ 身體橢圓 rx=r*1.2 非常寬，手臂若顏色相同會被蓋住 → limbs 使用明顯較淺的棕色
 function _drawBear(ctx, r, t, boss) {
     const C = BOSS_COLORS.bear;
     const isChasing = boss && boss.state === 'chasing';
@@ -58,37 +59,38 @@ function _drawBear(ctx, r, t, boss) {
     const offL   = stompL * r * 0.09;
     const offR   = stompR * r * 0.09;
 
-    // 攻擊動畫偵測（350ms 快速弧線）
+    // 攻擊偵測（450ms 視窗）
     const sinceAtk = boss ? Math.max(0, t - (boss.attackCooldown || 0)) : 99999;
-    const isAtk    = sinceAtk < 350 && boss && boss.attackCooldown > 0;
-    const atkPhase = isAtk ? Math.sin(sinceAtk / 350 * Math.PI) : 0;
+    const isAtk    = sinceAtk < 450 && boss && boss.attackCooldown > 0;
+    const atkPhase = isAtk ? Math.sin(sinceAtk / 450 * Math.PI) : 0;
     const isCrit   = !!(boss && boss.lastAttackCrit);
     const atkLeg   = (boss && boss.lastAttackLeg) || 'left';
     // atkLeg==='left'：左腳踩地 → 右臂(side=+1)攻擊，軌跡呈 "/"
     // atkLeg==='right'：右腳踩地 → 左臂(side=-1)攻擊，軌跡呈 "\"
 
-    // 計算單臂的肩膀位置 + 旋轉角，依狀態決定
-    // side: -1=左臂, +1=右臂；phase: atkPhase（0~1）
+    // ── 手臂橢圓參數 ──
+    // armLen=r*0.55，橢圓頂端對齊肩膀（seamless），底端延伸至 2*armLen 下方
+    // 追擊時 angle=±1.2（≈69°），使臂中心落在身體橢圓外側 → 清晰可見
+    const armLen = r * 0.55;
+
     const getArm = (side, phase) => {
-        // 此臂是否為本次攻擊的揮砍臂
         const isAtkArm = isAtk && (isCrit || ((atkLeg === 'left') === (side > 0)));
         if (isAtkArm) {
-            // 從舉高位斜向對角橫掃（"/"或"\"軌跡由殘影呈現）
+            // 從高舉位大幅橫掃：肩膀向對側推移 + 角度翻轉
             return {
-                sx:    side * r * (0.70 - phase * 0.50),  // 向中線推進
-                sy:    -r * 0.40 + phase * r * 0.55,      // 從高位下落
-                angle: side * (0.70 - phase * 2.00)       // 大幅旋轉產生揮砍感
+                sx:    side * r * (0.70 - phase * 0.90),
+                sy:    -r * 0.45 + phase * r * 0.75,
+                angle: side * (1.20 - phase * 3.00)
             };
         } else if (isChasing) {
-            // 追擊：雙臂高舉，像熊爪蓄力
-            return { sx: side * r * 0.70, sy: -r * 0.40, angle: side * 0.70 };
+            // 雙臂高舉外展（angle=1.2rad ≈ 69°），臂中心落在身體外側
+            return { sx: side * r * 0.70, sy: -r * 0.45, angle: side * 1.20 };
         } else {
-            // 閒置：自然垂下，略向外傾
-            return { sx: side * r * 0.70, sy: r * 0.10, angle: -side * 0.15 };
+            // 閒置：手臂垂至身體下外側
+            return { sx: side * r * 0.80, sy: r * 0.45, angle: side * 0.10 };
         }
     };
 
-    // 繪製單臂（含 globalAlpha 控制殘影）
     const drawArm = (side, phase, alpha) => {
         const { sx, sy, angle } = getArm(side, phase);
         ctx.globalAlpha = alpha;
@@ -97,7 +99,7 @@ function _drawBear(ctx, r, t, boss) {
         ctx.translate(sx, sy);
         ctx.rotate(angle);
         ctx.beginPath();
-        ctx.ellipse(0, r * 0.48, r * 0.24, r * 0.48, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, armLen, r * 0.22, armLen, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     };
@@ -119,7 +121,7 @@ function _drawBear(ctx, r, t, boss) {
     ctx.ellipse(0, r * 0.2, r * 1.2, r * 0.75, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // ── 前臂殘影（攻擊時才畫，製造快速掃擊的殘影感）──
+    // ── 前臂殘影（攻擊時）──
     if (isAtk) {
         const tPhases = [Math.max(0, atkPhase - 0.35), Math.max(0, atkPhase - 0.18)];
         const tAlphas = [0.10, 0.22];
@@ -134,7 +136,33 @@ function _drawBear(ctx, r, t, boss) {
     drawArm( 1, atkPhase, 1.0);
     ctx.globalAlpha = 1.0;
 
+    // ── 爪痕特效（繪於身體之上、頭部之下，確保攻擊清晰可見）──
+    // 普攻：深紅 3 條"/"或"\"斜線；暴擊：橙紅 6 條呈"X"
+    if (isAtk && atkPhase > 0.05) {
+        ctx.save();
+        ctx.globalAlpha = Math.sin(sinceAtk / 450 * Math.PI) * 0.90;
+        ctx.strokeStyle = isCrit ? '#ff8800' : '#dd2200';
+        ctx.lineWidth   = r * 0.12;
+        ctx.lineCap     = 'round';
+        const clawSides = isCrit ? [1, -1] : [atkLeg === 'left' ? 1 : -1];
+        for (const side of clawSides) {
+            for (let ci = -1; ci <= 1; ci++) {
+                const ox = ci * r * 0.13;             // 三條爪痕水平間距
+                const cx1 = side * r * 0.50 + ox;    // 起點（上方）
+                const cy1 = -r * 0.35;
+                const cx2 = -side * r * 0.28 + ox;   // 終點（下斜對側）
+                const cy2 = r * 0.48;
+                ctx.beginPath();
+                ctx.moveTo(cx1, cy1);
+                ctx.lineTo(cx1 + (cx2 - cx1) * atkPhase, cy1 + (cy2 - cy1) * atkPhase);
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
+
     // ── 頭部 ──
+    ctx.globalAlpha = 1.0;
     ctx.fillStyle = C.head;
     ctx.beginPath();
     ctx.ellipse(0, -r * 0.6, r * 0.75, r * 0.65, 0, 0, Math.PI * 2);
