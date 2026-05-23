@@ -5,34 +5,27 @@
 
 // ── 物種固定顏色常數 ──────────────────────────────────────────
 const CREATURE_COLORS = {
-    // 草系
-    moose:     '#8B4513',   // 深棕
-    beetle:    '#1ABC9C',   // 青綠
-    camel:     '#E8C87A',   // 淺沙白
-    // 肉系
-    lynx:      '#A0826D',   // 灰褐
-    croc:      '#6B8E23',   // 橄欖綠
-    hyena:     '#8B6914',   // 深咖啡
-
-    // 特殊狀態（用於光暈/染色）
-    giantized: '#FF8C00',   // 橙色光暈
-    alpha:     '#FFD700',   // 金色光暈
-    killer0:   '#CC2200',   // 殺手化基礎深紅
+    moose:      '#8B4513',   // 深棕
+    beetle:     '#1ABC9C',   // 青綠
+    camel:      '#E8C87A',   // 淺沙白
+    lynx:       '#A0826D',   // 灰褐
+    croc:       '#6B8E23',   // 橄欖綠
+    hyena:      '#8B6914',   // 深咖啡
+    // 特殊狀態光暈
+    giantized:  '#FF8C00',
+    alpha:      '#FFD700',
+    killerBase: '#CC2200',
 };
 
 // ── 取得物種固定顏色（不跟地形走）────────────────────────────
 function _getCreatureColor(creature) {
-    // 特殊狀態覆蓋顏色
-    if (creature.isAlpha)     return CREATURE_COLORS.alpha;
-    if (creature.isGiantized) return CREATURE_COLORS.giantized;
-    // 固定物種顏色
     return CREATURE_COLORS[creature.speciesId] || '#888888';
 }
 
-// ── 特殊狀態光暈（疊加在本體圓形之後）────────────────────────
-function _drawCreatureGlow(ctx, creature, screenX, screenY) {
-    let glowColor = null;
-    let glowRadius = creature.radius;
+// ── 特殊狀態光暈（不跟著旋轉，以世界座標繪製）───────────────
+function _drawCreatureGlow(ctx, creature, sx, sy) {
+    let glowColor  = null;
+    let glowRadius = creature.radius + 4;
 
     if (creature.isAlpha) {
         glowColor  = CREATURE_COLORS.alpha;
@@ -41,13 +34,11 @@ function _drawCreatureGlow(ctx, creature, screenX, screenY) {
         glowColor  = CREATURE_COLORS.giantized;
         glowRadius = creature.radius + 4;
     } else if (creature.isKiller) {
-        // 殺手等級越高顏色越深（插值到更深紅）
-        const lv        = creature.killerLevel || 0;
-        const intensity = Math.min(lv / 10, 1.0);
-        // #CC2200 → #660000，level越高越深
-        const r = Math.round(204 - intensity * (204 - 102));
-        const g = Math.round(34  - intensity * 34);
-        glowColor  = `rgb(${r},${g},0)`;
+        const lv = creature.killerLevel || 0;
+        const t  = Math.min(lv / 10, 1.0);
+        const rv = Math.round(204 - t * 102);
+        const gv = Math.round(34  - t * 34);
+        glowColor  = `rgb(${rv},${gv},0)`;
         glowRadius = creature.radius + 2;
     }
 
@@ -55,162 +46,211 @@ function _drawCreatureGlow(ctx, creature, screenX, screenY) {
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(screenX, screenY, glowRadius, 0, Math.PI * 2);
-    ctx.strokeStyle   = glowColor;
-    ctx.lineWidth     = 3;
-    ctx.globalAlpha   = 0.8;
+    ctx.arc(sx, sy, glowRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = glowColor;
+    ctx.lineWidth   = 3;
+    ctx.globalAlpha = 0.8;
     ctx.stroke();
     ctx.restore();
 }
 
-// ── 各物種獨立體型繪製 ────────────────────────────────────────
+// ── 各物種形狀函式（全部以 (0,0) 為中心、角度0頭朝右）────────
 
-// 駝鹿（moose）— 高挑橢圓 + 鹿角
-function _drawMoose(ctx, x, y, r) {
-    // 身體：高橢圓（高1.5倍，寬1倍）
+// 駝鹿（moose）— 高挑橢圓 + 頭部圓 + 鹿角
+function _drawMoose(ctx, r) {
+    // 身體：高橢圓
     ctx.beginPath();
-    ctx.ellipse(x, y, r, r * 1.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, r * 0.8, r * 1.4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 頭部小圓（上方）
+    // 頭部小圓（前方 +x）
     ctx.beginPath();
-    ctx.arc(x, y - r * 1.4, r * 0.5, 0, Math.PI * 2);
+    ctx.arc(r * 1.2, 0, r * 0.45, 0, Math.PI * 2);
     ctx.fill();
 
-    // 鹿角（兩條線）
+    // 鹿角（從頭頂往前上方延伸兩支）
     ctx.strokeStyle = ctx.fillStyle;
     ctx.lineWidth   = 2;
     ctx.beginPath();
-    ctx.moveTo(x - r * 0.3, y - r * 1.7);
-    ctx.lineTo(x - r * 0.6, y - r * 2.2);
-    ctx.moveTo(x + r * 0.3, y - r * 1.7);
-    ctx.lineTo(x + r * 0.6, y - r * 2.2);
+    ctx.moveTo(r * 1.1, -r * 0.35);
+    ctx.lineTo(r * 1.5, -r * 0.9);
+    ctx.moveTo(r * 1.3, -r * 0.35);
+    ctx.lineTo(r * 1.7, -r * 0.9);
     ctx.stroke();
 }
 
-// 猞猁（lynx）— 低扁橢圓 + 三角耳
-function _drawLynx(ctx, x, y, r) {
-    // 身體：扁橢圓（寬1.4倍，高0.7倍）
+// 猞猁（lynx）— 扁橢圓 + 頭部圓 + 三角耳 + 短翹尾
+function _drawLynx(ctx, r) {
+    // 身體：扁橢圓
     ctx.beginPath();
-    ctx.ellipse(x, y, r * 1.4, r * 0.7, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, r * 1.3, r * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 頭部（前方）
+    ctx.beginPath();
+    ctx.arc(r * 1.1, 0, r * 0.5, 0, Math.PI * 2);
     ctx.fill();
 
     // 左耳三角
     ctx.beginPath();
-    ctx.moveTo(x - r * 0.6, y - r * 0.7);
-    ctx.lineTo(x - r * 0.9, y - r * 1.3);
-    ctx.lineTo(x - r * 0.3, y - r * 0.9);
+    ctx.moveTo(r * 0.85, -r * 0.45);
+    ctx.lineTo(r * 0.75, -r * 1.0);
+    ctx.lineTo(r * 1.15, -r * 0.55);
     ctx.closePath();
     ctx.fill();
 
     // 右耳三角
     ctx.beginPath();
-    ctx.moveTo(x + r * 0.6, y - r * 0.7);
-    ctx.lineTo(x + r * 0.9, y - r * 1.3);
-    ctx.lineTo(x + r * 0.3, y - r * 0.9);
+    ctx.moveTo(r * 1.2, -r * 0.45);
+    ctx.lineTo(r * 1.3, -r * 1.0);
+    ctx.lineTo(r * 1.5, -r * 0.55);
     ctx.closePath();
     ctx.fill();
-}
 
-// 巨型甲虫（beetle）— 寬扁橢圓 + 甲殼線
-function _drawBeetle(ctx, x, y, r) {
-    // 身體：寬扁橢圓（寬1.4倍，高1倍）
+    // 短尾巴（後方，往上翹）
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth   = r * 0.25;
+    ctx.lineCap     = 'round';
     ctx.beginPath();
-    ctx.ellipse(x, y, r * 1.4, r, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 甲殼中線
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-    ctx.lineWidth   = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(x, y - r);
-    ctx.lineTo(x, y + r);
+    ctx.moveTo(-r * 1.2, 0);
+    ctx.quadraticCurveTo(-r * 1.5, -r * 0.3, -r * 1.3, -r * 0.7);
     ctx.stroke();
 }
 
-// 鱷魚（croc）— 長橢圓 + 三角尾
-function _drawCroc(ctx, x, y, r) {
-    // 身體：長橢圓（寬2.5倍，高0.8倍）
+// 巨型甲虫（beetle）— 寬扁橢圓 + 甲殼中線 + 小頭圓
+function _drawBeetle(ctx, r) {
+    // 身體：寬扁橢圓
     ctx.beginPath();
-    ctx.ellipse(x, y, r * 2.5, r * 0.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, r * 1.3, r * 0.9, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 尾巴三角（右側）
+    // 甲殼中線（縱向）
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth   = 1.5;
     ctx.beginPath();
-    ctx.moveTo(x + r * 2.5, y);
-    ctx.lineTo(x + r * 3.2, y - r * 0.5);
-    ctx.lineTo(x + r * 3.2, y + r * 0.5);
+    ctx.moveTo(0, -r * 0.9);
+    ctx.lineTo(0,  r * 0.9);
+    ctx.stroke();
+
+    // 頭部小圓（前方）
+    ctx.beginPath();
+    ctx.arc(r * 1.2, 0, r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// 鱷魚（croc）— 長橢圓 + 長方形頭（右）+ 反向三角尾（左）
+function _drawCroc(ctx, r) {
+    const bodyLen = r * 2.2;
+    const bodyH   = r * 0.75;
+
+    // 身體：長橢圓
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bodyLen, bodyH, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 頭部長方形（右側，占身長30%）
+    const headW = bodyLen * 0.3;
+    const headH = bodyH  * 0.9;
+    ctx.fillRect(bodyLen - headW * 0.3, -headH / 2, headW, headH);
+
+    // 尾巴三角（左側，尖端朝左）
+    const tailLen  = bodyLen * 0.2;
+    const tailBase = bodyH   * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-bodyLen, -tailBase / 2);
+    ctx.lineTo(-bodyLen,  tailBase / 2);
+    ctx.lineTo(-bodyLen - tailLen, 0);
     ctx.closePath();
     ctx.fill();
 }
 
-// 駱駝（camel）— 橢圓 + 駝峰 + 輪廓描邊
-function _drawCamel(ctx, x, y, r) {
-    // 身體橢圓
+// 駱駝（camel）— 橫躺橢圓 + 兩個並排半圓駝峰 + 頭圓 + 描邊
+function _drawCamel(ctx, r) {
+    // 身體：寬扁橢圓（橫躺）
     ctx.beginPath();
-    ctx.ellipse(x, y, r, r * 1.3, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, r * 1.4, r * 0.85, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 駝峰（背上小圓）
+    // 駝峰左（半圓，上方偏左）
     ctx.beginPath();
-    ctx.arc(x, y - r * 1.1, r * 0.45, 0, Math.PI * 2);
+    ctx.arc(-r * 0.35, -r * 0.75, r * 0.38, Math.PI, 0);
+    ctx.fill();
+
+    // 駝峰右（半圓，上方偏右）
+    ctx.beginPath();
+    ctx.arc(r * 0.35, -r * 0.75, r * 0.38, Math.PI, 0);
+    ctx.fill();
+
+    // 頭部小圓（右側）
+    ctx.beginPath();
+    ctx.arc(r * 1.5, 0, r * 0.38, 0, Math.PI * 2);
     ctx.fill();
 
     // 輪廓描邊（避免跟沙漠混色）
     ctx.strokeStyle = '#8B6914';
     ctx.lineWidth   = 2;
     ctx.beginPath();
-    ctx.ellipse(x, y, r, r * 1.3, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, r * 1.4, r * 0.85, 0, 0, Math.PI * 2);
     ctx.stroke();
 }
 
-// 鬣狗（hyena）— 橢圓 + 豎耳
-function _drawHyena(ctx, x, y, r) {
-    // 身體橢圓
+// 鬣狗（hyena）— 橢圓 + 頭部圓 + 豎耳
+function _drawHyena(ctx, r) {
+    // 身體橢圓（略寬）
     ctx.beginPath();
-    ctx.ellipse(x, y, r * 1.2, r * 0.9, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, r * 1.2, r * 0.85, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 左豎耳（尖耳）
+    // 頭部（前方）
     ctx.beginPath();
-    ctx.moveTo(x - r * 0.4, y - r * 0.9);
-    ctx.lineTo(x - r * 0.55, y - r * 1.5);
-    ctx.lineTo(x - r * 0.15, y - r * 1.0);
+    ctx.arc(r * 1.1, 0, r * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 左豎耳（尖）
+    ctx.beginPath();
+    ctx.moveTo(r * 0.85, -r * 0.45);
+    ctx.lineTo(r * 0.75, -r * 1.1);
+    ctx.lineTo(r * 1.1,  -r * 0.55);
     ctx.closePath();
     ctx.fill();
 
-    // 右豎耳
+    // 右豎耳（尖）
     ctx.beginPath();
-    ctx.moveTo(x + r * 0.4, y - r * 0.9);
-    ctx.lineTo(x + r * 0.55, y - r * 1.5);
-    ctx.lineTo(x + r * 0.15, y - r * 1.0);
+    ctx.moveTo(r * 1.15, -r * 0.45);
+    ctx.lineTo(r * 1.25, -r * 1.1);
+    ctx.lineTo(r * 1.5,  -r * 0.55);
     ctx.closePath();
     ctx.fill();
 }
 
-// ── 主分派函式：依物種繪製對應體型 ──────────────────────────
-function drawCreatureShape(ctx, creature, screenX, screenY) {
+// ── 主分派函式：translate → rotate → 物種形狀 → 光暈 ────────
+// 朝向約定：angle=0 時頭朝右（+x 方向）
+function drawCreatureShape(ctx, creature, sx, sy) {
+    const angle = creature._moveAngle || 0;
+    const r     = creature.radius;
+
     ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(angle);
     ctx.fillStyle = _getCreatureColor(creature);
 
     switch (creature.speciesId) {
-        case 'moose':  _drawMoose(ctx, screenX, screenY, creature.radius);  break;
-        case 'beetle': _drawBeetle(ctx, screenX, screenY, creature.radius); break;
-        case 'camel':  _drawCamel(ctx, screenX, screenY, creature.radius);  break;
-        case 'lynx':   _drawLynx(ctx, screenX, screenY, creature.radius);   break;
-        case 'croc':   _drawCroc(ctx, screenX, screenY, creature.radius);   break;
-        case 'hyena':  _drawHyena(ctx, screenX, screenY, creature.radius);  break;
+        case 'moose':  _drawMoose(ctx, r);  break;
+        case 'beetle': _drawBeetle(ctx, r); break;
+        case 'camel':  _drawCamel(ctx, r);  break;
+        case 'lynx':   _drawLynx(ctx, r);   break;
+        case 'croc':   _drawCroc(ctx, r);   break;
+        case 'hyena':  _drawHyena(ctx, r);  break;
         default:
-            // fallback：普通圓形
             ctx.beginPath();
-            ctx.arc(screenX, screenY, creature.radius, 0, Math.PI * 2);
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
             ctx.fill();
     }
 
     ctx.restore();
 
-    // 疊加特殊狀態光暈
-    _drawCreatureGlow(ctx, creature, screenX, screenY);
+    // 特殊狀態光暈（不跟著旋轉，固定在世界座標）
+    _drawCreatureGlow(ctx, creature, sx, sy);
 }
 
 // ── 草食性連吃：附近500px是否有同族巨人化 ──
