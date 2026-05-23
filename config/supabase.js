@@ -98,6 +98,15 @@ async function fetchFunKillerMaxLevel(difficulty) {
         '?select=name,killer_max_level,version,created_at' + diffFilter + '&killer_max_level=gt.0&order=killer_max_level.desc&limit=10'
     );
 }
+// 最快擊殺 Boss（boss_kill_time 最短，只有勝利記錄才有此欄位）
+async function fetchFunBossKillSpeed(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,boss_kill_time,version,created_at' + diffFilter +
+        '&is_victory=eq.true&boss_kill_time=not.is.null&order=boss_kill_time.asc&limit=10'
+    );
+}
 
 // 取得排行榜中有資料的難度陣列（去重後排序）
 async function fetchAvailableDifficulties() {

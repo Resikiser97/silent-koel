@@ -322,6 +322,7 @@ function showFunLeaderboard(difficulty) {
         { key: 'giant',   label: '👾 巨人獵人', fetchFn: () => fetchFunGiantKills(difficulty),  colName: 'giant_kills',    colLabel: '巨人擊殺', format: v => String(v) },
         { key: 'killer',  label: '🔪 殺手獵人', fetchFn: () => fetchFunKillerKills(difficulty), colName: 'killer_kills',   colLabel: '殺手擊殺', format: v => String(v) },
         { key: 'kmaxlv',  label: '⭐ 殺手克星', fetchFn: () => fetchFunKillerMaxLevel(difficulty), colName: 'killer_max_level', colLabel: '最高殺手Lv', format: v => 'Lv.' + v },
+        { key: 'bosskill', label: '⚔️ 最快擊殺Boss', fetchFn: () => fetchFunBossKillSpeed(difficulty), colName: 'boss_kill_time', colLabel: 'Boss擊殺(秒)', format: v => String(v) + 's' },
     ];
     let currentCat = categories[0];
 

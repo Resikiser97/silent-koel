@@ -2,6 +2,14 @@
 
 ---
 
+## 功能新增 - 2026-05-23（不更新版本號）
+
+### 新增
+
+- **趣味排行榜新增「⚔️ 最快擊殺Boss」分類**（`config/supabase.js`、`systems/leaderboard.js`）：引用現有 `boss_kill_time` 欄位（Boss 出現到被擊殺的秒數），排序 asc 越小越快；只顯示勝利記錄（`is_victory=true`）
+
+---
+
 ## 文件修正 - 2026-05-23（不更新版本號）
 
 ### 修復
