@@ -2,6 +2,14 @@
 
 ---
 
+## 文件修正 - 2026-05-23（不更新版本號）
+
+### 修復
+
+- **趣味排行榜最速通關欄位引用錯誤**（`config/supabase.js`、`systems/leaderboard.js`）：`fetchFunSpeedVictory` 查詢欄位從 `boss_kill_time` 改為 `play_time`，顯示欄位標籤同步更新為「遊玩時間(秒)」；舊資料不受影響，直接引用正確欄位即可
+
+---
+
 ## v0.47.1 - 2026-05-23
 
 ### 修復

@@ -58,12 +58,12 @@ async function fetchTop10(difficulty) {
 }
 
 // ── 趣味排行榜（九）：各類特殊統計
-// 最速通關（勝利，boss_kill_time 最短）
+// 最速通關（勝利，play_time 最短）
 async function fetchFunSpeedVictory(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,boss_kill_time,play_time,version,created_at' + diffFilter + '&is_victory=eq.true&boss_kill_time=not.is.null&order=boss_kill_time.asc&limit=10'
+        '?select=name,play_time,version,created_at' + diffFilter + '&is_victory=eq.true&play_time=not.is.null&order=play_time.asc&limit=10'
     );
 }
 // 最速死亡（失敗，play_time 最短）

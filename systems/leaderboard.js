@@ -317,7 +317,7 @@ function showFunLeaderboard(difficulty) {
 
     // 類別按鈕列
     const categories = [
-        { key: 'speed',   label: '🏃 最速通關', fetchFn: () => fetchFunSpeedVictory(difficulty), colName: 'boss_kill_time', colLabel: '擊殺Boss(秒)', format: v => String(v) + 's' },
+        { key: 'speed',   label: '🏃 最速通關', fetchFn: () => fetchFunSpeedVictory(difficulty), colName: 'play_time', colLabel: '遊玩時間(秒)', format: v => String(v) + 's' },
         { key: 'death',   label: '💀 最速死亡', fetchFn: () => fetchFunSpeedDeath(difficulty),  colName: 'play_time',      colLabel: '遊玩時間(秒)', format: v => String(v) + 's' },
         { key: 'giant',   label: '👾 巨人獵人', fetchFn: () => fetchFunGiantKills(difficulty),  colName: 'giant_kills',    colLabel: '巨人擊殺', format: v => String(v) },
         { key: 'killer',  label: '🔪 殺手獵人', fetchFn: () => fetchFunKillerKills(difficulty), colName: 'killer_kills',   colLabel: '殺手擊殺', format: v => String(v) },
