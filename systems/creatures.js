@@ -56,38 +56,43 @@ function _drawCreatureGlow(ctx, creature, sx, sy) {
 
 // ── 各物種形狀函式（全部以 (0,0) 為中心，頭朝右 +x，尾朝左 -x）──
 
-// 駝鹿（moose）— 橢圓身體 + 兩側橫向鹿角（完整旋轉）
+// 駝鹿（moose）— 橢圓身體 + 頭部圓 + 鹿角長在頭部（完整旋轉）
 function _drawMoose(ctx, r) {
     // 身體橢圓
     ctx.beginPath();
     ctx.ellipse(0, 0, r * 1.1, r * 0.85, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 鹿角（兩側對稱，往上延伸）
+    // 頭部小圓（前方 +x）
+    ctx.beginPath();
+    ctx.arc(r * 1.3, 0, r * 0.42, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 鹿角（從頭部上方左右對稱展開）
     ctx.strokeStyle = ctx.fillStyle;
     ctx.lineWidth   = r * 0.18;
     ctx.lineCap     = 'round';
 
-    // 左主枝
+    // 左鹿角主枝（頭部左上）
     ctx.beginPath();
-    ctx.moveTo(-r * 0.4, -r * 0.8);
-    ctx.lineTo(-r * 0.8, -r * 1.6);
+    ctx.moveTo(r * 1.1, -r * 0.3);
+    ctx.lineTo(r * 0.7, -r * 1.2);
     ctx.stroke();
     // 左分叉
     ctx.beginPath();
-    ctx.moveTo(-r * 0.6, -r * 1.2);
-    ctx.lineTo(-r * 1.2, -r * 1.4);
+    ctx.moveTo(r * 0.9, -r * 0.75);
+    ctx.lineTo(r * 0.4, -r * 0.95);
     ctx.stroke();
 
-    // 右主枝
+    // 右鹿角主枝（頭部右上）
     ctx.beginPath();
-    ctx.moveTo(r * 0.4, -r * 0.8);
-    ctx.lineTo(r * 0.8, -r * 1.6);
+    ctx.moveTo(r * 1.5, -r * 0.3);
+    ctx.lineTo(r * 1.9, -r * 1.2);
     ctx.stroke();
     // 右分叉
     ctx.beginPath();
-    ctx.moveTo(r * 0.6, -r * 1.2);
-    ctx.lineTo(r * 1.2, -r * 1.4);
+    ctx.moveTo(r * 1.7, -r * 0.75);
+    ctx.lineTo(r * 2.15, -r * 0.95);
     ctx.stroke();
 }
 
@@ -190,44 +195,45 @@ function _drawCamel(ctx, r) {
     ctx.stroke();
 }
 
-// 猞猁（lynx）— 大三角身體 + 圓頭 + 小三角耳 + 彎尾（只左右翻轉）
+// 猞猁（lynx）— 正立貓形：圓頭 + 三角耳 + 三角身體 + 彎尾（只左右翻轉）
+// 頭在上（-y），身體往下（+y），尾巴預設往右翹，scale(-1,1) 後自動翻左
 function _drawLynx(ctx, r) {
-    // 身體大三角（尖端朝右=頭方向，底邊朝左）
+    // 身體：圓潤三角（正立，底邊在下）
     ctx.beginPath();
-    ctx.moveTo( r * 1.0,  0);
-    ctx.lineTo(-r * 0.8, -r * 0.85);
-    ctx.lineTo(-r * 0.8,  r * 0.85);
+    ctx.moveTo(0,        -r * 0.35);   // 頂點（頸部）
+    ctx.lineTo(-r * 0.9,  r * 1.05);  // 左下腳
+    ctx.lineTo( r * 0.9,  r * 1.05);  // 右下腳
     ctx.closePath();
     ctx.fill();
 
-    // 頭部圓形（三角尖端前方）
+    // 頭部圓形（上方）
     ctx.beginPath();
-    ctx.arc(r * 1.45, 0, r * 0.48, 0, Math.PI * 2);
+    ctx.arc(0, -r * 0.85, r * 0.52, 0, Math.PI * 2);
     ctx.fill();
 
-    // 左耳小三角
+    // 左耳三角
     ctx.beginPath();
-    ctx.moveTo(r * 1.15, -r * 0.38);
-    ctx.lineTo(r * 1.05, -r * 0.85);
-    ctx.lineTo(r * 1.45, -r * 0.45);
+    ctx.moveTo(-r * 0.52, -r * 1.28);
+    ctx.lineTo(-r * 0.68, -r * 1.75);
+    ctx.lineTo(-r * 0.1,  -r * 1.35);
     ctx.closePath();
     ctx.fill();
 
-    // 右耳小三角
+    // 右耳三角
     ctx.beginPath();
-    ctx.moveTo(r * 1.5,  -r * 0.38);
-    ctx.lineTo(r * 1.55, -r * 0.85);
-    ctx.lineTo(r * 1.85, -r * 0.35);
+    ctx.moveTo( r * 0.52, -r * 1.28);
+    ctx.lineTo( r * 0.68, -r * 1.75);
+    ctx.lineTo( r * 0.1,  -r * 1.35);
     ctx.closePath();
     ctx.fill();
 
-    // 彎尾（左側=移動反方向，往上翹）
+    // 彎尾（右側，翻轉後自動換邊）
     ctx.strokeStyle = CREATURE_COLORS.lynx;
     ctx.lineWidth   = r * 0.22;
     ctx.lineCap     = 'round';
     ctx.beginPath();
-    ctx.moveTo(-r * 0.8, 0);
-    ctx.quadraticCurveTo(-r * 1.5, r * 0.2, -r * 1.3, -r * 0.75);
+    ctx.moveTo(r * 0.8, r * 0.75);
+    ctx.quadraticCurveTo(r * 1.55, r * 0.25, r * 1.3, -r * 0.55);
     ctx.stroke();
 }
 
