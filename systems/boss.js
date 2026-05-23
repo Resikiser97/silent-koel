@@ -2,6 +2,382 @@
 // 首領系統 - spawnBoss / updateBoss / showVictory / drawBossArrow
 // =============================================================
 
+// ── Boss 顏色常數 ─────────────────────────────────────────────
+const BOSS_COLORS = {
+    bear: {
+        body:  '#2a1808',
+        head:  '#301c0a',
+        limbs: '#2a1808',
+        eye:   '#cc4400',
+        pupil: '#1a0000',
+    },
+    shark: {
+        body:  '#1a3050',
+        fin:   '#162840',
+        tail:  '#162840',
+        eye:   '#88ccff',
+        pupil: '#001830',
+    },
+    scorp: {
+        body:    '#1a0828',
+        bodyMid: '#22103a',
+        bodyTop: '#2a1445',
+        claw:    '#1a0828',
+        tail:    '#22103a',
+        stinger: '#9030c0',
+        eye:     '#cc00ff',
+        pupil:   '#1a0020',
+    },
+};
+
+// ── Boss 主繪製分派 ───────────────────────────────────────────
+function drawBossShape(ctx, boss, sx, sy) {
+    ctx.save();
+    ctx.translate(sx, sy);
+    const r = boss.radius;
+    const t = Date.now();
+    if      (boss.biome === 'forest') _drawBear(ctx, r, t, boss);
+    else if (boss.biome === 'ocean')  _drawShark(ctx, r, t, boss);
+    else if (boss.biome === 'desert') _drawScorp(ctx, r, t, boss);
+    ctx.restore();
+}
+
+// ── 黑熊（forest）──────────────────────────────────────────────
+function _drawBear(ctx, r, t, boss) {
+    const C = BOSS_COLORS.bear;
+    const speedMult = (boss && boss.state === 'chasing') ? 1.9 : 1.0;
+    const period    = 450 / speedMult;
+
+    // 踏步動畫：sin > 0 踩下（放大+往下位移），sin < 0 抬起（縮小）
+    // 左右腿相位差 π → 一腳踩下另一腳抬起
+    const stompL = Math.sin(t / period);
+    const stompR = Math.sin(t / period + Math.PI);
+    const scaleL = 1.0 + stompL * 0.38;   // 0.62 ~ 1.38
+    const scaleR = 1.0 + stompR * 0.38;
+    const offL   = stompL * r * 0.09;     // 踩下時輕微往下偏
+    const offR   = stompR * r * 0.09;
+
+    // ── 後腿（先畫，被身體蓋住根部）──
+    ctx.fillStyle = C.limbs;
+    ctx.beginPath();
+    ctx.ellipse(-r * 0.52, r * 0.68 + offL, r * 0.27, r * 0.55 * scaleL, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = C.limbs;
+    ctx.beginPath();
+    ctx.ellipse( r * 0.52, r * 0.68 + offR, r * 0.27, r * 0.55 * scaleR, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 身體主橢圓 ──
+    ctx.fillStyle = C.body;
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.2, r * 1.2, r * 0.75, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 前臂（固定，不動）──
+    ctx.fillStyle = C.limbs;
+    ctx.save();
+    ctx.translate(-r * 0.7, r * 0.1);
+    ctx.rotate(0.15);
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.48, r * 0.24, r * 0.48, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(r * 0.7, r * 0.1);
+    ctx.rotate(-0.15);
+    ctx.fillStyle = C.limbs;
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.48, r * 0.24, r * 0.48, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // ── 頭部 ──
+    ctx.fillStyle = C.head;
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.6, r * 0.75, r * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = C.body;
+    ctx.beginPath();
+    ctx.arc(-r * 0.5, -r * 1.15, r * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.5, -r * 1.15, r * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 眼睛（脈動發光）──
+    const glowPulse = 0.7 + Math.sin(t / 700) * 0.3;
+    ctx.globalAlpha = glowPulse;
+    ctx.fillStyle = C.eye;
+    ctx.beginPath();
+    ctx.arc(-r * 0.28, -r * 0.65, r * 0.13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.28, -r * 0.65, r * 0.13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.fillStyle = C.pupil;
+    ctx.beginPath();
+    ctx.arc(-r * 0.28, -r * 0.65, r * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.28, -r * 0.65, r * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ── 大白鯊（ocean）─────────────────────────────────────────────
+function _drawShark(ctx, r, t, boss) {
+    const C = BOSS_COLORS.shark;
+    // 移動速度連動：追擊時尾鰭加速擺動
+    const speedMult = (boss && boss.state === 'chasing') ? 1.9 : 1.0;
+    const period    = 550 / speedMult;
+    const tailSwing = Math.sin(t / period) * 0.5;
+
+    // 尾巴（左側，先畫）
+    ctx.save();
+    ctx.translate(-r * 1.3, 0);
+    ctx.rotate(tailSwing);
+    ctx.fillStyle = C.tail;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-r * 0.6, -r * 0.45);
+    ctx.lineTo(-r * 0.6,  r * 0.45);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // 身體扁橢圓
+    ctx.fillStyle = C.body;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 1.4, r * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 背鰭（上方三角）
+    ctx.fillStyle = C.fin;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.15, -r * 0.6);
+    ctx.lineTo( r * 0.35, -r * 1.35);
+    ctx.lineTo( r * 0.6,  -r * 0.6);
+    ctx.closePath();
+    ctx.fill();
+
+    // 胸鰭（下方兩側）
+    ctx.fillStyle = C.fin;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.3,  r * 0.5);
+    ctx.lineTo(-r * 0.7,  r * 1.0);
+    ctx.lineTo( r * 0.1,  r * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo( r * 0.3,  r * 0.5);
+    ctx.lineTo( r * 0.5,  r * 1.0);
+    ctx.lineTo( r * 0.7,  r * 0.55);
+    ctx.closePath();
+    ctx.fill();
+
+    // 眼睛（脈動）
+    const glowPulse = 0.6 + Math.sin(t / 1200) * 0.4;
+    ctx.globalAlpha = glowPulse;
+    ctx.fillStyle = C.eye;
+    ctx.beginPath();
+    ctx.arc(r * 0.55, -r * 0.1, r * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.fillStyle = C.pupil;
+    ctx.beginPath();
+    ctx.arc(r * 0.55, -r * 0.1, r * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ── 沙漠蠍王（desert）──────────────────────────────────────────
+// 身體橢圓：rx=0.85r, ry=0.5r，腳根必須在橢圓內才能被身體蓋住
+// 腳根計算：點(x,y)在橢圓內 ⟺ (x/0.85r)²+(y/0.5r)² < 1
+function _drawScorp(ctx, r, t, boss) {
+    const C = BOSS_COLORS.scorp;
+    // 移動速度連動
+    const speedMult  = (boss && boss.state === 'chasing') ? 1.9 : 1.0;
+    const legPeriod  = 260 / speedMult;
+    const tailPeriod = 800;
+
+    // ── 三對步行腳（三腳步法 Tripod Gait）──
+    // 群 A（左後[2]、右中[4]、左前[0]）與群 B（右後[5]、左中[1]、右前[3]）交替
+    // 群 B 相位差 +π（半週期），組內後腿先出，每腳差 10%（step = 0.1×2π）
+    const step = Math.PI * 0.2;
+    const legPhases = [
+        step * 2,           // 0: 左前 — 群A，第三出
+        Math.PI + step,     // 1: 左中 — 群B，第二出
+        0,                  // 2: 左後 — 群A，第一出（最先）
+        Math.PI + step * 2, // 3: 右前 — 群B，第三出
+        step,               // 4: 右中 — 群A，第二出
+        Math.PI,            // 5: 右後 — 群B，第一出
+    ];
+
+    // 腳根（在橢圓內，被身體蓋住）與靜止末端位置
+    const legRoots = [
+        { x: -r * 0.74, y: -r * 0.18, ex: -r * 1.45, ey: -r * 0.55 }, // 左前
+        { x: -r * 0.82, y:  r * 0.02, ex: -r * 1.58, ey:  r * 0.12 }, // 左中
+        { x: -r * 0.70, y:  r * 0.22, ex: -r * 1.35, ey:  r * 0.55 }, // 左後
+        { x:  r * 0.74, y: -r * 0.18, ex:  r * 1.45, ey: -r * 0.55 }, // 右前
+        { x:  r * 0.82, y:  r * 0.02, ex:  r * 1.58, ey:  r * 0.12 }, // 右中
+        { x:  r * 0.70, y:  r * 0.22, ex:  r * 1.35, ey:  r * 0.55 }, // 右後
+    ];
+
+    // 腳動畫：末端 y 偏移（抬腳時末端向上移，非旋轉）
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 6; i++) {
+        const { x, y, ex, ey } = legRoots[i];
+        const swing = Math.sin(t / legPeriod + legPhases[i]);
+        // swing > 0 = 抬腳（細線）；swing <= 0 = 落地支撐（粗線）
+        const ey_anim = ey - swing * r * 0.3;
+        ctx.strokeStyle = C.claw;
+        ctx.lineWidth   = swing > 0 ? r * 0.09 : r * 0.14;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(ex, ey_anim);
+        ctx.stroke();
+    }
+
+    // ── 前大夾鉗（靜止待機，攻擊時向內夾）──
+    // 根部 (±0.3r, -0.3r)：(0.3/0.85)²+(0.3/0.5)² ≈ 0.48 < 1 ✓
+    // 攻擊檢測：boss.attackCooldown 記錄最後攻擊時刻（Date.now()）
+    const sinceAtk = boss ? Math.max(0, Date.now() - (boss.attackCooldown || 0)) : 99999;
+    const atkPhase = (sinceAtk < 700 && boss && boss.attackCooldown > 0)
+        ? Math.sin(sinceAtk / 700 * Math.PI) : 0;
+    const snapAngle = atkPhase * 0.65;   // 最大約 37°，向內夾
+
+    ctx.lineCap = 'round';
+    for (const side of [-1, 1]) {
+        ctx.save();
+        ctx.translate(side * r * 0.3, -r * 0.3);
+        ctx.rotate(snapAngle * -side);   // 兩夾均向中線夾
+        // 主臂
+        ctx.strokeStyle = C.claw;
+        ctx.lineWidth = r * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(side * r * 0.55, -r * 0.55);
+        ctx.stroke();
+        // 上夾
+        ctx.lineWidth = r * 0.13;
+        ctx.beginPath();
+        ctx.moveTo(side * r * 0.55, -r * 0.55);
+        ctx.lineTo(side * r * 0.82, -r * 0.78);
+        ctx.stroke();
+        // 下夾
+        ctx.beginPath();
+        ctx.moveTo(side * r * 0.55, -r * 0.55);
+        ctx.lineTo(side * r * 0.82, -r * 0.35);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // ── 身體（三層橢圓，蓋住腳根關節）──
+    ctx.fillStyle = C.body;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 0.85, r * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = C.bodyMid;
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.1, r * 0.65, r * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = C.bodyTop;
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.18, r * 0.48, r * 0.32, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 尾巴（往上彎，輕微搖擺，從身體後部伸出）──
+    const tailSwing = Math.sin(t / tailPeriod) * 0.15;
+    ctx.save();
+    ctx.translate(0, r * 0.1);
+    ctx.rotate(tailSwing);
+    ctx.strokeStyle = C.tail;
+    ctx.lineWidth   = r * 0.22;
+    ctx.lineCap     = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(r * 0.6, -r * 1.1, r * 0.25, -r * 1.85);
+    ctx.stroke();
+    // 毒針尖
+    ctx.fillStyle = C.stinger;
+    ctx.beginPath();
+    ctx.ellipse(r * 0.25, -r * 1.97, r * 0.14, r * 0.1, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // ── 眼睛（紫色脈動）──
+    const glowPulse = 0.65 + Math.sin(t / 900) * 0.35;
+    ctx.globalAlpha = glowPulse;
+    ctx.fillStyle = C.eye;
+    ctx.beginPath();
+    ctx.arc(-r * 0.2, -r * 0.2, r * 0.11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.2, -r * 0.2, r * 0.11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.fillStyle = C.pupil;
+    ctx.beginPath();
+    ctx.arc(-r * 0.2, -r * 0.2, r * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.2, -r * 0.2, r * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ── drawBoss（每幀由 hud.js 呼叫）──────────────────────────────
+function drawBoss() {
+    const boss = gameState.boss;
+    if (!boss || boss.hp <= 0) return;
+
+    const s = worldToScreen(boss.x, boss.y);
+    if (s.x < -100 || s.x > VIEW_W + 100 || s.y < -100 || s.y > VIEW_H + 100) return;
+
+    const r       = boss.radius;
+    const flicker = Math.sin(Date.now() * 0.006) * 0.4 + 0.7;
+
+    // 光暈環（保留原本的閃爍感）
+    ctx.save();
+    ctx.shadowColor = boss.glowColor || '#8B4513';
+    ctx.shadowBlur  = 10 + flicker * 12;
+    ctx.globalAlpha = 0.55 + flicker * 0.35;
+    ctx.strokeStyle = boss.glowColor || '#8B4513';
+    ctx.lineWidth   = 4;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, r + 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Boss 形狀（純 Canvas）
+    drawBossShape(ctx, boss, s.x, s.y);
+
+    // 名字標籤
+    ctx.save();
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur  = 4;
+    ctx.fillStyle   = '#FFFFFF';
+    ctx.font        = 'bold 12px Arial';
+    ctx.textAlign   = 'center';
+    ctx.fillText(boss.name || boss.label || 'Boss', s.x, s.y - r - 32);
+    ctx.restore();
+
+    // 血條
+    const bBarW = 50, bBarH = 6;
+    const bBarX = s.x - bBarW / 2;
+    const bBarY = s.y - r - 24;
+    ctx.fillStyle = '#550000';
+    ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
+    ctx.fillStyle = '#FF4400';
+    ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+}
+
 function spawnBoss() {
     const playerBiome = getBiome(gameState.player.x, gameState.player.y);
     const baseCfg = BOSS_CONFIG[playerBiome] || BOSS_CONFIG.forest;
@@ -31,7 +407,8 @@ function spawnBoss() {
         wanderTarget: null, lastWanderTime: Date.now(),
         name: cfg.name, label: cfg.label,
         color: cfg.color, colorChasing: cfg.colorChasing,
-        glowColor: cfg.glowColor
+        glowColor: cfg.glowColor,
+        biome: playerBiome
     };
     gameState.bossSpawned = true;
     gameState.bossSpawnTime = Date.now();
