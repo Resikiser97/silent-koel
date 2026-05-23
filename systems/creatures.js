@@ -253,6 +253,28 @@ function drawCreatureShape(ctx, creature, sx, sy) {
     _drawCreatureGlow(ctx, creature, sx, sy);
 }
 
+// ── 測試用：方向指示三角形（確認無誤後移除）────────────────────
+function _drawDirectionArrow(ctx, creature, sx, sy) {
+    const r     = creature.radius;
+    const angle = creature._moveAngle || 0;
+    const tip   = r + 8;   // 三角形尖端距中心
+
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(angle);
+
+    ctx.beginPath();
+    ctx.moveTo(tip + 6, 0);   // 尖端（朝前）
+    ctx.lineTo(tip,    -4);   // 左翼
+    ctx.lineTo(tip,     4);   // 右翼
+    ctx.closePath();
+    ctx.fillStyle   = '#FFFFFF';
+    ctx.globalAlpha = 0.9;
+    ctx.fill();
+
+    ctx.restore();
+}
+
 // ── 草食性連吃：附近500px是否有同族巨人化 ──
 function _hasGiantizedNearby(creature, range) {
     for (const c of gameState.neutralCreatures) {
@@ -626,6 +648,7 @@ function updateNeutralCreatures() {
                         }
                     }
                 } else {
+                    creature._moveAngle = Math.atan2(dy, dx);
                     moveCreature(creature, creature.x + Math.cos(Math.atan2(dy, dx)) * creature.speed, creature.y + Math.sin(Math.atan2(dy, dx)) * creature.speed);
                 }
             } else {
@@ -733,6 +756,7 @@ function updateNeutralCreatures() {
                         }
                     } else {
                         const gaAngle = Math.atan2(gady, gadx);
+                        creature._moveAngle = gaAngle;
                         moveCreature(creature, creature.x + Math.cos(gaAngle) * creature.speed,
                                                creature.y + Math.sin(gaAngle) * creature.speed);
                     }
@@ -828,6 +852,7 @@ function updateNeutralCreatures() {
             }
             if (creature.state === 'fleeing') {
                 const { dx: fdx, dy: fdy } = wrappedDelta(p.x, p.y, creature.x, creature.y);
+                creature._moveAngle = Math.atan2(fdy, fdx);
                 moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * creature.speed,
                                        creature.y + Math.sin(Math.atan2(fdy, fdx)) * creature.speed);
                 continue;
@@ -947,6 +972,7 @@ function updateNeutralCreatures() {
         }
         if (creature.state === 'fleeing') {
             const { dx: fdx, dy: fdy } = wrappedDelta(p.x, p.y, creature.x, creature.y);
+            creature._moveAngle = Math.atan2(fdy, fdx);
             moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * creature.speed,
                                    creature.y + Math.sin(Math.atan2(fdy, fdx)) * creature.speed);
             continue;
@@ -960,6 +986,7 @@ function updateNeutralCreatures() {
             if (closestIdx !== -1) {
                 const fruit = gameState.fruits[closestIdx];
                 const { dx: fdx, dy: fdy } = wrappedDelta(creature.x, creature.y, fruit.x, fruit.y);
+                creature._moveAngle = Math.atan2(fdy, fdx);
                 moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * creature.speed,
                                        creature.y + Math.sin(Math.atan2(fdy, fdx)) * creature.speed);
                 if (closestDist < creature.radius + 6) {
@@ -997,6 +1024,7 @@ function drawNeutralCreatures() {
         if (creature.speciesId) {
             // 生態生物：固定顏色 + 獨立體型
             drawCreatureShape(ctx, creature, s.x, s.y);
+            _drawDirectionArrow(ctx, creature, s.x, s.y);
         } else {
             // 非生態生物（舊邏輯 fallback）：地形染色 + 圓形
             const nBiome = getBiome(creature.x, creature.y);
@@ -1269,6 +1297,7 @@ function updateHostileCreatures() {
                 }
             } else {
                 const angle = Math.atan2(dy, dx);
+                creature._moveAngle = angle;
                 // 物種移動速度加成（生態區）
                 let chaseSpeed = creature.speed;
                 if (creature.speciesId === 'lynx') {
@@ -1413,6 +1442,7 @@ function drawHostileCreatures() {
         if (creature.speciesId) {
             // 生態生物：固定顏色 + 獨立體型（光暈在 drawCreatureShape 內呼叫）
             drawCreatureShape(ctx, creature, s.x, s.y);
+            _drawDirectionArrow(ctx, creature, s.x, s.y);
         } else {
             // 非生態生物（舊邏輯 fallback）：地形染色 + 圓形
             const hBiome    = getBiome(creature.x, creature.y);
