@@ -65,6 +65,7 @@ systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayT
                           updateDayNightCycle, showGameOver
 systems/leaderboard.js    _lbDifficulty, _top10Difficulty, _diffKey
                           showLeaderboard, showScoreSubmitPopup
+                          showFunLeaderboard（趣味排行榜，v0.47.0）
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
 systems/hud.js            drawGame, updateUI, drawTopBarUI
@@ -142,7 +143,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - `aggroRangeOverride: 400`（全局追擊範圍，v0.39.0 由 2000 調整至 400）
 - `removeHostileCap: true`（移除速度/傷害上限）
 - 精英怪：第1夜 ×5/+0.3/×1.5、第2夜 ×10/+0.7/×2.1、第3夜 ×20/+1.5/×2.9
-- Boss：黑熊 HP1500/速4.5/傷30/r33、大白鯊 HP1800/速5.85/傷36/r40、蠍王 HP1650/速5.4/傷40/r37
+- Boss：黑熊 HP1500/速9.0/傷30/r33、大白鯊 HP1800/速11.7/傷36/r40、蠍王 HP1650/速10.8/傷40/r37（v0.47.0 速度翻倍）
 - 專屬 features：`giantization`、`killer`、`eliteRegen`、`bossRegen`、`hostileEatMeat`
 
 ---
@@ -268,7 +269,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 - 第1夜：每 5 秒 +1% maxHP；第2夜：+2%；第3夜：+3%
 
 ### Boss回血（`features.bossRegen`）
-- 每 10 秒 +10% maxHP
+- 每 3 秒 +2% maxHP（v0.47.0 強化；原為每 10 秒 +10%）
 
 ---
 
@@ -443,15 +444,15 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 | 來源 | 時機 | 數量 | 位置 |
 |------|------|------|------|
-| 精英怪擊殺 | 遊戲中（每夜） | 夜晚1=+1、夜晚2=+2、夜晚3=+3 | `systems/organs.js` `handleEliteKill` |
-| Boss擊殺 | 勝利結算前 | +5 | `systems/boss.js` `showVictory` |
+| 精英怪擊殺 | 遊戲中（每夜） | 夜晚1=+1、夜晚2=+1、夜晚3=+2（v0.47.0） | `systems/organs.js` `handleEliteKill` |
+| Boss擊殺 | 勝利結算前 | +3（v0.47.0，原為+5） | `systems/boss.js` `showVictory` |
 | 時間獎勵 | 死亡/勝利結算 | `Math.floor((600 - timeRemaining) / 180)` | `showSkillTree` / `showVictory` |
 | 等級獎勵 | 死亡/勝利結算 | `Math.floor(player.level / 6)` | `showSkillTree` / `showVictory` |
 
 ### 技能點追蹤（v0.34.0）
 - `gameState.sessionSkillPoints = { elite: 0, boss: 0 }` 在每局開始時清零（`initializeGame()` 的狀態重設區塊）
-- `handleEliteKill` 累加 `sessionSkillPoints.elite += eliteNightNum`
-- `showVictory` 設定 `sessionSkillPoints.boss = 5`
+- `handleEliteKill` 累加 `sessionSkillPoints.elite += eliteSkillPts`（公式：`[1,1,2][nightIndex] || 1`，v0.47.0）
+- `showVictory` 設定 `sessionSkillPoints.boss = 3`（v0.47.0）
 - 結算畫面（`showDeathSettlement` / `doShowVictory`）讀取此值顯示詳細明細
 
 ### 技能升級費用（`upgradeSkill`）

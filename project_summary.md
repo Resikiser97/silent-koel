@@ -70,8 +70,8 @@ Goblinnest（單人獨立開發，AI 輔助）
 **技能費用（階梯制）**：Lv1=1點，Lv2=2點，Lv3=3點，Lv4=4點，Lv5=5點；全滿需 63 點
 
 **技能點來源（v0.32.0 重整，死亡不再直接給點）**：
-- 精英怪擊殺：第1夜+1，第2夜+2，第3夜+3
-- Boss 擊殺：+5
+- 精英怪擊殺：第1夜+1，第2夜+1，第3夜+2（v0.47.0 調整）
+- Boss 擊殺：+3（v0.47.0 調整，原為+5）
 - 時間獎勵（死亡/勝利時結算）：`Math.floor((600 - timeRemaining) / 180)`
 - 等級獎勵（死亡/勝利時結算）：`Math.floor(player.level / 6)`
 
@@ -137,6 +137,10 @@ Goblinnest（單人獨立開發，AI 輔助）
 - 使用開發者模式的記錄不上傳（`gameState.devModeUsed = true`）
 - 首頁右側 TOP10 浮窗（v0.40.0 起支援難度切換按鈕，`_top10Difficulty` 模組變數）
 - 排行榜面板（`showLeaderboard()`）亦支援難度切換，`_lbDifficulty` 模組變數；兩者保持同步
+- 趣味排行榜（v0.47.0）：`showFunLeaderboard(difficulty)`，5 類排名（最速通關、最速死亡、巨人獵人、殺手獵人、殺手克星）
+  - `sessionStats` 新增欄位：`giantKills`（巨人獵人）、`killerKills`（殺手獵人）、`killerMaxLevel`（殺手克星）
+  - 「🎲 種類」按鈕（`showLeaderboard()` 標題列）→ `showFunLeaderboard()`
+  - 新增 Supabase 查詢：`fetchFunSpeedVictory`、`fetchFunSpeedDeath`、`fetchFunGiantKills`、`fetchFunKillerKills`、`fetchFunKillerMaxLevel`
 
 ### 真實遊玩時間（realPlayTime）
 - `gameState.realPlayTime`：累積毫秒數，上傳時 `Math.floor(realPlayTime / 1000)` 轉秒
@@ -178,6 +182,7 @@ Goblinnest（單人獨立開發，AI 輔助）
 - 升級費用：`getMutationUpgradeCost()`
 - 補償機制：`MUTATION_COMPENSATION_VERSION` 控制版本；`checkMutationCompensation()` 在 `initMutationData()` 末尾執行，執行一次後記錄避免重複
 - 突變點數來源：擊殺生物累積；`corpseEaten=N` 時 N% 機率額外獲得 1~N 點（死亡時結算）
+- 兌換按鈕（v0.47.0）：100 技能點 → 10 突變點（`showMutationPanel()` 底部按鈕）
 - 初始化流程：`window.onload → initMutationData() → applyMutationEffects()`
 - 套用順序：`initializeGame() → applySkillBonuses() → applyEvolutionEffects() → applyAllMutationBonuses()`
 
@@ -221,6 +226,8 @@ config/
   evolution.js        → EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種）
   patchnotes.js       → PATCH_NOTES（版本更新公告資料，最新版本置頂）
   supabase.js         → Supabase API（fetchVictoryRecords / fetchDefeatRecords / submitScore）
+                        fetchFunSpeedVictory / fetchFunSpeedDeath / fetchFunGiantKills /
+                        fetchFunKillerKills / fetchFunKillerMaxLevel（v0.47.0）
 
 lang/
   zh-TW.js            → 繁體中文語言包
@@ -267,6 +274,7 @@ map/
 | `gameSettings` | `{ language, volume, keys, deviceMode, autoAttack }` |
 | `SAVE_VERSION` | 目前為 `"1.1"`（不一致時清除 playerSkills / skillPoints / savedOrgans / savedHiddenOrgans） |
 | `mutationData` | 突變器官等級和點數（不受 `SAVE_VERSION` 清除，永久保留） |
+| `lastDifficulty` | 上一局選擇的難度（`'easy'`/`'normal'`），供頁面重整後恢復（v0.47.0 B1）|
 
 ### 開發規則
 - `gameLoop` 裡絕對不能出現字面上的 `\n` 字符
@@ -277,7 +285,7 @@ map/
 - 每次 commit 後必須執行 git push origin master
 
 ### 版本與部署
-- 目前版本：**v0.46.0**
+- 目前版本：**v0.47.0**
 
 ### Branch 工作流程
 - `master`：主開發分支，所有日常開發在此進行
