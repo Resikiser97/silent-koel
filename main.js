@@ -110,6 +110,7 @@ function initializeGame() {
     gameState.bones               = [];
     gameState.treasures           = [];
     gameState.brainShockwaves     = [];
+    gameState.venomPuddles        = [];   // 蠍王定點毒霧陣列
     gameState.neutralCreatures    = [];
     gameState.hostileCreatures    = [];
     gameState.camera              = { x: 3200, y: 3550 };

@@ -408,24 +408,26 @@ function _drawScorp(ctx, r, t, boss) {
 }
 
 // ── 大白鯊衝刺警告箭頭 ───────────────────────────────────────────
-// warning=黃色閃爍，charging=紅色；寬度=Boss直徑；從鎖定位置出發指向玩家鎖定點
+// warning=黃色閃爍，charging=紅色；寬度=Boss直徑
+// 長度 = speed×4×0.8×60（實際衝刺距離，世界px轉螢幕px）
+// _chargeArrow = { angle, dist, fromX, fromY }：warning開始瞬間鎖定
 function _drawSharkChargeArrow(boss) {
     if (!boss._chargeArrow) return;
     const isWarning  = boss._chargeState === 'warning';
     const isCharging = boss._chargeState === 'charging';
     if (!isWarning && !isCharging) return;
 
-    const arrow = boss._chargeArrow;
-    const from  = worldToScreen(arrow.fromX, arrow.fromY);
-    const to    = worldToScreen(arrow.toX,   arrow.toY);
-    const dx    = to.x - from.x;
-    const dy    = to.y - from.y;
-    const len   = Math.sqrt(dx * dx + dy * dy);
-    if (len < 1) return;
+    const { angle, dist, fromX, fromY } = boss._chargeArrow;
+    const from      = worldToScreen(fromX, fromY);
+    const toWorldX  = fromX + Math.cos(angle) * dist;
+    const toWorldY  = fromY + Math.sin(angle) * dist;
+    const to        = worldToScreen(toWorldX, toWorldY);
+    const screenLen = Math.sqrt((to.x - from.x) ** 2 + (to.y - from.y) ** 2);
+    if (screenLen < 1) return;
 
-    const angle  = Math.atan2(dy, dx);
-    const arrowW = boss.radius * 2;
-    const color  = isWarning ? 'rgba(255, 220, 0, 0.75)' : 'rgba(255, 50, 50, 0.75)';
+    const arrowW  = boss.radius * 2;
+    const bodyLen = Math.max(0, screenLen - arrowW * 0.6);
+    const color   = isWarning ? 'rgba(255, 220, 0, 0.75)' : 'rgba(255, 50, 50, 0.75)';
 
     ctx.save();
     ctx.translate(from.x, from.y);
@@ -434,14 +436,14 @@ function _drawSharkChargeArrow(boss) {
     // 箭身長方形
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.rect(0, -arrowW / 2, len - arrowW * 0.6, arrowW);
+    ctx.rect(0, -arrowW / 2, bodyLen, arrowW);
     ctx.fill();
 
     // 箭頭三角
     ctx.beginPath();
-    ctx.moveTo(len,                0);
-    ctx.lineTo(len - arrowW * 0.6, -arrowW * 0.8);
-    ctx.lineTo(len - arrowW * 0.6,  arrowW * 0.8);
+    ctx.moveTo(screenLen, 0);
+    ctx.lineTo(bodyLen,  -arrowW * 0.8);
+    ctx.lineTo(bodyLen,   arrowW * 0.8);
     ctx.closePath();
     ctx.fill();
 
@@ -451,33 +453,53 @@ function _drawSharkChargeArrow(boss) {
         ctx.strokeStyle = `rgba(255, 255, 0, ${pulse.toFixed(2)})`;
         ctx.lineWidth   = 2;
         ctx.beginPath();
-        ctx.rect(0, -arrowW / 2, len - arrowW * 0.6, arrowW);
+        ctx.rect(0, -arrowW / 2, bodyLen, arrowW);
         ctx.stroke();
     }
 
     ctx.restore();
 }
 
-// ── 蠍王毒霧擴散圓 ────────────────────────────────────────────────
-// 從Boss位置向外擴散至 maxRadius(300px)，持續 duration(4000ms)，透明度漸淡
-function _drawScorpPoisonFog(boss, sx, sy) {
-    const v = boss._poisonFogVisual;
-    if (!v) return;
+// ── 蠍王毒霧特效（警告光圈 + 定點毒霧圓） ────────────────────────
+// 警告：600ms黃色虛線圓圈（鎖定玩家位置）
+// 毒霧：radius 150px，持續4000ms，淡入300ms / 淡出500ms
+function _drawVenomEffects(boss) {
+    // 1. 警告光圈（黃色虛線，閃爍）
+    if (boss._venomWarning) {
+        const s = worldToScreen(boss._venomWarning.x, boss._venomWarning.y);
+        const pulse = 0.5 + Math.sin(Date.now() / 80) * 0.5;
+        ctx.save();
+        ctx.setLineDash([8, 6]);
+        ctx.strokeStyle = `rgba(255, 220, 0, ${pulse.toFixed(2)})`;
+        ctx.lineWidth   = 2;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 150, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
 
-    const elapsed   = Date.now() - v.startTime;
-    const progress  = Math.min(elapsed / v.duration, 1.0);
-    const curRadius = v.maxRadius * progress;           // 世界單位 = 螢幕像素（無縮放）
-    const alpha     = 0.4 * (1 - Math.pow(progress, 2));
+    // 2. 定點毒霧圓圈（綠色半透明，淡入淡出）
+    if (gameState.venomPuddles) {
+        for (const puddle of gameState.venomPuddles) {
+            const elapsed = Date.now() - puddle.startTime;
+            let alpha;
+            if (elapsed < 300)                        alpha = (elapsed / 300) * 0.45;
+            else if (elapsed > puddle.duration - 500) alpha = ((puddle.duration - elapsed) / 500) * 0.45;
+            else                                      alpha = 0.45;
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(sx, sy, curRadius, 0, Math.PI * 2);
-    ctx.fillStyle   = `rgba(80, 200, 80, ${alpha.toFixed(3)})`;
-    ctx.fill();
-    ctx.strokeStyle = `rgba(40, 160, 40, ${Math.min(1, alpha * 1.5).toFixed(3)})`;
-    ctx.lineWidth   = 3;
-    ctx.stroke();
-    ctx.restore();
+            const s = worldToScreen(puddle.x, puddle.y);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, puddle.radius, 0, Math.PI * 2);
+            ctx.fillStyle   = `rgba(80, 200, 80, ${alpha.toFixed(3)})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(40, 160, 40, ${Math.min(1, alpha * 1.5).toFixed(3)})`;
+            ctx.lineWidth   = 3;
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
 }
 
 // ── 蠍王沙暴螢幕外圈遮罩 ─────────────────────────────────────────
@@ -486,6 +508,9 @@ function _drawScorpPoisonFog(boss, sx, sy) {
 function _drawSandStormOverlay() {
     const boss = gameState.boss;
     if (!boss || !boss._sandStormVisual) return;
+
+    // 玩家不在沙漠生態區時不顯示遮罩（可跑出沙漠躲避）
+    if (getBiome(gameState.player.x, gameState.player.y) !== 'desert') return;
 
     const elapsed  = Date.now() - boss._sandStormVisual.startTime;
     const duration = boss._sandStormVisual.duration;
@@ -543,8 +568,8 @@ function drawBoss() {
     // Boss 形狀（純 Canvas）
     drawBossShape(ctx, boss, s.x, s.y);
 
-    // 毒霧擴散圓（蠍王，在形狀後繪製疊在身上）
-    if (boss.biome === 'desert') _drawScorpPoisonFog(boss, s.x, s.y);
+    // 毒霧特效（蠍王：警告光圈 + 定點毒霧圓，在形狀後繪製）
+    if (boss.biome === 'desert') _drawVenomEffects(boss);
 
     // 名字標籤
     ctx.save();
@@ -594,7 +619,7 @@ function spawnBoss() {
         attackCooldown: 0, state: 'patrolling',
         lastAttackCrit: false,   // 熊：上一擊是否暴擊
         lastAttackLeg:  'left',  // 熊：攻擊時哪腳在地（'left'|'right'）
-        _chargeArrow:   null,    // 鯊：衝刺箭頭 { fromX, fromY, toX, toY }
+        _chargeArrow:   null,    // 鯊：衝刺箭頭 { angle, dist, fromX, fromY }
         wanderTarget: null, lastWanderTime: Date.now(),
         name: cfg.name, label: cfg.label,
         color: cfg.color, colorChasing: cfg.colorChasing,
@@ -680,43 +705,52 @@ function updateBoss() {
                 boss._chargeState = 'warning';
                 boss._chargeWarningStart = now;
                 boss._chargeTarget = { x: p.x, y: p.y };
-                // 鎖定衝刺箭頭起點（Boss當前位置）和終點（玩家當前位置）
-                boss._chargeArrow = { fromX: boss.x, fromY: boss.y, toX: p.x, toY: p.y };
+                // 鎖定箭頭：方向+實際衝刺距離（speed×4×0.8s×60fps）
+                const _cAngle = Math.atan2(p.y - boss.y, p.x - boss.x);
+                const _cDist  = boss.speed * 4 * 0.8 * 60;
+                boss._chargeArrow = { angle: _cAngle, dist: _cDist, fromX: boss.x, fromY: boss.y };
             }
         }
     }
 
     // ── 沙漠蠍王：毒霧 + 沙暴
     if (boss.name && boss.name.includes('蠍')) {
-        // 毒霧：每5秒在玩家周圍釋放
+        // 毒液投擲：每5秒鎖定玩家位置，不限距離
         if (!boss._venomTimer) boss._venomTimer = now;
-        if (now - boss._venomTimer > 5000 && dist < 300) {
+        if (now - boss._venomTimer > 5000) {
             boss._venomTimer = now;
-            // 對玩家施加持續毒傷（模擬：直接傷害 + 顯示文字）
-            p._scorpionVenomEnd = now + 4000;
-            p._scorpionVenomDmg = Math.round(boss.damage * 0.3);
-            p._scorpionVenomTick = now;
-            // 毒霧視覺特效（從Boss向外擴散300px，持續4秒）
-            boss._poisonFogVisual = { startTime: now, duration: 4000, maxRadius: 300 };
-            showFloatingText(p.x, p.y - 30, t('venomFloat') || '☠ 毒霧', '#aa00cc', 16);
+            boss._venomWarning = { x: p.x, y: p.y, startTime: now, duration: 600 };
         }
-        // 毒傷 tick（玩家跑出擴散圓範圍可躲開傷害）
-        if (p._scorpionVenomEnd && now < p._scorpionVenomEnd) {
-            if (now - (p._scorpionVenomTick || 0) >= 1000) {
-                p._scorpionVenomTick = now;
-                // 動態計算當前毒霧半徑（隨時間擴散）
-                const fogRadius = boss._poisonFogVisual
-                    ? boss._poisonFogVisual.maxRadius * Math.min(
-                        (now - boss._poisonFogVisual.startTime) / boss._poisonFogVisual.duration, 1.0)
-                    : 300;
-                if (wrappedDistance(boss.x, boss.y, p.x, p.y) < fogRadius) {
-                    applyDamageToPlayer(p._scorpionVenomDmg || 5, boss);
+        // 警告600ms後在鎖定位置生成定點毒霧
+        if (boss._venomWarning && now - boss._venomWarning.startTime >= boss._venomWarning.duration) {
+            if (!gameState.venomPuddles) gameState.venomPuddles = [];
+            gameState.venomPuddles.push({
+                x:         boss._venomWarning.x,
+                y:         boss._venomWarning.y,
+                radius:    150,
+                startTime: now,
+                duration:  4000,
+                dmgPerSec: Math.round(boss.damage * 0.3),
+                lastTick:  now,
+            });
+            boss._venomWarning = null;
+        }
+        // 毒霧傷害 tick（玩家跑出 radius 停止受傷）
+        if (gameState.venomPuddles) {
+            for (let _vi = gameState.venomPuddles.length - 1; _vi >= 0; _vi--) {
+                const puddle = gameState.venomPuddles[_vi];
+                if (now - puddle.startTime >= puddle.duration) {
+                    gameState.venomPuddles.splice(_vi, 1);
+                    continue;
+                }
+                if (now - puddle.lastTick >= 1000) {
+                    puddle.lastTick = now;
+                    if (wrappedDistance(puddle.x, puddle.y, p.x, p.y) < puddle.radius) {
+                        applyDamageToPlayer(puddle.dmgPerSec, boss);
+                        showFloatingText(p.x, p.y - 30, t('venomFloat') || '☠ 毒霧', '#aa00cc', 16);
+                    }
                 }
             }
-        }
-        // 清除過期毒霧視覺
-        if (boss._poisonFogVisual && now - boss._poisonFogVisual.startTime >= boss._poisonFogVisual.duration) {
-            boss._poisonFogVisual = null;
         }
         // 沙暴：血量<40%時觸發一次
         if (!boss._sandstormTriggered && boss.hp / boss.maxHp < 0.4) {
@@ -730,8 +764,8 @@ function updateBoss() {
         if (boss._sandstormActive && now > (boss._sandstormEndTime || 0)) {
             boss._sandstormActive = false;
         }
-        // 沙暴期間：玩家移速 -40%（用 flag，由 updatePlayerMovement 檢查）
-        p._inSandstorm = boss._sandstormActive || false;
+        // 沙暴期間：玩家移速 -40%，但只在沙漠生態區內才生效（離開沙漠立即解除）
+        p._inSandstorm = (boss._sandstormActive || false) && getBiome(p.x, p.y) === 'desert';
     } else {
         p._inSandstorm = false;
     }
@@ -756,7 +790,7 @@ function updateBoss() {
                 if (boss.biome === 'forest') {
                     boss.lastAttackCrit = isCrit;
                     // 暴擊命中玩家時顯示橙色浮動文字
-                    if (isCrit) showFloatingText(boss.x, boss.y - boss.radius * 2, 'X熊爪！', '#ff8800', 18);
+                    if (isCrit) showFloatingText(p.x, p.y - 40, 'X熊爪！', '#ff8800', 18);
                     // 記錄哪腳踩地（追擊速度下的踏步相位）
                     const atkPeriod = 450 / 1.9;
                     boss.lastAttackLeg = Math.sin(now / atkPeriod) > 0 ? 'left' : 'right';
