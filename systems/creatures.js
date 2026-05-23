@@ -56,7 +56,8 @@ function _drawCreatureGlow(ctx, creature, sx, sy) {
 
 // ── 各物種形狀函式（全部以 (0,0) 為中心，頭朝右 +x，尾朝左 -x）──
 
-// 駝鹿（moose）— 橢圓身體 + 頭部圓 + 鹿角長在頭部（完整旋轉）
+// 駝鹿（moose）— 橢圓身體 + 頭部圓 + 鹿角從頭部往 ±y 兩側展開（完整旋轉）
+// 旋轉後：移動方向兩側各一組鹿角，正確左右對稱
 function _drawMoose(ctx, r) {
     // 身體橢圓
     ctx.beginPath();
@@ -68,31 +69,37 @@ function _drawMoose(ctx, r) {
     ctx.arc(r * 1.3, 0, r * 0.42, 0, Math.PI * 2);
     ctx.fill();
 
-    // 鹿角（從頭部上方左右對稱展開）
+    // 鹿角（從頭部往 ±y 兩側展開，旋轉後變成移動方向的兩側）
     ctx.strokeStyle = ctx.fillStyle;
     ctx.lineWidth   = r * 0.18;
     ctx.lineCap     = 'round';
 
-    // 左鹿角主枝（頭部左上）
+    // ── 上側鹿角（-y 方向）──
     ctx.beginPath();
-    ctx.moveTo(r * 1.1, -r * 0.3);
-    ctx.lineTo(r * 0.7, -r * 1.2);
+    ctx.moveTo(r * 1.3,  0);
+    ctx.lineTo(r * 1.3, -r * 1.1);   // 主枝
     ctx.stroke();
-    // 左分叉
     ctx.beginPath();
-    ctx.moveTo(r * 0.9, -r * 0.75);
-    ctx.lineTo(r * 0.4, -r * 0.95);
+    ctx.moveTo(r * 1.3, -r * 0.55);
+    ctx.lineTo(r * 1.85, -r * 0.9);  // 往後分叉
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(r * 1.3, -r * 0.55);
+    ctx.lineTo(r * 0.75, -r * 0.9);  // 往前分叉
     ctx.stroke();
 
-    // 右鹿角主枝（頭部右上）
+    // ── 下側鹿角（+y 方向，鏡像對稱）──
     ctx.beginPath();
-    ctx.moveTo(r * 1.5, -r * 0.3);
-    ctx.lineTo(r * 1.9, -r * 1.2);
+    ctx.moveTo(r * 1.3,  0);
+    ctx.lineTo(r * 1.3,  r * 1.1);
     ctx.stroke();
-    // 右分叉
     ctx.beginPath();
-    ctx.moveTo(r * 1.7, -r * 0.75);
-    ctx.lineTo(r * 2.15, -r * 0.95);
+    ctx.moveTo(r * 1.3,  r * 0.55);
+    ctx.lineTo(r * 1.85, r * 0.9);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(r * 1.3,  r * 0.55);
+    ctx.lineTo(r * 0.75, r * 0.9);
     ctx.stroke();
 }
 
@@ -227,13 +234,13 @@ function _drawLynx(ctx, r) {
     ctx.closePath();
     ctx.fill();
 
-    // 彎尾（右側，翻轉後自動換邊）
+    // 彎尾（左側 -x，預設尾在後方；scale(-1,1) 後自動換到右側）
     ctx.strokeStyle = CREATURE_COLORS.lynx;
     ctx.lineWidth   = r * 0.22;
     ctx.lineCap     = 'round';
     ctx.beginPath();
-    ctx.moveTo(r * 0.8, r * 0.75);
-    ctx.quadraticCurveTo(r * 1.55, r * 0.25, r * 1.3, -r * 0.55);
+    ctx.moveTo(-r * 0.8, r * 0.75);
+    ctx.quadraticCurveTo(-r * 1.55, r * 0.25, -r * 1.3, -r * 0.55);
     ctx.stroke();
 }
 
