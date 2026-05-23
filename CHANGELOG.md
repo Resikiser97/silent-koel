@@ -2,6 +2,23 @@
 
 ---
 
+## v0.47.1 - 2026-05-23
+
+### 修復
+
+- **公告紅點未及時消除**（`systems/ui.js`）：`showPatchNotes()` 改為建立 `readInSession` Set 追蹤本次已讀的版本 Tab，不再在面板開啟時立即寫入 `lastSeenPatchVersion`；所有比 `lastSeenPatchVersion` 新的版本 Tab 都點開後才消除紅點並更新 localStorage，徹底解決殘留問題
+
+### 調整
+
+- **進化圖鑑改為固定值動態描述**（`systems/ui.js`）：新增全域函式 `buildEvoLevelDesc(pathId, upToLevel)`，從 `config/evolution.js` 的 `effects` 動態計算累計值（草食性 HP/果子XP/體型累計，雜食性速度累計；肉食性攻擊和雜食性白骨素為固定值），圖鑑數值自動與 config 同步，不再手寫固定文字
+
+### 新增
+
+- **圖鑑 Boss 介紹頁**（`systems/ui.js`）：圖鑑遊戲說明分頁新增「Boss 圖鑑」頁，動態引用 `EASY_MAP`/`NORMAL_MAP` bosses 數值，顯示簡單/普通兩套 HP/速度/傷害、普通難度技能說明（黑熊狂暴化/大白鯊衝鋒撕咬/蠍王毒霧）、通用回血說明、弱點提示
+- **圖鑑難度介紹頁**（`systems/ui.js`）：圖鑑遊戲說明分頁新增「難度介紹」頁，動態引用 `EASY_MAP`/`NORMAL_MAP` config，顯示生物強度倍率、精英/Boss 獎勵、特殊機制開關（巨人化/殺手化/精英回血/Boss 回血），兼顧硬核與休閒玩家說明風格
+
+---
+
 ## v0.47.0 - 2026-05-23
 
 ### 修正（Bug Fix）

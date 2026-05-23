@@ -76,6 +76,8 @@ systems/ui.js             showTooltip, hideTooltip, showMapSelect
                           showGuide, hideGuide, showStartScreen
                           showGuideStory, _getGuideStoryPages
                           showPatchNotes, checkPatchNotesPopup
+                          buildEvoLevelDesc（全域，動態生成進化圖鑑描述）
+                          showCompendium → _buildBossPage, _buildDifficultyPage（圖鑑新增頁）
 
 main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ```
@@ -575,13 +577,39 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
+## 圖鑑系統（v0.31.0 / v0.47.1 擴充）
+
+- **入口**：首頁「📖 圖鑑」按鈕呼叫 `showCompendium('guide')`；遊戲內右上角 `_drawCompendiumBtn()` 呼叫 `showCompendium('organs')`
+- **三分頁**：遊戲說明（guide） / 器官圖鑑（organs） / 進化系統（evo）
+- **開啟時暫停**：`organSelectionActive = true`，關閉時恢復
+
+### 遊戲說明分頁（v0.47.1 擴充至 5 頁）
+
+| 頁碼 | 內容 |
+|------|------|
+| 1 | 基本操作（移動/攻擊/設定/果子/目標/自動攻擊） |
+| 2 | 器官系統說明 |
+| 3 | 進化系統說明 |
+| 4 | **Boss 圖鑑**（`_buildBossPage()`）：動態引用 EASY_MAP/NORMAL_MAP bosses，顯示簡單/普通兩套數值、普通技能說明、通用回血、弱點提示 |
+| 5 | **難度介紹**（`_buildDifficultyPage()`）：動態引用地圖 config，顯示生物強度倍率、精英/Boss 獎勵、特殊機制開關 |
+
+### buildEvoLevelDesc(pathId, upToLevel)（v0.47.1）
+
+- **位置**：`systems/ui.js`，全域函式，定義於 `showCompendium()` 之前
+- 從 `EVOLUTION_PATHS[pathId].levels` 動態計算，`config/evolution.js` 改數值後自動同步
+- **草食性**：HP / 果子XP 累計，體型取最新值，行為說明依等級固定文字（撞到不逃跑/被攻擊不逃跑）
+- **肉食性**：攻擊/屍體XP/吞噬時間/攻速 取當級固定值（非累計）
+- **雜食性**：速度累計，白骨吞噬時間/白骨素 取當級固定值
+
+---
+
 ## 版本更新公告系統（v0.42.0）
 
 - **資料檔**：`config/patchnotes.js`，定義全域常數 `PATCH_NOTES`（陣列），最新版本置頂（index 0）
 - **欄位格式**：`{ version, date, added[], fixed[], changed[] }`，沒有內容的欄位可省略
-- **`showPatchNotes()`**（`systems/ui.js`）：彈出公告面板（z-index 210），左側垂直 Tab 切換版本，右側顯示分類內容；開啟即寫入 `lastSeenPatchVersion` 至 localStorage
+- **`showPatchNotes()`**（`systems/ui.js`）：彈出公告面板（z-index 210），左側垂直 Tab 切換版本，右側顯示分類內容；建立 `readInSession` Set 追蹤已讀 Tab，所有未讀版本都點開後才更新 `lastSeenPatchVersion` 並消除紅點（v0.47.1 修復）
 - **`checkPatchNotesPopup()`**（`systems/ui.js`）：在 `showStartScreen()` 末尾呼叫；新玩家（無 `hasPlayedBefore`）跳過；有未讀版本（`lastSeenPatchVersion !== PATCH_NOTES[0].version`）時自動 setTimeout 400ms 彈出
-- **未讀標記**：比 `lastSeenPatchVersion` 更新的版本在 Tab 列顯示紅點（`#FF4444`）
+- **未讀標記**：比 `lastSeenPatchVersion` 更新的版本在 Tab 列顯示紅點（`#FF4444`，class `pn-tab-dot`）；首頁按鈕紅點 id `patch-red-dot`
 - **首頁按鈕**：`#patch-notes-btn`，位置 `top:96px left:20px`（故事書按鈕正下方），點擊呼叫 `showPatchNotes()`
 
 ---

@@ -792,6 +792,67 @@ function getOrganDisplayName(id) {
     return id;
 }
 
+// 進化圖鑑：從 EVOLUTION_PATHS 的 effects 動態生成累計描述
+// 草食/雜食速度為累計值；肉食攻擊、雜食白骨素為固定值（當級顯示當級）
+function buildEvoLevelDesc(pathId, upToLevel) {
+    const path = EVOLUTION_PATHS[pathId];
+    if (!path) return '';
+    const levels = path.levels.slice(0, upToLevel);
+
+    let totalHp      = 0;
+    let totalSpeed   = 0;
+    let totalFruitXP = 0;
+    let totalRadius  = 0;
+    let friendly     = false;
+    let boneEatTime  = null;
+
+    for (const lv of levels) {
+        if (lv.hpMaxAdd)            totalHp      += lv.hpMaxAdd;
+        if (lv.speedBonus)          totalSpeed   += lv.speedBonus;
+        if (lv.fruitXPBonus)        totalFruitXP += lv.fruitXPBonus;
+        if (lv.radiusPercent)       totalRadius   = lv.radiusPercent; // 取最新值
+        if (lv.friendly)            friendly      = true;
+        if (lv.boneEatTime != null) boneEatTime   = lv.boneEatTime;
+    }
+
+    const parts = [];
+
+    if (pathId === 'herbivore') {
+        parts.push('可吃果子');
+        if (totalHp > 0)      parts.push('HP上限+' + totalHp);
+        if (totalFruitXP > 0) parts.push('果子XP+' + totalFruitXP);
+        if (totalRadius > 0)  parts.push('體型+' + Math.round(totalRadius * 100) + '%');
+        if (friendly)         parts.push('中立生物完全友善');
+        if (upToLevel >= 2)   parts.push('撞到不逃跑');
+        if (upToLevel >= 3)   parts.push('被攻擊也不逃跑');
+    }
+
+    if (pathId === 'carnivore') {
+        // 肉食性各數值為固定值（當級對應固定總攻擊加成），直接取當前等級
+        const lv = levels[upToLevel - 1];
+        if (!lv) return '';
+        parts.push('可吃屍體');
+        if (lv.attackAdd)            parts.push('攻擊+' + lv.attackAdd);
+        if (lv.eatXP)                parts.push('屍體' + lv.eatXP + 'XP');
+        if (lv.eatTime != null)      parts.push(lv.eatTime / 1000 + '秒吞噬');
+        if (lv.attackSpeedBonus > 0) parts.push('攻速+' + Math.round(lv.attackSpeedBonus * 100) + '%');
+    }
+
+    if (pathId === 'omnivore') {
+        // 速度累計，白骨素/白骨吞噬取當級固定值
+        const lv = levels[upToLevel - 1];
+        if (!lv) return '';
+        parts.push('需草食+肉食');
+        if (totalSpeed > 0)              parts.push('速度+' + totalSpeed.toFixed(1));
+        parts.push('獲得毒囊');
+        if (lv.boneEatTime === 0)        parts.push('即時吞噬白骨');
+        else if (lv.boneEatTime != null) parts.push('白骨吞噬' + lv.boneEatTime / 1000 + '秒');
+        if (lv.boneMaterialAdd)          parts.push('白骨素+' + lv.boneMaterialAdd + '/次');
+    }
+
+    return parts.join('，');
+}
+
 function showCompendium(startTab) {
     applyDeviceMode();
     if (document.getElementById('compendium-overlay')) return;
@@ -878,6 +939,85 @@ function showCompendium(startTab) {
         }
     }
 
+    // Boss 圖鑑頁：動態引用 EASY_MAP/NORMAL_MAP bosses 數值
+    function _buildBossPage() {
+        const easyBosses   = (typeof EASY_MAP   !== 'undefined') ? EASY_MAP.bosses   : [];
+        const normalBosses = (typeof NORMAL_MAP !== 'undefined') ? NORMAL_MAP.bosses : [];
+
+        // 技能說明文字：因技能邏輯未 config 化，直接手寫
+        const bossSkills = {
+            'forest': '狂暴化（HP<40%）：速度×1.5、傷害×1.3。森林內 50% 暴擊 1.5倍；離開森林 25% 暴擊 1.25倍',
+            'ocean':  '衝鋒撕咬（每8秒或HP<40%）：命中 1.5倍傷害並暈眩玩家 0.3秒。海洋內速度+30%、每5秒回2%HP',
+            'desert': '毒霧（每10秒或HP<40%）：200px範圍每秒5傷持續3秒。沙漠內觸發沙塵暴：玩家300px外視野遮蔽'
+        };
+
+        let html = _h2('👾 Boss 圖鑑');
+
+        normalBosses.forEach(bossN => {
+            const bossE = easyBosses.find(b => b.biome === bossN.biome) || {};
+            html += '<div style="margin-bottom:14px;border-left:3px solid #CC4400;padding-left:10px;">';
+            html += '<div style="font-weight:bold;font-size:14px;color:#FFD700;margin-bottom:3px;">' + _esc(bossN.name) + '</div>';
+            const appearsIn = [];
+            if (bossE.hp) appearsIn.push('🌿 簡單');
+            appearsIn.push('⚔️ 普通');
+            html += '<div style="font-size:11px;color:#888;margin-bottom:4px;">出現難度：' + _esc(appearsIn.join(' / ')) + '</div>';
+            if (bossE.hp) {
+                html += '<div style="font-size:11px;color:#88cc88;margin-bottom:2px;">🌿 簡單：HP ' + _esc(String(bossE.hp)) + ' / 速度 ' + _esc(String(bossE.speed)) + ' / 傷害 ' + _esc(String(bossE.damage)) + '</div>';
+            }
+            html += '<div style="font-size:11px;color:#FF9988;margin-bottom:2px;">⚔️ 普通：HP ' + _esc(String(bossN.hp)) + ' / 速度 ' + _esc(String(bossN.speed)) + ' / 傷害 ' + _esc(String(bossN.damage)) + '</div>';
+            const skill = bossSkills[bossN.biome];
+            if (skill) {
+                html += '<div style="font-size:11px;color:#ccaaff;margin-bottom:2px;">技能（普通）：' + _esc(skill) + '</div>';
+            }
+            html += '<div style="font-size:11px;color:#aaaaff;">通用：每3秒回復2%最大HP</div>';
+            html += '</div>';
+        });
+
+        html += '<div style="font-size:11px;color:#aa8844;border-top:1px solid #333;padding-top:8px;margin-top:4px;">⚠️ 弱點提示：離開生態區後特殊技能效果減弱</div>';
+        return html;
+    }
+
+    // 難度介紹頁：動態引用 EASY_MAP / NORMAL_MAP config 數值
+    function _buildDifficultyPage() {
+        const easy   = typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null;
+        const normal = typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null;
+        const fKeys  = ['giantization', 'killer', 'eliteRegen', 'bossRegen'];
+        const fNames = { giantization: '巨人化', killer: '殺手化', eliteRegen: '精英回血', bossRegen: 'Boss 回血' };
+
+        let html = _h2('⚔️ 難度介紹');
+
+        if (easy) {
+            const ec    = easy.creatureStrength.hostile;
+            const feats = easy.features || {};
+            html += '<div style="margin-bottom:14px;">';
+            html += '<div style="font-size:13px;font-weight:bold;color:#88CC88;margin-bottom:4px;">🌿 簡單</div>';
+            html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-style:italic;">適合初次體驗的輕鬆模式。生物強度正常，Boss 相對溫和。探索世界、熟悉器官與進化系統的最佳起點。</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 生物強度：×' + _esc(String(ec.hpMultiplier)) + '（HP / 速度 / 傷害）</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 精英獎勵：第1夜 +1 / 第2夜 +1 / 第3夜 +2 技能點</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• Boss 擊殺獎勵：+3 技能點</div>';
+            html += '<div style="font-size:11px;color:#ccc;">• 特殊機制：' + _esc(fKeys.map(k => fNames[k] + (feats[k] ? ' ✅' : ' ➖')).join('、')) + '</div>';
+            html += '</div>';
+        }
+
+        if (normal) {
+            const nc    = normal.creatureStrength.hostile;
+            const feats = normal.features || {};
+            html += '<div style="margin-bottom:8px;">';
+            html += '<div style="font-size:13px;font-weight:bold;color:#FF9944;margin-bottom:4px;">⚔️ 普通</div>';
+            html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-style:italic;">給有經驗的玩家設計的挑戰模式。生物更強、追擊更積極、Boss 擁有獨特技能。通關更困難，但獎勵與達成感也更豐富。</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 生物強度：×' + _esc(String(nc.hpMultiplier)) + '（HP / 速度 / 傷害）</div>';
+            if (normal.aggroRangeOverride) {
+                html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 追擊範圍：' + _esc(String(normal.aggroRangeOverride)) + 'px（比簡單模式更積極）</div>';
+            }
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 精英獎勵：第1夜 +1 / 第2夜 +1 / 第3夜 +2 技能點</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• Boss 擊殺獎勵：+3 技能點</div>';
+            html += '<div style="font-size:11px;color:#ccc;">• 特殊機制：' + _esc(fKeys.map(k => fNames[k] + (feats[k] ? ' ✅' : ' ➖')).join('、')) + '、Boss 獨特技能 ✅</div>';
+            html += '</div>';
+        }
+
+        return html;
+    }
+
     function buildGuidePages() {
         const pages = [];
         // 操作說明（原 showGuide 的四頁內容精簡為文字版）
@@ -896,6 +1036,9 @@ function showCompendium(startTab) {
             _p(t('guideEvo1')) + _p(t('guideEvo2')) + _p(t('guideEvo3')) +
             _p(t('guideEvo4')) + _p(t('guideEvo5'))
         );
+        // v0.47.1 新增：Boss 圖鑑頁 + 難度介紹頁
+        pages.push(_buildBossPage());
+        pages.push(_buildDifficultyPage());
         return pages;
     }
 
@@ -963,7 +1106,8 @@ function showCompendium(startTab) {
         Object.values(EVOLUTION_PATHS).forEach(path => {
             let html = _h2(path.icon + ' ' + path.name + '  (最高Lv' + path.maxLevel + ')');
             path.levels.forEach((lv, i) => {
-                html += '<div style="margin-bottom:6px;"><span style="color:#FFD700;">Lv' + (i+1) + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(lv.desc) + '</span></div>';
+                // 使用 buildEvoLevelDesc 動態生成累計描述，config 改數值後自動同步
+                html += '<div style="margin-bottom:6px;"><span style="color:#FFD700;">Lv' + (i+1) + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(buildEvoLevelDesc(path.id, i + 1)) + '</span></div>';
             });
             pages.push(html);
         });
@@ -1370,13 +1514,8 @@ function showPatchNotes() {
     if (document.getElementById('patch-notes-overlay')) return;
 
     const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
-    // 標記為已讀（開啟面板即算已讀）
-    if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
-        localStorage.setItem('lastSeenPatchVersion', PATCH_NOTES[0].version);
-    }
-    // B12: 移除紅點
-    const _rd = document.getElementById('patch-red-dot');
-    if (_rd) _rd.remove();
+    // 不立即標記已讀，改為追蹤本次已讀的版本 Tab
+    const readInSession = new Set();
 
     const overlay = document.createElement('div');
     overlay.id = 'patch-notes-overlay';
@@ -1428,6 +1567,20 @@ function showPatchNotes() {
         'border-right:1px solid #2a4a2a', 'padding:8px 0'
     ].join(';');
 
+    // 當所有未讀 Tab 都被點開後，消除紅點並更新 lastSeenPatchVersion
+    function _checkAllRead() {
+        if (_unreadNotes.length === 0) return;
+        const allRead = _unreadNotes.every(n => readInSession.has(n.version));
+        if (allRead) {
+            if (notes.length > 0) {
+                localStorage.setItem('lastSeenPatchVersion', notes[0].version);
+            }
+            const _rd = document.getElementById('patch-red-dot');
+            if (_rd) _rd.remove();
+            tabCol.querySelectorAll('.pn-tab-dot').forEach(d => d.remove());
+        }
+    }
+
     // 內容區（右側）
     const contentArea = document.createElement('div');
     contentArea.style.cssText = [
@@ -1437,6 +1590,10 @@ function showPatchNotes() {
 
     const notes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
     let activeIdx = 0;
+
+    // 計算未讀版本列表（比 lastSeen 更新的版本）
+    const _lastSeenIdx = notes.findIndex(n => n.version === lastSeen);
+    const _unreadNotes  = _lastSeenIdx === -1 ? notes.slice() : notes.slice(0, _lastSeenIdx);
 
     function renderContent(idx) {
         activeIdx = idx;
@@ -1510,6 +1667,7 @@ function showPatchNotes() {
 
         if (unread) {
             const dot = document.createElement('span');
+            dot.className = 'pn-tab-dot';
             dot.style.cssText = [
                 'width:7px', 'height:7px', 'border-radius:50%',
                 'background:#FF4444', 'display:inline-block', 'flex-shrink:0'
@@ -1520,7 +1678,11 @@ function showPatchNotes() {
 
         tab.appendChild(tabVer);
         tab.appendChild(tabDate);
-        tab.onclick = () => renderContent(idx);
+        tab.onclick = () => {
+            readInSession.add(note.version);
+            _checkAllRead();
+            renderContent(idx);
+        };
         tabCol.appendChild(tab);
     });
 
@@ -1531,8 +1693,12 @@ function showPatchNotes() {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     document.getElementById('game-container').appendChild(overlay);
 
-    // 預設顯示第一個（最新版本）
-    if (notes.length > 0) renderContent(0);
+    // 預設顯示第一個（最新版本），並將第一個版本標記為已讀
+    if (notes.length > 0) {
+        readInSession.add(notes[0].version);
+        _checkAllRead();
+        renderContent(0);
+    }
 }
 
 function checkPatchNotesPopup() {
