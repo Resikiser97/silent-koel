@@ -130,7 +130,11 @@ function initializeGame() {
         attackTimer: 0, attackVisual: 0,
         boneMaterial: 0,
         level: 1, levelXP: 0, tenacityUsed: false,
-        evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' }
+        evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' },
+        dashCooldown: 0,
+        dashInvincible: false,
+        dashInvincibleEnd: 0,
+        lastMoveDir: { dx: 0, dy: -1 }
     });
     gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };
     gameState.sessionStats = { giantKills: 0, killerKills: 0, killerMaxLevel: 0 };

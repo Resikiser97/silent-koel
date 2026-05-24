@@ -161,6 +161,17 @@ function _attackZone(x, y) {
     return x >= vw * 0.5 && y >= vh * 0.75;
 }
 
+// 閃現區：攻擊區正上方，同寬同高
+function _dashZone(x, y) {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (gameState.orientation === 'landscape') {
+        // 攻擊區：右側25%寬，底部50%高 → 閃現區：右側25%寬，底部50%~100%高
+        return x >= vw * 0.75 && y >= 0 && y < vh * 0.5;
+    }
+    // 直向：攻擊區：右側50%寬，底部25%高 → 閃現區：右側50%寬，底部25%~50%高
+    return x >= vw * 0.5 && y >= vh * 0.5 && y < vh * 0.75;
+}
+
 function _renderMobileOverlay() {
     const jc = document.getElementById('joystick-canvas');
     if (!jc) return;
@@ -200,6 +211,39 @@ function _renderMobileOverlay() {
             jctx.restore();
         }
 
+        // ── 橫向：閃現按鈕（攻擊區正上方，右側25%寬，底部0%~50%高，中心在25%高）
+        {
+            const dashCX = vw * 0.875, dashCY = vh * 0.25;
+            const dashCD = gameState.player.dashCooldown || 0;
+            const dashW  = vw * 0.25, dashH = vh * 0.5;
+            const dashL  = vw * 0.75, dashT = 0;
+            jctx.save();
+            jctx.textAlign = 'center';
+            jctx.textBaseline = 'middle';
+            jctx.fillStyle = 'white';
+            if (dashCD <= 0) {
+                jctx.globalAlpha = 0.15;
+                jctx.font = '60px Arial';
+                jctx.fillText('💨', dashCX, dashCY);
+            } else {
+                // 圖示（暗）
+                jctx.globalAlpha = 0.08;
+                jctx.font = '60px Arial';
+                jctx.fillText('💨', dashCX, dashCY);
+                // 冷卻進度條（從上往下）
+                const prog = dashCD / 15000;
+                jctx.globalAlpha = 0.55;
+                jctx.fillStyle = 'rgba(100,100,100,0.55)';
+                jctx.fillRect(dashL, dashT, dashW, dashH * prog);
+                // 倒數秒數
+                jctx.globalAlpha = 0.7;
+                jctx.fillStyle = 'white';
+                jctx.font = '20px Arial';
+                jctx.fillText(Math.ceil(dashCD / 1000) + 's', dashCX, dashCY);
+            }
+            jctx.restore();
+        }
+
         // ── 動態搖桿（啟用時）
         if (_joyActive) {
             jctx.beginPath();
@@ -230,6 +274,39 @@ function _renderMobileOverlay() {
             jctx.fillText('⚔️', atkCX, atkCY);
         }
         jctx.restore();
+
+        // ── 直向：閃現按鈕（攻擊區正上方，右側50%寬，底部50%~75%高，中心在62.5%高）
+        {
+            const dashCX = vw * 0.75, dashCY = vh * 0.625;
+            const dashCD = gameState.player.dashCooldown || 0;
+            const dashW  = vw * 0.5, dashH = vh * 0.25;
+            const dashL  = vw * 0.5, dashT = vh * 0.5;
+            jctx.save();
+            jctx.textAlign = 'center';
+            jctx.textBaseline = 'middle';
+            jctx.fillStyle = 'white';
+            if (dashCD <= 0) {
+                jctx.globalAlpha = 0.15;
+                jctx.font = '60px Arial';
+                jctx.fillText('💨', dashCX, dashCY);
+            } else {
+                // 圖示（暗）
+                jctx.globalAlpha = 0.08;
+                jctx.font = '60px Arial';
+                jctx.fillText('💨', dashCX, dashCY);
+                // 冷卻進度條（從上往下）
+                const prog = dashCD / 15000;
+                jctx.globalAlpha = 0.55;
+                jctx.fillStyle = 'rgba(100,100,100,0.55)';
+                jctx.fillRect(dashL, dashT, dashW, dashH * prog);
+                // 倒數秒數
+                jctx.globalAlpha = 0.7;
+                jctx.fillStyle = 'white';
+                jctx.font = '20px Arial';
+                jctx.fillText(Math.ceil(dashCD / 1000) + 's', dashCX, dashCY);
+            }
+            jctx.restore();
+        }
 
         // ── 直向：搖桿（動態位置）
         if (_joyActive) {
@@ -284,6 +361,13 @@ function _attachJoystickListeners() {
             }
 
             const x = touch.clientX, y = touch.clientY;
+
+            // 閃現區（優先於攻擊區）
+            if (_dashZone(x, y)) {
+                handled = true;
+                playerDash();
+                continue;
+            }
 
             // 攻擊區
             if (_attackZone(x, y)) {

@@ -5,9 +5,47 @@
 //            checkXPMilestone / addXP / checkLevelUp
 // =============================================================
 
+function playerDash() {
+    const p = gameState.player;
+    if (p.dashCooldown > 0) return;
+    if (_joyPaused()) return;
+
+    // 取方向：手機優先 mobileInput，否則用 lastMoveDir
+    const mi = gameState.mobileInput;
+    let dirX, dirY;
+    if (mi.dx !== 0 || mi.dy !== 0) {
+        dirX = mi.dx;
+        dirY = mi.dy;
+    } else {
+        dirX = p.lastMoveDir.dx;
+        dirY = p.lastMoveDir.dy;
+    }
+
+    const len = Math.sqrt(dirX * dirX + dirY * dirY);
+    if (len === 0) return;
+    dirX /= len;
+    dirY /= len;
+
+    const distance = Math.min(p.speed * 50, 500);
+    const targetX = Math.max(p.radius, Math.min(MAP_WIDTH  - p.radius, p.x + dirX * distance));
+    const targetY = Math.max(p.radius, Math.min(MAP_HEIGHT - p.radius, p.y + dirY * distance));
+
+    p.x = targetX;
+    p.y = targetY;
+    p.dashCooldown      = 15000;
+    p.dashInvincible    = true;
+    p.dashInvincibleEnd = Date.now() + 500;
+}
+
 function updatePlayerMovement() {
     const p = gameState.player;
     const now = Date.now();
+
+    // 冷卻遞減（使用 Fixed Timestep，每幀 1000/60 ≈ 16.67ms）
+    if (p.dashCooldown > 0) p.dashCooldown = Math.max(0, p.dashCooldown - FIXED_DELTA);
+
+    // 無敵時間檢查
+    if (p.dashInvincible && now >= p.dashInvincibleEnd) p.dashInvincible = false;
 
     // 鱷魚死亡翻滾：暈眩期間無法移動
     if (p._stunUntil && now < p._stunUntil) return;
@@ -38,6 +76,13 @@ function updatePlayerMovement() {
     }
 
     if (dx === 0 && dy === 0) return;
+
+    // 更新最後移動方向（正規化）
+    const moveLen = Math.sqrt(dx * dx + dy * dy);
+    if (moveLen > 0) {
+        p.lastMoveDir = { dx: dx / moveLen, dy: dy / moveLen };
+    }
+
     p.x = ((p.x + dx) % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH;
     p.y = ((p.y + dy) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT;
 }

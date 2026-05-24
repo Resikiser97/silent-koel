@@ -32,6 +32,7 @@ systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeF
                           showXPPopup, checkTreasureCollision, updatePassiveOrgans
                           checkXPMilestone, addXP, checkLevelUp
                           findBestPerceptionPath
+                          playerDash（閃現技能：瞬移+無敵+冷卻，v0.53.0）
 systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTutorialStump，handleTutorialStumpKill
                           （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
 systems/combat.js         showFloatingText, applyDamageToPlayer, handleKill, playerAttack
@@ -69,6 +70,7 @@ systems/leaderboard.js    _lbDifficulty, _top10Difficulty, _diffKey
                           showFunLeaderboard（趣味排行榜，v0.47.0；👑 最高等級分類 v0.51.0）
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
+                          _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）
 systems/hud.js            drawGame, updateUI, drawTopBarUI
                           drawMinimap（含所有 _minimap 變數）, drawTreasures
 systems/ui.js             showTooltip, hideTooltip, showMapSelect
@@ -539,6 +541,38 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ### 關鍵 CSS 注意
 
 - `canvas { background-color }` 已改為 `#gameCanvas { background-color: #549954 }`，避免 `#joystick-canvas` 繼承綠色背景蓋住所有 overlay
+
+---
+
+## 閃現技能系統（v0.53.0）
+
+- **觸發**：桌機 `F` 鍵（`input.js handleKeyDown`）；手機版點擊 `_dashZone()` 矩形區域（攻擊區正上方）
+- **函式**：`playerDash()`（`systems/player.js`）
+- **效果**：朝 `lastMoveDir` 方向瞬移 `speed × 50`（最遠 500px），夾在地圖邊界內
+- **無敵**：`dashInvincible = true`，持續 500ms（`dashInvincibleEnd = Date.now() + 500`），`applyDamageToPlayer` 開頭返回跳過所有外部傷害
+- **冷卻**：`dashCooldown = 15000`（ms），每幀扣 `FIXED_DELTA`（≈16.67ms）
+- **方向優先序**：手機搖桿 `mobileInput` > `player.lastMoveDir`（移動時持續更新正規化方向，初始值 `{dx:0, dy:-1}` 朝上）
+
+### player 新增欄位
+
+| 欄位 | 初值 | 說明 |
+|------|------|------|
+| `dashCooldown` | `0` | 閃現剩餘冷卻毫秒（每幀由 `updatePlayerMovement` 遞減） |
+| `dashInvincible` | `false` | 無敵旗標（`applyDamageToPlayer` 開頭判斷） |
+| `dashInvincibleEnd` | `0` | 無敵結束時間戳（ms，由 `updatePlayerMovement` 檢查清除） |
+| `lastMoveDir` | `{dx:0, dy:-1}` | 最後移動方向（正規化，每幀移動時更新；閃現方向依據） |
+
+### 桌機版指示器（`hud.js drawGame` 步驟 12b）
+
+- 位置：VIEW_W 右側 50%、VIEW_H 50%~75%（與手機直向閃現區對應）
+- 正常：`💨 F`，globalAlpha 0.15，字體 28px
+- 冷卻：`💨 F` 暗（0.08）+ 灰色進度條 + 倒數秒數（20px，白色 0.7）
+
+### 手機版按鈕（`mobile.js _renderMobileOverlay`）
+
+- **直向**：右側 50% 寬，底部 50%~75% 高（攻擊區正上方）
+- **橫向**：右側 25% 寬，整個上半部（底部 0%~50% 高）
+- 正常：`💨` globalAlpha 0.15；冷卻：暗圖示 + 進度條 + 倒數秒數
 
 ---
 

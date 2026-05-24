@@ -2,6 +2,23 @@
 
 ---
 
+## v0.53.0 - 2026-05-24
+
+### 新增
+
+- **閃現技能（💨）**（`systems/player.js`、`systems/combat.js`、`systems/input.js`、`systems/mobile.js`、`systems/hud.js`）：
+  - 觸發：桌機版按 `F` 鍵；手機版點擊攻擊區正上方 💨 按鈕
+  - 效果：瞬間位移至最後移動方向 `speed × 50`（最遠 500px）
+  - 無敵：觸發後 **0.5 秒** 內豁免所有外部傷害（`applyDamageToPlayer` 開頭判斷 `dashInvincible`）
+  - 冷卻：**15 秒**（`dashCooldown`，每幀固定遞減）
+  - 方向邏輯：手機版優先用搖桿方向（`mobileInput`）；桌機版用 `lastMoveDir`（最後移動方向，初始朝上）
+  - `gameState.player` 新增欄位：`dashCooldown`、`dashInvincible`、`dashInvincibleEnd`、`lastMoveDir`
+  - 桌機版右下角繪製冷卻指示器（`💨 F`），冷卻中顯示灰色進度條 + 倒數秒數
+  - 手機版 `_dashZone()` 定義按鈕矩形；冷卻中顯示灰色進度條 + 倒數秒數
+- **語言包新增** `dashSkill` / `dashCooldownLabel` 鍵值（`lang/zh-TW.js`、`lang/en.js`）
+
+---
+
 ## v0.52.0 - 2026-05-24
 
 ### 新增

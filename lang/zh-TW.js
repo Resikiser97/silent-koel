@@ -126,6 +126,8 @@ LANG['zh-TW'] = {
         poisonFloat: '毒 -{n}',
         boneMaterialFloat: '+{n} 白骨素',
         venomFloat: '☠ 毒霧',
+        dashSkill: '閃現',
+        dashCooldownLabel: '冷卻中',
         mutationExchange: '100 技能點 → 10 變異點',
         mutationExchangeHint: '目前技能點：{n}',
         // ── 圖鑑

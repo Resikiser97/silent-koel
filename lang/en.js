@@ -122,6 +122,8 @@ LANG['en'] = {
         poisonFloat: 'Poison -{n}',
         boneMaterialFloat: '+{n} Bone Material',
         venomFloat: '☠ Venom Cloud',
+        dashSkill: 'Blink',
+        dashCooldownLabel: 'Cooldown',
         mutationExchange: '100 Skill Pts → 10 Mutation Pts',
         mutationExchangeHint: 'Current skill points: {n}',
         // ── Compendium

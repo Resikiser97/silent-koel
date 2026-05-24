@@ -36,6 +36,13 @@ function handleKeyDown(e) {
             saveSettings();
         }
     }
+    if (key === 'f') {
+        if (!gameState.organSelectionActive && !gameState.settingsOpen &&
+            !gameState.skillTreeOpen && !gameState.gameOver && !gameState.victory &&
+            !gameState.mutationPanelOpen && !gameState.tutorialOpen) {
+            playerDash();
+        }
+    }
     gameState.devInput = (gameState.devInput + e.key).slice(-8);
     if (gameState.devInput === '77777778') toggleDevMode();
 }

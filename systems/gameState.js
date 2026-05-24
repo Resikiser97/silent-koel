@@ -29,7 +29,11 @@ const gameState = {
         attackTimer: 0, attackVisual: 0,
         boneMaterial: 0,
         level: 1, levelXP: 0, tenacityUsed: false,
-        evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' }
+        evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' },
+        dashCooldown: 0,
+        dashInvincible: false,
+        dashInvincibleEnd: 0,
+        lastMoveDir: { dx: 0, dy: -1 }
     },
 
     trees: [],

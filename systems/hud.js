@@ -722,6 +722,43 @@ function drawGame() {
         ctx.restore();
     }
 
+    // 12b. 桌機版閃現冷卻指示器（右下角，對應手機直向閃現區位置）
+    if (!gameState.isMobile && gameState.gameStarted && !gameState.gameOver && !gameState.victory) {
+        const dashCD = gameState.player.dashCooldown || 0;
+        // 矩形範圍：右側50%寬，底部25%~50%高（VIEW_W/2 ~ VIEW_W，VIEW_H*0.5 ~ VIEW_H*0.75）
+        const dashW = VIEW_W * 0.5;
+        const dashH = VIEW_H * 0.25;
+        const dashL = VIEW_W * 0.5;
+        const dashT = VIEW_H * 0.5;
+        const dashCX = VIEW_W * 0.75;
+        const dashCY = VIEW_H * 0.625;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'white';
+        if (dashCD <= 0) {
+            ctx.globalAlpha = 0.15;
+            ctx.font = '28px Arial';
+            ctx.fillText('💨 F', dashCX, dashCY);
+        } else {
+            // 圖示（暗）
+            ctx.globalAlpha = 0.08;
+            ctx.font = '28px Arial';
+            ctx.fillText('💨 F', dashCX, dashCY);
+            // 冷卻進度條（從上往下）
+            const prog = dashCD / 15000;
+            ctx.globalAlpha = 0.55;
+            ctx.fillStyle = 'rgba(100,100,100,0.55)';
+            ctx.fillRect(dashL, dashT, dashW, dashH * prog);
+            // 倒數秒數
+            ctx.globalAlpha = 0.7;
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText(Math.ceil(dashCD / 1000) + 's', dashCX, dashCY);
+        }
+        ctx.restore();
+    }
+
     // 13. 繪製小地圖
     drawMinimap();
 

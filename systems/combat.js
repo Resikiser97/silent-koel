@@ -21,6 +21,8 @@ function showFloatingText(wx, wy, text, color, fontSize) {
 
 function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
+    // 閃現無敵期間豁免所有外部傷害（毒傷tick/刺甲反傷不走此函式，不受影響）
+    if (p.dashInvincible) return;
     const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
     gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
     AudioManager.play('hurt');
