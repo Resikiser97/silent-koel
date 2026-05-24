@@ -13,9 +13,9 @@ function _collectFruit(p, fruit) {
         herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
     }
     const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
-    addXP(fruitXP);
+    const actualFruitXP = addXP(fruitXP);
     AudioManager.play('eatFruit');
-    showXPPopup(p.x, p.y, fruitXP);
+    showXPPopup(p.x, p.y, actualFruitXP);
 }
 
 function playerDash() {
@@ -186,8 +186,8 @@ function checkTreasureCollision() {
     for (let i = gameState.treasures.length - 1; i >= 0; i--) {
         const t = gameState.treasures[i];
         if (wrappedDistance(p.x, p.y, t.x, t.y) < p.radius + t.radius) {
-            addXP(50);
-            showXPPopup(p.x, p.y, 50);
+            const actualXP = addXP(50);
+            showXPPopup(p.x, p.y, actualXP);
             gameState.treasures.splice(i, 1);
         }
     }
@@ -250,6 +250,7 @@ function addXP(amount) {
     gameState.stats.xpCurrent += finalAmount;
     gameState.player.levelXP  += finalAmount;
     checkLevelUp();
+    return finalAmount; // 回傳實際加入的 XP（已乘 mutationXpBonus）
 }
 
 function checkLevelUp() {

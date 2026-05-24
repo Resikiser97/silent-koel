@@ -496,8 +496,8 @@ function handleEliteKill(elite) {
         const drops = Object.values(HIDDEN_ORGANS).filter(h => !ownedIds.includes(h.id) && Math.random() < 0.5);
         if (drops.length > 0) showHiddenOrganSelection(drops);
     }
-    addXP(xp);
-    showXPPopup(gameState.player.x, gameState.player.y, xp);
+    const actualXP = addXP(xp);
+    showXPPopup(gameState.player.x, gameState.player.y, actualXP);
     const nightIndex = Math.floor(gameState.currentPhaseIndex / 2);
     const eliteSkillPts = [1, 1, 2][nightIndex] || 1;
     gameState.skillPoints += eliteSkillPts;

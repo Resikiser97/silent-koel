@@ -231,6 +231,22 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
     title.textContent = t('lbSubmitTitle');
     box.appendChild(title);
 
+    const rankPreview = document.createElement('div');
+    rankPreview.style.cssText = [
+        'background:rgba(255,215,0,0.08)',
+        'border:1px solid rgba(255,215,0,0.3)',
+        'border-radius:6px',
+        'padding:10px 14px',
+        'margin-bottom:14px',
+        'font-size:13px',
+        'line-height:1.8',
+        'color:#ddd',
+        'text-align:left',
+        'min-height:48px'
+    ].join(';');
+    rankPreview.textContent = '⏳ 計算中...';
+    box.appendChild(rankPreview);
+
     const input = document.createElement('input');
     input.type = 'text';
     input.maxLength = 20;
@@ -263,6 +279,128 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
         onDone();
     }
 
+    const difficulty = gameState.lastDifficulty || 'easy';
+
+    // ⚠️ 每次新增趣味榜分類都必須在此同步新增對應查詢項目
+    const funCategories = [
+        {
+            label:    '🏃 通關速度榜',
+            fetchFn:  () => fetchFunSpeedVictory(difficulty),
+            colName:  'play_time',
+            myValue:  isVictory ? Math.floor(gameState.realPlayTime / 1000) : null,
+            ascending: true,   // 越小越好
+        },
+        {
+            label:    '💀 最速死亡榜',
+            fetchFn:  () => fetchFunSpeedDeath(difficulty),
+            colName:  'play_time',
+            myValue:  !isVictory ? Math.floor(gameState.realPlayTime / 1000) : null,
+            ascending: true,
+        },
+        {
+            label:    '👾 巨人獵人榜',
+            fetchFn:  () => fetchFunGiantKills(difficulty),
+            colName:  'giant_kills',
+            myValue:  gameState.sessionStats ? (gameState.sessionStats.giantKills || 0) : 0,
+            ascending: false,  // 越大越好
+        },
+        {
+            label:    '🔪 殺手獵人榜',
+            fetchFn:  () => fetchFunKillerKills(difficulty),
+            colName:  'killer_kills',
+            myValue:  gameState.sessionStats ? (gameState.sessionStats.killerKills || 0) : 0,
+            ascending: false,
+        },
+        {
+            label:    '⭐ 殺手克星榜',
+            fetchFn:  () => fetchFunKillerMaxLevel(difficulty),
+            colName:  'killer_max_level',
+            myValue:  gameState.sessionStats ? (gameState.sessionStats.killerMaxLevel || 0) : 0,
+            ascending: false,
+        },
+        {
+            label:    '⚔️ 最快擊殺Boss榜',
+            fetchFn:  () => fetchFunBossKillSpeed(difficulty),
+            colName:  'boss_kill_time',
+            myValue:  (isVictory && bossKillTime != null) ? Math.floor(bossKillTime) : null,
+            ascending: true,
+        },
+        {
+            label:    '👑 最高等級榜',
+            fetchFn:  () => fetchFunMaxLevel(difficulty),
+            colName:  'level',
+            myValue:  gameState.player ? (gameState.player.level || 1) : 1,
+            ascending: false,
+        },
+    ];
+
+    // 計算本局成績在一般榜的排名
+    async function _fetchGeneralRank() {
+        try {
+            let records;
+            if (isVictory) {
+                records = await fetchVictoryRecords(difficulty);
+            } else {
+                records = await fetchDefeatRecords(200, difficulty);
+            }
+            if (!records || records.length === 0) return 1;
+
+            const myTime = Math.floor(gameState.realPlayTime / 1000);
+
+            // 勝利：play_time 越短越好
+            // 失敗：play_time 越長越好（存活越久）
+            let rank = 1;
+            for (const r of records) {
+                if (isVictory) {
+                    if (r.play_time < myTime) rank++;
+                } else {
+                    if (r.play_time > myTime) rank++;
+                }
+            }
+            return rank;
+        } catch (e) {
+            return null; // null 代表斷線
+        }
+    }
+
+    // 檢查每個趣味榜分類，回傳命中的結果陣列
+    async function _fetchFunRanks() {
+        const hits = [];
+        for (const cat of funCategories) {
+            // myValue 為 null 代表本局不適用此分類
+            if (cat.myValue === null) continue;
+            // 數值為 0 且是越大越好的榜，不值得顯示
+            if (!cat.ascending && cat.myValue === 0) continue;
+
+            try {
+                const records = await cat.fetchFn();
+                if (!records || records.length === 0) {
+                    hits.push({ label: cat.label, rank: 1 });
+                    continue;
+                }
+
+                let rank = 1;
+                for (const r of records) {
+                    const rv = r[cat.colName];
+                    if (rv == null) continue;
+                    if (cat.ascending) {
+                        if (rv < cat.myValue) rank++;
+                    } else {
+                        if (rv > cat.myValue) rank++;
+                    }
+                }
+
+                // 只顯示 TOP3 命中的
+                if (rank <= 3) {
+                    hits.push({ label: cat.label, rank });
+                }
+            } catch (e) {
+                // 單個趣味榜查詢失敗靜默跳過，不影響其他榜
+            }
+        }
+        return hits;
+    }
+
     submitBtn.onclick = () => {
         const name = input.value.trim() || t('lbAnonymous');
         submitBtn.disabled = true;
@@ -293,6 +431,53 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
     skipBtn.onclick = closePopup;
 
     document.getElementById('game-container').appendChild(popup);
+
+    // 面板開啟後立刻查詢所有名次
+    (async () => {
+        try {
+            // 並行查詢：一般榜 + 所有趣味榜
+            const [generalRank, funHits] = await Promise.all([
+                _fetchGeneralRank(),
+                _fetchFunRanks(),
+            ]);
+
+            // 建立顯示內容
+            const lines = [];
+
+            if (generalRank === null) {
+                // 斷線
+                rankPreview.style.borderColor = 'rgba(255,100,100,0.5)';
+                rankPreview.style.background  = 'rgba(255,50,50,0.08)';
+                rankPreview.innerHTML = '❌ 無法連線排行榜，仍可提交分數';
+                return;
+            }
+
+            // 一般榜名次
+            const resultLabel = isVictory ? '🏆 通關' : '💀 死亡';
+            lines.push(`${resultLabel} 一般榜預計第 <strong style="color:#FFD700">${generalRank}</strong> 名`);
+
+            // 趣味榜命中項目
+            for (const hit of funHits) {
+                const medal = hit.rank === 1 ? '🥇' : hit.rank === 2 ? '🥈' : '🥉';
+                lines.push(`${medal} ${hit.label} 第 <strong style="color:#FFD700">${hit.rank}</strong> 名！`);
+            }
+
+            if (lines.length > 0) {
+                rankPreview.style.borderColor = 'rgba(255,215,0,0.5)';
+                rankPreview.style.background  = 'rgba(255,215,0,0.06)';
+                rankPreview.innerHTML = lines.join('<br>');
+            } else {
+                rankPreview.textContent = '本局未進入任何榜單 TOP3';
+                rankPreview.style.color = '#888';
+            }
+
+        } catch (e) {
+            rankPreview.style.borderColor = 'rgba(255,100,100,0.5)';
+            rankPreview.style.background  = 'rgba(255,50,50,0.08)';
+            rankPreview.innerHTML = '❌ 網路連線異常，仍可提交分數';
+        }
+    })();
+
     setTimeout(() => input.focus(), 50);
 }
 

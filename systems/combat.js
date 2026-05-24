@@ -64,8 +64,8 @@ function handleGiantKill(c) {
     // XP：巨人化 60，Alpha 200（+獵人本能加成）
     const baseXP = c.isAlpha ? 200 : 60;
     const xp = baseXP + (gameState.playerSkills.hunter || 0) * 10;
-    addXP(xp);
-    showXPPopup(p.x, p.y, xp);
+    const actualXP = addXP(xp);
+    showXPPopup(p.x, p.y, actualXP);
 
     // 掉落道具（圓形散落）
     const items = c.isAlpha
@@ -103,9 +103,9 @@ function handleGiantKill(c) {
 function handleKillerKill(creature) {
     // 固定100 + 殺手Lv×5 + 獵人本能加成
     const killerLv = creature.killerLevel || 0;
-    const finalXP = 100 + killerLv * 5 + (gameState.playerSkills.hunter || 0) * 10;
-    addXP(finalXP);
-    showXPPopup(creature.x, creature.y, finalXP);
+    const baseXP = 100 + killerLv * 5 + (gameState.playerSkills.hunter || 0) * 10;
+    const actualXP = addXP(baseXP);
+    showXPPopup(creature.x, creature.y, actualXP);
 
     // 圓形散落：2份1倍屍體
     spawnLootCircle(creature.x, creature.y, [
@@ -142,9 +142,9 @@ function handleKill(c, isHostile) {
     const now = Date.now();
     gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
     const baseXP = isHostile ? Math.min(80, 30 + Math.round(((c.maxHp || 50) / 50) * 50)) : 20;
-    const xp = baseXP + (gameState.playerSkills.hunter || 0) * 10;
-    addXP(xp);
-    showXPPopup(p.x, p.y, xp);
+    const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * 10;
+    const actualXP = addXP(rawXP);
+    showXPPopup(p.x, p.y, actualXP);
 }
 
 function playerAttack() {
@@ -369,8 +369,8 @@ function updateCorpseEating() {
                     : Math.floor(corpse.xpBuffer);
                 if (giveXP > 0) {
                     corpse.xpBuffer -= giveXP;
-                    addXP(giveXP);
-                    showFloatingText(corpse.x, corpse.y - 15, '+' + giveXP + ' XP', '#00CC44');
+                    const actualCorpseXP = addXP(giveXP);
+                    showFloatingText(corpse.x, corpse.y - 15, '+' + actualCorpseXP + ' XP', '#00CC44');
                 }
 
                 gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + hpPerTick);
