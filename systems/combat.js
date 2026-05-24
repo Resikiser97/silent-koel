@@ -369,8 +369,8 @@ function updateCorpseEating() {
                     : Math.floor(corpse.xpBuffer);
                 if (giveXP > 0) {
                     corpse.xpBuffer -= giveXP;
-                    addXP(giveXP);
-                    showFloatingText(corpse.x, corpse.y - 15, '+' + giveXP + ' XP', '#00CC44');
+                    const actualCorpseXP = addXP(giveXP);
+                    showFloatingText(corpse.x, corpse.y - 15, '+' + actualCorpseXP + ' XP', '#00CC44');
                 }
 
                 gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + hpPerTick);
