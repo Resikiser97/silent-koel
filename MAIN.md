@@ -781,6 +781,30 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
+## 排行榜系統（systems/leaderboard.js）
+
+### showScoreSubmitPopup — 趣味榜分類維護規則（v0.47.0 起）
+
+`showScoreSubmitPopup()` 內部的 `funCategories` 陣列定義了所有趣味榜分類的查詢邏輯。
+**每次新增趣味榜分類，必須同步在 `funCategories` 陣列新增對應項目**，包含：
+
+| 欄位 | 說明 |
+|------|------|
+| `label` | 顯示名稱（含 emoji） |
+| `fetchFn` | 對應的 fetch 函式（接受 `difficulty` 閉包變數） |
+| `colName` | Supabase 欄位名稱 |
+| `myValue` | 本局對應的數值（不適用時填 `null`） |
+| `ascending` | `true` = 越小越好（時間類）；`false` = 越大越好（數量類） |
+
+### Submit 前名次預覽（v0.54.1）
+
+面板開啟時立即並行查詢（`Promise.all`）：
+- **一般榜**（`_fetchGeneralRank()`）：與現有記錄逐筆比對 `play_time`，回傳預計名次；`null` 代表斷線
+- **趣味榜**（`_fetchFunRanks()`）：遍歷 `funCategories`，僅顯示排進 TOP3 的分類；查詢失敗靜默跳過
+- 結果顯示在輸入框**上方** `rankPreview` 區塊；斷線時顯示紅色連線異常提示
+
+---
+
 ## 重要設計注意事項
 
 ### handleEliteKill 執行順序（v0.15.2 修復）

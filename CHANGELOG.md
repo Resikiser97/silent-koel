@@ -4,6 +4,18 @@
 
 ## 文件修正 - 2026-05-24（不更新版本號）
 
+### 新增
+
+- **Submit 前名次預覽**（`systems/leaderboard.js`）：
+  `showScoreSubmitPopup()` 面板開啟時立即並行查詢一般榜名次與所有趣味榜（`Promise.all`），
+  顯示「⏳ 計算中...」；查詢完成後在輸入框上方顯示預計排名與命中的趣味榜 TOP3；
+  斷線時顯示連線異常提示；`funCategories` 陣列集中管理所有趣味榜查詢邏輯，
+  新增趣味榜分類時需同步更新（已記錄至 `MAIN.md`）
+
+---
+
+## 文件修正 - 2026-05-24（不更新版本號）
+
 ### 修復
 
 - **XP Popup 顯示數值未反映變異 XP 倍率**（`systems/player.js`、`systems/combat.js`、`systems/organs.js`）：
