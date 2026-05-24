@@ -8,45 +8,45 @@ const ORGANS = {
     crabClaw: {
         id: 'crabClaw', name: '蟹鉗', type: 'attack', maxLevel: 3,
         levels: [
-            { desc: '攻擊+8，15%流血（每秒1傷，3秒）',
-              effects: { attackAdd: 8, bleedChance: 0.15, bleedDmg: 1, bleedDur: 3000 } },
-            { desc: '攻擊+2，流血+5%，每秒傷+1，持續+1秒',
-              effects: { attackAdd: 2, bleedChance: 0.05, bleedDmg: 1, bleedDur: 1000 } },
-            { desc: '攻擊+3，流血+10%，每秒傷+1，持續+1秒',
-              effects: { attackAdd: 3, bleedChance: 0.10, bleedDmg: 1, bleedDur: 1000 } }
+            { desc: '攻擊+5，25%流血（每秒1傷，10秒）',
+              effects: { attackAdd: 5, bleedChance: 0.25, bleedDmg: 1, bleedDur: 10000 } },
+            { desc: '攻擊+2，流血+25%，每秒傷+2',
+              effects: { attackAdd: 2, bleedChance: 0.25, bleedDmg: 2 } },
+            { desc: '攻擊+3，流血+50%，每秒傷+2',
+              effects: { attackAdd: 3, bleedChance: 0.50, bleedDmg: 2 } }
         ]
     },
     boxingGloves: {
         id: 'boxingGloves', name: '搏擊拳套', type: 'attack', maxLevel: 3,
         levels: [
-            { desc: '攻擊+5，攻速+30%',
-              effects: { attackAdd: 5, attackSpeedMult: 1.3 } },
-            { desc: '攻擊+2，攻速+5%',
-              effects: { attackAdd: 2, attackSpeedMult: 1.05 } },
-            { desc: '攻擊+3，攻速+5%',
-              effects: { attackAdd: 3, attackSpeedMult: 1.05 } }
+            { desc: '攻擊+5，攻速+10%',
+              effects: { attackAdd: 5, attackSpeedBonus: 0.10 } },
+            { desc: '攻擊+2，攻速+15%',
+              effects: { attackAdd: 2, attackSpeedBonus: 0.15 } },
+            { desc: '攻擊+3，攻速+15%',
+              effects: { attackAdd: 3, attackSpeedBonus: 0.15 } }
         ]
     },
     poisonStinger: {
         id: 'poisonStinger', name: '毒刺', type: 'attack', maxLevel: 3,
         levels: [
-            { desc: '攻擊+1，攻擊時附加中毒每秒2傷持續5秒',
-              effects: { attackAdd: 1, poisonDmg: 2, poisonDur: 5000 } },
-            { desc: '每秒傷+1，持續+1秒',
-              effects: { poisonDmg: 1, poisonDur: 1000 } },
-            { desc: '每秒傷+2，持續+1秒',
-              effects: { poisonDmg: 2, poisonDur: 1000 } }
+            { desc: '攻擊時附加中毒每秒2傷持續5秒',
+              effects: { poisonDmg: 2, poisonDur: 5000 } },
+            { desc: '每秒傷+1，持續+3秒',
+              effects: { poisonDmg: 1, poisonDur: 3000 } },
+            { desc: '每秒傷+2，持續+2秒',
+              effects: { poisonDmg: 2, poisonDur: 2000 } }
         ]
     },
     fang: {
         id: 'fang', name: '獠牙', type: 'attack', maxLevel: 3,
         levels: [
-            { desc: '攻擊+12，15%暈眩敵人1秒',
-              effects: { attackAdd: 12, stunChance: 0.15, stunDur: 1000 } },
-            { desc: '攻擊+2，暈眩+2%',
-              effects: { attackAdd: 2, stunChance: 0.02 } },
-            { desc: '攻擊+3，暈眩+3%',
-              effects: { attackAdd: 3, stunChance: 0.03 } }
+            { desc: '攻擊+12，15%暈眩敵人0.5秒',
+              effects: { attackAdd: 12, stunChance: 0.15, stunDurAdd: 500 } },
+            { desc: '攻擊+2，暈眩+5%',
+              effects: { attackAdd: 2, stunChance: 0.05 } },
+            { desc: '攻擊+3，暈眩+5%，暈眩時間+0.5秒',
+              effects: { attackAdd: 3, stunChance: 0.05, stunDurAdd: 500 } }
         ]
     },
 
@@ -54,42 +54,42 @@ const ORGANS = {
     longLegs: {
         id: 'longLegs', name: '大長腿', type: 'defense', maxLevel: 3,
         levels: [
-            { desc: '移動速度+0.5', effects: { speedAdd: 0.5 } },
-            { desc: '移動速度+0.5', effects: { speedAdd: 0.5 } },
-            { desc: '移動速度+0.5', effects: { speedAdd: 0.5 } }
+            { desc: '移動速度+1', effects: { speedAdd: 1 } },
+            { desc: '移動速度+1', effects: { speedAdd: 1 } },
+            { desc: '移動速度+1', effects: { speedAdd: 1 } }
         ]
     },
     turtleShell: {
         id: 'turtleShell', name: '龜殼', type: 'defense', maxLevel: 3,
         levels: [
-            { desc: '受傷-30%，速度-0.2',
-              effects: { damageReductionAdd: 0.30, speedAdd: -0.2 } },
-            { desc: '受傷額外-3%，速度回復+0.1',
-              effects: { damageReductionAdd: 0.03, speedAdd: 0.1 } },
-            { desc: '受傷額外-7%，速度回復+0.1',
-              effects: { damageReductionAdd: 0.07, speedAdd: 0.1 } }
+            { desc: '受傷-10%，速度-1',
+              effects: { damageReductionAdd: 0.10, speedAdd: -1 } },
+            { desc: '受傷額外-10%，速度-1',
+              effects: { damageReductionAdd: 0.10, speedAdd: -1 } },
+            { desc: '受傷額外-10%，速度-1',
+              effects: { damageReductionAdd: 0.10, speedAdd: -1 } }
         ]
     },
     thickSkin: {
         id: 'thickSkin', name: '厚皮', type: 'defense', maxLevel: 3,
         levels: [
-            { desc: 'HP上限+50，當前HP+50',
-              effects: { hpMaxAdd: 50 } },
-            { desc: 'HP上限+50，體型+20%（半徑+2，攻擊範圍同比例增加）',
-              effects: { hpMaxAdd: 50, radiusAdd: 2 } },
-            { desc: 'HP上限+50，體型再+20%',
+            { desc: 'HP上限+20，當前HP+20',
+              effects: { hpMaxAdd: 20 } },
+            { desc: 'HP上限+30，當前HP+30，體型+20%',
+              effects: { hpMaxAdd: 30, radiusAdd: 2 } },
+            { desc: 'HP上限+50，當前HP+50，體型+20%',
               effects: { hpMaxAdd: 50, radiusAdd: 2 } }
         ]
     },
     thornArmor: {
         id: 'thornArmor', name: '刺甲', type: 'defense', maxLevel: 3,
         levels: [
-            { desc: '被攻擊時反傷10%',
-              effects: { thornDamageAdd: 0.10 } },
-            { desc: '反傷+5%',
+            { desc: '被攻擊時反彈最大HP 5%的傷害',
               effects: { thornDamageAdd: 0.05 } },
-            { desc: '反傷+5%，額外反彈玩家攻擊力5%的傷害',
-              effects: { thornDamageAdd: 0.05, thornPlayerAtkReflect: true } }
+            { desc: '額外反彈最大HP 5%（累計10%）',
+              effects: { thornDamageAdd: 0.05 } },
+            { desc: '額外反彈最大HP 5%（累計15%）',
+              effects: { thornDamageAdd: 0.05 } }
         ]
     },
 
@@ -108,8 +108,8 @@ const ORGANS = {
     trueEye: {
         id: 'trueEye', name: '真視之眼', type: 'spirit', maxLevel: 3,
         levels: [
-            { desc: '暴擊率+10%，暴擊傷害x1.5',
-              effects: { critChanceAdd: 0.10, critMultiplierAdd: 0.5 } },
+            { desc: '暴擊率+10%',
+              effects: { critChanceAdd: 0.10 } },
             { desc: '暴擊率+5%，暴擊傷害+0.25',
               effects: { critChanceAdd: 0.05, critMultiplierAdd: 0.25 } },
             { desc: '暴擊率+10%，暴擊傷害+0.25',
@@ -119,12 +119,12 @@ const ORGANS = {
     sharpSense: {
         id: 'sharpSense', name: '靈敏知覺', type: 'spirit', maxLevel: 3,
         levels: [
-            { desc: '敵意生物偵測範圍-30px',
-              effects: { aggroRangeReductionAdd: 30 } },
-            { desc: '偵測範圍再-20px',
-              effects: { aggroRangeReductionAdd: 20 } },
-            { desc: '偵測範圍再-20px',
-              effects: { aggroRangeReductionAdd: 20 } }
+            { desc: '偵測1000px範圍內果子，顯示最佳路徑（紅線）',
+              effects: { perceptionRangeAdd: 1000 } },
+            { desc: '新增追蹤最近屍體（黃線）',
+              effects: {} },
+            { desc: '新增追蹤最近白骨（白線）',
+              effects: {} }
         ]
     },
     naturalRegen: {
@@ -132,10 +132,30 @@ const ORGANS = {
         levels: [
             { desc: '每10秒回復1HP',
               effects: { regenHpAdd: 1, regenIntervalDelta: 0 } },
-            { desc: '間隔-2秒，回復+1HP',
-              effects: { regenHpAdd: 1, regenIntervalDelta: -2000 } },
-            { desc: '間隔-3秒，回復+1HP',
-              effects: { regenHpAdd: 1, regenIntervalDelta: -3000 } }
+            { desc: '間隔-2秒，回復+1HP，額外回復最大HP 0.5%',
+              effects: { regenHpAdd: 1, regenIntervalDelta: -2000, regenHpMaxPercent: 0.005 } },
+            { desc: '間隔-3秒，回復+1HP，額外回復最大HP 0.5%',
+              effects: { regenHpAdd: 1, regenIntervalDelta: -3000, regenHpMaxPercent: 0.005 } }
+        ]
+    },
+
+    // ── 特殊器官（不出現在技能池，不可繼承）
+    poisonSac: {
+        id: 'poisonSac', name: '毒囊', type: 'special', maxLevel: 10,
+        noSelection: true, noInherit: true,
+        // 各等級對應的白骨素累計門檻
+        thresholds: [5, 10, 20, 40, 60, 100, 120, 140, 160, 200],
+        levels: [
+            { desc: '攻擊+1，毒傷+1（基礎5秒）',        effects: { attackAdd: 1, poisonSacDmg: 1, poisonSacDur: 5000 } },
+            { desc: '攻擊+1，毒傷+1',                   effects: { attackAdd: 1, poisonSacDmg: 1 } },
+            { desc: '攻擊+2，毒傷+2',                   effects: { attackAdd: 2, poisonSacDmg: 2 } },
+            { desc: '攻擊+3，毒傷+3',                   effects: { attackAdd: 3, poisonSacDmg: 3 } },
+            { desc: '攻擊+3，毒傷+3',                   effects: { attackAdd: 3, poisonSacDmg: 3 } },
+            { desc: '攻擊+4，毒傷+4',                   effects: { attackAdd: 4, poisonSacDmg: 4 } },
+            { desc: '攻擊+4，毒傷+4',                   effects: { attackAdd: 4, poisonSacDmg: 4 } },
+            { desc: '攻擊+5，毒傷+5',                   effects: { attackAdd: 5, poisonSacDmg: 5 } },
+            { desc: '攻擊+5，毒傷+5',                   effects: { attackAdd: 5, poisonSacDmg: 5 } },
+            { desc: '攻擊+8，毒傷+8',                   effects: { attackAdd: 8, poisonSacDmg: 8 } }
         ]
     }
 };
@@ -143,25 +163,31 @@ const ORGANS = {
 const HIDDEN_ORGANS = {
     strongHeart: {
         id: 'strongHeart', name: '強大的心臟', type: 'hidden',
-        desc: '移速+0.2，攻擊+5，HP上限+100，體型+20%',
-        effects: { speedAdd: 0.2, attackAdd: 5, hpMaxAdd: 100, radiusAdd: 2 }
+        desc: '移速+0.6，攻擊+5，HP上限+60，體型+20%',
+        effects: { speedAdd: 0.6, attackAdd: 5, hpMaxAdd: 60, radiusAdd: 2 }
     },
     strongLegs: {
         id: 'strongLegs', name: '強大的大腿', type: 'hidden',
-        desc: '移速+1，體型+20%',
-        effects: { speedAdd: 1, radiusAdd: 2 }
+        desc: '移速+3，體型+20%',
+        effects: { speedAdd: 3, radiusAdd: 2 }
     },
     strongArms: {
         id: 'strongArms', name: '強大的手臂', type: 'hidden',
         desc: '收集範圍+15px，體型+20%（攻擊範圍同比例增加）',
         effects: { pickupRangeAdd: 15, radiusAdd: 2 }
+    },
+    strongEye: {
+        id: 'strongEye', name: '強大的眼睛', type: 'hidden',
+        desc: '暴擊率+10%，暴擊傷害+0.25，體型+20%',
+        effects: { critChanceAdd: 0.10, critMultiplierAdd: 0.25, radiusAdd: 2 }
     }
 };
 
 const COMBOS = [
-    { ids: ['crabClaw',   'poisonStinger'], key: 'comboCrabPoison', desc: '流血同時附加劇毒（毒傷x2）' },
-    { ids: ['turtleShell','thornArmor'],    key: 'comboShellArmor', desc: '格擋時反傷翻倍' },
-    { ids: ['brain',      'trueEye'],       key: 'comboBrainEye',   desc: '念力波有機率觸發暴擊傷害' },
-    { ids: ['thickSkin',  'naturalRegen'],  key: 'comboSkinRegen',  desc: '回復量+1HP，回復間隔再-1秒' },
-    { ids: ['trueEye',    'fang'],          key: 'comboEyeFang',    desc: '暴擊時附加暈眩效果' }
+    { ids: ['poisonStinger', 'poisonSac'],             key: 'comboCrabPoison', desc: '毒傷翻倍（毒刺Lv3且擁有毒囊）' },
+    { ids: ['crabClaw',      'boxingGloves'],          key: 'comboCrabGloves', desc: '流血傷害翻倍，命中敵人施加回復量-50%（蟹鉗+搏擊拳套各達Lv3）' },
+    { ids: ['turtleShell',   'thornArmor'],            key: 'comboShellArmor', desc: '反彈時傷害翻倍（各達Lv3）' },
+    { ids: ['brain',         'trueEye'],               key: 'comboBrainEye',   desc: '念力波可沿用暴擊率和暴擊傷害（各達Lv3）' },
+    { ids: ['thickSkin',     'naturalRegen'],          key: 'comboSkinRegen',  desc: '回復量+1HP，回復間隔再-1秒（各達Lv3）' },
+    { ids: ['trueEye',       'fang'],                  key: 'comboEyeFang',    desc: '暴擊時附加暈眩效果（各達Lv3）' }
 ];

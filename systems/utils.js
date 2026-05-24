@@ -54,3 +54,36 @@ function drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur) {
     ctx.fill();
     ctx.restore();
 }
+
+// =============================================================
+// 圓形平均角度散落函式
+// spawnLootCircle(cx, cy, items)
+//   cx, cy  — 散落中心點（死亡位置）
+//   items   — [{ type, data }, ...]
+//     type 'corpse': data = { multiplier }，radius 按 multiplier 縮放
+//     type 'bone'  : data = {}，直接呼叫 _spawnBone
+//     （未來 Phase 可新增 mutation 等 type）
+// =============================================================
+function spawnLootCircle(cx, cy, items) {
+    if (!items || items.length === 0) return;
+    const count = items.length;
+    const now = Date.now();
+    items.forEach((item, index) => {
+        // 單個物品隨機角度；多個物品平均分配
+        const angle = count === 1
+            ? Math.random() * Math.PI * 2
+            : (2 * Math.PI / count) * index;
+        const dist = 10 + Math.random() * 15; // 10~25px
+        const x = cx + Math.cos(angle) * dist;
+        const y = cy + Math.sin(angle) * dist;
+
+        if (item.type === 'corpse') {
+            const multiplier = (item.data && item.data.multiplier != null) ? item.data.multiplier : 1;
+            const baseRadius = 8;
+            const radius = multiplier > 1 ? baseRadius * 1.5 : baseRadius;
+            gameState.corpses.push({ x, y, radius, spawnTime: now });
+        } else if (item.type === 'bone') {
+            _spawnBone(x, y, 8);
+        }
+    });
+}

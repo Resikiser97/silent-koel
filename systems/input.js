@@ -8,12 +8,14 @@ let _settingsMouseHandler = null;
 let _rebindBlink          = null;
 let _rebindTimeout        = null;
 let _skillTreeFromHome    = false;
+let _skillTreeMode        = '';
 
 function handleKeyDown(e) {
     if (e.key === 'Escape') {
         if (gameState.settingsOpen) { hideSettings(); } else if (!gameState.gameOver) { showSettings(); }
         return;
     }
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (gameState._rebindTarget) { e.preventDefault(); return; }
 
     const key = e.key.toLowerCase();
@@ -26,6 +28,20 @@ function handleKeyDown(e) {
     if (key === sk.attack || e.key === ' ') {
         e.preventDefault();
         if (!gameState.organSelectionActive && !gameState.settingsOpen) playerAttack();
+    }
+    if (key === 'z') {
+        if (!gameState.organSelectionActive && !gameState.settingsOpen &&
+            !gameState.skillTreeOpen && !gameState.gameOver && !gameState.victory) {
+            gameState.settings.autoAttack = !gameState.settings.autoAttack;
+            saveSettings();
+        }
+    }
+    if (key === (gameState.settings.keys.dash || 'f')) {
+        if (!gameState.organSelectionActive && !gameState.settingsOpen &&
+            !gameState.skillTreeOpen && !gameState.gameOver && !gameState.victory &&
+            !gameState.mutationPanelOpen && !gameState.tutorialOpen) {
+            playerDash();
+        }
     }
     gameState.devInput = (gameState.devInput + e.key).slice(-8);
     if (gameState.devInput === '77777778') toggleDevMode();

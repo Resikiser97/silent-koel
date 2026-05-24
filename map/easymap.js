@@ -31,9 +31,9 @@ const EASY_MAP = {
 
     // Boss 配置（待定，先預留結構）
     bosses: [
-        { biome: 'forest', name: '黑熊',   hp: 500, speed: 1.0, damage: 15 },
-        { biome: 'ocean',  name: '大白鯊', hp: 600, speed: 1.3, damage: 18 },
-        { biome: 'desert', name: '沙漠蠍王', hp: 550, speed: 1.2, damage: 20 },
+        { biome: 'forest', name: '🌿 黑熊',     hp: 500, speed: 1.0, damage: 15, radius: 25, attackRange: 30 },
+        { biome: 'ocean',  name: '🌊 大白鯊',   hp: 600, speed: 1.3, damage: 18, radius: 30, attackRange: 35 },
+        { biome: 'desert', name: '🏜️ 沙漠蠍王', hp: 550, speed: 1.2, damage: 20, radius: 28, attackRange: 32 },
     ],
 
     // 生物技能（預留，之後填入）

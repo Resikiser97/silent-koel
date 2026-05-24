@@ -2,9 +2,602 @@
 // 首領系統 - spawnBoss / updateBoss / showVictory / drawBossArrow
 // =============================================================
 
+// ── Boss 顏色常數 ─────────────────────────────────────────────
+const BOSS_COLORS = {
+    bear: {
+        body:  '#2a1808',
+        head:  '#301c0a',
+        limbs: '#7a3d0c',   // 明顯淺於 body，確保手臂可見
+        eye:   '#cc4400',
+        pupil: '#1a0000',
+    },
+    shark: {
+        body:  '#1a3050',
+        fin:   '#162840',
+        tail:  '#162840',
+        eye:   '#88ccff',
+        pupil: '#001830',
+    },
+    scorp: {
+        body:    '#1a0828',
+        bodyMid: '#22103a',
+        bodyTop: '#2a1445',
+        claw:    '#1a0828',
+        tail:    '#22103a',
+        stinger: '#9030c0',
+        eye:     '#cc00ff',
+        pupil:   '#1a0020',
+    },
+};
+
+// ── Boss 主繪製分派 ───────────────────────────────────────────
+function drawBossShape(ctx, boss, sx, sy) {
+    ctx.save();
+    ctx.translate(sx, sy);
+    const r = boss.radius;
+    const t = Date.now();
+    if      (boss.biome === 'forest') _drawBear(ctx, r, t, boss);
+    else if (boss.biome === 'ocean')  _drawShark(ctx, r, t, boss);
+    else if (boss.biome === 'desert') _drawScorp(ctx, r, t, boss);
+    ctx.restore();
+}
+
+// ── 黑熊（forest）──────────────────────────────────────────────
+// 手臂三狀態：閒置垂下 / 追擊高舉（延伸至身體外側） / 攻擊橫掃＋爪痕特效
+// ⚠️ 身體橢圓 rx=r*1.2 非常寬，手臂若顏色相同會被蓋住 → limbs 使用明顯較淺的棕色
+function _drawBear(ctx, r, t, boss) {
+    const C = BOSS_COLORS.bear;
+    const isChasing = boss && boss.state === 'chasing';
+    const speedMult = isChasing ? 1.9 : 1.0;
+    const period    = 450 / speedMult;
+
+    // 踏步動畫（腿）
+    const stompL = Math.sin(t / period);
+    const stompR = Math.sin(t / period + Math.PI);
+    const scaleL = 1.0 + stompL * 0.38;
+    const scaleR = 1.0 + stompR * 0.38;
+    const offL   = stompL * r * 0.09;
+    const offR   = stompR * r * 0.09;
+
+    // 攻擊偵測（450ms 視窗）
+    const sinceAtk = boss ? Math.max(0, t - (boss.attackCooldown || 0)) : 99999;
+    const isAtk    = sinceAtk < 450 && boss && boss.attackCooldown > 0;
+    const atkPhase = isAtk ? Math.sin(sinceAtk / 450 * Math.PI) : 0;
+    const isCrit   = !!(boss && boss.lastAttackCrit);
+    const atkLeg   = (boss && boss.lastAttackLeg) || 'left';
+    // atkLeg==='left'：左腳踩地 → 右臂(side=+1)攻擊，軌跡呈 "/"
+    // atkLeg==='right'：右腳踩地 → 左臂(side=-1)攻擊，軌跡呈 "\"
+
+    // ── 手臂橢圓參數 ──
+    // armLen=r*0.55，橢圓頂端對齊肩膀（seamless），底端延伸至 2*armLen 下方
+    // 追擊時 angle=±1.2（≈69°），使臂中心落在身體橢圓外側 → 清晰可見
+    const armLen = r * 0.55;
+
+    const getArm = (side, phase) => {
+        const isAtkArm = isAtk && (isCrit || ((atkLeg === 'left') === (side > 0)));
+        if (isAtkArm) {
+            // 從高舉位大幅橫掃：肩膀向對側推移 + 角度翻轉
+            return {
+                sx:    side * r * (0.70 - phase * 0.90),
+                sy:    -r * 0.45 + phase * r * 0.75,
+                angle: side * (1.20 - phase * 3.00)
+            };
+        } else if (isChasing) {
+            // 雙臂高舉外展（angle=1.2rad ≈ 69°），臂中心落在身體外側
+            return { sx: side * r * 0.70, sy: -r * 0.45, angle: side * 1.20 };
+        } else {
+            // 閒置：手臂垂至身體下外側
+            return { sx: side * r * 0.80, sy: r * 0.45, angle: side * 0.10 };
+        }
+    };
+
+    const drawArm = (side, phase, alpha) => {
+        const { sx, sy, angle } = getArm(side, phase);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle   = C.limbs;
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.ellipse(0, armLen, r * 0.22, armLen, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    };
+
+    // ── 後腿（先畫，被身體蓋住根部）──
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = C.limbs;
+    ctx.beginPath();
+    ctx.ellipse(-r * 0.52, r * 0.68 + offL, r * 0.27, r * 0.55 * scaleL, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse( r * 0.52, r * 0.68 + offR, r * 0.27, r * 0.55 * scaleR, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 身體主橢圓 ──
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = C.body;
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.2, r * 1.2, r * 0.75, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 前臂殘影（攻擊時）──
+    if (isAtk) {
+        const tPhases = [Math.max(0, atkPhase - 0.35), Math.max(0, atkPhase - 0.18)];
+        const tAlphas = [0.10, 0.22];
+        for (let ti = 0; ti < 2; ti++) {
+            if (isCrit || atkLeg === 'right') drawArm(-1, tPhases[ti], tAlphas[ti]);
+            if (isCrit || atkLeg === 'left')  drawArm( 1, tPhases[ti], tAlphas[ti]);
+        }
+    }
+
+    // ── 前臂主體 ──
+    drawArm(-1, atkPhase, 1.0);
+    drawArm( 1, atkPhase, 1.0);
+    ctx.globalAlpha = 1.0;
+
+    // ── 爪痕特效（繪於身體之上、頭部之下，確保攻擊清晰可見）──
+    // 普攻：深紅 3 條"/"或"\"斜線；暴擊：橙紅 6 條呈"X"
+    if (isAtk && atkPhase > 0.05) {
+        ctx.save();
+        ctx.globalAlpha = Math.sin(sinceAtk / 450 * Math.PI) * 0.90;
+        ctx.strokeStyle = isCrit ? '#ff8800' : '#dd2200';
+        ctx.lineWidth   = r * 0.12;
+        ctx.lineCap     = 'round';
+        const clawSides = isCrit ? [1, -1] : [atkLeg === 'left' ? 1 : -1];
+        for (const side of clawSides) {
+            for (let ci = -1; ci <= 1; ci++) {
+                const ox = ci * r * 0.13;             // 三條爪痕水平間距
+                const cx1 = side * r * 0.50 + ox;    // 起點（上方）
+                const cy1 = -r * 0.35;
+                const cx2 = -side * r * 0.28 + ox;   // 終點（下斜對側）
+                const cy2 = r * 0.48;
+                ctx.beginPath();
+                ctx.moveTo(cx1, cy1);
+                ctx.lineTo(cx1 + (cx2 - cx1) * atkPhase, cy1 + (cy2 - cy1) * atkPhase);
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
+
+    // ── 頭部 ──
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = C.head;
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.6, r * 0.75, r * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 耳朵
+    ctx.fillStyle = C.body;
+    ctx.beginPath();
+    ctx.arc(-r * 0.5, -r * 1.15, r * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.5, -r * 1.15, r * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 眼睛（脈動發光）──
+    const glowPulse = 0.7 + Math.sin(t / 700) * 0.3;
+    ctx.globalAlpha = glowPulse;
+    ctx.fillStyle = C.eye;
+    ctx.beginPath();
+    ctx.arc(-r * 0.28, -r * 0.65, r * 0.13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.28, -r * 0.65, r * 0.13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.fillStyle = C.pupil;
+    ctx.beginPath();
+    ctx.arc(-r * 0.28, -r * 0.65, r * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.28, -r * 0.65, r * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ── 大白鯊（ocean）─────────────────────────────────────────────
+function _drawShark(ctx, r, t, boss) {
+    const C = BOSS_COLORS.shark;
+    // 移動速度連動：追擊時尾鰭加速擺動
+    const speedMult = (boss && boss.state === 'chasing') ? 1.9 : 1.0;
+    const period    = 550 / speedMult;
+    const tailSwing = Math.sin(t / period) * 0.5;
+
+    // 面向玩家：玩家在左側則水平翻轉，讓頭永遠朝向目標
+    // 原始繪圖頭在右（+x），尾在左（-x），翻轉後頭在左
+    const facingLeft = gameState.player && gameState.player.x < (boss ? boss.x : 0);
+    if (facingLeft) ctx.scale(-1, 1);
+
+    // 尾巴（左側，先畫）
+    ctx.save();
+    ctx.translate(-r * 1.3, 0);
+    ctx.rotate(tailSwing);
+    ctx.fillStyle = C.tail;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-r * 0.6, -r * 0.45);
+    ctx.lineTo(-r * 0.6,  r * 0.45);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // 身體扁橢圓
+    ctx.fillStyle = C.body;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 1.4, r * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 背鰭（上方三角）
+    ctx.fillStyle = C.fin;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.15, -r * 0.6);
+    ctx.lineTo( r * 0.35, -r * 1.35);
+    ctx.lineTo( r * 0.6,  -r * 0.6);
+    ctx.closePath();
+    ctx.fill();
+
+    // 胸鰭（下方兩側）
+    ctx.fillStyle = C.fin;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.3,  r * 0.5);
+    ctx.lineTo(-r * 0.7,  r * 1.0);
+    ctx.lineTo( r * 0.1,  r * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo( r * 0.3,  r * 0.5);
+    ctx.lineTo( r * 0.5,  r * 1.0);
+    ctx.lineTo( r * 0.7,  r * 0.55);
+    ctx.closePath();
+    ctx.fill();
+
+    // 眼睛（脈動）
+    const glowPulse = 0.6 + Math.sin(t / 1200) * 0.4;
+    ctx.globalAlpha = glowPulse;
+    ctx.fillStyle = C.eye;
+    ctx.beginPath();
+    ctx.arc(r * 0.55, -r * 0.1, r * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.fillStyle = C.pupil;
+    ctx.beginPath();
+    ctx.arc(r * 0.55, -r * 0.1, r * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ── 沙漠蠍王（desert）──────────────────────────────────────────
+// 身體橢圓：rx=0.85r, ry=0.5r，腳根必須在橢圓內才能被身體蓋住
+// 腳根計算：點(x,y)在橢圓內 ⟺ (x/0.85r)²+(y/0.5r)² < 1
+function _drawScorp(ctx, r, t, boss) {
+    const C = BOSS_COLORS.scorp;
+    // 移動速度連動
+    const speedMult  = (boss && boss.state === 'chasing') ? 1.9 : 1.0;
+    const legPeriod  = 260 / speedMult;
+    const tailPeriod = 800;
+
+    // ── 三對步行腳（三腳步法 Tripod Gait）──
+    // 群 A（左後[2]、右中[4]、左前[0]）與群 B（右後[5]、左中[1]、右前[3]）交替
+    // 群 B 相位差 +π（半週期），組內後腿先出，每腳差 10%（step = 0.1×2π）
+    const step = Math.PI * 0.2;
+    const legPhases = [
+        step * 2,           // 0: 左前 — 群A，第三出
+        Math.PI + step,     // 1: 左中 — 群B，第二出
+        0,                  // 2: 左後 — 群A，第一出（最先）
+        Math.PI + step * 2, // 3: 右前 — 群B，第三出
+        step,               // 4: 右中 — 群A，第二出
+        Math.PI,            // 5: 右後 — 群B，第一出
+    ];
+
+    // 腳根（在橢圓內，被身體蓋住）與靜止末端位置
+    const legRoots = [
+        { x: -r * 0.74, y: -r * 0.18, ex: -r * 1.45, ey: -r * 0.55 }, // 左前
+        { x: -r * 0.82, y:  r * 0.02, ex: -r * 1.58, ey:  r * 0.12 }, // 左中
+        { x: -r * 0.70, y:  r * 0.22, ex: -r * 1.35, ey:  r * 0.55 }, // 左後
+        { x:  r * 0.74, y: -r * 0.18, ex:  r * 1.45, ey: -r * 0.55 }, // 右前
+        { x:  r * 0.82, y:  r * 0.02, ex:  r * 1.58, ey:  r * 0.12 }, // 右中
+        { x:  r * 0.70, y:  r * 0.22, ex:  r * 1.35, ey:  r * 0.55 }, // 右後
+    ];
+
+    // 腳動畫：末端 y 偏移（抬腳時末端向上移，非旋轉）
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 6; i++) {
+        const { x, y, ex, ey } = legRoots[i];
+        const swing = Math.sin(t / legPeriod + legPhases[i]);
+        // swing > 0 = 抬腳（細線）；swing <= 0 = 落地支撐（粗線）
+        const ey_anim = ey - swing * r * 0.3;
+        ctx.strokeStyle = C.claw;
+        ctx.lineWidth   = swing > 0 ? r * 0.09 : r * 0.14;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(ex, ey_anim);
+        ctx.stroke();
+    }
+
+    // ── 前大夾鉗（靜止待機，攻擊時向內夾）──
+    // 根部 (±0.3r, -0.3r)：(0.3/0.85)²+(0.3/0.5)² ≈ 0.48 < 1 ✓
+    // 攻擊檢測：boss.attackCooldown 記錄最後攻擊時刻（Date.now()）
+    const sinceAtk = boss ? Math.max(0, Date.now() - (boss.attackCooldown || 0)) : 99999;
+    const atkPhase = (sinceAtk < 700 && boss && boss.attackCooldown > 0)
+        ? Math.sin(sinceAtk / 700 * Math.PI) : 0;
+    const snapAngle = atkPhase * 0.65;   // 最大約 37°，向內夾
+
+    ctx.lineCap = 'round';
+    for (const side of [-1, 1]) {
+        ctx.save();
+        ctx.translate(side * r * 0.3, -r * 0.3);
+        ctx.rotate(snapAngle * -side);   // 兩夾均向中線夾
+        // 主臂
+        ctx.strokeStyle = C.claw;
+        ctx.lineWidth = r * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(side * r * 0.55, -r * 0.55);
+        ctx.stroke();
+        // 上夾
+        ctx.lineWidth = r * 0.13;
+        ctx.beginPath();
+        ctx.moveTo(side * r * 0.55, -r * 0.55);
+        ctx.lineTo(side * r * 0.82, -r * 0.78);
+        ctx.stroke();
+        // 下夾
+        ctx.beginPath();
+        ctx.moveTo(side * r * 0.55, -r * 0.55);
+        ctx.lineTo(side * r * 0.82, -r * 0.35);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // ── 身體（三層橢圓，蓋住腳根關節）──
+    ctx.fillStyle = C.body;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 0.85, r * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = C.bodyMid;
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.1, r * 0.65, r * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = C.bodyTop;
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.18, r * 0.48, r * 0.32, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 尾巴（往上彎，輕微搖擺，從身體後部伸出）──
+    const tailSwing = Math.sin(t / tailPeriod) * 0.15;
+    ctx.save();
+    ctx.translate(0, r * 0.1);
+    ctx.rotate(tailSwing);
+    ctx.strokeStyle = C.tail;
+    ctx.lineWidth   = r * 0.22;
+    ctx.lineCap     = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(r * 0.6, -r * 1.1, r * 0.25, -r * 1.85);
+    ctx.stroke();
+    // 毒針尖
+    ctx.fillStyle = C.stinger;
+    ctx.beginPath();
+    ctx.ellipse(r * 0.25, -r * 1.97, r * 0.14, r * 0.1, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // ── 眼睛（紫色脈動）──
+    const glowPulse = 0.65 + Math.sin(t / 900) * 0.35;
+    ctx.globalAlpha = glowPulse;
+    ctx.fillStyle = C.eye;
+    ctx.beginPath();
+    ctx.arc(-r * 0.2, -r * 0.2, r * 0.11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.2, -r * 0.2, r * 0.11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.fillStyle = C.pupil;
+    ctx.beginPath();
+    ctx.arc(-r * 0.2, -r * 0.2, r * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc( r * 0.2, -r * 0.2, r * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ── 大白鯊衝刺警告箭頭 ───────────────────────────────────────────
+// warning=黃色閃爍，charging=紅色；寬度=Boss直徑
+// 長度 = speed×4×0.8×60（實際衝刺距離，世界px轉螢幕px）
+// _chargeArrow = { angle, dist, fromX, fromY }：warning開始瞬間鎖定
+function _drawSharkChargeArrow(boss) {
+    if (!boss._chargeArrow) return;
+    const isWarning  = boss._chargeState === 'warning';
+    const isCharging = boss._chargeState === 'charging';
+    if (!isWarning && !isCharging) return;
+
+    const { angle, dist, fromX, fromY } = boss._chargeArrow;
+    const from      = worldToScreen(fromX, fromY);
+    const toWorldX  = fromX + Math.cos(angle) * dist;
+    const toWorldY  = fromY + Math.sin(angle) * dist;
+    const to        = worldToScreen(toWorldX, toWorldY);
+    const screenLen = Math.sqrt((to.x - from.x) ** 2 + (to.y - from.y) ** 2);
+    if (screenLen < 1) return;
+
+    const arrowW  = boss.radius * 2;
+    const bodyLen = Math.max(0, screenLen - arrowW * 0.6);
+    const color   = isWarning ? 'rgba(255, 220, 0, 0.75)' : 'rgba(255, 50, 50, 0.75)';
+
+    ctx.save();
+    ctx.translate(from.x, from.y);
+    ctx.rotate(angle);
+
+    // 箭身長方形
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.rect(0, -arrowW / 2, bodyLen, arrowW);
+    ctx.fill();
+
+    // 箭頭三角
+    ctx.beginPath();
+    ctx.moveTo(screenLen, 0);
+    ctx.lineTo(bodyLen,  -arrowW * 0.8);
+    ctx.lineTo(bodyLen,   arrowW * 0.8);
+    ctx.closePath();
+    ctx.fill();
+
+    // 警告時加閃爍邊框
+    if (isWarning) {
+        const pulse = 0.5 + Math.sin(Date.now() / 80) * 0.5;
+        ctx.strokeStyle = `rgba(255, 255, 0, ${pulse.toFixed(2)})`;
+        ctx.lineWidth   = 2;
+        ctx.beginPath();
+        ctx.rect(0, -arrowW / 2, bodyLen, arrowW);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+// ── 蠍王毒霧特效（警告光圈 + 定點毒霧圓） ────────────────────────
+// 警告：600ms黃色虛線圓圈（鎖定玩家位置）
+// 毒霧：radius 150px，持續4000ms，淡入300ms / 淡出500ms
+function _drawVenomEffects(boss) {
+    // 1. 警告光圈（黃色虛線，閃爍）
+    if (boss._venomWarning) {
+        const s = worldToScreen(boss._venomWarning.x, boss._venomWarning.y);
+        const pulse = 0.5 + Math.sin(Date.now() / 80) * 0.5;
+        ctx.save();
+        ctx.setLineDash([8, 6]);
+        ctx.strokeStyle = `rgba(255, 220, 0, ${pulse.toFixed(2)})`;
+        ctx.lineWidth   = 2;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 150, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
+
+    // 2. 定點毒霧圓圈（綠色半透明，淡入淡出）
+    if (gameState.venomPuddles) {
+        for (const puddle of gameState.venomPuddles) {
+            const elapsed = Date.now() - puddle.startTime;
+            let alpha;
+            if (elapsed < 300)                        alpha = (elapsed / 300) * 0.45;
+            else if (elapsed > puddle.duration - 500) alpha = ((puddle.duration - elapsed) / 500) * 0.45;
+            else                                      alpha = 0.45;
+
+            const s = worldToScreen(puddle.x, puddle.y);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, puddle.radius, 0, Math.PI * 2);
+            ctx.fillStyle   = `rgba(80, 200, 80, ${alpha.toFixed(3)})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(40, 160, 40, ${Math.min(1, alpha * 1.5).toFixed(3)})`;
+            ctx.lineWidth   = 3;
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+}
+
+// ── 蠍王沙暴螢幕外圈遮罩 ─────────────────────────────────────────
+// radialGradient：中央透明，外圈沙色 alpha=0.3，淡入淡出各500ms
+// 由 hud.js drawGame() 在所有世界物件後、UI前呼叫
+function _drawSandStormOverlay() {
+    const boss = gameState.boss;
+    if (!boss || !boss._sandStormVisual) return;
+
+    // 玩家不在沙漠生態區時不顯示遮罩（可跑出沙漠躲避）
+    if (getBiome(gameState.player.x, gameState.player.y) !== 'desert') return;
+
+    const elapsed  = Date.now() - boss._sandStormVisual.startTime;
+    const duration = boss._sandStormVisual.duration;
+    if (elapsed > duration) {
+        boss._sandStormVisual = null;
+        return;
+    }
+
+    let alpha;
+    if (elapsed < 500)                alpha = (elapsed / 500) * 0.3;
+    else if (elapsed > duration - 500) alpha = ((duration - elapsed) / 500) * 0.3;
+    else                               alpha = 0.3;
+
+    const W = VIEW_W, H = VIEW_H;
+    const grad = ctx.createRadialGradient(
+        W / 2, H / 2, Math.min(W, H) * 0.35,
+        W / 2, H / 2, Math.max(W, H) * 0.75
+    );
+    grad.addColorStop(0,   `rgba(194, 154, 82, 0)`);
+    grad.addColorStop(0.6, `rgba(194, 154, 82, ${(alpha * 0.5).toFixed(3)})`);
+    grad.addColorStop(1.0, `rgba(194, 154, 82, ${alpha.toFixed(3)})`);
+
+    ctx.save();
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+}
+
+// ── drawBoss（每幀由 hud.js 呼叫）──────────────────────────────
+function drawBoss() {
+    const boss = gameState.boss;
+    if (!boss || boss.hp <= 0) return;
+
+    const s = worldToScreen(boss.x, boss.y);
+    if (s.x < -100 || s.x > VIEW_W + 100 || s.y < -100 || s.y > VIEW_H + 100) return;
+
+    const r       = boss.radius;
+    const flicker = Math.sin(Date.now() * 0.006) * 0.4 + 0.7;
+
+    // 光暈環（保留原本的閃爍感）
+    ctx.save();
+    ctx.shadowColor = boss.glowColor || '#8B4513';
+    ctx.shadowBlur  = 10 + flicker * 12;
+    ctx.globalAlpha = 0.55 + flicker * 0.35;
+    ctx.strokeStyle = boss.glowColor || '#8B4513';
+    ctx.lineWidth   = 4;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, r + 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 衝刺警告箭頭（大白鯊，在形狀前繪製以免被遮蓋）
+    if (boss.biome === 'ocean') _drawSharkChargeArrow(boss);
+
+    // Boss 形狀（純 Canvas）
+    drawBossShape(ctx, boss, s.x, s.y);
+
+    // 毒霧特效（蠍王：警告光圈 + 定點毒霧圓，在形狀後繪製）
+    if (boss.biome === 'desert') _drawVenomEffects(boss);
+
+    // 名字標籤
+    ctx.save();
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur  = 4;
+    ctx.fillStyle   = '#FFFFFF';
+    ctx.font        = 'bold 12px Arial';
+    ctx.textAlign   = 'center';
+    ctx.fillText(boss.name || boss.label || 'Boss', s.x, s.y - r - 32);
+    ctx.restore();
+
+    // 血條
+    const bBarW = 50, bBarH = 6;
+    const bBarX = s.x - bBarW / 2;
+    const bBarY = s.y - r - 24;
+    ctx.fillStyle = '#550000';
+    ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
+    ctx.fillStyle = '#FF4400';
+    ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+}
+
 function spawnBoss() {
     const playerBiome = getBiome(gameState.player.x, gameState.player.y);
-    const cfg = BOSS_CONFIG[playerBiome] || BOSS_CONFIG.forest;
+    const baseCfg = BOSS_CONFIG[playerBiome] || BOSS_CONFIG.forest;
+    // 若當前地圖有地圖專屬 Boss 設定，合併覆蓋（速度/HP/傷害/半徑/名稱）
+    const mapBossArr = gameState.currentMap && gameState.currentMap.bosses;
+    const mapBossCfg = mapBossArr ? mapBossArr.find(b => b.biome === playerBiome) : null;
+    const cfg = mapBossCfg ? Object.assign({}, baseCfg, mapBossCfg) : baseCfg;
     let bx, by;
     if (cfg.spawnX !== null) {
         bx = cfg.spawnX;
@@ -24,12 +617,17 @@ function spawnBoss() {
         speed: cfg.speed, damage: cfg.damage,
         aggroRange: cfg.aggroRange, attackRange: cfg.attackRange,
         attackCooldown: 0, state: 'patrolling',
+        lastAttackCrit: false,   // 熊：上一擊是否暴擊
+        lastAttackLeg:  'left',  // 熊：攻擊時哪腳在地（'left'|'right'）
+        _chargeArrow:   null,    // 鯊：衝刺箭頭 { angle, dist, fromX, fromY }
         wanderTarget: null, lastWanderTime: Date.now(),
         name: cfg.name, label: cfg.label,
         color: cfg.color, colorChasing: cfg.colorChasing,
-        glowColor: cfg.glowColor
+        glowColor: cfg.glowColor,
+        biome: playerBiome
     };
     gameState.bossSpawned = true;
+    gameState.bossSpawnTime = Date.now();
     gameState.dayNightMessage.text = t('bossAppeared', { name: cfg.name });
     gameState.dayNightMessage.timer = Date.now();
     AudioManager.playMusic('bossTheme');
@@ -43,6 +641,135 @@ function updateBoss() {
     if (boss.stunnedUntil && now < boss.stunnedUntil) return;
     const { dx, dy } = wrappedDelta(boss.x, boss.y, p.x, p.y);
     const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // ── 通用回血：每 3 秒回復最大HP的 2%（普通地圖才啟動）
+    if (gameState.currentMap && gameState.currentMap.features && gameState.currentMap.features.bossRegen) {
+        if (now - (boss.regenTimer || 0) >= 3000) {
+            boss.regenTimer = now;
+            const regenAmt = boss.maxHp * 0.02;
+            // 若玩家有蟹鉗+拳套組合，降低回血量 50%
+            const actualRegen = p.comboCrabGloves && (boss.healReduction || 0) > 0
+                ? regenAmt * (1 - boss.healReduction) : regenAmt;
+            boss.hp = Math.min(boss.maxHp, boss.hp + actualRegen);
+        }
+    }
+
+    // ── 黑熊 (<40% 狂暴)
+    if (boss.name && boss.name.includes('黑熊')) {
+        if (!boss._enraged && boss.hp / boss.maxHp < 0.4) {
+            boss._enraged = true;
+            boss.speed *= 1.5;
+            boss.damage = Math.round(boss.damage * 1.3);
+            boss._enrageGlow = true;
+            showFloatingText(boss.x, boss.y - 40, '🐻 狂暴！', '#ff4400', 20);
+        }
+    }
+
+    // ── 大白鯊 衝刺攻擊
+    if (boss.name && boss.name.includes('鯊')) {
+        if (boss._chargeState === 'charging') {
+            // 衝刺移動
+            boss.x = ((boss.x + boss._chargeVx + MAP_WIDTH)  % MAP_WIDTH);
+            boss.y = ((boss.y + boss._chargeVy + MAP_HEIGHT) % MAP_HEIGHT);
+            const toPlayer = wrappedDistance(boss.x, boss.y, p.x, p.y);
+            if (toPlayer < boss.attackRange + 10) {
+                applyDamageToPlayer(Math.round(boss.damage * 1.5), boss);
+                boss.attackCooldown = now;
+            }
+            if (now - (boss._chargeStartTime || 0) > 800) {
+                boss._chargeState = 'cooldown';
+                boss._chargeTimer = now;
+                boss._chargeArrow = null;  // 衝刺結束，清除箭頭
+            }
+            return; // 衝刺中跳過普通邏輯
+        } else if (boss._chargeState === 'warning') {
+            // 警告階段：0.6秒後開始衝刺
+            if (now - (boss._chargeWarningStart || 0) > 600) {
+                boss._chargeState = 'charging';
+                boss._chargeStartTime = now;
+                const angle = Math.atan2(
+                    boss._chargeTarget.y - boss.y,
+                    boss._chargeTarget.x - boss.x
+                );
+                const chargeSpeed = boss.speed * 4;
+                boss._chargeVx = Math.cos(angle) * chargeSpeed;
+                boss._chargeVy = Math.sin(angle) * chargeSpeed;
+            }
+            return;
+        } else if (boss._chargeState === 'cooldown') {
+            if (now - (boss._chargeTimer || 0) > 1500) boss._chargeState = null;
+        } else {
+            // 觸發衝刺
+            if (!boss._chargeTimer) boss._chargeTimer = now;
+            if (now - boss._chargeTimer > 4000 && dist < 500) {
+                boss._chargeState = 'warning';
+                boss._chargeWarningStart = now;
+                boss._chargeTarget = { x: p.x, y: p.y };
+                // 鎖定箭頭：方向+實際衝刺距離（speed×4×0.8s×60fps）
+                const _cAngle = Math.atan2(p.y - boss.y, p.x - boss.x);
+                const _cDist  = boss.speed * 4 * 0.8 * 60;
+                boss._chargeArrow = { angle: _cAngle, dist: _cDist, fromX: boss.x, fromY: boss.y };
+            }
+        }
+    }
+
+    // ── 沙漠蠍王：毒霧 + 沙暴
+    if (boss.name && boss.name.includes('蠍')) {
+        // 毒液投擲：每5秒鎖定玩家位置，不限距離
+        if (!boss._venomTimer) boss._venomTimer = now;
+        if (now - boss._venomTimer > 5000) {
+            boss._venomTimer = now;
+            boss._venomWarning = { x: p.x, y: p.y, startTime: now, duration: 600 };
+        }
+        // 警告600ms後在鎖定位置生成定點毒霧
+        if (boss._venomWarning && now - boss._venomWarning.startTime >= boss._venomWarning.duration) {
+            if (!gameState.venomPuddles) gameState.venomPuddles = [];
+            gameState.venomPuddles.push({
+                x:         boss._venomWarning.x,
+                y:         boss._venomWarning.y,
+                radius:    150,
+                startTime: now,
+                duration:  4000,
+                dmgPerSec: Math.round(boss.damage * 0.3),
+                lastTick:  now,
+            });
+            boss._venomWarning = null;
+        }
+        // 毒霧傷害 tick（玩家跑出 radius 停止受傷）
+        if (gameState.venomPuddles) {
+            for (let _vi = gameState.venomPuddles.length - 1; _vi >= 0; _vi--) {
+                const puddle = gameState.venomPuddles[_vi];
+                if (now - puddle.startTime >= puddle.duration) {
+                    gameState.venomPuddles.splice(_vi, 1);
+                    continue;
+                }
+                if (now - puddle.lastTick >= 1000) {
+                    puddle.lastTick = now;
+                    if (wrappedDistance(puddle.x, puddle.y, p.x, p.y) < puddle.radius) {
+                        applyDamageToPlayer(puddle.dmgPerSec, boss);
+                        showFloatingText(p.x, p.y - 30, t('venomFloat') || '☠ 毒霧', '#aa00cc', 16);
+                    }
+                }
+            }
+        }
+        // 沙暴：血量<40%時觸發一次
+        if (!boss._sandstormTriggered && boss.hp / boss.maxHp < 0.4) {
+            boss._sandstormTriggered = true;
+            boss._sandstormActive = true;
+            boss._sandstormEndTime = now + 6000;
+            // 沙暴螢幕外圈遮罩（淡入淡出各500ms，持續6秒）
+            boss._sandStormVisual = { startTime: now, duration: 6000 };
+            showFloatingText(boss.x, boss.y - 40, '🌪 沙暴！', '#cc8800', 20);
+        }
+        if (boss._sandstormActive && now > (boss._sandstormEndTime || 0)) {
+            boss._sandstormActive = false;
+        }
+        // 沙暴期間：玩家移速 -40%，但只在沙漠生態區內才生效（離開沙漠立即解除）
+        p._inSandstorm = (boss._sandstormActive || false) && getBiome(p.x, p.y) === 'desert';
+    } else {
+        p._inSandstorm = false;
+    }
+
     if (dist < boss.aggroRange) {
         boss.state = 'chasing';
     } else if (boss.state === 'chasing' && dist > boss.aggroRange + 150) {
@@ -51,8 +778,23 @@ function updateBoss() {
     if (boss.state === 'chasing') {
         if (dist <= boss.attackRange) {
             if (now - boss.attackCooldown >= 1500) {
-                applyDamageToPlayer(boss.damage, boss);
+                let dmg = boss.damage;
+                let isCrit = false;
+                // 黑熊有 25% 暴擊，傷害 ×1.5，觸發雙臂 X 攻擊動畫
+                if (boss.biome === 'forest' && Math.random() < 0.25) {
+                    dmg = Math.round(dmg * 1.5);
+                    isCrit = true;
+                }
+                applyDamageToPlayer(dmg, boss);
                 boss.attackCooldown = now;
+                if (boss.biome === 'forest') {
+                    boss.lastAttackCrit = isCrit;
+                    // 暴擊命中玩家時顯示橙色浮動文字
+                    if (isCrit) showFloatingText(p.x, p.y - 40, 'X熊爪！', '#ff8800', 18);
+                    // 記錄哪腳踩地（追擊速度下的踏步相位）
+                    const atkPeriod = 450 / 1.9;
+                    boss.lastAttackLeg = Math.sin(now / atkPeriod) > 0 ? 'left' : 'right';
+                }
             }
         } else {
             const angle = Math.atan2(dy, dx);
@@ -73,60 +815,105 @@ function updateBoss() {
             }
         }
     }
+    console.log && false; // [v0.47.0] 六：Boss 機制改版完成
 }
 
 function showVictory() {
     if (gameState.gameOver) return;
+    pausePlayTimer();
+    gameState.topBarTarget = null;
+    gameState.topBarFadeTimer = 0;
     gameState.gameOver = true;
     gameState.victory = true;
     AudioManager.stopMusic();
     AudioManager.play('victory');
     addXP(500);
     saveLastRunOrgans();
-    gameState.skillPoints += 1;
+    const timeBonus = Math.floor((600 - gameState.timeRemaining) / 180);
+    const levelBonus = Math.floor(gameState.player.level / 6);
+    const eliteBonus = (gameState.sessionSkillPoints && gameState.sessionSkillPoints.elite) || 0;
+    if (gameState.sessionSkillPoints) gameState.sessionSkillPoints.boss = 3;
+    gameState.skillPoints += 3 + timeBonus + levelBonus;
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     localStorage.removeItem('savedOrgans');
     localStorage.removeItem('savedHiddenOrgans');
-    const overlay = document.createElement('div');
-    overlay.id = 'victory-overlay';
-    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
-    const title = document.createElement('div');
-    title.style.cssText = 'font-size:52px;margin-bottom:16px;';
-    title.textContent = t('victoryTitle');
-    overlay.appendChild(title);
-    const desc1 = document.createElement('div');
-    desc1.style.cssText = 'font-size:22px;margin-bottom:8px;';
-    const bossName = gameState.boss && gameState.boss.name ? gameState.boss.name : (BOSS_CONFIG.forest.name);
-    desc1.textContent = t('victoryDesc', { boss: bossName });
-    overlay.appendChild(desc1);
-    const desc2 = document.createElement('div');
-    desc2.style.cssText = 'font-size:18px;margin-bottom:28px;color:#FFD700;';
-    desc2.textContent = t('victoryReward');
-    overlay.appendChild(desc2);
-    const btnTree = document.createElement('button');
-    btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:10px;';
-    btnTree.textContent = t('goSkillTree');
-    btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(); };
-    overlay.appendChild(btnTree);
-    const vBtnRow = document.createElement('div');
-    vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;';
-    const vHomeBtn = document.createElement('button');
-    vHomeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-    vHomeBtn.textContent = t('backHome');
-    vHomeBtn.onclick = () => location.reload();
-    vBtnRow.appendChild(vHomeBtn);
-    const vPlayAgainBtn = document.createElement('button');
-    vPlayAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-    vPlayAgainBtn.textContent = t('playAgain');
-    vPlayAgainBtn.onclick = () => { sessionStorage.setItem('autostart', '1'); location.reload(); };
-    vBtnRow.appendChild(vPlayAgainBtn);
-    overlay.appendChild(vBtnRow);
-    const vFooter = document.createElement('div');
-    vFooter.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
-    vFooter.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
-    overlay.appendChild(vFooter);
-    document.getElementById('game-container').appendChild(overlay);
+    const bossKillTime = gameState.bossSpawnTime ? Math.floor((Date.now() - gameState.bossSpawnTime) / 1000) : null;
+    const doShowVictory = () => {
+        const overlay = document.createElement('div');
+        overlay.id = 'victory-overlay';
+        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
+        const title = document.createElement('div');
+        title.style.cssText = 'font-size:52px;margin-bottom:16px;';
+        title.textContent = t('victoryTitle');
+        overlay.appendChild(title);
+        const desc1 = document.createElement('div');
+        desc1.style.cssText = 'font-size:22px;margin-bottom:8px;';
+        const bossName = gameState.boss && gameState.boss.name ? gameState.boss.name : (BOSS_CONFIG.forest.name);
+        desc1.textContent = t('victoryDesc', { boss: bossName });
+        overlay.appendChild(desc1);
+        const desc2 = document.createElement('div');
+        desc2.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
+        desc2.textContent = t('victoryReward');
+        overlay.appendChild(desc2);
+        const spSection = document.createElement('div');
+        spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;';
+        const spLines = [t('skillPtBoss', { n: 3 })];
+        if (eliteBonus > 0)  spLines.push(t('skillPtElite', { n: eliteBonus }));
+        if (timeBonus > 0)   spLines.push(t('skillPtTime',  { n: timeBonus }));
+        if (levelBonus > 0)  spLines.push(t('skillPtLevel', { n: levelBonus }));
+        spSection.innerHTML = spLines.join('<br>');
+        overlay.appendChild(spSection);
+        const btnTree = document.createElement('button');
+        btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
+        btnTree.textContent = t('goSkillTree');
+        btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'postGame'); };
+        overlay.appendChild(btnTree);
+        const vBtnRow = document.createElement('div');
+        vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;';
+        const vWarnEl = document.createElement('div');
+        vWarnEl.style.cssText = 'display:none;font-size:13px;color:#f80;text-align:center;';
+        vBtnRow.appendChild(vWarnEl);
+        const vRowInner = document.createElement('div');
+        vRowInner.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
+        const vHomeBtn = document.createElement('button');
+        vHomeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
+        vHomeBtn.textContent = t('backHome');
+        let vHomeWarned = false;
+        vHomeBtn.onclick = () => {
+            if (!vHomeWarned) {
+                vHomeWarned = true;
+                vWarnEl.textContent = t('warnNoOrganHome');
+                vWarnEl.style.display = 'block';
+                return;
+            }
+            location.reload();
+        };
+        vRowInner.appendChild(vHomeBtn);
+        const vPlayAgainBtn = document.createElement('button');
+        vPlayAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
+        vPlayAgainBtn.textContent = t('playAgain');
+        vPlayAgainBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'forceStart'); };
+        vRowInner.appendChild(vPlayAgainBtn);
+        vBtnRow.appendChild(vRowInner);
+        overlay.appendChild(vBtnRow);
+        const vFooter = document.createElement('div');
+        vFooter.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
+        vFooter.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
+        overlay.appendChild(vFooter);
+        if (gameState.devModeUsed) {
+            const devWarn = document.createElement('div');
+            devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
+            devWarn.textContent = '⚠️ 本局使用了開發者模式，分數不計入排行榜';
+            overlay.appendChild(devWarn);
+        }
+        document.getElementById('game-container').appendChild(overlay);
+    };
+    if (gameState.devModeUsed) {
+        doShowVictory();
+    } else {
+        showScoreSubmitPopup(true, bossKillTime, doShowVictory);
+    }
 }
 
 function drawBossArrow() {

@@ -1,22 +1,12 @@
-// =============================================================
+﻿// =============================================================
 // UI 系統 - Tooltip / drawGame / updateUI / drawTreasures
 //           Settings / updateTimer / Dev Mode
 //           showGuide / hideGuide / showStartScreen
 // =============================================================
 
-// ── 小地圖全域變數
-let _minimapTerrainCanvas  = null;
-let _minimapTerrainSeed    = -1;
-let _minimapCanvas         = null;
-let _minimapCtx            = null;
-let _sunmoonCanvas         = null;
-let _sunmoonCtx            = null;
-let _minimapFogCanvas      = null;
-let _minimapFogCtx         = null;
-let _minimapFogImageData   = null;
-let _minimapFogRenderCanvas = null;
-let _minimapFogRenderCtx    = null;
-let _fogCloudCanvas         = null;
+// _lbDifficulty / _top10Difficulty / _diffKey() 已移至 systems/leaderboard.js
+
+// drawGame() / updateUI() / drawTopBarUI() / drawMinimap() / drawTreasures() 已移至 systems/hud.js
 
 // ── Tooltip 全域變數
 let _organHitRegions = [];
@@ -60,465 +50,34 @@ function _escH(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// =============================================================
-// 小地圖系統
-// =============================================================
+// detectMobile() / getOrientation() / applyDeviceMode() 已移至 systems/mobile.js
+// _attachJoystickListeners() / _renderMobileOverlay() / _getAttackBtnPos() 已移至 systems/mobile.js
 
-function _buildFogCloudTexture() {
-    const size = 300;
-    const tc   = document.createElement('canvas');
-    tc.width   = tc.height = size;
-    const tctx = tc.getContext('2d');
-    let seed = 73856;
-    const rng = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967295; };
-    for (let i = 0; i < 70; i++) {
-        const x = rng() * size;
-        const y = rng() * size;
-        const r = 15 + rng() * 60;
-        const v = Math.floor(190 + rng() * 65);
-        const a = 0.25 + rng() * 0.65;
-        const g = tctx.createRadialGradient(x, y, r * 0.1, x, y, r);
-        g.addColorStop(0,   'rgba(' + v + ',' + v + ',' + v + ',' + a.toFixed(2) + ')');
-        g.addColorStop(0.5, 'rgba(255,255,255,' + (a * 0.4).toFixed(2) + ')');
-        g.addColorStop(1,   'rgba(255,255,255,0)');
-        tctx.fillStyle = g;
-        tctx.beginPath();
-        tctx.arc(x, y, r, 0, Math.PI * 2);
-        tctx.fill();
-    }
-    return tc;
-}
 
-function updateMinimapFog() {
-    if (!gameState.fogMap) return;
-    const COLS = MAP_WIDTH  / TILE_SIZE; // 400
-    const ROWS = MAP_HEIGHT / TILE_SIZE; // 400
-    const cam  = gameState.camera;
-    const gx0  = Math.floor(cam.x / TILE_SIZE);
-    const gy0  = Math.floor(cam.y / TILE_SIZE);
-    const gxW  = Math.ceil(VIEW_W / TILE_SIZE) + 1; // 81
-    const gyW  = Math.ceil(VIEW_H / TILE_SIZE) + 1; // 46
-    for (let dy = 0; dy < gyW; dy++) {
-        for (let dx = 0; dx < gxW; dx++) {
-            const gx = ((gx0 + dx) % COLS + COLS) % COLS;
-            const gy = ((gy0 + dy) % ROWS + ROWS) % ROWS;
-            gameState.fogMap[gy][gx] = false;
-        }
-    }
-}
-
-function _drawMinimapFog(mctx) {
-    if (!gameState.fogMap) return;
-    if (!_minimapFogCanvas) {
-        _minimapFogCanvas        = document.createElement('canvas');
-        _minimapFogCanvas.width  = 400;
-        _minimapFogCanvas.height = 400;
-        _minimapFogCtx           = _minimapFogCanvas.getContext('2d');
-        _minimapFogImageData     = _minimapFogCtx.createImageData(400, 400);
-    }
-    const MARGIN = 15;
-    const RC     = 300 + MARGIN * 2; // 330
-    if (!_minimapFogRenderCanvas || _minimapFogRenderCanvas.width !== RC) {
-        _minimapFogRenderCanvas        = document.createElement('canvas');
-        _minimapFogRenderCanvas.width  = RC;
-        _minimapFogRenderCanvas.height = RC;
-        _minimapFogRenderCtx           = _minimapFogRenderCanvas.getContext('2d');
-    }
-    if (!_fogCloudCanvas) _fogCloudCanvas = _buildFogCloudTexture();
-
-    // 寫入硬邊迷霧像素（白天白色 / 夜晚黑色）
-    const d      = _minimapFogImageData.data;
-    const fogMap = gameState.fogMap;
-    const v      = gameState.isNight ? 0 : 255;
-    for (let gy = 0; gy < 400; gy++) {
-        const row = fogMap[gy];
-        for (let gx = 0; gx < 400; gx++) {
-            const i = (gy * 400 + gx) * 4;
-            if (row[gx]) { d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255; }
-            else          { d[i + 3] = 0; }
-        }
-    }
-    _minimapFogCtx.putImageData(_minimapFogImageData, 0, 0);
-
-    // 渲染到 330×330 暫存畫布，使 blur kernel 在可視邊緣（距邊 15px）有足夠霧像素可採樣
-    const rc = _minimapFogRenderCtx;
-    rc.clearRect(0, 0, RC, RC);
-    rc.filter = 'blur(8px)';
-    rc.drawImage(_minimapFogCanvas, 0, 0, 400, 400, 0, 0, RC, RC);
-    rc.filter = 'none';
-
-    // 白天：用 source-atop 把雲霧材質貼在迷霧形狀內
-    if (!gameState.isNight) {
-        rc.globalCompositeOperation = 'source-atop';
-        rc.drawImage(_fogCloudCanvas, 0, 0, 300, 300, 0, 0, RC, RC);
-        rc.globalCompositeOperation = 'source-over';
-    }
-
-    // 只取中央 300×300，兩側各 15px 的邊緣失真區不顯示
-    mctx.drawImage(_minimapFogRenderCanvas, MARGIN, MARGIN, 300, 300, 0, 0, 300, 300);
-}
-
-function _buildMinimapTerrainCanvas() {
-    const mc   = document.createElement('canvas');
-    mc.width   = 400;
-    mc.height  = 400;
-    const mctx = mc.getContext('2d');
-    const cols = MAP_WIDTH  / TILE_SIZE;
-    const rows = MAP_HEIGHT / TILE_SIZE;
-    for (let gy = 0; gy < rows; gy++) {
-        for (let gx = 0; gx < cols; gx++) {
-            mctx.fillStyle = BIOME_COLOR[gameState.terrainMap[gy][gx]] || '#549954';
-            mctx.fillRect(gx, gy, 1, 1);
-        }
-    }
-    _minimapTerrainCanvas = mc;
-    _minimapTerrainSeed   = gameState.mapSeed;
-}
-
-function _drawMinimapEntities(mctx) {
-    if (!gameState.fogMap) return;
-    const scale = 300 / MAP_WIDTH;
-    const COLS  = MAP_WIDTH  / TILE_SIZE;
-    const ROWS  = MAP_HEIGHT / TILE_SIZE;
-
-    const toMM = (wx, wy) => ({
-        x: ((wx % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH)  * scale,
-        y: ((wy % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT) * scale
-    });
-
-    const isRevealed = (wx, wy) => {
-        const gx = Math.floor(((wx % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH)  / TILE_SIZE);
-        const gy = Math.floor(((wy % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT) / TILE_SIZE);
-        if (gy < 0 || gy >= ROWS || gx < 0 || gx >= COLS) return false;
-        return !gameState.fogMap[gy][gx];
-    };
-
-    // 中立生物（橘色）
-    mctx.fillStyle = '#FFA040';
-    for (const c of gameState.neutralCreatures) {
-        if (c.hp <= 0 || !isRevealed(c.x, c.y)) continue;
-        const m = toMM(c.x, c.y);
-        mctx.beginPath(); mctx.arc(m.x, m.y, 1.5, 0, Math.PI * 2); mctx.fill();
-    }
-
-    // 敵意生物（紅色）
-    mctx.fillStyle = '#FF4040';
-    for (const c of gameState.hostileCreatures) {
-        if (c.hp <= 0 || !isRevealed(c.x, c.y)) continue;
-        const m = toMM(c.x, c.y);
-        mctx.beginPath(); mctx.arc(m.x, m.y, 1.5, 0, Math.PI * 2); mctx.fill();
-    }
-
-    // 精英怪（金色，較大）
-    if (gameState.eliteCreature && gameState.eliteCreature.hp > 0 && isRevealed(gameState.eliteCreature.x, gameState.eliteCreature.y)) {
-        const m = toMM(gameState.eliteCreature.x, gameState.eliteCreature.y);
-        mctx.fillStyle = '#FFD700';
-        mctx.beginPath(); mctx.arc(m.x, m.y, 3, 0, Math.PI * 2); mctx.fill();
-    }
-
-    // Boss（深紅帶描邊）
-    if (gameState.boss && gameState.boss.hp > 0 && isRevealed(gameState.boss.x, gameState.boss.y)) {
-        const m = toMM(gameState.boss.x, gameState.boss.y);
-        mctx.fillStyle = '#CC0000';
-        mctx.strokeStyle = '#FF6600'; mctx.lineWidth = 1.5;
-        mctx.beginPath(); mctx.arc(m.x, m.y, 4, 0, Math.PI * 2);
-        mctx.fill(); mctx.stroke();
-        mctx.lineWidth = 1;
-    }
-
-    // 玩家（白/綠交替閃爍，帶黑色描邊）
-    const pm   = toMM(gameState.player.x, gameState.player.y);
-    const blink = Math.floor(Date.now() / 500) % 2 === 0;
-    mctx.fillStyle   = blink ? '#FFFFFF' : '#00FF88';
-    mctx.strokeStyle = 'rgba(0,0,0,0.8)'; mctx.lineWidth = 1.5;
-    mctx.beginPath(); mctx.arc(pm.x, pm.y, 3.5, 0, Math.PI * 2);
-    mctx.fill(); mctx.stroke();
-    mctx.lineWidth = 1;
-}
-
-function drawMinimap() {
-    if (!_minimapCanvas) {
-        _minimapCanvas = document.getElementById('minimapCanvas');
-        if (!_minimapCanvas) return;
-        _minimapCtx = _minimapCanvas.getContext('2d');
-    }
-    if (!gameState.terrainMap) {
-        _minimapCtx.fillStyle = '#222';
-        _minimapCtx.fillRect(0, 0, 300, 300);
-    } else {
-        if (!_minimapTerrainCanvas || _minimapTerrainSeed !== gameState.mapSeed) {
-            _buildMinimapTerrainCanvas();
-        }
-        _minimapCtx.imageSmoothingEnabled = false;
-        _minimapCtx.drawImage(_minimapTerrainCanvas, 0, 0, 400, 400, 0, 0, 300, 300);
-        _drawMinimapFog(_minimapCtx);
-        _drawMinimapEntities(_minimapCtx);
-    }
-    _drawSunMoonIndicator();
-}
-
-function _drawSunMoonIndicator() {
-    if (!_sunmoonCanvas) {
-        _sunmoonCanvas = document.getElementById('sunmoonCanvas');
-        if (!_sunmoonCanvas) return;
-        _sunmoonCtx = _sunmoonCanvas.getContext('2d');
-    }
-    const mctx = _sunmoonCtx;
-    const W = 24, H = 24;
-    mctx.clearRect(0, 0, W, H);
-    mctx.fillStyle = 'rgba(0,0,0,0.7)';
-    mctx.fillRect(0, 0, W, H);
-
-    const timeElapsed   = Math.max(0, 600 - gameState.timeRemaining);
-    const phaseIndex    = Math.min(7, Math.floor(timeElapsed / 75));
-    const phaseProgress = (timeElapsed % 75) / 75;
-    const isDay         = phaseIndex % 2 === 0;
-    const progress      = phaseProgress;
-
-    const icx = W / 2, icy = H / 2;
-    const sR  = 11;
-
-    const sunColor   = '#FFB300';
-    const moonColor  = '#1a3060';
-    const frontColor = isDay ? sunColor : moonColor;
-    const backColor  = isDay ? moonColor : sunColor;
-
-    // 裁切到球體範圍
-    mctx.save();
-    mctx.beginPath();
-    mctx.arc(icx, icy, sR, 0, Math.PI * 2);
-    mctx.clip();
-
-    // 後半球
-    mctx.fillStyle = backColor;
-    mctx.beginPath();
-    mctx.arc(icx, icy, sR, 0, Math.PI * 2);
-    mctx.fill();
-
-    // 前半球（橢圓邊界）
-    const ex    = Math.cos(progress * Math.PI) * sR;
-    const absEx = Math.abs(ex);
-    mctx.fillStyle = frontColor;
-    mctx.beginPath();
-    mctx.arc(icx, icy, sR, -Math.PI / 2, Math.PI / 2, true);
-    if (absEx > 0.5) {
-        if (ex >= 0) {
-            mctx.ellipse(icx, icy, absEx, sR, 0, Math.PI / 2, -Math.PI / 2, true);
-        } else {
-            mctx.ellipse(icx, icy, absEx, sR, 0, Math.PI / 2, -Math.PI / 2, false);
-        }
-    } else {
-        mctx.lineTo(icx, icy - sR);
-    }
-    mctx.fill();
-
-    mctx.restore();
-}
 
 // =============================================================
 // 繪製系統
 // =============================================================
 
-function drawGame() {
-    // 1. 貼上地形預渲染底圖（離屏 Canvas），夜晚遮罩在 drawTerrain 內疊加
-    drawTerrain();
-
-    // 2. 繪製環境 (樹木)
-    gameState.trees.forEach(tree => {
-        const s = worldToScreen(tree.x, tree.y);
-        if (s.x < -tree.radius - 50 || s.x > VIEW_W + tree.radius + 50 ||
-            s.y < -tree.radius - 50 || s.y > VIEW_H + tree.radius + 50) return;
-        ctx.fillStyle = tree.color;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, tree.radius, 0, Math.PI * 2);
-        ctx.fill();
-        // 開發者模式：顯示附近果子數 / 最大上限
-        if (gameState.devMode) {
-            const maxN = tree.isLarge ? 5 : 3;
-            ctx.save();
-            ctx.font = '9px Arial';
-            ctx.fillStyle = '#FFD700';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            ctx.fillText(tree.fruitCount + '/' + maxN, s.x, s.y + tree.radius + 2);
-            ctx.restore();
-        }
-    });
-
-    // 3. 繪製果子
-    gameState.fruits.forEach(fruit => {
-        const s = worldToScreen(fruit.x, fruit.y);
-        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) return;
-        ctx.fillStyle = fruit.color;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, fruit.radius, 0, Math.PI * 2);
-        ctx.fill();
-    });
-
-    // 4. 繪製寶物
-    drawTreasures();
-
-    // 5. 繪製屍體（在生物之下）
-    drawCorpses();
-    drawCorpseEatingBars();
-
-    // 5. 繪製中立生物
-    drawNeutralCreatures();
-
-    // 6. 繪製敵意生物
-    drawHostileCreatures();
-
-    // 7. 繪製 Boss
-    if (gameState.boss && gameState.boss.hp > 0) {
-        const boss = gameState.boss;
-        const bs = worldToScreen(boss.x, boss.y);
-        if (bs.x >= -50 && bs.x <= VIEW_W + 50 && bs.y >= -50 && bs.y <= VIEW_H + 50) {
-            const flicker = Math.sin(Date.now() * 0.006) * 0.4 + 0.7;
-            ctx.save();
-            ctx.shadowColor = boss.glowColor || '#8B4513';
-            ctx.shadowBlur = 10 + flicker * 12;
-            ctx.globalAlpha = 0.85 + flicker * 0.15;
-            ctx.fillStyle = boss.state === 'chasing' ? (boss.colorChasing || '#2A0D00') : (boss.color || '#3B1E08');
-            ctx.beginPath();
-            ctx.arc(bs.x, bs.y, boss.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            ctx.save();
-            ctx.shadowColor = '#000000'; ctx.shadowBlur = 4;
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(boss.name || boss.label || 'Boss', bs.x, bs.y - boss.radius - 32);
-            ctx.restore();
-            const bBarW = 50, bBarH = 6;
-            const bBarX = bs.x - bBarW / 2;
-            const bBarY = bs.y - boss.radius - 24;
-            ctx.fillStyle = '#550000';
-            ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
-            ctx.fillStyle = '#FF4400';
-            ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
-        }
-    }
-
-    // 7b. 繪製精英怪
-    drawEliteCreature();
-
-    // 8. 攻擊範圍視覺圓圈（0.2 秒淡出）
-    const p = gameState.player;
-    const ps = worldToScreen(p.x, p.y);
-    if (p.attackVisual > 0 && Date.now() - p.attackVisual < 200) {
-        const alpha = 1 - (Date.now() - p.attackVisual) / 200;
-        ctx.strokeStyle = 'rgba(255,255,255,' + alpha.toFixed(2) + ')';
-        ctx.fillStyle   = 'rgba(255,255,255,' + (alpha * 0.12).toFixed(2) + ')';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(ps.x, ps.y, p.attackRange, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.lineWidth = 1;
-    }
-
-    // 9. 繪製玩家角色 (噪鵑)
-    if (gameState.isNight) {
-        ctx.fillStyle = 'rgba(0,255,136,0.9)';
-        ctx.beginPath();
-        ctx.arc(ps.x, ps.y, p.radius + 3, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(ps.x, ps.y, p.radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    drawEliteArrow();
-    drawBossArrow();
-
-    // 9. 繪製器官清單（左下角）
-    drawOrganUI();
-
-    // 版本資訊（左下角最底部，與器官框不重疊）
-    ctx.save();
-    ctx.globalAlpha = 0.6;
-    ctx.fillStyle = 'white';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText('© ' + GAME_INFO.author, 6, VIEW_H - 20);
-    ctx.fillText(GAME_INFO.version, 6, VIEW_H - 5);
-    ctx.restore();
-
-    // 10. 繪製升級提示文字（畫面中央偏上，2 秒淡出）
-    const lvMsg = gameState.levelUpMessage;
-    if (lvMsg.text && Date.now() - lvMsg.timer < 2000) {
-        const lvAlpha = Math.max(0, 1 - (Date.now() - lvMsg.timer) / 2000);
-        ctx.save();
-        ctx.globalAlpha = lvAlpha;
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 40px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(lvMsg.text, VIEW_W / 2, VIEW_H / 2 - 60);
-        ctx.restore();
-    }
-
-    // 11. 繪製日夜切換提示文字（畫面中央，2 秒淡出）
-    const msg = gameState.dayNightMessage;
-    if (msg.text && Date.now() - msg.timer < 2000) {
-        const alpha = Math.max(0, 1 - (Date.now() - msg.timer) / 2000);
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 36px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(msg.text, VIEW_W / 2, VIEW_H / 2);
-        ctx.restore();
-    }
-
-    // 12. 繪製小地圖
-    drawMinimap();
+function showAlphaAnnouncement(name) {
+    const el = document.createElement('div');
+    el.style.cssText = [
+        'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
+        'display:flex', 'align-items:center', 'justify-content:center',
+        'pointer-events:none', 'z-index:9999', 'opacity:1', 'transition:opacity 0.5s'
+    ].join(';');
+    el.innerHTML =
+        '<div style="font-size:48px;font-weight:bold;color:#FFD700;' +
+        'text-shadow:0 0 20px #FF8800,2px 2px 4px #000;text-align:center;">' +
+        '⚠️ Alpha ' + (name || '') +
+        '<br><span style="font-size:32px">誕生了！</span></div>';
+    document.getElementById('ui-overlay').appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; }, 2500);
+    setTimeout(() => el.remove(), 3000);
 }
 
-function updateUI() {
-    const p = gameState.player;
-    const lvThreshold = 100 + (p.level - 1) * 50;
-    const barPct = Math.min(1, p.levelXP / lvThreshold);
-    document.getElementById('top-left').innerHTML =
-        '<div class="status-line">HP: ' + Math.round(gameState.stats.hpCurrent) + '/' + gameState.stats.hpMax + '</div>' +
-        '<div class="status-line">Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold + '</div>' +
-        '<div style="width:120px;height:6px;background:#333;border-radius:3px;margin-top:2px;">' +
-        '<div style="width:' + Math.round(barPct * 100) + '%;height:100%;background:#00CC00;border-radius:3px;"></div>' +
-        '</div>';
+// drawGame() / updateUI() / drawTopBarUI() / drawMinimap() / drawTreasures() 已移至 systems/hud.js
 
-    // 小地圖資訊列：地形圖示 + 時間
-    const mmBiomeEl = document.getElementById('minimap-biome');
-    const mmTimeEl  = document.getElementById('minimap-time');
-    if (mmBiomeEl) {
-        const biomeIcons = { forest: t('biomeForest'), ocean: t('biomeOcean'), desert: t('biomeDesert') };
-        mmBiomeEl.innerText = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
-    }
-    if (mmTimeEl) mmTimeEl.innerText = gameState.stats.timeStatus;
-
-    if (gameState.devMode) {
-        document.getElementById('dev-stat-fruits').textContent = t('devFruits') + '：' + gameState.fruits.length;
-        document.getElementById('dev-stat-neutral').textContent = t('devNeutral') + '：' + gameState.neutralCreatures.filter(c => c.hp > 0).length + ' / 50';
-        document.getElementById('dev-stat-hostile').textContent = t('devHostile') + '：' + gameState.hostileCreatures.filter(c => c.hp > 0).length + ' / 35';
-    }
-}
-
-function drawTreasures() {
-    for (const t of gameState.treasures) {
-        const s = worldToScreen(t.x, t.y);
-        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
-        ctx.fillStyle = 'gold';
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, t.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#CC8800';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.lineWidth = 1;
-    }
-}
 
 // =============================================================
 // 音效與設定系統
@@ -535,9 +94,19 @@ function loadSettings() {
                 gameState.settings.language = parsed.language;
                 gameState.language = parsed.language;
             }
+            if (parsed.deviceMode !== undefined) {
+                gameState.settings.deviceMode = parsed.deviceMode;
+            }
+            if (parsed.autoAttack !== undefined) {
+                gameState.settings.autoAttack = parsed.autoAttack;
+            }
+            if (parsed.showOrganTooltip !== undefined) {
+                gameState.settings.showOrganTooltip = parsed.showOrganTooltip;
+            }
         }
     } catch(e) {}
     applyLanguage(gameState.language);
+    applyDeviceMode();
 }
 
 // 切換語言：寫入 settings、重新套用 LANG 資料表、即時刷新開啟中的介面
@@ -591,6 +160,7 @@ function _buildSettingsSection(title) {
 }
 
 function showSettings(fromHome) {
+    applyDeviceMode();
     if (document.getElementById('settings-overlay')) return;
     gameState.settingsOpen = true;
 
@@ -665,7 +235,8 @@ function showSettings(fromHome) {
         { label: t('keyDown'),   sk: 'down',   fallback: '↓ ArrowDown'  },
         { label: t('keyLeft'),   sk: 'left',   fallback: '← ArrowLeft'  },
         { label: t('keyRight'),  sk: 'right',  fallback: '→ ArrowRight' },
-        { label: t('keyAttack'), sk: 'attack', fallback: t('mouseLeft') }
+        { label: t('keyAttack'), sk: 'attack', fallback: t('mouseLeft') },
+        { label: t('keyDash'),   sk: 'dash',   fallback: ''             }
     ];
     const rebindBtns = {};
 
@@ -675,7 +246,8 @@ function showSettings(fromHome) {
         const tgt = gameState._rebindTarget;
         if (tgt && rebindBtns[tgt]) {
             const def = keyDefs.find(x => x.sk === tgt);
-            rebindBtns[tgt].textContent = _keyDisplay(gameState.settings.keys[tgt]) + '  /  ' + (def ? def.fallback : '');
+            const _fb1 = def ? def.fallback : '';
+            rebindBtns[tgt].textContent = _keyDisplay(gameState.settings.keys[tgt]) + (_fb1 ? '  /  ' + _fb1 : '');
             rebindBtns[tgt].style.cssText = rebindBtns[tgt]._baseStyle;
         }
         gameState._rebindTarget = null;
@@ -688,7 +260,8 @@ function showSettings(fromHome) {
         gameState._rebindTarget = null;
         if (rebindBtns[sk]) {
             const def = keyDefs.find(x => x.sk === sk);
-            rebindBtns[sk].textContent = _keyDisplay(newKey) + '  /  ' + (def ? def.fallback : '');
+            const _fb2 = def ? def.fallback : '';
+            rebindBtns[sk].textContent = _keyDisplay(newKey) + (_fb2 ? '  /  ' + _fb2 : '');
             rebindBtns[sk].style.cssText = rebindBtns[sk]._baseStyle;
         }
         AudioManager.play('eatFruit');
@@ -742,7 +315,7 @@ function showSettings(fromHome) {
         const btn = document.createElement('button');
         btn._baseStyle = 'flex:1;padding:6px 10px;cursor:pointer;background:#2a2a2a;color:white;border:1px solid #666;border-radius:4px;font-size:13px;text-align:left;';
         btn.style.cssText = btn._baseStyle;
-        btn.textContent = _keyDisplay(gameState.settings.keys[sk]) + '  /  ' + fallback;
+        btn.textContent = _keyDisplay(gameState.settings.keys[sk]) + (fallback ? '  /  ' + fallback : '');
         btn.onclick = (e) => {
             e.stopPropagation();
             if (gameState._rebindTarget === sk) { _cancelRebind(); return; }
@@ -752,7 +325,125 @@ function showSettings(fromHome) {
         row.appendChild(btn);
         keySec.appendChild(row);
     });
-    panel.appendChild(keySec);
+    keySec.style.cssText = keySec.style.cssText + 'width:65%;box-sizing:border-box;margin-bottom:0;flex-shrink:0;';
+
+    // ─── 輔助功能 ───
+    const accSec = _buildSettingsSection(t('sectionAccessibility'));
+    accSec.style.cssText = accSec.style.cssText + 'flex:1;box-sizing:border-box;margin-bottom:0;';
+
+    const aaRow = document.createElement('div');
+    aaRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const aaTog = document.createElement('button');
+    aaTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshAaTog = () => {
+        const on = gameState.settings.autoAttack;
+        aaTog.textContent = on ? t('on') : t('off');
+        aaTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshAaTog();
+    aaTog.onclick = () => { gameState.settings.autoAttack = !gameState.settings.autoAttack; refreshAaTog(); saveSettings(); };
+    const aaLbl = document.createElement('div');
+    aaLbl.style.cssText = 'font-size:13px;';
+    aaLbl.textContent = t('autoAttack');
+    aaRow.appendChild(aaTog);
+    aaRow.appendChild(aaLbl);
+    accSec.appendChild(aaRow);
+    if (!gameState.isMobile) {
+        const aaHint = document.createElement('div');
+        aaHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;';
+        aaHint.textContent = t('autoAttackHint');
+        accSec.appendChild(aaHint);
+    }
+
+    // ── 器官提示 toggle（桌機版與手機版均顯示）
+    const otRow = document.createElement('div');
+    otRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const otTog = document.createElement('button');
+    otTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshOtTog = () => {
+        const on = gameState.settings.showOrganTooltip;
+        otTog.textContent = on ? t('on') : t('off');
+        otTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshOtTog();
+    otTog.onclick = () => {
+        gameState.settings.showOrganTooltip = !gameState.settings.showOrganTooltip;
+        refreshOtTog();
+        saveSettings();
+    };
+    const otLbl = document.createElement('div');
+    otLbl.style.cssText = 'font-size:13px;';
+    otLbl.textContent = t('organTooltip');
+    otRow.appendChild(otTog);
+    otRow.appendChild(otLbl);
+    accSec.appendChild(otRow);
+
+    // ── 新手教學開關（ON = 下一場會出現教學）
+    const tutRow = document.createElement('div');
+    tutRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const tutTog = document.createElement('button');
+    tutTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const _isTutorialOn = () => !localStorage.getItem('tutorialCompleted');
+    const refreshTutTog = () => {
+        const on = _isTutorialOn();
+        tutTog.textContent  = on ? t('on') : t('off');
+        tutTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshTutTog();
+    tutTog.onclick = () => {
+        if (_isTutorialOn()) {
+            // 目前 ON → 關閉（標記已完成，下一場不再顯示）
+            localStorage.setItem('tutorialCompleted', 'true');
+        } else {
+            // 目前 OFF → 開啟（移除完成標記，下一場會出現教學）
+            localStorage.removeItem('tutorialCompleted');
+        }
+        refreshTutTog();
+    };
+    const tutLbl = document.createElement('div');
+    tutLbl.style.cssText = 'font-size:13px;';
+    tutLbl.textContent = '新手教學';
+    tutRow.appendChild(tutTog);
+    tutRow.appendChild(tutLbl);
+    accSec.appendChild(tutRow);
+    const tutHint = document.createElement('div');
+    tutHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;margin-bottom:4px;';
+    tutHint.textContent = '開啟後，下一場遊戲開始時會顯示教學';
+    accSec.appendChild(tutHint);
+
+    const keyAccWrapper = document.createElement('div');
+    keyAccWrapper.style.cssText = 'display:flex;flex-direction:row;gap:8px;margin-bottom:14px;';
+    keyAccWrapper.appendChild(keySec);
+    keyAccWrapper.appendChild(accSec);
+    panel.appendChild(keyAccWrapper);
+
+    // ─── 裝置模式 ───
+    const deviceSec = _buildSettingsSection(t('sectionDevice'));
+    const deviceRow = document.createElement('div');
+    deviceRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+    const deviceModes = [
+        { label: t('deviceAuto'),    value: null       },
+        { label: t('deviceMobile'),  value: 'mobile'   },
+        { label: t('deviceDesktop'), value: 'desktop'  }
+    ];
+    const deviceBtns = [];
+    const _deviceBtnStyle = (sel) => 'flex:1;min-width:90px;padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;' +
+        (sel ? 'background:#2a5a2a;color:#FFD700;border:1px solid #FFD700;font-weight:bold;' : 'background:#2a2a2a;color:white;border:1px solid #555;');
+    deviceModes.forEach(({ label, value }) => {
+        const btn = document.createElement('button');
+        btn.style.cssText = _deviceBtnStyle(gameState.settings.deviceMode === value);
+        btn.textContent = label;
+        btn.onclick = () => {
+            gameState.settings.deviceMode = value;
+            applyDeviceMode();
+            saveSettings();
+            deviceBtns.forEach((b, i) => { b.style.cssText = _deviceBtnStyle(deviceModes[i].value === value); });
+        };
+        deviceBtns.push(btn);
+        deviceRow.appendChild(btn);
+    });
+    deviceSec.appendChild(deviceRow);
+    panel.appendChild(deviceSec);
 
     // ─── 其他設定 ───
     const otherSec = _buildSettingsSection(t('sectionOther'));
@@ -775,6 +466,7 @@ function showSettings(fromHome) {
         gameState.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
         gameState.settings.language = keepLang;
         saveSettings(); AudioManager.refreshMusicVolume();
+        applyDeviceMode();
         hideSettings(); showSettings();
     };
     otherSec.appendChild(resetBtn);
@@ -830,6 +522,7 @@ function updateTimer() {
 
 function toggleDevMode() {
     gameState.devMode = !gameState.devMode;
+    if (gameState.devMode) gameState.devModeUsed = true;
     document.getElementById('dev-panel').style.display    = gameState.devMode ? 'block' : 'none';
     document.getElementById('dev-indicator').style.display = gameState.devMode ? 'block' : 'none';
 }
@@ -917,10 +610,13 @@ function devToggleDayNight() {
 // 遊戲說明 (Guide)
 // =============================================================
 
+let _guideKeyHandler = null;
+
 function showGuide(startPage) {
+    applyDeviceMode();
     if (document.getElementById('guide-overlay')) return;
-    const pages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
-    let cur = Math.min(Math.max(0, startPage || 0), pages.length - 1);
+    const TOTAL = 4;
+    let cur = Math.min(Math.max(0, startPage || 0), TOTAL - 1);
 
     const overlay = document.createElement('div');
     overlay.id = 'guide-overlay';
@@ -928,64 +624,150 @@ function showGuide(startPage) {
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;align-items:center;justify-content:center;z-index:215;pointer-events:all;color:white;font-family:Arial,sans-serif;';
 
     const panel = document.createElement('div');
-    panel.style.cssText = 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:24px 28px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto;box-sizing:border-box;text-align:center;';
+    panel.style.cssText = 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:22px 26px;width:92%;max-width:580px;max-height:88vh;overflow-y:auto;box-sizing:border-box;';
 
     const titleBar = document.createElement('div');
-    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;';
+    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
+    const headerTitle = document.createElement('div');
+    headerTitle.style.cssText = 'font-size:20px;font-weight:bold;color:#FFD700;';
     const pageLbl = document.createElement('div');
     pageLbl.style.cssText = 'font-size:13px;color:#999;';
-    const headerTitle = document.createElement('div');
-    headerTitle.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;';
-    const spacer = document.createElement('div');
-    spacer.style.cssText = 'min-width:60px;';
-    titleBar.appendChild(spacer); titleBar.appendChild(headerTitle); titleBar.appendChild(pageLbl);
+    titleBar.appendChild(headerTitle);
+    titleBar.appendChild(pageLbl);
     panel.appendChild(titleBar);
 
-    const subTitle = document.createElement('div');
-    subTitle.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:14px;';
-    panel.appendChild(subTitle);
-
-    // 內容
     const content = document.createElement('div');
-    content.style.cssText = 'text-align:left;font-size:15px;line-height:1.9;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:18px 22px;margin-bottom:18px;';
+    content.style.cssText = 'font-size:14px;line-height:1.8;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:16px 20px;margin-bottom:16px;';
     panel.appendChild(content);
 
-    // 導覽
     const navRow = document.createElement('div');
     navRow.style.cssText = 'display:flex;gap:10px;align-items:center;justify-content:space-between;';
     const prevBtn = document.createElement('button');
-    prevBtn.style.cssText = 'padding:8px 18px;font-size:18px;background:#2a2a2a;color:white;border:1px solid #555;border-radius:4px;cursor:pointer;';
+    prevBtn.style.cssText = 'padding:8px 14px;font-size:13px;background:#2a2a2a;color:white;border:1px solid #555;border-radius:4px;cursor:pointer;min-width:96px;';
+    const closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'padding:8px 20px;font-size:13px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;';
     const nextBtn = document.createElement('button');
     nextBtn.style.cssText = prevBtn.style.cssText;
     navRow.appendChild(prevBtn);
-    const closeBtn = document.createElement('button');
-    closeBtn.style.cssText = 'padding:8px 24px;font-size:14px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;';
     navRow.appendChild(closeBtn);
     navRow.appendChild(nextBtn);
     panel.appendChild(navRow);
 
+    function _ln(text) {
+        return '<div style="margin-bottom:6px;">' + _escH(text) + '</div>';
+    }
+    function _sec(text) {
+        return '<div style="font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:10px;">' + _escH(text) + '</div>';
+    }
+    function _dot(color, key, extraStyle) {
+        const ds = 'width:12px;height:12px;border-radius:50%;background:' + color + ';flex-shrink:0;' + (extraStyle || '');
+        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'
+            + '<div style="' + ds + '"></div>'
+            + '<span>' + _escH(t(key)) + '</span></div>';
+    }
+
+    function buildPage0() {
+        if (_effectiveMobile()) {
+            const left = '<div style="flex:1;padding-right:12px;border-right:1px solid #444;">'
+                + _sec(t('guideBasicTitle'))
+                + _ln(t('guideMobileMove2'))
+                + _ln(t('guideMobileAttackZone'))
+                + _ln(t('guideMobileSettings'))
+                + _ln(t('guideFruit'))
+                + _ln(t('guideGoal'))
+                + _ln(t('guideAutoAttack'))
+                + '</div>';
+            // 手機示意圖：直向比例（高25% 寬50% 攻擊區）
+            const _isZhTW = gameState.language === 'zh-TW';
+            const lblMove = _isZhTW ? '移動區' : 'Move';
+            const lblAtk  = _isZhTW ? '攻擊區' : 'Attack';
+            const mobileDiagram =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="110" height="160" style="display:block;margin:0 auto 10px;">'
+                // 手機外框
+                + '<rect x="5" y="5" width="100" height="150" rx="10" ry="10" fill="#1a1a2e" stroke="#555" stroke-width="1.5"/>'
+                // 移動區（全螢幕淡藍色）
+                + '<rect x="8" y="8" width="94" height="144" rx="7" ry="7" fill="rgba(50,100,200,0.25)"/>'
+                + '<text x="55" y="60" text-anchor="middle" font-size="9" fill="rgba(100,160,255,0.85)">' + _escH(lblMove) + '</text>'
+                // 攻擊區（右下角：右50% × 下25%）
+                + '<rect x="57" y="116" width="45" height="36" rx="4" ry="4" fill="rgba(200,60,60,0.45)" stroke="rgba(255,100,100,0.55)" stroke-width="1"/>'
+                + '<text x="79" y="131" text-anchor="middle" font-size="11" fill="white">⚔️</text>'
+                + '<text x="79" y="146" text-anchor="middle" font-size="7" fill="rgba(255,200,200,0.9)">' + _escH(lblAtk) + '</text>'
+                + '</svg>';
+            const right = '<div style="flex:1;padding-left:12px;overflow:hidden;">'
+                + _sec(t('guideTouchTitle'))
+                + mobileDiagram
+                + '<div style="font-size:11px;color:#bbb;margin-top:4px;">' + _escH(t('guidePortraitDesc')) + '</div>'
+                + '</div>';
+            return '<div style="display:flex;gap:0;">' + left + right + '</div>';
+        }
+        return _sec(t('guideBasicTitle'))
+            + _ln(t('guideMove'))
+            + _ln(t('guideAttack'))
+            + _ln(t('guideSettings'))
+            + _ln(t('guideFruit'))
+            + _ln(t('guideGoal'))
+            + _ln(t('guideAutoAttack'));
+    }
+
+    function buildPage1() {
+        return _sec(t('guideOrganTitle'))
+            + _ln(t('guideOrgan1')) + _ln(t('guideOrgan2')) + _ln(t('guideOrgan3'))
+            + _ln(t('guideOrgan4')) + _ln(t('guideOrgan5')) + _ln(t('guideOrgan6'))
+            + _ln(t('guideOrgan7'));
+    }
+
+    function buildPage2() {
+        return _sec(t('guideEvoTitle'))
+            + _ln(t('guideEvo1')) + _ln(t('guideEvo2')) + _ln(t('guideEvo3'))
+            + _ln(t('guideEvo4')) + _ln(t('guideEvo5'));
+    }
+
+    function buildPage3() {
+        return _sec(t('guideMapTitle'))
+            + _dot('#000000', 'guideMapPlayer', 'border:1px solid #888;animation:dotBlink 1.5s ease-in-out infinite;')
+            + _dot('#FFA500', 'guideMapNeutral')
+            + _dot('#FF0000', 'guideMapHostile')
+            + _dot('#FFD700', 'guideMapEliteH', 'animation:dotBlink 1.5s ease-in-out infinite;')
+            + _dot('#9B59B6', 'guideMapEliteC', 'animation:dotBlink 1.5s ease-in-out infinite;')
+            + _dot('#8B4513', 'guideMapBossBear', 'color:#8B4513;animation:dotGlow 2s ease-in-out infinite;')
+            + _dot('#1a3a5c', 'guideMapBossShark', 'color:#1a3a5c;animation:dotGlow 2s ease-in-out infinite;')
+            + _dot('#8B6914', 'guideMapBossScorp', 'color:#8B6914;animation:dotGlow 2s ease-in-out infinite;')
+            + _dot('#2d5a1b', 'guideMapTree')
+            + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'
+            + '<div style="width:12px;height:12px;border-radius:2px;background:rgba(255,255,255,0.3);flex-shrink:0;"></div>'
+            + '<span>' + _escH(t('guideMapFog')) + '</span></div>';
+    }
+
     function render() {
-        const allPages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
-        const p = allPages[cur];
         headerTitle.textContent = t('guideTitle');
-        pageLbl.textContent = t('guidePageFmt', { cur: cur + 1, total: allPages.length });
-        subTitle.textContent = p.title;
-        content.innerHTML = p.lines.map(l => '<div style="margin-bottom:6px;">' + l.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</div>').join('');
+        pageLbl.textContent = t('guidePage', {'0': cur + 1, '1': TOTAL});
         prevBtn.textContent = t('guidePrev');
         nextBtn.textContent = t('guideNext');
-        closeBtn.textContent = t('close');
+        closeBtn.textContent = t('guideClose');
         prevBtn.disabled = (cur === 0);
-        nextBtn.disabled = (cur === allPages.length - 1);
+        nextBtn.disabled = (cur === TOTAL - 1);
         prevBtn.style.opacity = prevBtn.disabled ? '0.35' : '1';
         nextBtn.style.opacity = nextBtn.disabled ? '0.35' : '1';
         overlay.dataset.page = String(cur);
+        if (cur === 0) content.innerHTML = buildPage0();
+        else if (cur === 1) content.innerHTML = buildPage1();
+        else if (cur === 2) content.innerHTML = buildPage2();
+        else content.innerHTML = buildPage3();
     }
+
     prevBtn.onclick = () => { if (cur > 0) { cur--; render(); } };
-    nextBtn.onclick = () => {
-        const allPages = LANG[gameState.language]?.ui?.guidePages || LANG['zh-TW'].ui.guidePages;
-        if (cur < allPages.length - 1) { cur++; render(); }
-    };
+    nextBtn.onclick = () => { if (cur < TOTAL - 1) { cur++; render(); } };
     closeBtn.onclick = hideGuide;
+
+    _guideKeyHandler = function(e) {
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+            if (cur < TOTAL - 1) { cur++; render(); }
+        } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+            if (cur > 0) { cur--; render(); }
+        }
+    };
+    document.addEventListener('keydown', _guideKeyHandler);
 
     overlay.appendChild(panel);
     document.getElementById('game-container').appendChild(overlay);
@@ -995,6 +777,399 @@ function showGuide(startPage) {
 function hideGuide() {
     const el = document.getElementById('guide-overlay');
     if (el) el.remove();
+    if (_guideKeyHandler) {
+        document.removeEventListener('keydown', _guideKeyHandler);
+        _guideKeyHandler = null;
+    }
+}
+
+// =============================================================
+// 圖鑑系統 (Compendium)
+// =============================================================
+
+let _compendiumPaused = false;
+
+function getOrganDisplayName(id) {
+    if (ORGANS[id]) return ORGANS[id].name;
+    if (HIDDEN_ORGANS[id]) return HIDDEN_ORGANS[id].name;
+    return id;
+}
+
+// 進化圖鑑：從 EVOLUTION_PATHS 的 effects 動態生成累計描述
+// 草食/雜食速度為累計值；肉食攻擊、雜食白骨素為固定值（當級顯示當級）
+function buildEvoLevelDesc(pathId, upToLevel) {
+    const path = EVOLUTION_PATHS[pathId];
+    if (!path) return '';
+    const levels = path.levels.slice(0, upToLevel);
+
+    let totalHp      = 0;
+    let totalSpeed   = 0;
+    let totalFruitXP = 0;
+    let totalRadius  = 0;
+    let friendly     = false;
+    let boneEatTime  = null;
+
+    for (const lv of levels) {
+        if (lv.hpMaxAdd)            totalHp      += lv.hpMaxAdd;
+        if (lv.speedBonus)          totalSpeed   += lv.speedBonus;
+        if (lv.fruitXPBonus)        totalFruitXP += lv.fruitXPBonus;
+        if (lv.radiusPercent)       totalRadius   = lv.radiusPercent; // 取最新值
+        if (lv.friendly)            friendly      = true;
+        if (lv.boneEatTime != null) boneEatTime   = lv.boneEatTime;
+    }
+
+    const parts = [];
+
+    if (pathId === 'herbivore') {
+        parts.push('可吃果子');
+        if (totalHp > 0)      parts.push('HP上限+' + totalHp);
+        if (totalFruitXP > 0) parts.push('果子XP+' + totalFruitXP);
+        if (totalRadius > 0)  parts.push('體型+' + Math.round(totalRadius * 100) + '%');
+        if (friendly)         parts.push('中立生物完全友善');
+        if (upToLevel >= 2)   parts.push('撞到不逃跑');
+        if (upToLevel >= 3)   parts.push('被攻擊也不逃跑');
+    }
+
+    if (pathId === 'carnivore') {
+        // 肉食性各數值為固定值（當級對應固定總攻擊加成），直接取當前等級
+        const lv = levels[upToLevel - 1];
+        if (!lv) return '';
+        parts.push('可吃屍體');
+        if (lv.attackAdd)            parts.push('攻擊+' + lv.attackAdd);
+        if (lv.eatXP)                parts.push('屍體' + lv.eatXP + 'XP');
+        if (lv.eatTime != null)      parts.push(lv.eatTime / 1000 + '秒吞噬');
+        if (lv.attackSpeedBonus > 0) parts.push('攻速+' + Math.round(lv.attackSpeedBonus * 100) + '%');
+    }
+
+    if (pathId === 'omnivore') {
+        // 速度累計，白骨素/白骨吞噬取當級固定值
+        const lv = levels[upToLevel - 1];
+        if (!lv) return '';
+        parts.push('需草食+肉食');
+        if (totalSpeed > 0)              parts.push('速度+' + totalSpeed.toFixed(1));
+        parts.push('獲得毒囊');
+        if (lv.boneEatTime === 0)        parts.push('即時吞噬白骨');
+        else if (lv.boneEatTime != null) parts.push('白骨吞噬' + lv.boneEatTime / 1000 + '秒');
+        if (lv.boneMaterialAdd)          parts.push('白骨素+' + lv.boneMaterialAdd + '/次');
+    }
+
+    return parts.join('，');
+}
+
+function showCompendium(startTab) {
+    applyDeviceMode();
+    if (document.getElementById('compendium-overlay')) return;
+
+    // 遊戲中開啟時暫停
+    if (gameState.gameStarted && !gameState.gameOver && !gameState.victory) {
+        _compendiumPaused = true;
+        gameState.organSelectionActive = true; // 借用暫停機制
+    } else {
+        _compendiumPaused = false;
+    }
+
+    const tabs = ['guide', 'organs', 'evo'];
+    const tabNames = { guide: t('compendiumTabGuide'), organs: t('compendiumTabOrgans'), evo: t('compendiumTabEvo') };
+    let curTab = tabs.includes(startTab) ? startTab : 'guide';
+    let curPage = 0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'compendium-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:215;pointer-events:all;color:white;font-family:Arial,sans-serif;';
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:18px 22px;width:92%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;box-sizing:border-box;';
+
+    // ── 標題列
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;';
+    const headerTitle = document.createElement('div');
+    headerTitle.style.cssText = 'font-size:20px;font-weight:bold;color:#FFD700;';
+    headerTitle.textContent = t('compendiumTitle');
+    titleBar.appendChild(headerTitle);
+    panel.appendChild(titleBar);
+
+    // ── 書本樣式內容區
+    const content = document.createElement('div');
+    content.style.cssText = 'font-size:13px;line-height:1.7;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:14px 16px;flex:1;overflow-y:auto;min-height:0;';
+    panel.appendChild(content);
+
+    // ── Tab 列
+    const tabRow = document.createElement('div');
+    tabRow.style.cssText = 'display:flex;gap:6px;margin-top:10px;flex-shrink:0;';
+    const tabBtns = {};
+    tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'flex:1;padding:7px 4px;font-size:12px;border-radius:4px 4px 0 0;cursor:pointer;border:1px solid #555;';
+        btn.textContent = tabNames[tab];
+        btn.onclick = () => { curTab = tab; curPage = 0; render(); };
+        tabBtns[tab] = btn;
+        tabRow.appendChild(btn);
+    });
+    panel.appendChild(tabRow);
+
+    // ── 底部列：分頁 + 關閉
+    const navRow = document.createElement('div');
+    navRow.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:8px;flex-shrink:0;';
+    const prevBtn = document.createElement('button');
+    prevBtn.style.cssText = 'padding:7px 12px;font-size:12px;background:#2a2a2a;color:white;border:1px solid #555;border-radius:4px;cursor:pointer;min-width:80px;';
+    prevBtn.textContent = t('guidePrev');
+    const pageLbl = document.createElement('div');
+    pageLbl.style.cssText = 'font-size:12px;color:#aaa;';
+    const nextBtn = document.createElement('button');
+    nextBtn.style.cssText = prevBtn.style.cssText;
+    nextBtn.textContent = t('guideNext');
+    const closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'padding:7px 16px;font-size:12px;background:#2a5a2a;color:white;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;';
+    closeBtn.textContent = t('close');
+    navRow.appendChild(prevBtn);
+    navRow.appendChild(pageLbl);
+    navRow.appendChild(nextBtn);
+    navRow.appendChild(closeBtn);
+    panel.appendChild(navRow);
+
+    function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function _h2(t) { return '<div style="font-size:15px;font-weight:bold;color:#FFD700;margin:10px 0 6px;">' + _esc(t) + '</div>'; }
+    function _p(t)  { return '<div style="margin-bottom:5px;">' + _esc(t) + '</div>'; }
+
+    function getPages() {
+        if (curTab === 'guide') {
+            return buildGuidePages();
+        } else if (curTab === 'organs') {
+            return buildOrganPages();
+        } else {
+            return buildEvoPages();
+        }
+    }
+
+    // Boss 圖鑑頁：動態引用 EASY_MAP/NORMAL_MAP bosses 數值
+    function _buildBossPage() {
+        const easyBosses   = (typeof EASY_MAP   !== 'undefined') ? EASY_MAP.bosses   : [];
+        const normalBosses = (typeof NORMAL_MAP !== 'undefined') ? NORMAL_MAP.bosses : [];
+
+        // 技能說明文字：因技能邏輯未 config 化，直接手寫
+        const bossSkills = {
+            'forest': '狂暴化（HP<40%）：速度×1.5、傷害×1.3。森林內 50% 暴擊 1.5倍；離開森林 25% 暴擊 1.25倍',
+            'ocean':  '衝鋒撕咬（每8秒或HP<40%）：命中 1.5倍傷害並暈眩玩家 0.3秒。海洋內速度+30%、每5秒回2%HP',
+            'desert': '毒霧（每10秒或HP<40%）：200px範圍每秒5傷持續3秒。沙漠內觸發沙塵暴：玩家300px外視野遮蔽'
+        };
+
+        let html = _h2('👾 Boss 圖鑑');
+
+        normalBosses.forEach(bossN => {
+            const bossE = easyBosses.find(b => b.biome === bossN.biome) || {};
+            html += '<div style="margin-bottom:14px;border-left:3px solid #CC4400;padding-left:10px;">';
+            html += '<div style="font-weight:bold;font-size:14px;color:#FFD700;margin-bottom:3px;">' + _esc(bossN.name) + '</div>';
+            const appearsIn = [];
+            if (bossE.hp) appearsIn.push('🌿 簡單');
+            appearsIn.push('⚔️ 普通');
+            html += '<div style="font-size:11px;color:#888;margin-bottom:4px;">出現難度：' + _esc(appearsIn.join(' / ')) + '</div>';
+            if (bossE.hp) {
+                html += '<div style="font-size:11px;color:#88cc88;margin-bottom:2px;">🌿 簡單：HP ' + _esc(String(bossE.hp)) + ' / 速度 ' + _esc(String(bossE.speed)) + ' / 傷害 ' + _esc(String(bossE.damage)) + '</div>';
+            }
+            html += '<div style="font-size:11px;color:#FF9988;margin-bottom:2px;">⚔️ 普通：HP ' + _esc(String(bossN.hp)) + ' / 速度 ' + _esc(String(bossN.speed)) + ' / 傷害 ' + _esc(String(bossN.damage)) + '</div>';
+            const skill = bossSkills[bossN.biome];
+            if (skill) {
+                html += '<div style="font-size:11px;color:#ccaaff;margin-bottom:2px;">技能（普通）：' + _esc(skill) + '</div>';
+            }
+            html += '<div style="font-size:11px;color:#aaaaff;">通用：每3秒回復2%最大HP</div>';
+            html += '</div>';
+        });
+
+        html += '<div style="font-size:11px;color:#aa8844;border-top:1px solid #333;padding-top:8px;margin-top:4px;">⚠️ 弱點提示：離開生態區後特殊技能效果減弱</div>';
+        return html;
+    }
+
+    // 難度介紹頁：動態引用 EASY_MAP / NORMAL_MAP config 數值
+    function _buildDifficultyPage() {
+        const easy   = typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null;
+        const normal = typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null;
+        const fKeys  = ['giantization', 'killer', 'eliteRegen', 'bossRegen'];
+        const fNames = { giantization: '巨人化', killer: '殺手化', eliteRegen: '精英回血', bossRegen: 'Boss 回血' };
+
+        let html = _h2('⚔️ 難度介紹');
+
+        if (easy) {
+            const ec    = easy.creatureStrength.hostile;
+            const feats = easy.features || {};
+            html += '<div style="margin-bottom:14px;">';
+            html += '<div style="font-size:13px;font-weight:bold;color:#88CC88;margin-bottom:4px;">🌿 簡單</div>';
+            html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-style:italic;">適合初次體驗的輕鬆模式。生物強度正常，Boss 相對溫和。探索世界、熟悉器官與進化系統的最佳起點。</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 生物強度：×' + _esc(String(ec.hpMultiplier)) + '（HP / 速度 / 傷害）</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 精英獎勵：第1夜 +1 / 第2夜 +1 / 第3夜 +2 技能點</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• Boss 擊殺獎勵：+3 技能點</div>';
+            html += '<div style="font-size:11px;color:#ccc;">• 特殊機制：' + _esc(fKeys.map(k => fNames[k] + (feats[k] ? ' ✅' : ' ➖')).join('、')) + '</div>';
+            html += '</div>';
+        }
+
+        if (normal) {
+            const nc    = normal.creatureStrength.hostile;
+            const feats = normal.features || {};
+            html += '<div style="margin-bottom:8px;">';
+            html += '<div style="font-size:13px;font-weight:bold;color:#FF9944;margin-bottom:4px;">⚔️ 普通</div>';
+            html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-style:italic;">給有經驗的玩家設計的挑戰模式。生物更強、追擊更積極、Boss 擁有獨特技能。通關更困難，但獎勵與達成感也更豐富。</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 生物強度：×' + _esc(String(nc.hpMultiplier)) + '（HP / 速度 / 傷害）</div>';
+            if (normal.aggroRangeOverride) {
+                html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 追擊範圍：' + _esc(String(normal.aggroRangeOverride)) + 'px（比簡單模式更積極）</div>';
+            }
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 精英獎勵：第1夜 +1 / 第2夜 +1 / 第3夜 +2 技能點</div>';
+            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• Boss 擊殺獎勵：+3 技能點</div>';
+            html += '<div style="font-size:11px;color:#ccc;">• 特殊機制：' + _esc(fKeys.map(k => fNames[k] + (feats[k] ? ' ✅' : ' ➖')).join('、')) + '、Boss 獨特技能 ✅</div>';
+            html += '</div>';
+        }
+
+        return html;
+    }
+
+    function buildGuidePages() {
+        const pages = [];
+        // 操作說明（原 showGuide 的四頁內容精簡為文字版）
+        pages.push(
+            _h2(t('guideBasicTitle')) +
+            _p(t('guideMove')) + _p(t('guideAttack')) + _p(t('guideSettings')) +
+            _p(t('guideFruit')) + _p(t('guideGoal')) + _p(t('guideAutoAttack'))
+        );
+        pages.push(
+            _h2(t('guideOrganTitle')) +
+            _p(t('guideOrgan1')) + _p(t('guideOrgan2')) + _p(t('guideOrgan3')) +
+            _p(t('guideOrgan4')) + _p(t('guideOrgan5')) + _p(t('guideOrgan6')) + _p(t('guideOrgan7'))
+        );
+        pages.push(
+            _h2(t('guideEvoTitle')) +
+            _p(t('guideEvo1')) + _p(t('guideEvo2')) + _p(t('guideEvo3')) +
+            _p(t('guideEvo4')) + _p(t('guideEvo5'))
+        );
+        // v0.47.1 新增：Boss 圖鑑頁 + 難度介紹頁
+        pages.push(_buildBossPage());
+        pages.push(_buildDifficultyPage());
+        return pages;
+    }
+
+    function buildOrganPages() {
+        const pages = [];
+        const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF', special: '#AAAAFF' };
+        // 普通器官每頁3個
+        const allOrgans = Object.values(ORGANS).filter(o => !o.noSelection);
+        for (let i = 0; i < allOrgans.length; i += 3) {
+            const chunk = allOrgans.slice(i, i + 3);
+            let html = '';
+            chunk.forEach(org => {
+                const c = typeColor[org.type] || '#FFD700';
+                html += '<div style="margin-bottom:12px;border-left:3px solid ' + c + ';padding-left:8px;">';
+                html += '<div style="font-weight:bold;color:' + c + ';font-size:14px;">' + _esc(org.name) + '</div>';
+                org.levels.forEach((lv, idx) => {
+                    html += '<div style="color:#ccc;font-size:11px;margin-top:2px;"><span style="color:#aaa;">Lv' + (idx+1) + ':</span> ' + _esc(lv.desc) + '</div>';
+                });
+                html += '</div>';
+            });
+            // 特殊器官：毒囊
+            if (i === 0) {
+                const sac = ORGANS.poisonSac;
+                const sacLang = (LANG[gameState.language] || LANG['zh-TW']).organs.poisonSac;
+                html += '<div style="margin-bottom:12px;border-left:3px solid #AAAAFF;padding-left:8px;">';
+                html += '<div style="font-weight:bold;color:#AAAAFF;font-size:14px;">☠ ' + _esc(sac.name) + ' <span style="font-size:10px;color:#888;">（雜食性Lv1獲得，自動升級）</span></div>';
+                html += '<div style="color:#aaa;font-size:11px;margin-top:3px;">' + t('compendiumSacHint') + '</div>';
+                html += '<div style="margin-top:5px;">';
+                sac.levels.forEach((lv, idx) => {
+                    const desc = sacLang ? sacLang.levels[idx] : lv.desc;
+                    const threshold = sac.thresholds[idx];
+                    html += '<div style="font-size:11px;color:#ccc;line-height:1.6;">'
+                        + '<span style="color:#AAAAFF;margin-right:4px;">Lv' + (idx + 1) + '</span>'
+                        + '<span style="color:#777;margin-right:6px;">[白骨素≥' + threshold + ']</span>'
+                        + _esc(desc || lv.desc)
+                        + '</div>';
+                });
+                html += '</div>';
+                html += '</div>';
+            }
+            pages.push(html);
+        }
+        // 隱藏器官頁
+        let hiddenHtml = _h2(t('compendiumHiddenOrgans'));
+        Object.values(HIDDEN_ORGANS).forEach(h => {
+            hiddenHtml += '<div style="margin-bottom:10px;border-left:3px solid #FFD700;padding-left:8px;">';
+            hiddenHtml += '<div style="font-weight:bold;color:#FFD700;">✨ ' + _esc(h.name) + '</div>';
+            hiddenHtml += '<div style="color:#ccc;font-size:11px;margin-top:2px;">' + _esc(h.desc) + '</div>';
+            hiddenHtml += '</div>';
+        });
+        // 組合效果頁
+        hiddenHtml += _h2(t('compendiumCombos'));
+        COMBOS.forEach(combo => {
+            hiddenHtml += '<div style="margin-bottom:8px;">';
+            hiddenHtml += '<div style="color:#FFD700;font-size:12px;">' + _esc(combo.ids.map(id => getOrganDisplayName(id)).join(' + ')) + '</div>';
+            hiddenHtml += '<div style="color:#ccc;font-size:11px;">' + _esc(combo.desc) + '</div>';
+            hiddenHtml += '</div>';
+        });
+        pages.push(hiddenHtml);
+        return pages;
+    }
+
+    function buildEvoPages() {
+        const pages = [];
+        Object.values(EVOLUTION_PATHS).forEach(path => {
+            let html = _h2(path.icon + ' ' + path.name + '  (最高Lv' + path.maxLevel + ')');
+            path.levels.forEach((lv, i) => {
+                // 使用 buildEvoLevelDesc 動態生成累計描述，config 改數值後自動同步
+                html += '<div style="margin-bottom:6px;"><span style="color:#FFD700;">Lv' + (i+1) + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(buildEvoLevelDesc(path.id, i + 1)) + '</span></div>';
+            });
+            pages.push(html);
+        });
+        return pages;
+    }
+
+    function render() {
+        // 更新 Tab 按鈕樣式
+        tabs.forEach(tab => {
+            tabBtns[tab].style.background = tab === curTab ? '#2a5a2a' : 'rgba(40,40,40,0.8)';
+            tabBtns[tab].style.borderColor = tab === curTab ? '#4a8a4a' : '#555';
+            tabBtns[tab].style.color = 'white';
+        });
+        const pages = getPages();
+        const total = pages.length;
+        curPage = Math.max(0, Math.min(curPage, total - 1));
+        content.innerHTML = pages[curPage] || '';
+        content.scrollTop = 0;
+        pageLbl.textContent = t('guidePage', {'0': curPage + 1, '1': total});
+        prevBtn.disabled = curPage === 0;
+        nextBtn.disabled = curPage >= total - 1;
+        prevBtn.style.opacity = prevBtn.disabled ? '0.35' : '1';
+        nextBtn.style.opacity = nextBtn.disabled ? '0.35' : '1';
+    }
+
+    function closeCompendium() {
+        overlay.remove();
+        if (_compendiumPaused) {
+            gameState.organSelectionActive = false;
+            gameState.lastTimeTick = Date.now();
+            _compendiumPaused = false;
+        }
+        if (_compKeyHandler) {
+            document.removeEventListener('keydown', _compKeyHandler);
+            _compKeyHandler = null;
+        }
+    }
+
+    prevBtn.onclick = () => { if (curPage > 0) { curPage--; render(); } };
+    nextBtn.onclick = () => { const pages = getPages(); if (curPage < pages.length - 1) { curPage++; render(); } };
+    closeBtn.onclick = closeCompendium;
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeCompendium(); });
+
+    let _compKeyHandler = null;
+    _compKeyHandler = function(e) {
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+        if (e.key === 'Escape') { closeCompendium(); return; }
+        const pages = getPages();
+        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+            if (curPage < pages.length - 1) { curPage++; render(); }
+        } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+            if (curPage > 0) { curPage--; render(); }
+        }
+    };
+    document.addEventListener('keydown', _compKeyHandler);
+
+    overlay.appendChild(panel);
+    document.getElementById('game-container').appendChild(overlay);
+    render();
 }
 
 // =============================================================
@@ -1002,6 +1177,7 @@ function hideGuide() {
 // =============================================================
 
 function showMapSelect() {
+    applyDeviceMode();
     const prev = document.getElementById('start-screen');
     if (prev) prev.remove();
 
@@ -1032,10 +1208,10 @@ function showMapSelect() {
 
     let selectedDiff = 'easy';
     const diffs = [
-        { id: 'easy',   key: 'diffEasy',   map: typeof EASY_MAP !== 'undefined' ? EASY_MAP : null, locked: false },
-        { id: 'normal', key: 'diffNormal',  map: null, locked: true },
-        { id: 'hard',   key: 'diffHard',    map: null, locked: true },
-        { id: 'hell',   key: 'diffHell',    map: null, locked: true },
+        { id: 'easy',   key: 'diffEasy',   map: typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null, locked: false },
+        { id: 'normal', key: 'diffNormal', map: typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null, locked: false },
+        { id: 'hard',   key: 'diffHard',   map: null, locked: true },
+        { id: 'hell',   key: 'diffHell',   map: null, locked: true },
     ];
     const diffBtnEls = {};
 
@@ -1103,8 +1279,19 @@ function showMapSelect() {
     startBtn.onclick = () => {
         const selDiff = diffs.find(d => d.id === selectedDiff);
         gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
+        gameState.lastDifficulty = selectedDiff;
+        localStorage.setItem('lastDifficulty', selectedDiff); // B1: 儲存難度供重整頁面後恢復
         overlay.remove();
-        initializeGame();
+        let hasOrgans = false;
+        try {
+            const so = localStorage.getItem('savedOrgans');
+            hasOrgans = !!so && JSON.parse(so).length > 0;
+        } catch(e) {}
+        if (hasOrgans) {
+            initializeGame();
+        } else {
+            buildSkillTreeOverlay(null, false, true);
+        }
     };
     btnRow.appendChild(startBtn);
     overlay.appendChild(btnRow);
@@ -1113,6 +1300,7 @@ function showMapSelect() {
 }
 
 function showStartScreen() {
+    applyDeviceMode();
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
         initializeGame();
@@ -1148,9 +1336,15 @@ function showStartScreen() {
 
     const guideBtn = document.createElement('button');
     guideBtn.style.cssText = menuBtnStyle + 'background:rgba(90,80,40,0.3);border:1px solid #8a7a4a;';
-    guideBtn.textContent = t('guide');
-    guideBtn.onclick = () => showGuide(0);
+    guideBtn.textContent = t('compendium');
+    guideBtn.onclick = () => showCompendium('guide');
     overlay.appendChild(guideBtn);
+
+    const lbMenuBtn = document.createElement('button');
+    lbMenuBtn.style.cssText = menuBtnStyle + 'background:rgba(80,60,10,0.3);border:1px solid #8a7a2a;';
+    lbMenuBtn.textContent = t('leaderboard');
+    lbMenuBtn.onclick = () => showLeaderboard();
+    overlay.appendChild(lbMenuBtn);
 
     const settingsBtn = document.createElement('button');
     settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
@@ -1163,5 +1357,914 @@ function showStartScreen() {
     footerEl.textContent = '© 2026 ' + GAME_INFO.author + '  |  ' + GAME_INFO.version;
     overlay.appendChild(footerEl);
 
+    const top10Panel = document.createElement('div');
+    top10Panel.id = 'top10-panel';
+    // 手機版縮小至 scale(0.65)；桌機版維持原本的垂直置中
+    const _top10PanelTransform = gameState.isMobile
+        ? 'scale(0.65)'
+        : 'translateY(-50%)';
+    const _top10TransformOrigin = gameState.isMobile ? 'top right' : 'right center';
+    const _top10Top = gameState.isMobile ? '16px' : '50%';
+    top10Panel.style.cssText = 'position:absolute;right:16px;top:' + _top10Top + ';transform:' + _top10PanelTransform + ';transform-origin:' + _top10TransformOrigin + ';width:220px;background:rgba(0,0,0,0.75);border-radius:8px;padding:12px;color:white;font-family:Arial,sans-serif;font-size:13px;pointer-events:none;';
+
+    // 標題列（含難度切換按鈕）
+    const top10TitleRow = document.createElement('div');
+    top10TitleRow.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;';
+    const top10Title = document.createElement('div');
+    top10Title.style.cssText = 'color:#FFD700;font-weight:bold;font-size:14px;';
+    top10Title.textContent = t('lbTop10Title');
+    const top10DiffBtn = document.createElement('button');
+    top10DiffBtn.style.cssText = 'background:rgba(255,255,255,0.12);border:1px solid #666;color:#FFD700;padding:2px 7px;border-radius:4px;cursor:pointer;font-size:11px;pointer-events:all;flex-shrink:0;';
+    top10DiffBtn.textContent = t(_diffKey(_top10Difficulty));
+    top10TitleRow.appendChild(top10Title);
+    top10TitleRow.appendChild(top10DiffBtn);
+    top10Panel.appendChild(top10TitleRow);
+
+    const top10List = document.createElement('div');
+    top10List.id = 'top10-list';
+    top10List.innerHTML = t('lbLoading');
+    top10Panel.appendChild(top10List);
+    overlay.appendChild(top10Panel);
+
+    function loadTop10() {
+        top10List.innerHTML = t('lbLoading');
+        fetchTop10(_top10Difficulty).then(rows => {
+            if (!rows || rows.length === 0) { top10List.textContent = t('lbError'); return; }
+            top10List.innerHTML = '';
+            rows.forEach((row, i) => {
+                const rank = i + 1;
+                const name = row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name;
+                const mm = String(Math.floor(row.play_time / 60)).padStart(2, '0');
+                const ss = String(row.play_time % 60).padStart(2, '0');
+                const timeStr = mm + ':' + ss;
+                const result = row.is_victory ? t('lbVictoryIcon') : t('lbDefeatIcon');
+                const rankIcon = getRankIcon(rank);
+                const row_el = document.createElement('div');
+                row_el.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
+                row_el.innerHTML = '<span style="min-width:28px;text-align:center;">' + rankIcon + '</span>' +
+                    '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</span>' +
+                    '<span style="color:#aaa;">' + timeStr + '</span>' +
+                    '<span>' + result + '</span>';
+                top10List.appendChild(row_el);
+            });
+        }).catch(() => { top10List.textContent = t('lbError'); });
+    }
+
+    // 難度切換：取得有資料的難度後循環，與全屏排行榜同步
+    top10DiffBtn.onclick = () => {
+        fetchAvailableDifficulties().then(function(diffs) {
+            const availDiffs = (diffs && diffs.length > 0) ? diffs : ['easy'];
+            const idx = availDiffs.indexOf(_top10Difficulty);
+            _top10Difficulty = availDiffs[(idx + 1) % availDiffs.length];
+            _lbDifficulty = _top10Difficulty;
+            top10DiffBtn.textContent = t(_diffKey(_top10Difficulty));
+            loadTop10();
+        }).catch(() => { loadTop10(); });
+    };
+
+    loadTop10();
+
+    const bookBtn = document.createElement('div');
+    bookBtn.id = 'story-book-btn';
+    bookBtn.style.cssText = `
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 220, 130, 0.12);
+        border: 2px solid rgba(255, 220, 130, 0.45);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: all;
+        transition: all 0.2s ease;
+        z-index: 201;
+    `;
+    bookBtn.innerHTML = '<div style="font-size:28px;line-height:1;">📖</div><div style="font-size:11px;color:#FFF5DC;letter-spacing:1px;margin-top:3px;">故事</div>';
+    bookBtn.onmouseenter = () => {
+        bookBtn.style.background = 'rgba(255, 220, 130, 0.28)';
+        bookBtn.style.transform = 'scale(1.08)';
+        bookBtn.style.borderColor = 'rgba(255, 220, 130, 0.8)';
+    };
+    bookBtn.onmouseleave = () => {
+        bookBtn.style.background = 'rgba(255, 220, 130, 0.12)';
+        bookBtn.style.transform = 'scale(1)';
+        bookBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
+    };
+    bookBtn.onclick = () => showGuideStory();
+
+    // ── 更新日誌按鈕（在故事書按鈕下方）
+    const patchBtn = document.createElement('div');
+    patchBtn.id = 'patch-notes-btn';
+    patchBtn.style.cssText = `
+        position: absolute;
+        top: 96px;
+        left: 20px;
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 220, 130, 0.12);
+        border: 2px solid rgba(255, 220, 130, 0.45);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: all;
+        transition: all 0.2s ease;
+        z-index: 201;
+    `;
+    patchBtn.innerHTML = '<div style="font-size:28px;line-height:1;">📋</div><div style="font-size:11px;color:#FFF5DC;letter-spacing:1px;margin-top:3px;">更新</div>';
+    // B12: 未讀版本時顯示紅點
+    if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
+        const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+        if (lastSeen !== PATCH_NOTES[0].version) {
+            const redDot = document.createElement('div');
+            redDot.id = 'patch-red-dot';
+            redDot.style.cssText = 'position:absolute;top:6px;right:8px;width:10px;height:10px;background:#ff3333;border-radius:50%;border:1.5px solid #fff;';
+            patchBtn.style.position = 'absolute'; // already set
+            patchBtn.appendChild(redDot);
+        }
+    }
+    patchBtn.onmouseenter = () => {
+        patchBtn.style.background = 'rgba(255, 220, 130, 0.28)';
+        patchBtn.style.transform = 'scale(1.08)';
+        patchBtn.style.borderColor = 'rgba(255, 220, 130, 0.8)';
+    };
+    patchBtn.onmouseleave = () => {
+        patchBtn.style.background = 'rgba(255, 220, 130, 0.12)';
+        patchBtn.style.transform = 'scale(1)';
+        patchBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
+    };
+    patchBtn.onclick = () => showPatchNotes();
+    overlay.appendChild(bookBtn);
+    overlay.appendChild(patchBtn);
+
     document.getElementById('game-container').appendChild(overlay);
+    checkPatchNotesPopup();
 }
+
+// =============================================================
+// 版本更新公告系統
+// =============================================================
+
+function showPatchNotes() {
+    applyDeviceMode();
+    if (document.getElementById('patch-notes-overlay')) return;
+
+    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    // 不立即標記已讀，改為追蹤本次已讀的版本 Tab
+    const readInSession = new Set();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'patch-notes-overlay';
+    overlay.style.cssText = [
+        'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
+        'background:rgba(0,0,0,0.88)', 'display:flex', 'align-items:center',
+        'justify-content:center', 'z-index:210', 'pointer-events:all',
+        'font-family:Arial,sans-serif'
+    ].join(';');
+
+    const panel = document.createElement('div');
+    panel.style.cssText = [
+        'background:#131f13', 'border:1px solid #3a5a3a', 'border-radius:10px',
+        'width:92%', 'max-width:620px', 'max-height:85vh',
+        'display:flex', 'flex-direction:column', 'overflow:hidden',
+        'box-shadow:0 8px 40px rgba(0,0,0,0.7)'
+    ].join(';');
+
+    // ── 標題列
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = [
+        'display:flex', 'align-items:center', 'justify-content:space-between',
+        'padding:14px 20px', 'border-bottom:1px solid #2a4a2a',
+        'flex-shrink:0'
+    ].join(';');
+    const titleText = document.createElement('div');
+    titleText.style.cssText = 'font-size:18px;font-weight:bold;color:#FFD700;';
+    titleText.textContent = t('patchNotesTitle');
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = [
+        'background:transparent', 'border:1px solid #555', 'color:#aaa',
+        'border-radius:4px', 'width:28px', 'height:28px', 'cursor:pointer',
+        'font-size:14px', 'pointer-events:all', 'flex-shrink:0'
+    ].join(';');
+    closeBtn.onclick = () => overlay.remove();
+    titleBar.appendChild(titleText);
+    titleBar.appendChild(closeBtn);
+    panel.appendChild(titleBar);
+
+    // ── 主體：Tab 列 + 內容區
+    const body = document.createElement('div');
+    body.style.cssText = 'display:flex;flex:1;min-height:0;';
+
+    // Tab 列（左側垂直）
+    const tabCol = document.createElement('div');
+    tabCol.style.cssText = [
+        'width:170px', 'flex-shrink:0', 'overflow-y:auto',
+        'border-right:1px solid #2a4a2a', 'padding:8px 0'
+    ].join(';');
+
+    // 當所有未讀 Tab 都被點開後，消除紅點並更新 lastSeenPatchVersion
+    function _checkAllRead() {
+        if (_unreadNotes.length === 0) return;
+        const allRead = _unreadNotes.every(n => readInSession.has(n.version));
+        if (allRead) {
+            if (notes.length > 0) {
+                localStorage.setItem('lastSeenPatchVersion', notes[0].version);
+            }
+            const _rd = document.getElementById('patch-red-dot');
+            if (_rd) _rd.remove();
+            tabCol.querySelectorAll('.pn-tab-dot').forEach(d => d.remove());
+        }
+    }
+
+    // 內容區（右側）
+    const contentArea = document.createElement('div');
+    contentArea.style.cssText = [
+        'flex:1', 'overflow-y:auto', 'padding:16px 20px',
+        'color:white', 'font-size:14px', 'line-height:1.7'
+    ].join(';');
+
+    const notes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
+    let activeIdx = 0;
+
+    // 計算未讀版本列表（比 lastSeen 更新的版本）
+    const _lastSeenIdx = notes.findIndex(n => n.version === lastSeen);
+    const _unreadNotes  = _lastSeenIdx === -1 ? notes.slice() : notes.slice(0, _lastSeenIdx);
+
+    function renderContent(idx) {
+        activeIdx = idx;
+        const note = notes[idx];
+        contentArea.innerHTML = '';
+        if (!note) return;
+
+        // 版本標題
+        const vh = document.createElement('div');
+        vh.style.cssText = 'font-size:17px;font-weight:bold;color:#FFD700;margin-bottom:4px;';
+        vh.textContent = note.version;
+        contentArea.appendChild(vh);
+
+        const dateEl = document.createElement('div');
+        dateEl.style.cssText = 'font-size:12px;color:#666;margin-bottom:16px;';
+        dateEl.textContent = note.date;
+        contentArea.appendChild(dateEl);
+
+        const sections = [
+            { key: 'added',   label: t('patchAdded'),   color: '#6fca6f', items: note.added   },
+            { key: 'fixed',   label: t('patchFixed'),   color: '#6ab0e8', items: note.fixed   },
+            { key: 'changed', label: t('patchChanged'), color: '#e8c46a', items: note.changed },
+        ];
+
+        sections.forEach(sec => {
+            if (!sec.items || sec.items.length === 0) return;
+            const secTitle = document.createElement('div');
+            secTitle.style.cssText = 'font-size:13px;font-weight:bold;margin-bottom:6px;margin-top:12px;color:' + sec.color + ';';
+            secTitle.textContent = sec.label;
+            contentArea.appendChild(secTitle);
+
+            sec.items.forEach(item => {
+                const li = document.createElement('div');
+                li.style.cssText = 'font-size:13px;color:#ccc;margin-bottom:5px;padding-left:12px;position:relative;';
+                li.innerHTML = '<span style="position:absolute;left:0;color:' + sec.color + ';">•</span>' + item;
+                contentArea.appendChild(li);
+            });
+        });
+
+        // 更新 tab 高亮
+        Array.from(tabCol.children).forEach((btn, i) => {
+            btn.style.background = i === idx ? 'rgba(255,215,0,0.1)' : 'transparent';
+            btn.style.borderLeft = i === idx ? '3px solid #FFD700' : '3px solid transparent';
+            btn.style.color = i === idx ? '#FFD700' : '#aaa';
+        });
+    }
+
+    notes.forEach((note, idx) => {
+        const isUnread = note.version !== lastSeen &&
+            notes.indexOf(note) < notes.findIndex(n => n.version === lastSeen) ||
+            lastSeen === '';
+        // 判斷是否為未讀（比 lastSeen 更新的版本）
+        const lastSeenIdx = notes.findIndex(n => n.version === lastSeen);
+        const unread = lastSeenIdx === -1 ? true : idx < lastSeenIdx;
+
+        const tab = document.createElement('div');
+        tab.style.cssText = [
+            'padding:10px 14px', 'cursor:pointer', 'font-size:12px',
+            'border-left:3px solid transparent', 'color:#aaa',
+            'transition:all 0.15s', 'line-height:1.4',
+            'pointer-events:all'
+        ].join(';');
+
+        const tabDate = document.createElement('div');
+        tabDate.style.cssText = 'font-size:11px;color:#555;margin-top:2px;';
+        tabDate.textContent = note.date;
+
+        const tabVer = document.createElement('div');
+        tabVer.style.cssText = 'display:flex;align-items:center;gap:5px;';
+        tabVer.textContent = note.version;
+
+        if (unread) {
+            const dot = document.createElement('span');
+            dot.className = 'pn-tab-dot';
+            dot.style.cssText = [
+                'width:7px', 'height:7px', 'border-radius:50%',
+                'background:#FF4444', 'display:inline-block', 'flex-shrink:0'
+            ].join(';');
+            tabVer.appendChild(dot);
+            tab.style.background = 'rgba(255,68,68,0.06)';
+        }
+
+        tab.appendChild(tabVer);
+        tab.appendChild(tabDate);
+        tab.onclick = () => {
+            readInSession.add(note.version);
+            _checkAllRead();
+            renderContent(idx);
+        };
+        tabCol.appendChild(tab);
+    });
+
+    body.appendChild(tabCol);
+    body.appendChild(contentArea);
+    panel.appendChild(body);
+    overlay.appendChild(panel);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    document.getElementById('game-container').appendChild(overlay);
+
+    // 預設顯示第一個（最新版本），並將第一個版本標記為已讀
+    if (notes.length > 0) {
+        readInSession.add(notes[0].version);
+        _checkAllRead();
+        renderContent(0);
+    }
+}
+
+function checkPatchNotesPopup() {
+    // 新玩家不彈出
+    if (!localStorage.getItem('hasPlayedBefore')) return;
+    if (typeof PATCH_NOTES === 'undefined' || PATCH_NOTES.length === 0) return;
+    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    if (lastSeen === PATCH_NOTES[0].version) return;
+    // 有未讀版本，自動彈出
+    setTimeout(() => showPatchNotes(), 400);
+}
+
+function showGuideStory() {
+    applyDeviceMode();
+    if (document.getElementById('guide-story-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'guide-story-overlay';
+    overlay.style.cssText = `
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 250;
+        pointer-events: all;
+        font-family: Georgia, serif;
+    `;
+
+    const book = document.createElement('div');
+    book.style.cssText = `
+        background: #f5ead8;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 660px;
+        max-height: 88vh;
+        padding: 0;
+        box-sizing: border-box;
+        box-shadow: 0 8px 48px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(160,120,60,0.25);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-left: 8px solid rgba(130,80,20,0.45);
+    `;
+
+    // ── 插畫區（上半部）
+    const illustrationArea = document.createElement('div');
+    illustrationArea.style.cssText = `
+        width: 100%;
+        height: 260px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border-radius: 8px 8px 0 0;
+        background: #0a0f08;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+
+    // ── 文字區（下半部）
+    const textArea = document.createElement('div');
+    textArea.style.cssText = `
+        padding: 20px 32px 12px;
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+    `;
+
+    const chapterHeader = document.createElement('div');
+    chapterHeader.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;';
+    const chapterIcon = document.createElement('div');
+    chapterIcon.style.cssText = 'font-size:26px;line-height:1;flex-shrink:0;';
+    const chapterTitle = document.createElement('div');
+    chapterTitle.style.cssText = 'font-size:20px;font-weight:bold;color:#4a2808;letter-spacing:1px;';
+    chapterHeader.appendChild(chapterIcon);
+    chapterHeader.appendChild(chapterTitle);
+
+    const storyText = document.createElement('div');
+    storyText.style.cssText = `
+        font-size: 13.5px;
+        line-height: 1.85;
+        color: #3a2208;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: Georgia, serif;
+    `;
+
+    if (_effectiveMobile && _effectiveMobile()) {
+        book.style.maxWidth = '98%';
+        illustrationArea.style.height = '200px';
+        textArea.style.padding = '14px 20px 8px';
+        storyText.style.fontSize = '12.5px';
+    }
+
+    textArea.appendChild(chapterHeader);
+    textArea.appendChild(storyText);
+
+    // ── 分隔線 + 底部導航
+    const divider = document.createElement('div');
+    divider.style.cssText = 'width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(130,80,20,0.25),transparent);margin:0;flex-shrink:0;';
+
+    const navArea = document.createElement('div');
+    navArea.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 28px 16px;flex-shrink:0;';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '&#9664;';
+    prevBtn.style.cssText = `
+        width:38px;height:38px;border-radius:50%;
+        border:2px solid rgba(130,80,20,0.35);
+        background:rgba(255,220,130,0.15);
+        color:#5a3010;font-size:13px;cursor:pointer;
+        transition:all 0.2s;pointer-events:all;
+    `;
+
+    const dots = document.createElement('div');
+    dots.style.cssText = 'display:flex;gap:7px;align-items:center;';
+
+    const nextBtn = document.createElement('button');
+    nextBtn.style.cssText = `
+        padding:9px 18px;border-radius:18px;
+        border:2px solid rgba(130,80,20,0.4);
+        background:rgba(255,220,130,0.22);
+        color:#4a2808;font-size:13px;font-weight:bold;
+        cursor:pointer;transition:all 0.2s;
+        font-family:Georgia,serif;pointer-events:all;
+    `;
+
+    navArea.appendChild(prevBtn);
+    navArea.appendChild(dots);
+    navArea.appendChild(nextBtn);
+
+    // ── 關閉按鈕
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = `
+        position:absolute;top:12px;right:14px;
+        background:rgba(0,0,0,0.45);border:none;
+        font-size:16px;color:rgba(255,255,255,0.6);
+        cursor:pointer;padding:4px 8px;border-radius:4px;
+        transition:color 0.2s;z-index:5;pointer-events:all;
+        font-family:Arial,sans-serif;
+    `;
+    closeBtn.onmouseenter = () => closeBtn.style.color = 'rgba(255,255,255,0.95)';
+    closeBtn.onmouseleave = () => closeBtn.style.color = 'rgba(255,255,255,0.6)';
+    closeBtn.onclick = () => overlay.remove();
+
+    book.appendChild(closeBtn);
+    book.appendChild(illustrationArea);
+    book.appendChild(textArea);
+    book.appendChild(divider);
+    book.appendChild(navArea);
+    overlay.appendChild(book);
+    document.getElementById('game-container').appendChild(overlay);
+
+    const PAGES = _getGuideStoryPages();
+    let currentPage = 0;
+
+    function renderPage(idx) {
+        const page = PAGES[idx];
+
+        // 插畫切換（淡出 → 替換 → 淡入）
+        illustrationArea.style.transition = 'opacity 0.3s ease';
+        illustrationArea.style.opacity = '0';
+        setTimeout(() => {
+            illustrationArea.innerHTML = page.svgIllustration;
+            illustrationArea.style.opacity = '1';
+        }, 300);
+
+        // 標題
+        chapterIcon.textContent = page.icon;
+        chapterTitle.textContent = page.title;
+
+        // 文字淡入
+        storyText.style.transition = 'opacity 0.3s ease';
+        storyText.style.opacity = '0';
+        setTimeout(() => {
+            storyText.textContent = page.content;
+            storyText.style.opacity = '1';
+        }, 200);
+
+        textArea.scrollTop = 0;
+
+        // 進度點
+        dots.innerHTML = '';
+        for (let i = 0; i < PAGES.length; i++) {
+            const dot = document.createElement('div');
+            dot.style.cssText = `
+                width:${i === idx ? '20px' : '8px'};
+                height:8px;border-radius:4px;
+                background:${i === idx ? '#7a4a10' : 'rgba(122,74,16,0.28)'};
+                transition:all 0.3s ease;
+            `;
+            dots.appendChild(dot);
+        }
+
+        // 按鈕狀態
+        prevBtn.style.opacity = idx === 0 ? '0.3' : '1';
+        prevBtn.style.cursor = idx === 0 ? 'not-allowed' : 'pointer';
+
+        if (idx === PAGES.length - 1) {
+            nextBtn.textContent = '⚔️  開始冒險';
+            nextBtn.style.background = 'rgba(80,160,40,0.25)';
+            nextBtn.style.borderColor = 'rgba(60,130,20,0.5)';
+            nextBtn.style.color = '#2a5008';
+        } else {
+            nextBtn.textContent = '下一頁 ▶';
+            nextBtn.style.background = 'rgba(255,220,130,0.22)';
+            nextBtn.style.borderColor = 'rgba(130,80,20,0.4)';
+            nextBtn.style.color = '#4a2808';
+        }
+    }
+
+    prevBtn.onclick = () => { if (currentPage > 0) { currentPage--; renderPage(currentPage); } };
+    nextBtn.onclick = () => {
+        if (currentPage < PAGES.length - 1) {
+            currentPage++;
+            renderPage(currentPage);
+        } else {
+            overlay.remove();
+            localStorage.setItem('hasPlayedBefore', 'true');
+            const startScreen = document.getElementById('start-screen');
+            if (startScreen) startScreen.remove();
+            initializeGame();
+        }
+    };
+
+    renderPage(0);
+}
+
+function _getGuideStoryPages() {
+    const svgStyle = `<style>
+@keyframes _blink{0%,90%,100%{opacity:1}95%{opacity:.1}}
+@keyframes _drift{0%{transform:translateX(0)}100%{transform:translateX(18px)}}
+@keyframes _rpulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes _twinkle{0%,100%{opacity:.3}50%{opacity:.9}}
+@keyframes _gflash{0%,100%{opacity:0}8%,12%{opacity:1}}
+@keyframes _ppulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes _vglow{0%,100%{opacity:.2}50%{opacity:.55}}
+@keyframes _fdrip{0%,60%{opacity:0}65%{opacity:.9}80%{transform:translateY(0)}100%{transform:translateY(8px);opacity:0}}
+@keyframes _breath{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.03)}}
+@keyframes _bfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes _sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes _fall{0%{transform:translateY(0) rotate(0deg);opacity:.8}100%{transform:translateY(12px) rotate(15deg);opacity:0}}
+@keyframes _warmP{0%,100%{opacity:.15}50%{opacity:.3}}
+@keyframes _hbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes _emerge{0%{opacity:.15}100%{opacity:.75}}
+@keyframes _eglow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes _wripple{0%{transform:scaleX(1)}50%{transform:scaleX(1.04)}100%{transform:scaleX(1)}}
+@keyframes _tsway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+</style>`;
+
+    return [
+        {
+            icon: '🌑',
+            title: '第一章 — 破曉',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="180" fill="#0a1208"/>
+<ellipse cx="90" cy="95" rx="70" ry="52" fill="#111f0e"/>
+<ellipse cx="95" cy="88" rx="50" ry="36" fill="#162a12"/>
+<polygon points="30,180 80,180 55,145" fill="#0e1a0c"/>
+<polygon points="60,180 110,180 85,148" fill="#0e1a0c"/>
+<polygon points="100,180 145,180 122,150" fill="#0e1a0c"/>
+<polygon points="135,180 175,180 155,152" fill="#0e1a0c"/>
+<polygon points="320,180 370,180 345,138" fill="#0c1a0a"/>
+<polygon points="360,180 410,180 385,140" fill="#0c1a0a"/>
+<polygon points="400,180 450,180 425,142" fill="#0c1a0a"/>
+<polygon points="440,180 490,180 465,145" fill="#0c1a0a"/>
+<g style="animation:_drift 8s ease-in-out infinite alternate">
+  <ellipse cx="250" cy="88" rx="52" ry="26" fill="#0d1f1a"/>
+  <ellipse cx="250" cy="82" rx="44" ry="21" fill="#152a20"/>
+  <path d="M198 82 Q210 65 230 67 Q220 80 205 85Z" fill="#0d1f1a"/>
+  <path d="M295 70 Q310 60 325 65 Q315 75 298 77Z" fill="#0d1f1a"/>
+  <path d="M240 102 Q250 112 265 109 Q260 102 248 100Z" fill="#0d1f1a"/>
+  <path d="M225 94 Q215 102 210 100 Q215 94 225 92Z" fill="#1a3030"/>
+  <path d="M225 94 Q222 98 218 97" stroke="#7fd967" stroke-width="1.2" fill="none"/>
+  <ellipse style="animation:_blink 4s ease-in-out infinite" cx="220" cy="81" rx="4.5" ry="4" fill="#cc2200" opacity="0.9"/>
+  <ellipse cx="220" cy="81" rx="1.8" ry="1.6" fill="#1a0000"/>
+</g>
+<circle style="animation:_twinkle 2.1s ease-in-out infinite" cx="400" cy="28" r="1.2" fill="#c8e8a0"/>
+<circle style="animation:_twinkle 3.3s ease-in-out infinite .7s" cx="440" cy="16" r="1" fill="#c8e8a0"/>
+<circle style="animation:_twinkle 1.8s ease-in-out infinite 1.2s" cx="470" cy="36" r="1.4" fill="#c8e8a0"/>
+<circle style="animation:_twinkle 2.5s ease-in-out infinite .4s" cx="350" cy="20" r="0.9" fill="#c8e8a0"/>
+<circle style="animation:_twinkle 2.8s ease-in-out infinite .9s" cx="490" cy="24" r="1.1" fill="#c8e8a0"/>
+<g style="animation:_gflash 5s ease-in-out infinite 2s">
+  <circle cx="488" cy="55" r="6" fill="#ffee88" opacity=".9"/>
+  <circle cx="488" cy="55" r="10" fill="#ffaa22" opacity=".4"/>
+  <line x1="488" y1="48" x2="488" y2="42" stroke="#ffee88" stroke-width="1.5" opacity=".7"/>
+  <line x1="481" y1="51" x2="475" y2="47" stroke="#ffee88" stroke-width="1.5" opacity=".7"/>
+  <line x1="495" y1="51" x2="501" y2="47" stroke="#ffee88" stroke-width="1.5" opacity=".7"/>
+</g>
+<text x="260" y="188" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#4a7a38" opacity=".7">遠方傳來槍聲。你孤身一人。</text>
+</svg>`,
+            content: `你睜開了眼睛。
+
+紅色的眼眸在黑暗中閃爍。
+你的身體比任何野生噪鹃都龐大，
+蘋果綠色的喙，已經長出了獠牙。
+
+你不知道自己從哪裡來。
+你只記得——
+一對大嘴烏鸦，用牠們的智慧把你撫養長大。
+
+牠們教你計算、教你躲藏、教你思考。
+但那是很久以前的事了。
+
+遠方傳來槍聲。
+
+現在，你孤身一人。
+養父母已經死了——被人類獵人的毒箭。
+
+牠們最後說的話還在迴盪：
+「用腦子去活。用腦子去贏。」
+
+這片森林很陌生。
+你不知道哪裡有食物，
+你只知道——
+獵人還在追殺你，還有三天三夜。
+
+你必須活下去。`
+        },
+        {
+            icon: '🐦‍⬛',
+            title: '第二章 — 孤兒',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="180" fill="#1a1005"/>
+<ellipse style="animation:_warmP 3s ease-in-out infinite" cx="260" cy="150" rx="160" ry="45" fill="#c8640a" opacity=".2"/>
+<ellipse cx="260" cy="150" rx="78" ry="20" fill="#2a1a06"/>
+<path d="M185 150 Q200 124 230 122 Q260 119 290 122 Q320 124 335 150Z" fill="#3a2508"/>
+<path d="M205 148 L215 140 L220 147" stroke="#4a3010" stroke-width="1.5" fill="none"/>
+<path d="M295 148 L305 140 L310 147" stroke="#4a3010" stroke-width="1.5" fill="none"/>
+<path d="M240 147 L248 139 L256 147" stroke="#4a3010" stroke-width="1.5" fill="none"/>
+<path d="M270 147 L278 139 L286 147" stroke="#4a3010" stroke-width="1.5" fill="none"/>
+<ellipse cx="260" cy="142" rx="20" ry="7" fill="#c87820" opacity=".5"/>
+<g style="animation:_hbob 2.5s ease-in-out infinite;transform-origin:195px 88px">
+  <ellipse cx="195" cy="92" rx="26" ry="18" fill="#1a2018"/>
+  <ellipse cx="195" cy="85" rx="20" ry="14" fill="#222820"/>
+  <path d="M175 82 Q180 69 192 71 Q185 80 178 84Z" fill="#1a2018"/>
+  <path d="M205 73 Q215 65 220 69 Q212 75 206 77Z" fill="#1a2018"/>
+  <path d="M190 96 Q195 104 205 102 Q200 96 192 94Z" fill="#1a2018"/>
+  <path d="M173 93 Q165 97 163 94 Q167 90 174 91Z" fill="#222820"/>
+  <path d="M173 93 Q170 96 166 95" stroke="#555" stroke-width="1" fill="none"/>
+  <circle cx="170" cy="84" r="3" fill="#1a1a1a"/>
+  <circle cx="169" cy="83.5" r="1" fill="#555" opacity=".7"/>
+</g>
+<g style="animation:_hbob 2.5s ease-in-out infinite .8s;transform-origin:325px 85px">
+  <ellipse cx="325" cy="89" rx="24" ry="17" fill="#1a2018"/>
+  <ellipse cx="325" cy="83" rx="18" ry="13" fill="#222820"/>
+  <path d="M348 81 Q353 69 342 70 Q348 79 350 83Z" fill="#1a2018"/>
+  <path d="M316 72 Q308 65 304 70 Q311 76 314 77Z" fill="#1a2018"/>
+  <path d="M318 97 Q315 105 306 103 Q309 97 316 95Z" fill="#1a2018"/>
+  <path d="M348 89 Q356 93 357 90 Q353 86 347 88Z" fill="#222820"/>
+  <circle cx="350" cy="81" r="3" fill="#1a1a1a"/>
+</g>
+<g style="animation:_hbob 2s ease-in-out infinite .5s;transform-origin:260px 115px">
+  <ellipse cx="260" cy="122" rx="14" ry="10" fill="#152a20"/>
+  <ellipse cx="260" cy="117" rx="10" ry="8" fill="#1d3828"/>
+  <path d="M250 115 Q253 108 258 109 Q255 114 252 117Z" fill="#152a20"/>
+  <path d="M263 107 Q268 102 271 105 Q267 109 264 111Z" fill="#152a20"/>
+  <path d="M253 124 Q258 130 265 128 Q262 123 255 122Z" fill="#152a20"/>
+  <path d="M250 118 Q245 121 243 119 Q246 116 251 117Z" fill="#1a3228"/>
+  <path d="M250 118 Q247 120 244 119" stroke="#7fd967" stroke-width="1" fill="none"/>
+  <circle cx="247" cy="114" r="2.5" fill="#cc2200" opacity=".85"/>
+</g>
+<path style="animation:_fall 3s ease-in infinite" d="M230 65 Q228 70 232 73 Q230 75 228 71Z" fill="#333" opacity=".6"/>
+<path style="animation:_fall 3s ease-in infinite 1.4s" d="M290 60 Q288 65 292 68 Q290 70 288 66Z" fill="#333" opacity=".5"/>
+<text x="260" y="188" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#8a6030" opacity=".8">牠們咬著你，叼進了自己的巢。</text>
+</svg>`,
+            content: `你很小很小的時候，
+人類帶著槍聲進入了那片樹林。
+
+你掉進了樹洞裡，發不出聲音。
+就在你以為自己要死在黑暗中的時候——
+
+一對黑色的翅膀遮住了樹洞的光。
+
+那兩隻大嘴烏鸦沒有猶豫，
+叼著你，把你帶進了自己的巢。
+
+🧮 牠們用算術教你躲避危險：
+  三個獵人進木屋，只有兩個出來——
+  那麼裡面還藏著一個。
+  數字，就是活著的方法。
+
+🔧 牠們用工具教你生存：
+  野生噪鹃只用嘴吃現成的果子。
+  但你學會了用爪子配合，用腦子創造方法。
+
+後來，一根毒箭穿過了牠們的身體。
+
+在最後一聲淒厲的叫聲中，
+養父說：
+「孩子，不要像野生噪鹃那樣愚蠢地送死……
+  用你的腦子去活下去。用腦子去贏。」
+
+你咬著牠們的羽毛，感受到體溫漸漸消散。
+那一刻，你發誓：
+要用牠們教你的智慧，活著走出這片森林。`
+        },
+        {
+            icon: '☠️',
+            title: '第三章 — 蛻變',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="180" fill="#0c0a15"/>
+<ellipse style="animation:_vglow 2s ease-in-out infinite" cx="180" cy="95" rx="75" ry="52" fill="#6030c0" opacity=".2"/>
+<g style="animation:_breath 3s ease-in-out infinite;transform-origin:180px 95px">
+  <ellipse cx="180" cy="98" rx="55" ry="30" fill="#0d1a18"/>
+  <ellipse cx="178" cy="90" rx="42" ry="25" fill="#152a22"/>
+  <path d="M138 88 Q148 70 165 72 Q155 85 142 90Z" fill="#0d1a18"/>
+  <path d="M215 73 Q228 63 236 68 Q225 77 218 80Z" fill="#0d1a18"/>
+  <path d="M172 120 Q180 132 196 129 Q190 120 175 118Z" fill="#0d1a18"/>
+  <path d="M138 102 Q125 109 122 106 Q127 100 139 101Z" fill="#1a2e26"/>
+  <path d="M138 102 Q133 106 127 105" stroke="#7fd967" stroke-width="1.2" fill="none"/>
+  <circle cx="132" cy="90" r="5" fill="#cc2200"/>
+  <circle cx="131" cy="89" r="2" fill="#1a0000"/>
+</g>
+<ellipse style="animation:_vglow 2s ease-in-out infinite" cx="165" cy="114" rx="18" ry="10" fill="#8040e0" opacity=".4"/>
+<ellipse cx="165" cy="114" rx="12" ry="7" fill="#5020a0" opacity=".8"/>
+<ellipse cx="165" cy="114" rx="7" ry="4" fill="#9060e8" opacity=".9"/>
+<circle style="animation:_ppulse 2s ease-in-out infinite" cx="165" cy="114" r="7" fill="none" stroke="#b080ff" stroke-width="1" opacity=".7"/>
+<path d="M148 100 Q145 107 148 112 Q152 118 158 114" stroke="#9060c8" stroke-width="1" fill="none" opacity=".6"/>
+<path d="M124 105 Q116 112 114 110 Q118 104 125 105" fill="#1a3030" opacity=".8"/>
+<circle style="animation:_fdrip 3.5s ease-in infinite" cx="120" cy="118" r="2" fill="#b080ff"/>
+<circle style="animation:_fdrip 3.5s ease-in infinite 1.8s" cx="115" cy="121" r="1.5" fill="#9060c8"/>
+<g style="animation:_bfloat 2.5s ease-in-out infinite">
+  <rect x="310" y="118" width="58" height="7" rx="3.5" fill="#c8c0a8" opacity=".85"/>
+  <circle cx="310" cy="121" r="6.5" fill="#d8d0b8" opacity=".85"/>
+  <circle cx="368" cy="121" r="6.5" fill="#d8d0b8" opacity=".85"/>
+</g>
+<g style="animation:_bfloat 2.5s ease-in-out infinite 1.2s">
+  <rect x="335" y="142" width="40" height="6" rx="3" fill="#c0b89a" opacity=".7"/>
+  <circle cx="335" cy="145" r="5" fill="#d0c8aa" opacity=".7"/>
+  <circle cx="375" cy="145" r="5" fill="#d0c8aa" opacity=".7"/>
+</g>
+<path d="M205 118 Q240 118 290 124" stroke="#9060c8" stroke-width=".8" fill="none" stroke-dasharray="3 4" opacity=".5"/>
+<circle cx="420" cy="35" r="1.2" fill="#a080d0" opacity=".5"/>
+<circle cx="455" cy="22" r="1" fill="#a080d0" opacity=".4"/>
+<circle cx="480" cy="44" r="1.1" fill="#a080d0" opacity=".6"/>
+<text x="260" y="188" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#9060c8" opacity=".8">白骨素不是詛咒。是生存的證明。</text>
+</svg>`,
+            content: `每一口果子，是為了活著。
+每一次進化，是為了更強壯。
+
+但有一種力量，不是你選擇的——
+
+那是白骨。
+
+你咬下去，感到了噁心。
+那不是養父母教你的食物，
+那是腐肉，是死亡的味道。
+
+每一次吞下白骨，
+你的肌肉在增長，
+你的獠牙在發出微弱的紫光，
+你的毒囊在進化。
+
+這不是你選擇的。
+這是你的身體，在黑暗環境下的自然反應。
+
+你看著自己的爪子——
+牠們已經是獵手的爪子了。
+怪物的爪子。
+
+但這個怪物，會活著。
+有時候，活著本身，
+就需要變成你害怕的樣子。`
+        },
+        {
+            icon: '⚔️',
+            title: '第四章 — 試煉',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="_bg" cx="50%" cy="50%"><stop offset="0%" stop-color="#141810"/><stop offset="100%" stop-color="#060806"/></radialGradient>
+  <radialGradient id="_bg1" cx="50%" cy="50%"><stop offset="0%" stop-color="#5a3010" stop-opacity=".45"/><stop offset="100%" stop-color="#5a3010" stop-opacity="0"/></radialGradient>
+  <radialGradient id="_bg2" cx="50%" cy="50%"><stop offset="0%" stop-color="#103858" stop-opacity=".45"/><stop offset="100%" stop-color="#103858" stop-opacity="0"/></radialGradient>
+  <radialGradient id="_bg3" cx="50%" cy="50%"><stop offset="0%" stop-color="#3a1050" stop-opacity=".45"/><stop offset="100%" stop-color="#3a1050" stop-opacity="0"/></radialGradient>
+</defs>
+<rect x="0" y="0" width="520" height="180" fill="url(#_bg)"/>
+<ellipse cx="85" cy="100" rx="65" ry="52" fill="url(#_bg1)"/>
+<ellipse cx="260" cy="128" rx="78" ry="38" fill="url(#_bg2)"/>
+<ellipse cx="435" cy="95" rx="65" ry="52" fill="url(#_bg3)"/>
+<g style="animation:_emerge 3s ease-out forwards">
+  <ellipse cx="85" cy="108" rx="40" ry="26" fill="#2a1808"/>
+  <ellipse cx="85" cy="94" rx="27" ry="23" fill="#301c0a"/>
+  <ellipse cx="69" cy="79" rx="9" ry="9" fill="#2a1808"/>
+  <ellipse cx="102" cy="79" rx="9" ry="9" fill="#2a1808"/>
+  <ellipse cx="56" cy="122" rx="9" ry="14" fill="#2a1808"/>
+  <ellipse cx="114" cy="122" rx="9" ry="14" fill="#2a1808"/>
+  <ellipse cx="68" cy="140" rx="8" ry="12" fill="#2a1808"/>
+  <ellipse cx="102" cy="140" rx="8" ry="12" fill="#2a1808"/>
+  <circle style="animation:_eglow 2s ease-in-out infinite" cx="77" cy="91" r="3.5" fill="#cc4400"/>
+  <circle style="animation:_eglow 2s ease-in-out infinite .3s" cx="94" cy="91" r="3.5" fill="#cc4400"/>
+  <circle cx="77" cy="91" r="1.5" fill="#1a0000"/>
+  <circle cx="94" cy="91" r="1.5" fill="#1a0000"/>
+</g>
+<text x="85" y="165" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#8a4820" opacity=".85">🐻 黑熊</text>
+<g style="animation:_emerge 3s ease-out forwards .5s;opacity:.15">
+  <g style="animation:_wripple 2s ease-in-out infinite;transform-origin:260px 132px">
+    <ellipse cx="260" cy="132" rx="72" ry="10" fill="#0a2038" opacity=".9"/>
+  </g>
+  <path d="M215 128 Q240 94 260 91 Q280 94 305 128Z" fill="#1a3050"/>
+  <path d="M255 91 Q260 76 265 91Z" fill="#1a3050"/>
+  <g style="animation:_tsway 1.5s ease-in-out infinite;transform-origin:305px 128px">
+    <path d="M305 128 Q320 116 330 123 Q325 132 305 132Z" fill="#162840"/>
+  </g>
+  <circle style="animation:_eglow 2.4s ease-in-out infinite .6s" cx="238" cy="112" r="3" fill="#88ccff"/>
+  <circle cx="238" cy="112" r="1.3" fill="#001830"/>
+</g>
+<text x="260" y="165" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#3870a8" opacity=".85">🦈 大白鯊</text>
+<g style="animation:_emerge 3s ease-out forwards 1s;opacity:.15">
+  <ellipse cx="435" cy="108" rx="22" ry="13" fill="#1a0828"/>
+  <ellipse cx="435" cy="100" rx="16" ry="11" fill="#22103a"/>
+  <ellipse cx="435" cy="96" rx="12" ry="8" fill="#2a1445"/>
+  <path d="M413 108 Q408 100 404 104 Q406 110 413 110Z" fill="#1a0828"/>
+  <path d="M457 108 Q462 100 466 104 Q464 110 457 110Z" fill="#1a0828"/>
+  <path d="M418 112 Q410 120 406 118 Q408 112 418 110Z" fill="#1a0828"/>
+  <path d="M452 112 Q460 120 464 118 Q462 112 452 110Z" fill="#1a0828"/>
+  <path d="M435 94 Q445 80 455 70 Q452 80 458 88 Q448 85 435 94Z" fill="#22103a"/>
+  <ellipse cx="458" cy="70" rx="4" ry="3" fill="#9030c0" opacity=".9"/>
+  <circle style="animation:_eglow 1.8s ease-in-out infinite 1s" cx="428" cy="94" r="2.8" fill="#cc00ff"/>
+  <circle style="animation:_eglow 1.8s ease-in-out infinite 1.4s" cx="442" cy="94" r="2.8" fill="#cc00ff"/>
+  <circle cx="428" cy="94" r="1.2" fill="#1a0020"/>
+  <circle cx="442" cy="94" r="1.2" fill="#1a0020"/>
+</g>
+<text x="435" y="165" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#8830b0" opacity=".85">🦂 沙漠蠍王</text>
+<text x="260" y="14" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#506040" opacity=".6">三個威脅，從黑暗中浮現</text>
+<text x="260" y="188" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#506040" opacity=".65">用腦子去贏。</text>
+</svg>`,
+            content: `這片廣東的森林，隱藏著三個威脅。
+
+🐻  北方密林 — 黑熊
+  體型最龐大的陸生獵食者。
+  眼睛不好，但嗅覺敏銳。
+  用毒與智謀，你有機會讓牠自取滅亡。
+
+🦈  南方水澤 — 大白鯊
+  潛伏水中的幽靈，代表無處可逃的恐懼。
+  利用牠對水的依賴——
+  離開了水，牠就什麼都不是。
+
+🦂  西方荒地 — 沙漠蠍王
+  比你更毒的毒液，比你更快的速度。
+  但速度和力量，從來不是唯一的答案。
+
+養父母曾說：
+「與其和敵人硬碰硬，不如讓敵人自相殘殺。」
+
+————
+
+吃果子，是在儲存生存的力量。
+選擇器官，是在決定進化的方向。
+擊敗 Boss，是在掌控一片區域的生態。
+
+每一次勝利，都是朝著復仇更近一步。
+
+現在，輪到你改寫這片森林。
+
+「用腦子去贏。」`
+        }
+    ];
+}
+
+// showLeaderboard() 已移至 systems/leaderboard.js
+// showScoreSubmitPopup() 已移至 systems/leaderboard.js

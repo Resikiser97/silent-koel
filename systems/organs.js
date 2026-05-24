@@ -20,27 +20,39 @@ function getOrganCumulative(id, effectKey) {
 function getComboHint(organId) {
     for (const combo of COMBOS) {
         if (!combo.ids.includes(organId)) continue;
-        const partner = combo.ids.find(id => id !== organId);
-        if (gameState.player.organs.some(o => o.id === partner)) return combo.desc;
+        const partners = combo.ids.filter(id => id !== organId);
+        if (partners.every(id => gameState.player.organs.some(o => o.id === id))) return combo.desc;
     }
     return null;
 }
 
 function checkComboEffects() {
     const p = gameState.player;
-    const has = id => p.organs.some(o => o.id === id);
+    const hasLv3 = id => {
+        const o = p.organs.find(o => o.id === id);
+        return o && (o.level || 1) >= 3;
+    };
+    const hasOrgan = id => p.organs.some(o => o.id === id);
+
     for (const combo of COMBOS) {
-        p[combo.key] = combo.ids.every(id => has(id));
+        if (combo.key === 'comboCrabPoison') {
+            // 毒刺 Lv3 且擁有毒囊（不要求毒囊達 Lv3）
+            p.comboCrabPoison = hasLv3('poisonStinger') && hasOrgan('poisonSac');
+        } else {
+            p[combo.key] = combo.ids.every(id => hasLv3(id));
+        }
     }
 }
 
 function getOrganSlotsUsed() {
-    return gameState.player.organs.reduce((sum, o) => sum + (o.level || 1), 0);
+    return gameState.player.organs
+        .filter(o => !ORGANS[o.id] || !ORGANS[o.id].noSelection)
+        .reduce((sum, o) => sum + (o.level || 1), 0);
 }
 
 function applyHiddenOrganEffects(organ) {
     const p = gameState.player;
-    const fx = organ.effects || {};
+    const fx = organ.effects || (HIDDEN_ORGANS[organ.id] || {}).effects || {};
     if (fx.speedAdd)       p.speed = Math.max(0.3, p.speed + fx.speedAdd);
     if (fx.attackAdd)      p.attack += fx.attackAdd;
     if (fx.hpMaxAdd) {
@@ -48,23 +60,28 @@ function applyHiddenOrganEffects(organ) {
         gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + fx.hpMaxAdd);
     }
     if (fx.radiusAdd) {
-        const rangeIncrease = Math.round(fx.radiusAdd / p.radius * p.attackRange);
-        p.radius += fx.radiusAdd;
-        p.attackRange += rangeIncrease;
+        const safeRadius    = Math.max(p.radius, 1);
+        const rangeIncrease = Math.round(fx.radiusAdd / safeRadius * p.attackRange);
+        p.radius            = Math.max(5, p.radius + fx.radiusAdd);
+        p.attackRange       = Math.max(10, p.attackRange + rangeIncrease);
     }
-    if (fx.pickupRangeAdd) p.pickupRange += fx.pickupRangeAdd;
+    if (fx.pickupRangeAdd)     p.pickupRange += fx.pickupRangeAdd;
+    if (fx.critChanceAdd)      p.critChance += fx.critChanceAdd;
+    if (fx.critMultiplierAdd)  p.critMultiplier += fx.critMultiplierAdd;
 }
 
 function applyOrganEffects(organ) {
     const p = gameState.player;
     const def = ORGANS[organ.id];
     if (!def) return;
-    const lv = def.levels[organ.level - 1];
+    // poisonSac Lv0 無效果
+    if (organ.id === 'poisonSac' && (organ.level || 0) === 0) return;
+    const lv = def.levels[(organ.level || 1) - 1];
     if (!lv) return;
     const fx = lv.effects;
 
     if (fx.attackAdd)              p.attack += fx.attackAdd;
-    if (fx.attackSpeedMult)        p.attackSpeed *= fx.attackSpeedMult;
+    if (fx.attackSpeedBonus)       p.attackSpeedBonus = (p.attackSpeedBonus || 0) + fx.attackSpeedBonus;
     if (fx.speedAdd)               p.speed = Math.max(0.3, p.speed + fx.speedAdd);
     if (fx.damageReductionAdd)     p.damageReduction = Math.min(0.9, p.damageReduction + fx.damageReductionAdd);
     if (fx.hpMaxAdd) {
@@ -72,12 +89,12 @@ function applyOrganEffects(organ) {
         gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + fx.hpMaxAdd);
     }
     if (fx.radiusAdd) {
-        const rangeIncrease = Math.round(fx.radiusAdd / p.radius * p.attackRange);
-        p.radius += fx.radiusAdd;
-        p.attackRange += rangeIncrease;
+        const safeRadius    = Math.max(p.radius, 1);
+        const rangeIncrease = Math.round(fx.radiusAdd / safeRadius * p.attackRange);
+        p.radius            = Math.max(5, p.radius + fx.radiusAdd);
+        p.attackRange       = Math.max(10, p.attackRange + rangeIncrease);
     }
     if (fx.thornDamageAdd)         p.thornDamage += fx.thornDamageAdd;
-    if (fx.thornPlayerAtkReflect)  p.thornPlayerAtkReflect = true;
     if (fx.critChanceAdd)          p.critChance += fx.critChanceAdd;
     if (fx.critMultiplierAdd)      p.critMultiplier += fx.critMultiplierAdd;
     if (fx.brainActivate) { p.brainActive = true; p.brainTimer = Date.now(); }
@@ -86,11 +103,17 @@ function applyOrganEffects(organ) {
     if (fx.brainDmgDelta)          p.brainDmg += fx.brainDmgDelta;
     if (fx.pickupRangeAdd)         p.pickupRange += fx.pickupRangeAdd;
     if (fx.attackRangeAdd)         p.attackRange += fx.attackRangeAdd;
-    if (fx.aggroRangeReductionAdd) p.aggroRangeReduction += fx.aggroRangeReductionAdd;
     if (fx.regenHpAdd)             p.naturalRegenHp += fx.regenHpAdd;
     if (fx.regenIntervalDelta)     p.naturalRegenInterval = Math.max(2000, p.naturalRegenInterval + fx.regenIntervalDelta);
+    if (fx.regenHpMaxPercent)      p.naturalRegenHpMaxPercent += fx.regenHpMaxPercent;
+    if (fx.perceptionRangeAdd)     p.perceptionRange += fx.perceptionRangeAdd;
+    // 毒囊特有欄位：不影響 player stats，combat.js 直接讀 getOrganCumulative
 
     checkComboEffects();
+
+    // 刷新變異倍率（只更新 player 上的 mutationXxxBonus，不直接改 stats）
+    // 實際一次性 Final 值乘算由 applyAllMutationBonuses() 在遊戲初始化末尾完成
+    if (typeof applyMutationEffects === 'function') applyMutationEffects();
 }
 
 function checkOrganUpgrade() {
@@ -107,12 +130,16 @@ function showOrganSelection() {
         gameState.pendingOrganSelections++;
         return;
     }
+    // 戰鬥教學：第一教學完成、戰鬥教學尚未完成 → 鎖定只能選攻擊器官
+    if (localStorage.getItem('tutorialCompleted') && !localStorage.getItem('tutorialCombatDone')) {
+        gameState.tutorialOrganPhase = true;
+    }
     const p = gameState.player;
     gameState.organSelectionActive = true;
 
     const organSlotsUsed = getOrganSlotsUsed();
     const slotsFull = organSlotsUsed >= p.organSlots;
-    const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
+    const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF', special: '#CC99FF' };
 
     const evoOptions = slotsFull ? checkEvolutionUnlock() : [];
 
@@ -131,11 +158,11 @@ function showOrganSelection() {
     function generateOrganOptions() {
         const opts = [];
         p.organs
-            .filter(o => ORGANS[o.id] && o.level < ORGANS[o.id].maxLevel)
+            .filter(o => ORGANS[o.id] && !ORGANS[o.id].noSelection && o.level < ORGANS[o.id].maxLevel)
             .forEach(o => opts.push({ type: 'upgrade', def: ORGANS[o.id], existingOrgan: o }));
         const equippedIds = p.organs.map(o => o.id);
         Object.values(ORGANS)
-            .filter(def => !equippedIds.includes(def.id))
+            .filter(def => !def.noSelection && !equippedIds.includes(def.id))
             .sort(() => Math.random() - 0.5)
             .forEach(def => opts.push({ type: 'new', def }));
         opts.sort(() => Math.random() - 0.5);
@@ -144,7 +171,7 @@ function showOrganSelection() {
         if (p.level <= 3 && !p.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack')) {
             if (!opts.some(opt => opt.def.type === 'attack')) {
                 const eIds = p.organs.map(o => o.id);
-                const atkPool = Object.values(ORGANS).filter(def => def.type === 'attack' && !eIds.includes(def.id));
+                const atkPool = Object.values(ORGANS).filter(def => def.type === 'attack' && !def.noSelection && !eIds.includes(def.id));
                 if (atkPool.length > 0) opts[0] = { type: 'new', def: atkPool[Math.floor(Math.random() * atkPool.length)] };
             }
         }
@@ -177,7 +204,23 @@ function showOrganSelection() {
     function renderOptions(organOptions) {
         optionsContainer.innerHTML = '';
 
-        organOptions.forEach(opt => {
+        // ── 教學器官階段：找出第一個攻擊器官的索引
+        const _tutAtkIdx = gameState.tutorialOrganPhase
+            ? organOptions.findIndex(o => o.def && o.def.type === 'attack')
+            : -1;
+        // 若在教學模式下卻無攻擊器官選項，自動取消鎖定（安全保護）
+        if (gameState.tutorialOrganPhase && _tutAtkIdx < 0) {
+            gameState.tutorialOrganPhase = false;
+        }
+        // 注入閃爍動畫 CSS（只注入一次）
+        if (_tutAtkIdx >= 0 && !document.getElementById('tut-organ-style')) {
+            const _st = document.createElement('style');
+            _st.id = 'tut-organ-style';
+            _st.textContent = '@keyframes tutOrganGlow{0%,100%{box-shadow:0 0 8px #FFD700,0 0 16px rgba(255,215,0,0.4);}50%{box-shadow:0 0 22px #FFD700,0 0 44px rgba(255,215,0,0.7);}}';
+            document.head.appendChild(_st);
+        }
+
+        organOptions.forEach((opt, _tutIdx) => {
             const { def, type, existingOrgan } = opt;
             const color = typeColor[def.type] || '#FFD700';
             const isUpgrade = type === 'upgrade';
@@ -185,29 +228,48 @@ function showOrganSelection() {
             const lvDesc = def.levels[targetLevel - 1].desc;
             const comboHint = getComboHint(def.id);
 
+            // 教學狀態：第一張攻擊器官 = 高亮；其他 = 灰暗禁用
+            const _isAtkHighlight = _tutAtkIdx >= 0 && _tutIdx === _tutAtkIdx;
+            const _isDisabled     = _tutAtkIdx >= 0 && _tutIdx !== _tutAtkIdx;
+
             const btn = document.createElement('div');
-            btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid ' + (isUpgrade ? '#FFAA44' : '#666') + ';color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
+            if (_isAtkHighlight) {
+                btn.style.cssText = 'background:rgba(255,215,0,0.12);border:2px solid #FFD700;color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;animation:tutOrganGlow 1.2s ease-in-out infinite;';
+            } else if (_isDisabled) {
+                btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid #555;color:white;padding:12px 20px;margin:5px;border-radius:6px;width:380px;text-align:center;opacity:0.4;pointer-events:none;cursor:default;';
+            } else {
+                btn.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid ' + (isUpgrade ? '#FFAA44' : '#666') + ';color:white;padding:12px 20px;margin:5px;cursor:pointer;border-radius:6px;width:380px;text-align:center;';
+            }
             btn.innerHTML =
                 '<div style="color:' + color + ';font-weight:bold;font-size:15px;">' +
                     def.name + (isUpgrade ? ' Lv.' + existingOrgan.level + ' → Lv.' + targetLevel : ' Lv.1') +
                 '</div>' +
                 '<div style="font-size:11px;color:#ccc;margin-top:4px;">' + lvDesc + '</div>' +
-                (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">' + t('comboHintLabel') + comboHint + '</div>' : '');
-            btn.onmouseenter = (e) => {
-                btn.style.background = 'rgba(255,255,255,0.2)';
-                showTooltip({ name: def.name, level: targetLevel, maxLevel: def.maxLevel, desc: def.levels[targetLevel - 1].desc, combo: comboHint }, e.clientX, e.clientY);
-            };
-            btn.onmouseleave = () => { btn.style.background = 'rgba(255,255,255,0.08)'; hideTooltip(); };
-            btn.onclick = () => {
-                if (isUpgrade) {
-                    existingOrgan.level = targetLevel;
-                    existingOrgan.desc = def.levels[targetLevel - 1].desc;
-                } else {
-                    p.organs.push({ id: def.id, name: def.name, type: def.type, level: 1, desc: def.levels[0].desc });
-                }
-                applyOrganEffects(isUpgrade ? existingOrgan : p.organs[p.organs.length - 1]);
-                closeOverlay();
-            };
+                (comboHint ? '<div style="font-size:10px;color:#FFD700;margin-top:5px;">' + t('comboHintLabel') + comboHint + '</div>' : '') +
+                (_isAtkHighlight ? '<div style="font-size:12px;color:#FFD700;margin-top:8px;">👆 選擇你的第一個攻擊器官！</div>' : '');
+            if (!_isDisabled) {
+                btn.onmouseenter = (e) => {
+                    btn.style.background = _isAtkHighlight ? 'rgba(255,215,0,0.22)' : 'rgba(255,255,255,0.2)';
+                    showTooltip({ name: def.name, level: targetLevel, maxLevel: def.maxLevel, desc: def.levels[targetLevel - 1].desc, combo: comboHint }, e.clientX, e.clientY);
+                };
+                btn.onmouseleave = () => {
+                    btn.style.background = _isAtkHighlight ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.08)';
+                    hideTooltip();
+                };
+                btn.onclick = () => {
+                    if (isUpgrade) {
+                        existingOrgan.level = targetLevel;
+                        existingOrgan.desc = def.levels[targetLevel - 1].desc;
+                    } else {
+                        p.organs.push({ id: def.id, name: def.name, type: def.type, level: 1, desc: def.levels[0].desc });
+                    }
+                    applyOrganEffects(isUpgrade ? existingOrgan : p.organs[p.organs.length - 1]);
+                    const _wasTutOrgan = _isAtkHighlight;
+                    if (_wasTutOrgan) gameState.tutorialOrganPhase = false;
+                    closeOverlay();
+                    if (_wasTutOrgan) spawnTutorialStump();
+                };
+            }
             optionsContainer.appendChild(btn);
         });
 
@@ -229,7 +291,7 @@ function showOrganSelection() {
             optionsContainer.appendChild(btn);
         });
 
-        if (!slotsFull && (gameState.playerSkills.luckyReroll || 0) > 0) {
+        if (!slotsFull && (gameState.playerSkills.luckyReroll || 0) > 0 && !gameState.tutorialOrganPhase) {
             const remaining = gameState.player.rerollsRemaining || 0;
             const canReroll = remaining > 0;
             const rerollBtn = document.createElement('div');
@@ -273,8 +335,12 @@ function drawOrganUI() {
 
     const evoCnt = evoEntries.length;
     const evoBoxH = evoCnt > 0 ? evoCnt * lineH + padY * 2 : 0;
+    // 普通器官（不包含 poisonSac）+ 毒囊單行
+    const normalOrgans = organs.filter(o => o.id !== 'poisonSac');
+    const sacOrgan = organs.find(o => o.id === 'poisonSac');
     const hiddenRows = hiddenOrgans.length > 0 ? hiddenOrgans.length + 1 : 0;
-    const organsBoxH = (1 + organs.length + hiddenRows) * lineH + padY * 2;
+    const sacRow = sacOrgan ? 1 : 0;
+    const organsBoxH = (1 + normalOrgans.length + hiddenRows + sacRow) * lineH + padY * 2;
 
     const boxBottom = H - versionAreaH;
     const boxY      = boxBottom - organsBoxH;
@@ -293,7 +359,7 @@ function drawOrganUI() {
             });
         });
     }
-    organs.forEach((organ, i) => {
+    normalOrgans.forEach((organ, i) => {
         _organHitRegions.push({
             x: _hrX, y: boxY + padY + (i + 1) * lineH, w: _hrW, h: lineH,
             data: {
@@ -305,10 +371,31 @@ function drawOrganUI() {
             }
         });
     });
+    // 毒囊行
+    if (sacOrgan) {
+        const sacDef = ORGANS.poisonSac;
+        const sacLv = sacOrgan.level || 0;
+        const nextThreshold = sacLv < sacDef.maxLevel ? sacDef.thresholds[sacLv] : null;
+        const sacDesc = sacLv === 0 ? '沒什麼囊用' : (sacDef.levels[sacLv - 1].desc || '');
+        const nextInfo = nextThreshold ? '  下一級: ' + nextThreshold + '白骨素' : '  已滿級';
+        _organHitRegions.push({
+            x: _hrX, y: boxY + padY + (normalOrgans.length + 1) * lineH, w: _hrW, h: lineH,
+            data: {
+                name: sacOrgan.name,
+                level: sacLv,
+                maxLevel: sacDef.maxLevel,
+                desc: sacDesc + nextInfo,
+                organId: 'poisonSac'
+            }
+        });
+    }
     if (hiddenOrgans.length > 0) {
+        const sepBase = normalOrgans.length + 1 + sacRow;
         hiddenOrgans.forEach((organ, j) => {
+            // hit region 對齊繪製位置：文字繪製在 (sepBase+2+j)*lineH - 4，
+            // 與普通器官相同規律，hit region 放在文字行的前一格（+1 而非 +2）
             _organHitRegions.push({
-                x: _hrX, y: boxY + padY + (organs.length + 2 + j) * lineH, w: _hrW, h: lineH,
+                x: _hrX, y: boxY + padY + (sepBase + 1 + j) * lineH, w: _hrW, h: lineH,
                 data: {
                     name: organ.name,
                     desc: HIDDEN_ORGANS[organ.id] ? HIDDEN_ORGANS[organ.id].desc : (organ.desc || ''),
@@ -337,30 +424,73 @@ function drawOrganUI() {
     const slotText = t('organLabel') + '：' + organSlotsUsed + ' / ' + p.organSlots + (isFull ? t('canEvolve') : '');
     ctx.fillText(slotText, padX, boxY + padY + lineH - 4);
 
-    const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
-    organs.forEach((organ, i) => {
+    const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF', special: '#AAAAFF' };
+    normalOrgans.forEach((organ, i) => {
         ctx.fillStyle = typeColor[organ.type] || '#FFD700';
         const label = '▸ ' + organ.name + ' Lv.' + (organ.level || 1) + (organ.inherited ? t('inheritedSuffix') : '');
         ctx.fillText(label, padX, boxY + padY + (i + 2) * lineH - 4);
     });
 
+    // 毒囊特殊顯示：毒囊 Lv3（24/40）
+    if (sacOrgan) {
+        const sacLv = sacOrgan.level || 0;
+        const sacDef = ORGANS.poisonSac;
+        const nextThreshold = sacLv < sacDef.maxLevel ? sacDef.thresholds[sacLv] : null;
+        const bm = p.boneMaterial || 0;
+        ctx.fillStyle = '#AAAAFF';
+        let sacLabel = '☠ ' + sacOrgan.name + ' Lv' + sacLv;
+        if (nextThreshold) sacLabel += '（' + bm + '/' + nextThreshold + '）';
+        else sacLabel += '（MAX）';
+        ctx.fillText(sacLabel, padX, boxY + padY + (normalOrgans.length + 2) * lineH - 4);
+    }
+
     if (hiddenOrgans.length > 0) {
-        const sepRow = organs.length + 2;
+        const sepBase = normalOrgans.length + 1 + sacRow;
+        // sepBase+1 行為分隔行（畫中線），器官名稱從 sepBase+2 開始
         ctx.fillStyle = 'rgba(255,215,0,0.5)';
-        ctx.fillRect(padX - 2, boxY + padY + sepRow * lineH - 14, 160, 1);
+        ctx.fillRect(padX - 2, boxY + padY + (sepBase + 1) * lineH - Math.floor(lineH / 2), 160, 1);
         hiddenOrgans.forEach((organ, i) => {
             ctx.fillStyle = '#FFD700';
-            ctx.fillText('✨ ' + organ.name, padX, boxY + padY + (sepRow + i + 1) * lineH - 4);
+            ctx.fillText('✨ ' + organ.name, padX, boxY + padY + (sepBase + 2 + i) * lineH - 4);
         });
     }
+
+    // 圖鑑按鈕（📖）：器官框右側
+    _drawCompendiumBtn(padX - 4 + 164 + 4, boxY);
 }
 
+function _drawCompendiumBtn(bx, by) {
+    const btnW = 24, btnH = 24;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(bx, by, btnW, btnH);
+    ctx.fillStyle = '#FFD700';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('📖', bx + btnW / 2, by + btnH / 2);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    // 登記點擊區域
+    _compendiumBtnRegion = { x: bx, y: by, w: btnW, h: btnH };
+}
+
+let _compendiumBtnRegion = null;
+
 function handleEliteKill(elite) {
+    pausePlayTimer();
     const xp = elite.xp;
+
+    // 精英怪死亡掉落：1個1倍屍體 + 4具白骨（圓形散落）
+    spawnLootCircle(elite.x, elite.y, [
+        { type: 'corpse', data: { multiplier: 1 } },
+        { type: 'bone', data: {} },
+        { type: 'bone', data: {} },
+        { type: 'bone', data: {} },
+        { type: 'bone', data: {} },
+    ]);
+
     gameState.eliteCreature = null;
     gameState.eliteJustKilled = true;
-    // showHiddenOrganSelection 必須在 addXP 之前呼叫，確保 organSelectionActive=true，
-    // 避免 addXP 觸發升級選器官時直接疊層。(v0.15.2 修復)
     if (!gameState.gameOver) {
         const ownedIds = (gameState.player.hiddenOrgans || []).map(h => h.id);
         const drops = Object.values(HIDDEN_ORGANS).filter(h => !ownedIds.includes(h.id) && Math.random() < 0.5);
@@ -368,13 +498,18 @@ function handleEliteKill(elite) {
     }
     addXP(xp);
     showXPPopup(gameState.player.x, gameState.player.y, xp);
-    gameState.skillPoints += 1;
+    const nightIndex = Math.floor(gameState.currentPhaseIndex / 2);
+    const eliteSkillPts = [1, 1, 2][nightIndex] || 1;
+    gameState.skillPoints += eliteSkillPts;
+    if (!gameState.sessionSkillPoints) gameState.sessionSkillPoints = { elite: 0, boss: 0 };
+    gameState.sessionSkillPoints.elite += eliteSkillPts;
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
     gameState.timeRemaining = nextDayTime;
     updateDayNightCycle();
     gameState.dayNightMessage.text = t('morningEliteKilled');
     gameState.dayNightMessage.timer = Date.now();
+    resumePlayTimer();
 }
 
 function showHiddenOrganSelection(drops) {
@@ -385,9 +520,6 @@ function showHiddenOrganSelection(drops) {
         hideTooltip();
         const el = document.getElementById('hidden-organ-overlay');
         if (el) el.remove();
-        // 先釋放 organSelectionActive，再呼叫 showOrganSelection，
-        // 否則 showOrganSelection 入口會再次 pending++ 並直接 return，
-        // 導致 active=true 但無 overlay 而卡死。(v0.15.3 修復)
         gameState.organSelectionActive = false;
         gameState.lastTimeTick = Date.now();
         if (gameState.pendingOrganSelections > 0) {

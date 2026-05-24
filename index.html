@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>噪鵑的森林冒險</title>
     <style>
         body {
@@ -9,6 +10,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
             background-color: #222; /* Overall background color */
             font-family: Arial, sans-serif;
         }
@@ -20,6 +23,8 @@
         }
         canvas {
             display: block;
+        }
+        #gameCanvas {
             background-color: #549954; /* Forest Green Background */
         }
         #ui-overlay {
@@ -44,6 +49,7 @@
         #top-left {
             top: 10px;
             left: 10px;
+            padding: 0;
         }
 
         #minimap-container {
@@ -60,7 +66,7 @@
         }
         #minimap-info {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             background: rgba(0,0,0,0.7);
             border-radius: 4px;
@@ -149,6 +155,57 @@
         #game-tooltip .tt-hidden { font-size:11px; color:#FFD700; margin-bottom:3px; }
         #game-tooltip .tt-desc { font-size:12px; color:#ccc; }
         #game-tooltip .tt-combo { font-size:11px; color:#FFD700; margin-top:5px; }
+        @keyframes dotBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        @keyframes dotGlow {
+            0%, 100% { box-shadow: 0 0 4px currentColor; }
+            50% { box-shadow: 0 0 12px currentColor; }
+        }
+        /* 變異器官脈動動畫 */
+        @keyframes mutationPulse {
+            0%   { transform: scale(1);    color: inherit; }
+            50%  { transform: scale(1.15); color: #FFD700; }
+            100% { transform: scale(1);    color: inherit; }
+        }
+        .mutation-pulse {
+            animation: mutationPulse 0.8s ease-in-out infinite;
+        }
+        /* 排行榜皇冠 */
+        .crown-gold, .crown-silver, .crown-bronze {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            font-size: 10px;
+        }
+        .crown-top {
+            display: flex;
+            align-items: flex-end;
+            gap: 1px;
+        }
+        .crown-star { font-size: 8px; margin-bottom: 2px; }
+        .crown-spike {
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+        }
+        .crown-base {
+            width: 28px;
+            height: 8px;
+            border-radius: 0 0 3px 3px;
+        }
+        .crown-gold .crown-spike { border-bottom: 10px solid #FFD700; }
+        .crown-gold .crown-base { background: #FFD700; box-shadow: 0 0 6px #FFD700; }
+        .crown-gold .crown-star { color: #FFD700; text-shadow: 0 0 4px #FFD700; }
+        .crown-silver .crown-spike { border-bottom: 10px solid #C0C0C0; }
+        .crown-silver .crown-base { background: #C0C0C0; box-shadow: 0 0 4px #C0C0C0; }
+        .crown-silver .crown-star { color: #C0C0C0; }
+        .crown-bronze .crown-spike { border-bottom: 10px solid #CD7F32; }
+        .crown-bronze .crown-base { background: #CD7F32; box-shadow: 0 0 4px #CD7F32; }
+        .crown-bronze .crown-star { color: #CD7F32; }
     </style>
 </head>
 <body>
@@ -169,8 +226,8 @@
         <div id="minimap-container">
             <canvas id="minimapCanvas" width="300" height="300"></canvas>
             <div id="minimap-info">
-                <span id="minimap-biome">🌲 森林</span>
-                <span style="display:flex;align-items:center;gap:4px;">
+                <span id="minimap-biome">🌲 森林</span><span id="minimap-playtime" style="margin-left:6px;">⏱ 00:00</span><span id="minimap-difficulty" style="font-size:11px;color:#aaa;margin-left:6px;"></span>
+                <span style="display:flex;align-items:center;gap:4px;margin-left:auto;">
                     <canvas id="sunmoonCanvas" width="24" height="24"></canvas>
                     <span id="minimap-time">00:00</span>
                 </span>
@@ -199,13 +256,17 @@
         <button onclick="devToggleDayNight()">🌙 切換日夜</button>
     </div>
 </div>
+<canvas id="joystick-canvas" style="display:none;position:fixed;top:0;left:0;pointer-events:none;z-index:400;touch-action:none;"></canvas>
 <div id="game-tooltip"></div>
 
 <script src="config/gameConfig.js"></script>
+<script src="config/patchnotes.js"></script>
+<script src="config/supabase.js"></script>
 <script src="config/organs.js"></script>
 <script src="config/creatures.js"></script>
 <script src="config/evolution.js"></script>
 <script src="map/easymap.js"></script>
+<script src="map/normalmap.js"></script>
 <script src="lang.js"></script>
 <script src="lang/zh-TW.js"></script>
 <script src="lang/en.js"></script>
@@ -217,15 +278,51 @@
 <script src="systems/input.js"></script>
 <script src="systems/spawning.js"></script>
 <script src="systems/player.js"></script>
+<script src="systems/tutorial.js"></script>
 <script src="systems/combat.js"></script>
 <script src="systems/organs.js"></script>
+<script src="systems/mutation.js"></script>
 <script src="systems/evolution.js"></script>
 <script src="systems/creatures.js"></script>
 <script src="systems/elite.js"></script>
 <script src="systems/boss.js"></script>
 <script src="systems/daynight.js"></script>
+<script src="systems/leaderboard.js"></script>
+<script src="systems/mobile.js"></script>
+<script src="systems/hud.js"></script>
 <script src="systems/ui.js"></script>
 <script src="main.js"></script>
+
+<script>
+function buildCrown(type) {
+    return `<span class="crown-${type}">` +
+        `<div class="crown-top">` +
+        `<span class="crown-star">✦</span>` +
+        `<div class="crown-spike"></div>` +
+        `<div class="crown-spike"></div>` +
+        `<div class="crown-spike"></div>` +
+        `<span class="crown-star">✦</span>` +
+        `</div>` +
+        `<div class="crown-base"></div>` +
+        `</span>`;
+}
+
+function getRankIcon(rank) {
+    if (rank === 1) return buildCrown('gold');
+    if (rank === 2) return buildCrown('silver');
+    if (rank === 3) return buildCrown('bronze');
+    if (rank <= 10) return '🎖️';
+    return String(rank);
+}
+
+if (typeof fetchTop10 === 'undefined') {
+    function fetchTop10(difficulty) { return Promise.reject(new Error('no supabase')); }
+    function fetchVictoryRecords(difficulty) { return Promise.reject(new Error('no supabase')); }
+    function fetchDefeatRecords(limit, difficulty) { return Promise.reject(new Error('no supabase')); }
+    function fetchAvailableDifficulties() { return Promise.resolve([]); }
+    function submitScore() { return Promise.reject(new Error('no supabase')); }
+}
+</script>
 
 </body>
 </html>
