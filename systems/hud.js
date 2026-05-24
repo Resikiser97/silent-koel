@@ -722,16 +722,16 @@ function drawGame() {
         ctx.restore();
     }
 
-    // 12b. 桌機版閃現冷卻指示器（右下角，對應手機直向閃現區位置）
+    // 12b. 桌機版閃現冷卻指示器（對應手機直向閃現區位置，縮小為攻擊區 50%）
     if (!gameState.isMobile && gameState.gameStarted && !gameState.gameOver && !gameState.victory) {
         const dashCD = gameState.player.dashCooldown || 0;
-        // 矩形範圍：右側50%寬，底部25%~50%高（VIEW_W/2 ~ VIEW_W，VIEW_H*0.5 ~ VIEW_H*0.75）
-        const dashW = VIEW_W * 0.5;
-        const dashH = VIEW_H * 0.25;
-        const dashL = VIEW_W * 0.5;
-        const dashT = VIEW_H * 0.5;
+        const atkH = VIEW_H * 0.25;
+        const dashH = atkH * 0.5;
+        const dashW = dashH;  // 正方形：寬＝高
         const dashCX = VIEW_W * 0.75;
-        const dashCY = VIEW_H * 0.625;
+        const dashCY = VIEW_H * 0.875 - atkH;  // = VIEW_H * 0.625
+        const dashL  = dashCX - dashW / 2;
+        const dashT  = dashCY - dashH / 2;
         ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
