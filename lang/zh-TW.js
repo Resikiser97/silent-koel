@@ -48,8 +48,9 @@ LANG['zh-TW'] = {
         diffNormal: '⚔️ 普通',
         diffHard:   '💀 困難',
         diffHell:   '🔥 地獄',
-        charKoel:   '🐦 噪鵑（The Koel）',
-        charSoon:   '❓ 即將推出',
+        charKoel:        '🐦 噪鵑（The Koel）',
+        charArcherfish:  '🐟 阿奇爾（Archerfish）',
+        charSoon:        '❓ 即將推出',
         btnBack:    '← 返回',
         btnStart:   '開始遊戲 →',
         // ── 設定面板
@@ -329,6 +330,21 @@ LANG['zh-TW'] = {
             '每10秒回復1HP',
             '間隔-2秒，回復+1HP，額外回復最大HP 0.5%',
             '間隔-3秒，回復+1HP，額外回復最大HP 0.5%'
+        ]},
+        mouthOrgan:    { name: '嘴器', levels: [
+            '攻擊+4',
+            '攻擊+4',
+            '攻擊+2，命中使目標移動速度-20%持續2秒'
+        ]},
+        fishScale:     { name: '魚鱗', levels: [
+            '韌性+5%（減少控制時間5%）',
+            '韌性+10%（累計15%）',
+            '韌性+15%（累計30%）'
+        ]},
+        sharkLeaf:     { name: '鯊魚嗅葉', levels: [
+            '對血量15%以下的敵人傷害+10%',
+            '對血量30%以下的敵人傷害+15%',
+            '對血量50%以下的敵人傷害+20%'
         ]},
         poisonSac:     { name: '毒囊', levels: [
             'Lv1：攻擊+1，毒傷+1（5秒）',

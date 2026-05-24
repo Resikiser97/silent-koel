@@ -18,7 +18,7 @@
 //   7. 教學木樁（7c，tutorialStump）
 //   8. 精英（drawEliteCreature）
 //   9. Boss
-//   10. 玩家
+//   10. 玩家（+ drawProjectiles / _drawArcherChargeVisual）
 //   11. 浮動文字
 //   12. 器官 UI（drawOrganUI）
 //   13. 上方血條（drawTopBarUI）
@@ -75,6 +75,195 @@ function _buildFogCloudTexture() {
         tctx.fill();
     }
     return tc;
+}
+
+// =============================================================
+// 角色繪製函式
+// =============================================================
+
+// 阿奇爾（Archerfish）：神仙魚藍三角形（播放按鈕形狀）
+// 朝向依 p.lastMoveDir.dx 正負決定左右翻轉
+function _drawArcherfish(ctx, sx, sy, r, p) {
+    const facingRight = (!p.lastMoveDir || p.lastMoveDir.dx >= 0);
+    const color = '#4FC3F7'; // 神仙魚藍
+
+    ctx.save();
+    ctx.translate(sx, sy);
+    if (!facingRight) ctx.scale(-1, 1); // 向左翻轉
+
+    // 夜晚發光外圈
+    if (gameState.isNight) {
+        ctx.fillStyle = 'rgba(79,195,247,0.35)';
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // 三角形本體（尖端朝右，形如播放按鈕）
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo( r * 1.2,  0);           // 尖端（右）
+    ctx.lineTo(-r * 0.8, -r * 0.9);    // 左上
+    ctx.lineTo(-r * 0.8,  r * 0.9);    // 左下
+    ctx.closePath();
+    ctx.fill();
+
+    // 細描邊（深藍，增強辨識度）
+    ctx.strokeStyle = 'rgba(0,120,200,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+// =============================================================
+// 阿奇爾 HUD：子彈渲染 + 充能格顯示
+// =============================================================
+
+/** 渲染所有飛行中的子彈（水泡造型） */
+function drawProjectiles() {
+    if (!gameState.projectiles || gameState.projectiles.length === 0) return;
+    for (const b of gameState.projectiles) {
+        const s = worldToScreen(b.x, b.y);
+        if (s.x < -20 || s.x > VIEW_W + 20 || s.y < -20 || s.y > VIEW_H + 20) continue;
+        ctx.save();
+        // 外圈光暈
+        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, b.radius * 2);
+        grad.addColorStop(0, 'rgba(79,195,247,0.35)');
+        grad.addColorStop(1, 'rgba(79,195,247,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, b.radius * 2, 0, Math.PI * 2);
+        ctx.fill();
+        // 主體水泡
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, b.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(79,195,247,0.65)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(200,240,255,0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // 高光小點
+        ctx.beginPath();
+        ctx.arc(s.x - b.radius * 0.3, s.y - b.radius * 0.3, b.radius * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+/**
+ * 繪製阿奇爾充能狀態（玩家正下方3格充能點 + 蓄力中環繞氣泡）
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} sx  玩家螢幕 x
+ * @param {number} sy  玩家螢幕 y
+ * @param {object} p   gameState.player
+ */
+function _drawArcherChargeVisual(ctx, sx, sy, p) {
+    if (!p.isRanged) return;
+    const maxCharges = 3;
+    const charges    = Math.min(p.reloadCharges || 0, maxCharges);
+    const dotR       = 4;
+    const gap        = 4;
+    const totalW     = maxCharges * (dotR * 2) + (maxCharges - 1) * gap;
+    const startX     = sx - totalW / 2;
+    const dotY       = sy + p.radius + 12;
+
+    // ── 3 格充能點
+    for (let i = 0; i < maxCharges; i++) {
+        const cx = startX + i * (dotR * 2 + gap) + dotR;
+        ctx.save();
+        if (i < charges) {
+            ctx.fillStyle = '#4FC3F7';
+            ctx.shadowColor = '#4FC3F7';
+            ctx.shadowBlur  = 8;
+        } else {
+            ctx.fillStyle = 'rgba(100,160,200,0.28)';
+        }
+        ctx.beginPath();
+        ctx.arc(cx, dotY, dotR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // ── 蓄力中：已消耗格數的環繞氣泡
+    const consumed = p.chargeConsumed || 0;
+    if (p.chargeHolding && consumed > 0) {
+        const bubbleCount = consumed * 2;
+        const orbitR      = p.radius + 10;
+        const now         = Date.now();
+        for (let i = 0; i < bubbleCount; i++) {
+            const angle = now * 0.003 + (Math.PI * 2 / bubbleCount) * i;
+            const bx    = sx + Math.cos(angle) * orbitR;
+            const by    = sy + Math.sin(angle) * orbitR;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(bx, by, 3, 0, Math.PI * 2);
+            ctx.fillStyle   = 'rgba(79,195,247,0.85)';
+            ctx.shadowColor = '#4FC3F7';
+            ctx.shadowBlur  = 5;
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+}
+
+/**
+ * 自動攻擊模式下繪製瞄準指示器：
+ *   - 從玩家到最近敵人的流動虛線
+ *   - 敵人周圍旋轉缺口鎖定環
+ * 只在 autoAttack ON + 阿奇爾角色 + 遊戲進行中顯示
+ */
+/**
+ * 自動攻擊模式下繪製瞄準指示器：
+ *   - 流動虛線：玩家 → 鎖定目標
+ *   - 旋轉缺口環：套在鎖定目標周圍
+ *   - 後方小箭頭：指示後方氣泡的射出方向
+ * 使用 _findArcherAutoTarget() 取得目標，與實際射擊邏輯一致
+ */
+function _drawArcherLockOn() {
+    const p = gameState.player;
+    if (!p.isRanged || !gameState.settings.autoAttack) return;
+    if (!gameState.gameStarted || gameState.gameOver || gameState.victory) return;
+
+    // 使用與 _archerAttack 相同的優先邏輯（P1迎面 > P2全場最近）
+    const best = (typeof _findArcherAutoTarget === 'function') ? _findArcherAutoTarget() : null;
+    if (!best) return;
+
+    const ps  = worldToScreen(p.x, p.y);
+    const ts  = worldToScreen(best.x, best.y);
+    const now = Date.now();
+
+    ctx.save();
+
+    // ── 流動虛線（從玩家到鎖定目標）
+    ctx.globalAlpha    = 0.32;
+    ctx.strokeStyle    = '#4FC3F7';
+    ctx.lineWidth      = 1;
+    ctx.setLineDash([5, 8]);
+    ctx.lineDashOffset = -(now / 60) % 13;
+    ctx.beginPath();
+    ctx.moveTo(ps.x, ps.y);
+    ctx.lineTo(ts.x, ts.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
+
+    // ── 鎖定環（旋轉的四段缺口弧）
+    const lockR    = (best.radius || 10) + 8;
+    const rotAngle = (now / 800) * Math.PI * 2;
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = '#4FC3F7';
+    ctx.lineWidth   = 1.8;
+    for (let i = 0; i < 4; i++) {
+        const startA = rotAngle + i * (Math.PI / 2);
+        const endA   = startA + Math.PI / 2 * 0.6;
+        ctx.beginPath();
+        ctx.arc(ts.x, ts.y, lockR, startA, endA);
+        ctx.stroke();
+    }
+
+    ctx.restore();
 }
 
 function updateMinimapFog() {
@@ -514,10 +703,10 @@ function drawGame() {
         }
     }
 
-    // 8. 攻擊範圍視覺圓圈（0.2 秒淡出）
+    // 8. 攻擊範圍視覺圓圈（0.2 秒淡出，遠程角色不顯示）
     const p = gameState.player;
     const ps = worldToScreen(p.x, p.y);
-    if (p.attackVisual > 0 && Date.now() - p.attackVisual < 200) {
+    if (!p.isRanged && p.attackVisual > 0 && Date.now() - p.attackVisual < 200) {
         const alpha = 1 - (Date.now() - p.attackVisual) / 200;
         ctx.strokeStyle = 'rgba(255,255,255,' + alpha.toFixed(2) + ')';
         ctx.fillStyle   = 'rgba(255,255,255,' + (alpha * 0.12).toFixed(2) + ')';
@@ -593,18 +782,34 @@ function drawGame() {
         }
     }
 
-    // 9. 繪製玩家角色 (噪鵑)
+    // 9. 繪製玩家角色（根據 selectedCharacter 分派不同外觀）
     const drawRadius = Math.max(1, p.radius);
-    if (gameState.isNight) {
-        ctx.fillStyle = 'rgba(0,255,136,0.9)';
+    if (gameState.selectedCharacter === 'archerfish') {
+        _drawArcherfish(ctx, ps.x, ps.y, drawRadius, p);
+    } else {
+        // 噪鵑（預設）：夜晚發光圓 + 黑色圓形
+        if (gameState.isNight) {
+            ctx.fillStyle = 'rgba(0,255,136,0.9)';
+            ctx.beginPath();
+            ctx.arc(ps.x, ps.y, drawRadius + 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(ps.x, ps.y, drawRadius + 3, 0, Math.PI * 2);
+        ctx.arc(ps.x, ps.y, drawRadius, 0, Math.PI * 2);
         ctx.fill();
     }
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(ps.x, ps.y, drawRadius, 0, Math.PI * 2);
-    ctx.fill();
+
+    // 9-lock. 阿奇爾自動攻擊瞄準線 + 鎖定環（繪於子彈之下）
+    _drawArcherLockOn();
+
+    // 9-proj. 子彈（阿奇爾水泡子彈，繪於玩家圖層正上方）
+    drawProjectiles();
+
+    // 9-charge. 阿奇爾充能格 + 蓄力氣泡
+    if (gameState.selectedCharacter === 'archerfish') {
+        _drawArcherChargeVisual(ctx, ps.x, ps.y, p);
+    }
 
     drawEliteArrow();
     drawBossArrow();

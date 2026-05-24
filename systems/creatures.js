@@ -22,6 +22,12 @@ function _getCreatureColor(creature) {
     return CREATURE_COLORS[creature.speciesId] || '#888888';
 }
 
+// ── 嘴器減速：取生物有效速度（被減速中則乘以 _slowMult）────────
+function _effSpeed(c) {
+    const now = Date.now();
+    return (c._slowUntil && now < c._slowUntil) ? c.speed * (c._slowMult || 1.0) : c.speed;
+}
+
 // ── 特殊狀態光暈（不跟著旋轉，以世界座標繪製）───────────────
 function _drawCreatureGlow(ctx, creature, sx, sy) {
     let glowColor  = null;
@@ -556,8 +562,8 @@ function _updateGiantFlee(creature) {
         const { dx, dy } = wrappedDelta(creature.x, creature.y, closest.x, closest.y);
         creature._moveAngle = Math.atan2(dy, dx);
         moveCreature(creature,
-            creature.x + Math.cos(creature._moveAngle) * creature.speed,
-            creature.y + Math.sin(creature._moveAngle) * creature.speed);
+            creature.x + Math.cos(creature._moveAngle) * _effSpeed(creature),
+            creature.y + Math.sin(creature._moveAngle) * _effSpeed(creature));
 
         // 吃到果子：回復10% maxHP
         if (closestDist < creature.radius + 6) {
@@ -735,7 +741,7 @@ function updateNeutralCreatures() {
                     }
                 } else {
                     creature._moveAngle = Math.atan2(dy, dx);
-                    moveCreature(creature, creature.x + Math.cos(Math.atan2(dy, dx)) * creature.speed, creature.y + Math.sin(Math.atan2(dy, dx)) * creature.speed);
+                    moveCreature(creature, creature.x + Math.cos(Math.atan2(dy, dx)) * _effSpeed(creature), creature.y + Math.sin(Math.atan2(dy, dx)) * _effSpeed(creature));
                 }
             } else {
                 creature.state = 'wandering';
@@ -746,7 +752,7 @@ function updateNeutralCreatures() {
                 if (creature.wanderTarget) {
                     const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, creature.wanderTarget.x, creature.wanderTarget.y);
                     if (Math.sqrt(wdx * wdx + wdy * wdy) < 2) { creature.wanderTarget = null; }
-                    else { moveCreature(creature, creature.x + Math.cos(Math.atan2(wdy, wdx)) * creature.speed, creature.y + Math.sin(Math.atan2(wdy, wdx)) * creature.speed); }
+                    else { moveCreature(creature, creature.x + Math.cos(Math.atan2(wdy, wdx)) * _effSpeed(creature), creature.y + Math.sin(Math.atan2(wdy, wdx)) * _effSpeed(creature)); }
                 }
             }
             continue;
@@ -843,8 +849,8 @@ function updateNeutralCreatures() {
                     } else {
                         const gaAngle = Math.atan2(gady, gadx);
                         creature._moveAngle = gaAngle;
-                        moveCreature(creature, creature.x + Math.cos(gaAngle) * creature.speed,
-                                               creature.y + Math.sin(gaAngle) * creature.speed);
+                        moveCreature(creature, creature.x + Math.cos(gaAngle) * _effSpeed(creature),
+                                               creature.y + Math.sin(gaAngle) * _effSpeed(creature));
                     }
                     continue;
                 }
@@ -908,8 +914,8 @@ function updateNeutralCreatures() {
                 } else {
                     creature._moveAngle = (creature._moveAngle || 0) + (Math.random() - 0.5) * 0.12;
                 }
-                moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * creature.speed,
-                                       creature.y + Math.sin(creature._moveAngle) * creature.speed);
+                moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * _effSpeed(creature),
+                                       creature.y + Math.sin(creature._moveAngle) * _effSpeed(creature));
                 continue;
             }
 
@@ -939,8 +945,8 @@ function updateNeutralCreatures() {
             if (creature.state === 'fleeing') {
                 const { dx: fdx, dy: fdy } = wrappedDelta(p.x, p.y, creature.x, creature.y);
                 creature._moveAngle = Math.atan2(fdy, fdx);
-                moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * creature.speed,
-                                       creature.y + Math.sin(Math.atan2(fdy, fdx)) * creature.speed);
+                moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * _effSpeed(creature),
+                                       creature.y + Math.sin(Math.atan2(fdy, fdx)) * _effSpeed(creature));
                 continue;
             }
 
@@ -1028,8 +1034,8 @@ function updateNeutralCreatures() {
                     if (dLeader > 200) { // 超過200px才追隨
                         const { dx: ldx, dy: ldy } = wrappedDelta(creature.x, creature.y, leader.x, leader.y);
                         creature._moveAngle = Math.atan2(ldy, ldx);
-                        moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * creature.speed,
-                                               creature.y + Math.sin(creature._moveAngle) * creature.speed);
+                        moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * _effSpeed(creature),
+                                               creature.y + Math.sin(creature._moveAngle) * _effSpeed(creature));
                     }
                     continue;
                 }
@@ -1037,8 +1043,8 @@ function updateNeutralCreatures() {
 
             // 漫遊：每幀小幅偏移角度（模擬 Perlin Noise 平滑）
             creature._moveAngle = (creature._moveAngle || 0) + (Math.random() - 0.5) * 0.12;
-            moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * creature.speed,
-                                   creature.y + Math.sin(creature._moveAngle) * creature.speed);
+            moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * _effSpeed(creature),
+                                   creature.y + Math.sin(creature._moveAngle) * _effSpeed(creature));
             continue;
         }
 
@@ -1059,8 +1065,8 @@ function updateNeutralCreatures() {
         if (creature.state === 'fleeing') {
             const { dx: fdx, dy: fdy } = wrappedDelta(p.x, p.y, creature.x, creature.y);
             creature._moveAngle = Math.atan2(fdy, fdx);
-            moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * creature.speed,
-                                   creature.y + Math.sin(Math.atan2(fdy, fdx)) * creature.speed);
+            moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * _effSpeed(creature),
+                                   creature.y + Math.sin(Math.atan2(fdy, fdx)) * _effSpeed(creature));
             continue;
         }
         if (creature.diet === 'herbivore' || creature.diet === 'omnivore') {
@@ -1073,8 +1079,8 @@ function updateNeutralCreatures() {
                 const fruit = gameState.fruits[closestIdx];
                 const { dx: fdx, dy: fdy } = wrappedDelta(creature.x, creature.y, fruit.x, fruit.y);
                 creature._moveAngle = Math.atan2(fdy, fdx);
-                moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * creature.speed,
-                                       creature.y + Math.sin(Math.atan2(fdy, fdx)) * creature.speed);
+                moveCreature(creature, creature.x + Math.cos(Math.atan2(fdy, fdx)) * _effSpeed(creature),
+                                       creature.y + Math.sin(Math.atan2(fdy, fdx)) * _effSpeed(creature));
                 if (closestDist < creature.radius + 6) {
                     gameState.fruits.splice(closestIdx, 1);
                     creature.fruitsEaten = (creature.fruitsEaten || 0) + 1;
@@ -1095,7 +1101,7 @@ function updateNeutralCreatures() {
             const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, creature.wanderTarget.x, creature.wanderTarget.y);
             const dist = Math.sqrt(wdx * wdx + wdy * wdy);
             if (dist < 2) { creature.wanderTarget = null; creature.state = 'idle'; }
-            else { moveCreature(creature, creature.x + Math.cos(Math.atan2(wdy, wdx)) * creature.speed, creature.y + Math.sin(Math.atan2(wdy, wdx)) * creature.speed); }
+            else { moveCreature(creature, creature.x + Math.cos(Math.atan2(wdy, wdx)) * _effSpeed(creature), creature.y + Math.sin(Math.atan2(wdy, wdx)) * _effSpeed(creature)); }
         }
     }
 }
@@ -1343,8 +1349,8 @@ function updateHostileCreatures() {
             if (nearestGiant) {
                 const { dx: fdx, dy: fdy } = wrappedDelta(nearestGiant.x, nearestGiant.y, creature.x, creature.y);
                 creature._moveAngle = Math.atan2(fdy, fdx);
-                moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * creature.speed,
-                                       creature.y + Math.sin(creature._moveAngle) * creature.speed);
+                moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * _effSpeed(creature),
+                                       creature.y + Math.sin(creature._moveAngle) * _effSpeed(creature));
             }
             // 3秒後：切換為尋找落單草食性（非巨人化）
             if (now - (creature._fleeGiantTimer || 0) >= 3000) {
@@ -1370,7 +1376,8 @@ function updateHostileCreatures() {
                             if (Math.random() < (creature._critChance || 0)) {
                                 dmg = creature.baseDamage * (creature._critMult || 1.0);
                                 showFloatingText(p.x, p.y - 30, creature._critText || '暴擊！', '#FF4400');
-                                p._lynxSlowUntil = now + (creature._critSlowDur || 0);
+                                // 猞猁暴擊緩速：韌性縮短持續時間
+                                p._lynxSlowUntil = now + applyTenacity(creature._critSlowDur || 0, p);
                                 p._lynxSlowAmt   = creature._critSlowAmt || 0;
                             }
                         } else if (creature.speciesId === 'croc') {
@@ -1378,7 +1385,8 @@ function updateHostileCreatures() {
                             dmg = creature.damage * (creature._biomeAtkMult || 1.0);
                             if (Math.random() < (creature._deathRollChance || 0)) {
                                 showFloatingText(p.x, p.y - 30, '死亡翻滾！！', '#FF6600');
-                                p._stunUntil = now + 1000;
+                                // 鱷魚死亡翻滾：韌性縮短硬控時間
+                                p._stunUntil = now + applyTenacity(1000, p);
                             }
                         } else if (creature.speciesId === 'hyena') {
                             _applyHyenaBiomeBonus(creature);
@@ -1429,6 +1437,8 @@ function updateHostileCreatures() {
                     _applyHyenaBiomeBonus(creature);
                     chaseSpeed = creature.speed * (creature._finalSpeedMult || 1.0);
                 }
+                // 嘴器減速
+                if (creature._slowUntil && now < creature._slowUntil) chaseSpeed *= (creature._slowMult || 1.0);
                 moveCreature(creature, creature.x + Math.cos(angle) * chaseSpeed, creature.y + Math.sin(angle) * chaseSpeed);
             }
             continue;
@@ -1495,8 +1505,8 @@ function updateHostileCreatures() {
                     const { dx: rdx, dy: rdy } = wrappedDelta(creature.x, creature.y, creature._returnTarget.x, creature._returnTarget.y);
                     creature._moveAngle = Math.atan2(rdy, rdx);
                 }
-                moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * creature.speed * 1.3,
-                                       creature.y + Math.sin(creature._moveAngle) * creature.speed * 1.3);
+                moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * _effSpeed(creature) * 1.3,
+                                       creature.y + Math.sin(creature._moveAngle) * _effSpeed(creature) * 1.3);
                 continue;
             } else {
                 // 回到生態區：清除計時
@@ -1521,6 +1531,8 @@ function updateHostileCreatures() {
                 _applyHyenaBiomeBonus(creature);
                 wanderSpeed = creature.speed * (creature._finalSpeedMult || 1.0);
             }
+            // 嘴器減速
+            if (creature._slowUntil && now < creature._slowUntil) wanderSpeed *= (creature._slowMult || 1.0);
             moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * wanderSpeed,
                                    creature.y + Math.sin(creature._moveAngle) * wanderSpeed);
             continue;
@@ -1535,7 +1547,7 @@ function updateHostileCreatures() {
             const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, creature.wanderTarget.x, creature.wanderTarget.y);
             const dist = Math.sqrt(wdx * wdx + wdy * wdy);
             if (dist < 2) { creature.wanderTarget = null; }
-            else { moveCreature(creature, creature.x + Math.cos(Math.atan2(wdy, wdx)) * creature.speed, creature.y + Math.sin(Math.atan2(wdy, wdx)) * creature.speed); }
+            else { moveCreature(creature, creature.x + Math.cos(Math.atan2(wdy, wdx)) * _effSpeed(creature), creature.y + Math.sin(Math.atan2(wdy, wdx)) * _effSpeed(creature)); }
         }
     }
 }

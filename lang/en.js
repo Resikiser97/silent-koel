@@ -47,8 +47,9 @@ LANG['en'] = {
         diffNormal: '⚔️ Normal',
         diffHard:   '💀 Hard',
         diffHell:   '🔥 Hell',
-        charKoel:   '🐦 The Koel',
-        charSoon:   '❓ Coming Soon',
+        charKoel:        '🐦 The Koel',
+        charArcherfish:  '🐟 Archerfish',
+        charSoon:        '❓ Coming Soon',
         btnBack:    '← Back',
         btnStart:   'Start Game →',
         settingsTitle: '⚙️ Settings',
@@ -320,6 +321,21 @@ LANG['en'] = {
             'Recover 1 HP every 10s',
             'Interval -2s, +1 HP, +0.5% Max HP healed',
             'Interval -3s, +1 HP, +0.5% Max HP healed'
+        ]},
+        mouthOrgan:    { name: 'Mouth Organ', levels: [
+            'Atk +4',
+            'Atk +4',
+            'Atk +2, hit slows target -20% speed for 2s'
+        ]},
+        fishScale:     { name: 'Fish Scale', levels: [
+            'Tenacity +5% (CC duration -5%)',
+            'Tenacity +10% (total 15%)',
+            'Tenacity +15% (total 30%)'
+        ]},
+        sharkLeaf:     { name: 'Shark Sensory Leaf', levels: [
+            'Damage +10% vs targets below 15% HP',
+            'Damage +15% vs targets below 30% HP',
+            'Damage +20% vs targets below 50% HP'
         ]},
         poisonSac:     { name: 'Poison Sac', levels: [
             'Lv1: Atk +1, Poison +1 dmg/s (5s)',

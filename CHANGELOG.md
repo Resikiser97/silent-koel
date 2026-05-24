@@ -2,6 +2,67 @@
 
 ---
 
+## v0.56.0 - 2026-05-25
+
+### 新增
+- **角色選擇系統**（`config/characters.js`、`systems/ui.js`）：難度選擇後出現角色選擇畫面；噪鵑/阿奇爾可選，「？即將推出🔒」格子預留；`CHARACTERS` 常數定義各角色屬性、起始器官、起始進化
+- **阿奇爾（Archerfish）**（`config/characters.js`、`systems/player.js`、`systems/combat.js`）：首個遠程攻擊角色；HP60/速度2.0（水中+50%）/攻擊範圍120px/暴擊1.25x/攻速1500ms；三角形外觀（神仙魚藍 #4FC3F7），左右翻轉朝向移動方向
+- **Reload 充能系統**（`systems/player.js`）：不攻擊時每1.0秒（受攻速影響）+1格，上限3格；任何攻擊後計時器重置消耗1格；頭上3格指示+周圍藍色泡泡視覺
+- **子彈系統**（`systems/player.js`、`systems/combat.js`）：`gameState.projectiles[]` 管理；速度9px/幀，超出攻擊範圍120%消失；藍色半透明水晶bubble視覺
+- **自動/手動攻擊模式**（`systems/player.js`、`systems/input.js`）：自動=移動方向±45°扇形內最近目標優先，無目標→全場最近；手動電腦=滑鼠方向+按住蓄力（最多3格），放開發射；手動手機=攻擊區變方向鈕，拖動決定方向
+- **阿奇爾 F 技衝刺**（`systems/player.js`）：陸地+3速/水中+5速，持續3秒，衝刺期間撞怪暈眩0.5秒+附加傷害，冷卻15秒
+- **新器官：嘴器**（`config/organs.js`）：攻擊類 Lv1~3，累計攻擊+10，Lv3 命中使目標移動速度-20%持續2秒；阿奇爾起始 Lv3
+- **新器官：魚鱗**（`config/organs.js`）：防禦類 Lv1~3，累計韌性+30%（Lv1=5%/Lv2=15%/Lv3=30%）
+- **新器官：鯊魚嗅葉**（`config/organs.js`）：靈力類 Lv1~3，覆蓋效果，對低血量目標傷害+10/15/20%（閾值15/30/50%）
+- **韌性屬性系統**（`systems/utils.js`、`systems/organs.js`、`systems/combat.js`）：減少被控制持續時間，不影響減速幅度；`applyTenacity(durationMs, target)` 通用函式；適用暈眩/硬控/減速；已套用至猞猁暴擊緩速、鱷魚死亡翻滾
+- **嘴器 Lv3 減速**（`systems/player.js`、`systems/combat.js`、`systems/creatures.js`）：近戰及遠程命中均可施加 -20% 速度、2秒（受目標韌性縮短）；`_effSpeed(c)` 統一管理有效速度，已套用至 neutral/hostile/elite/boss 所有移動路徑
+- **鯊魚嗅葉處決加成**（`systems/player.js`、`systems/combat.js`）：近戰及遠程攻擊中，若目標血量低於閾值則額外加成傷害
+- **手機視野縮放**（`systems/camera.js`、`main.js`）：`_updateMobileCameraZoom()` 依玩家體型動態調整 `cameraZoom`（體型每+20%縮小5%，最小0.6）；`worldToScreen()` 以螢幕中心為基準縮放，桌機不受影響
+- **Boss 血條 Debuff 圖示**（`systems/boss.js`）：血條下方正方形圖示列；毒傷綠/流血紅/減速藍/暈眩黃；逆時針縮減進度邊框；最多4個同時顯示
+- **Debuff StartTime 追蹤**（`systems/combat.js`、`systems/player.js`）：施加毒/流血/減速/暈眩時同步記錄 `_[type]StartTime`，供 Debuff 圖示弧度進度計算
+
+### 修復
+- **器官名稱顯示 undefined**（`config/organs.js`）：`mouthOrgan`/`fishScale`/`sharkLeaf` 補上 `name` 欄位
+- **精英怪/Boss 嘴器減速無效**（`systems/elite.js`、`systems/boss.js`）：移動呼叫改用 `_effSpeed()`，減速現在正確生效
+- **滑鼠拖曳產生文字選取**（`index.html`）：`#game-container` 套用 `user-select: none`，禁止文字選取和右鍵選單
+- **手機返回鍵/左滑退出遊戲**（`main.js`）：`history.pushState` + `popstate` 全程攔截瀏覽器返回行為
+
+---
+
+## v0.55.0 - 2026-05-24
+
+### 新增（Phase C）
+
+- **新器官 × 3**（`config/organs.js`、`lang/zh-TW.js`、`lang/en.js`）：
+  - `mouthOrgan`（攻擊型，3 級）：攻擊+4 → +4 → +2，Lv3 命中使目標移速 -20% / 2 秒
+  - `fishScale`（防禦型，3 級）：韌性 +5% → +10% → +15%（累計 30%），減少玩家被控制時間
+  - `sharkLeaf`（精神型，3 級）：對低血量目標（15%/30%/50%）傷害加成 10%/15%/20%
+
+- **韌性屬性系統**（`systems/utils.js`）：
+  `applyTenacity(durationMs, target)` 根據目標自身 `tenacity`（0~1）縮短 CC 效果持續時間；
+  已套用至玩家被猞猁緩速（`_lynxSlowUntil`）及鱷魚死亡翻滾（`_stunUntil`）
+
+- **嘴器 Lv3 減速**（`systems/player.js`、`systems/combat.js`、`systems/creatures.js`）：
+  近戰命中（`playerAttack`）與遠程命中（`_checkProjectileHit`）均可對目標施加 -20% 速度、
+  持續 2 秒（受目標韌性縮短）；新增 `_effSpeed(c)` 函式統一處理生物有效移動速度，
+  已套用至 `updateNeutralCreatures`、`updateHostileCreatures` 全部移動路徑
+
+- **鯊魚葉執行加成**（`systems/player.js`、`systems/combat.js`）：
+  近戰及遠程攻擊中，若目標血量低於當前等級閾值則額外加成傷害；
+  `sharkLeaf` 等級直接讀取 `ORGANS.sharkLeaf.levels[lv-1].effects.executeBonus`
+
+- **手機視野縮放**（`systems/camera.js`、`main.js`）：
+  `_updateMobileCameraZoom()` 依玩家體型（radius）計算縮放比（體型增加 20% → 縮小 5%，最小 0.6）；
+  `worldToScreen()` 加入縮放邏輯（以螢幕中心為基準），僅在 `gameState.isMobile` 時啟用
+
+- **Boss 血條 Debuff 圖示**（`systems/boss.js`）：
+  `_drawBossDebuffIcons()` 在 Boss 血條正下方顯示最多 4 個 Debuff 圖示（毒/流血/減速/暈眩），
+  每個圖示含深色背景、彩色邊框、縮寫標籤、以及逆時針剩餘時間弧；
+  各 Debuff 施加點（`combat.js`、`player.js`）同步記錄 `_poisonStartTime`、`_bleedStartTime`、
+  `_slowStartTime`、`_stunStartTime`，供弧度計算使用
+
+---
+
 ## v0.54.1 - 2026-05-24
 
 ### 新增

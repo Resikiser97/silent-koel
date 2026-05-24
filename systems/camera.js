@@ -27,7 +27,24 @@ function worldToScreen(wx, wy) {
     else if (sx >  MAP_WIDTH  / 2) sx -= MAP_WIDTH;
     if (sy < -MAP_HEIGHT / 2) sy += MAP_HEIGHT;
     else if (sy >  MAP_HEIGHT / 2) sy -= MAP_HEIGHT;
+    // 手機視野縮放：以螢幕中心為基準縮放
+    const zoom = (gameState.isMobile && gameState.cameraZoom && gameState.cameraZoom !== 1.0)
+        ? gameState.cameraZoom : 1.0;
+    if (zoom !== 1.0) {
+        sx = (sx - VIEW_W / 2) * zoom + VIEW_W / 2;
+        sy = (sy - VIEW_H / 2) * zoom + VIEW_H / 2;
+    }
     return { x: sx, y: sy };
+}
+
+// 手機視野縮放：隨玩家體型增大而縮小鏡頭
+function _updateMobileCameraZoom() {
+    if (!gameState.isMobile) return;
+    const p = gameState.player;
+    const baseRadius    = 8;                               // 初始體型
+    const increaseRatio = Math.max(0, (p.radius - baseRadius) / baseRadius);
+    const zoomReduction = increaseRatio * 0.25;            // 體型每增加 20% → 縮小 5%
+    gameState.cameraZoom = Math.max(0.6, 1.0 - zoomReduction);
 }
 
 function updateCamera() {

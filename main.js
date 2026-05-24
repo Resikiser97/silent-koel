@@ -33,6 +33,7 @@ function updateGameLogic() {
     updateCreatureSpawning();
     updatePlayerMovement();
     updateCamera();
+    _updateMobileCameraZoom();  // 手機視野縮放（非手機時直接 return）
     checkFruitCollision();
     updateTreeFruitProduction(FIXED_DELTA);
     updateNeutralCreatures();
@@ -44,11 +45,15 @@ function updateGameLogic() {
     checkTreasureCollision();
     updateCorpseEating();
     updateBoneEating();
+    updateProjectiles();   // 阿奇爾子彈飛行 + 碰撞偵測
     updateMinimapFog();
 
     if (gameState.settings.autoAttack &&
         !_joyPaused() &&
-        gameState.player.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack')) {
+        // 遠程角色（阿奇爾）不依賴器官型別判斷，直接允許自動攻擊
+        // 近戰角色仍須裝備至少一個 attack 型器官才觸發
+        (gameState.player.isRanged ||
+         gameState.player.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack'))) {
         playerAttack();
     }
 }
@@ -74,6 +79,56 @@ function gameLoop(timestamp) {
     drawGame();
     updateUI();
     requestAnimationFrame(gameLoop);
+}
+
+// =============================================================
+// 角色初始屬性套用
+// 在 Object.assign 重置玩家後、applySkillBonuses 前呼叫。
+// 設定角色基礎值；startEvolution 只寫入等級（applyEvolutionEffects 由步驟8統一套用）。
+// startOrgans 立即套用效果，確保在後續加成前生效。
+// =============================================================
+function _applyCharacterStats() {
+    const charId = gameState.selectedCharacter || 'koel';
+    const char   = (typeof CHARACTERS !== 'undefined' && CHARACTERS[charId])
+        ? CHARACTERS[charId] : null;
+    if (!char) return;
+
+    const p = gameState.player;
+    const s = gameState.stats;
+
+    // ── 基礎數值（覆蓋 Object.assign 預設，技能/進化加成將疊加其上）
+    s.hpMax          = char.stats.hp;
+    s.hpCurrent      = char.stats.hp;
+    p.speed          = char.stats.speed;
+    p.radius         = char.stats.radius;
+    p.attackRange    = char.stats.attackRange;
+    p.critChance     = char.stats.critChance;
+    p.critMultiplier = char.stats.critMult;
+    p.pickupRange    = char.stats.pickupRange;
+    p.attackTimer    = 0;
+    p.isRanged       = char.isRanged || false;
+
+    // ── 起始器官：推入並立即套用效果（applyOrganEffects 會略過不存在的 id）
+    if (char.startOrgans && char.startOrgans.length > 0) {
+        for (const o of char.startOrgans) {
+            if (!p.organs.find(eo => eo.id === o.id)) {
+                const organObj = { id: o.id, level: o.level };
+                p.organs.push(organObj);
+                applyOrganEffects(organObj);
+            }
+        }
+    }
+
+    // ── 起始進化：若指定，重置所有進化等級後套用；applyEvolutionEffects 將在步驟8讀取
+    if (char.startEvolution) {
+        p.evolution.herbivore = 0;
+        p.evolution.carnivore = 0;
+        p.evolution.omnivore  = 0;
+        p.evolution[char.startEvolution.type] = char.startEvolution.level;
+    }
+    // 無 startEvolution 的角色（koel）維持 Object.assign 預設（herbivore:1）
+
+    console.log('[角色系統] 套用角色：' + char.name + '（' + charId + '），HP=' + s.hpMax + '，Speed=' + p.speed);
 }
 
 function initializeGame() {
@@ -111,6 +166,7 @@ function initializeGame() {
     gameState.treasures           = [];
     gameState.brainShockwaves     = [];
     gameState.venomPuddles        = [];   // 蠍王定點毒霧陣列
+    gameState.projectiles         = [];   // 阿奇爾子彈陣列
     gameState.neutralCreatures    = [];
     gameState.hostileCreatures    = [];
     gameState.camera              = { x: 3200, y: 3550 };
@@ -131,13 +187,18 @@ function initializeGame() {
         boneMaterial: 0,
         level: 1, levelXP: 0, tenacityUsed: false,
         evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' },
+        tenacity: 0,
         dashCooldown: 0,
         dashInvincible: false,
         dashInvincibleEnd: 0,
         lastMoveDir: { dx: 0, dy: -1 }
     });
+    gameState.cameraZoom = 1.0;
     gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };
     gameState.sessionStats = { giantKills: 0, killerKills: 0, killerMaxLevel: 0 };
+
+    // ── 套用角色初始屬性（覆蓋上方 Object.assign / stats 預設值，在技能/進化加成前設定基礎值）
+    _applyCharacterStats();
 
     // B1: 再來一局保留難度 — 若 currentMap 為 null（頁面重整後），從 localStorage 恢復
     if (!gameState.currentMap) {
@@ -203,9 +264,57 @@ function initializeGame() {
             showCompendium('organs');
             return;
         }
+        // 阿奇爾手動模式：由 mousedown/mouseup 蓄力發射，click 事件不重複觸發
+        if (gameState.player.isRanged && !gameState.settings.autoAttack) return;
         if (!gameState.organSelectionActive && !gameState.settingsOpen) playerAttack();
     });
+
+    // 阿奇爾左鍵蓄力：mousedown 開始蓄力，mouseup 放開發射
+    canvas.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        if (gameState.organSelectionActive || gameState.settingsOpen) return;
+        const p = gameState.player;
+        if (p.isRanged && !gameState.settings.autoAttack && !p.chargeHolding) {
+            p.chargeHolding  = true;
+            p.chargeHoldTime = 0;
+            p.chargeConsumed = 0;
+        }
+    });
+    canvas.addEventListener('mouseup', function(e) {
+        if (e.button !== 0) return;
+        const p = gameState.player;
+        if (!p.isRanged || gameState.settings.autoAttack || !p.chargeHolding) return;
+        p.chargeHolding = false;
+        // 快速點擊（尚未累積格數）→ 消耗 1 格
+        if (p.chargeConsumed === 0 && p.reloadCharges > 0) {
+            p.reloadCharges--;
+            p.reloadTimer   = 0;
+            p.chargeConsumed = 1;
+        }
+        if (p.chargeConsumed > 0) {
+            const dir = _getArcherShootDir();
+            if (dir) {
+                const dmg = Math.max(1, Math.round(p.attack * p.chargeConsumed));
+                gameState.projectiles.push({
+                    x: p.x, y: p.y,
+                    vx: dir.dx * 9, vy: dir.dy * 9,
+                    damage:       dmg,
+                    maxRange:     p.attackRange * 1.2,
+                    distTraveled: 0,
+                    radius:       5,
+                    ownerId:      'player',
+                    hasCrit:      false,
+                });
+                p.attackVisual = Date.now();
+                AudioManager.play('attackNormal');
+            }
+        }
+        p.chargeConsumed = 0;
+    });
     canvas.addEventListener('mousemove', function(e) {
+        // 阿奇爾瞄準：更新滑鼠世界座標
+        _updateMouseWorld(e.clientX, e.clientY);
+
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
@@ -272,6 +381,18 @@ function initializeGame() {
 }
 
 window.onload = () => {
+    // ── 禁止 #game-container 內右鍵選單（補強 CSS user-select）
+    const _gameContainer = document.getElementById('game-container');
+    if (_gameContainer) {
+        _gameContainer.addEventListener('contextmenu', e => e.preventDefault());
+    }
+
+    // ── 手機返回鍵 / 左滑返回攔截（全程維持同一個 history entry）
+    history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', () => {
+        history.pushState(null, '', window.location.href);
+    });
+
     // 先載入變異資料（獨立於遊戲存檔版本）
     initMutationData();
 

@@ -30,10 +30,21 @@ const gameState = {
         boneMaterial: 0,
         level: 1, levelXP: 0, tenacityUsed: false,
         evolution: { herbivore: 1, carnivore: 0, omnivore: 0, active: 'herbivore' },
+        tenacity: 0,          // 韌性（0~1），由魚鱗器官疊加；減少玩家被控制的持續時間
         dashCooldown: 0,
         dashInvincible: false,
         dashInvincibleEnd: 0,
-        lastMoveDir: { dx: 0, dy: -1 }
+        lastMoveDir: { dx: 0, dy: -1 },
+        // ── 阿奇爾專用欄位
+        reloadCharges:    0,      // 當前充能格數（0~3）
+        reloadTimer:      0,      // 距離下次充能的計時（ms）
+        chargeHolding:    false,  // 是否正在蓄力（手動模式按住中）
+        chargeHoldTime:   0,      // 已按住的時間（ms）
+        chargeConsumed:   0,      // 本次蓄力已消耗的格數
+        archerDashActive: false,  // F技衝刺是否生效中
+        archerDashEnd:    0,      // F技結束時間戳
+        archerDashSpeed:  0,      // F技附加速度
+        isRanged:         false,  // 遠程攻擊旗標（由 _applyCharacterStats 設定）
     },
 
     trees: [],
@@ -114,6 +125,11 @@ const gameState = {
     tutorialCombatActive: false,// 戰鬥教學：木樁存活中
     tutorialStump: null,        // 教學木樁物件
     dashEffect: null,           // 閃現特效狀態（{ ax,ay,bx,by,startTime,duration }）
+    projectiles:  [],           // 子彈陣列（阿奇爾射水）
+    mouseWorld:   { x: 0, y: 0 }, // 滑鼠世界座標（保留相容性，勿刪）
+    mouseScreen:  { sx: 0, sy: 0 }, // 滑鼠 canvas 螢幕座標（攻擊方向計算用，不受玩家移動影響）
+    cameraZoom: 1.0,           // 手機視野縮放（體型增加時自動縮小；桌機固定1.0）
+    selectedCharacter: 'koel', // 當前選擇的角色 ID（由 showMapSelect 寫入，initializeGame 套用）
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 

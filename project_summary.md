@@ -225,7 +225,8 @@ CHANGELOG.md          → 所有版本紀錄（最新在最上方）
 
 config/
   gameConfig.js       → GAME_INFO（版本號、SAVE_VERSION）、AUDIO_FILES
-  organs.js           → ORGANS（12種普通）+ HIDDEN_ORGANS（4種隱藏）+ poisonSac 毒囊
+  characters.js       → CHARACTERS（角色定義常數，v0.56.0）
+  organs.js           → ORGANS（15種普通，含 mouthOrgan/fishScale/sharkLeaf v0.56.0）+ HIDDEN_ORGANS（4種隱藏）+ poisonSac 毒囊
   creatures.js        → CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG（生物/精英/Boss 數值）
   evolution.js        → EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種）
   patchnotes.js       → PATCH_NOTES（版本更新公告資料，最新版本置頂）
@@ -241,20 +242,21 @@ lang.js               → LANG_LIST、LANG 字典、applyLanguage()、t(key, par
 
 systems/
   gameState.js        → DEFAULT_SETTINGS、gameState 物件、canvas/ctx、MAP 常數（MAP_WIDTH/HEIGHT/TILE_SIZE）
-  utils.js            → drawArrow / drawHealthBar / drawNameTag / drawGlowEffect
+  utils.js            → drawArrow / drawHealthBar / drawNameTag / drawGlowEffect / applyTenacity（v0.56.0）
   audio.js            → AudioManager（playMusic / playSfx / refreshMusicVolume）
-  camera.js           → updateCamera / worldToScreen
+  camera.js           → updateCamera / worldToScreen / _updateMobileCameraZoom（v0.56.0）
   input.js            → handleKeyDown / handleKeyUp（含 Z 鍵自動攻擊 toggle）
   map.js              → generateTerrain / buildTerrainCanvas / drawTerrain（4D Tileable Noise）
   spawning.js         → 生物/果子/樹木生成
   player.js           → updatePlayerMovement / checkFruitCollision / 靈敏知覺算法
+                         updateProjectiles / _archerAttack / _findArcherAutoTarget（v0.56.0）
   tutorial.js         → showTutorial / spawnTutorialStump / handleTutorialStumpKill（新手教學 IIFE）
   combat.js           → playerAttack / applyDamageToPlayer / updateStatusEffects / 白骨系統
   organs.js           → showOrganSelection / handleEliteKill / applyOrganEffects
   evolution.js        → buildSkillTreeOverlay / upgradeSkill / applyEvolutionEffects / updateCorpseEating
   creatures.js        → updateNeutralCreatures / updateHostileCreatures
   elite.js            → spawnEliteCreature / updateEliteCreature / drawEliteArrow
-  boss.js             → spawnBoss / updateBoss / showVictory
+  boss.js             → spawnBoss / updateBoss / showVictory / _drawBossDebuffIcons（v0.56.0）
   mutation.js         → initMutationData / applyMutationEffects / applyAllMutationBonuses / showMutationPanel / getMutationUpgradeCost / checkMutationCompensation
   daynight.js         → getDayNightPhaseIndex / updateDayNightCycle / showGameOver
   leaderboard.js      → 排行榜面板 / 分數提交 / 難度狀態管理
@@ -290,7 +292,7 @@ map/
 - 每次 commit 後必須執行 git push origin master
 
 ### 版本與部署
-- 目前版本：**v0.54.0**
+- 目前版本：**v0.56.0**
 
 ### Branch 工作流程
 - `master`：主開發分支，所有日常開發在此進行
@@ -316,6 +318,11 @@ map/
 9. 手機版 `onStart` handler 邏輯：HTML UI 元素觸點 → `continue`；器官 tooltip 命中 → 顯示 tooltip（若 `showOrganTooltip` 開啟）→ **繼續執行搖桿啟動邏輯**（v0.41.2 起移除 continue，不造成死區）；其他 gameCanvas 觸點 → 搖桿啟動
 10. `gameSettings.autoAttack` 任何版本更新都**不重置**（不受 `SAVE_VERSION` 控制）
 11. 毒傷 tick 使用 `c.lastPoisonTick += 1000`（不是 `= now`），避免累積誤差
+12. 新增 CC 效果時必須同步更新 4 個位置：`updateNeutralCreatures`、`updateHostileCreatures`、`updateEliteCreature`（elite.js）、`updateBoss`（boss.js）— 詳見 MAIN.md「CC 效果開發規範」
+
+### 待辦事項（TODO）
+- 遊戲幣系統（尚未規劃）
+- 遊戲說明 Review（圖鑑說明頁面更新）
 
 ---
 
@@ -328,3 +335,23 @@ map/
 - [ ] 遊戲封面圖（itch.io 上架需要）
 - [ ] itch.io 上架
 - [ ] 普通／困難／地獄難度地圖
+
+---
+
+## 五、待辦任務（未來版本）
+
+### 遊戲幣系統
+- 用途：角色購買（阿奇爾正式版需付費，封測玩家免費）
+- 目前所有角色暫時全部免費解鎖（`unlocked: true`）
+- 實作時需要：遊戲幣貨幣單位、獲得方式、localStorage 儲存、角色解鎖判斷（`CHARACTERS[id].unlocked`）
+
+### 阿奇爾射水技能（Phase B 待實裝）
+- `mouthOrgan`：射水器官（目前在 `startOrgans` 中指定但 ORGANS 尚無定義）
+- `archerfishDash`：衝刺 F 技（目前繼承通用 `playerDash`，未特化）
+- `isRanged: true`：遠程攻擊旗標（目前未影響 `playerAttack` 邏輯）
+- 水中速度加成（+50%）：需偵測 `getBiome(p.x, p.y) === 'ocean'` 並即時調整 `p.speed`
+
+### 遊戲說明全面 Review
+- 把所有新功能補進說明頁面
+- 包含：特殊技能 F 鍵說明、不同角色效果、巨人化/Alpha/殺手化說明、Boss 技能說明
+- 排定在下次大更新後執行

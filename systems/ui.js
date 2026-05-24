@@ -1231,7 +1231,7 @@ function showMapSelect() {
     }
     row.appendChild(diffSection);
 
-    // ── 角色選擇
+    // ── 角色選擇（從 CHARACTERS 設定檔動態建立）
     const charSection = document.createElement('div');
     charSection.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
     const charLabel = document.createElement('div');
@@ -1240,10 +1240,24 @@ function showMapSelect() {
     charSection.appendChild(charLabel);
 
     let selectedChar = 'koel';
-    const chars = [
-        { id: 'koel', key: 'charKoel', locked: false },
-        { id: 'soon', key: 'charSoon', locked: true  },
-    ];
+    // 從 CHARACTERS 物件建立解鎖角色列表，末尾附加鎖定佔位
+    const chars = [];
+    if (typeof CHARACTERS !== 'undefined') {
+        for (const cid of Object.keys(CHARACTERS)) {
+            const c = CHARACTERS[cid];
+            chars.push({ id: cid, label: c.icon + ' ' + c.name + '（' + c.nameEn + '）', locked: !c.unlocked });
+        }
+    } else {
+        chars.push({ id: 'koel', label: t('charKoel'), locked: false });
+    }
+    // 加入即將推出佔位（CHARACTERS_COMING_SOON）
+    if (typeof CHARACTERS_COMING_SOON !== 'undefined') {
+        for (const cs of CHARACTERS_COMING_SOON) {
+            chars.push({ id: cs.id, label: cs.icon + ' ' + cs.name, locked: true });
+        }
+    } else {
+        chars.push({ id: 'soon', label: t('charSoon'), locked: true });
+    }
     const charBtnEls = {};
 
     function refreshCharBtns() {
@@ -1254,7 +1268,7 @@ function showMapSelect() {
 
     for (const c of chars) {
         const btn = document.createElement('button');
-        btn.textContent = t(c.key) + (c.locked ? '  🔒' : '');
+        btn.textContent = c.label + (c.locked ? '  🔒' : '');
         btn.style.cssText = c.locked ? btnLocked : (c.id === selectedChar ? btnActive : btnNormal);
         if (!c.locked) { btn.onclick = () => { selectedChar = c.id; refreshCharBtns(); }; }
         charBtnEls[c.id] = btn;
@@ -1281,6 +1295,8 @@ function showMapSelect() {
         gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         gameState.lastDifficulty = selectedDiff;
         localStorage.setItem('lastDifficulty', selectedDiff); // B1: 儲存難度供重整頁面後恢復
+        // 儲存角色選擇
+        gameState.selectedCharacter = selectedChar;
         overlay.remove();
         let hasOrgans = false;
         try {

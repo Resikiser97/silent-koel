@@ -60,7 +60,7 @@ function updateEliteCreature() {
             }
         } else {
             const angle = Math.atan2(dy, dx);
-            moveCreature(elite, elite.x + Math.cos(angle) * elite.speed, elite.y + Math.sin(angle) * elite.speed);
+            moveCreature(elite, elite.x + Math.cos(angle) * _effSpeed(elite), elite.y + Math.sin(angle) * _effSpeed(elite));
         }
     } else {
         if (!elite.wanderTarget || now - elite.lastWanderTime >= 2500) {
@@ -73,7 +73,7 @@ function updateEliteCreature() {
             if (wDist < 2) { elite.wanderTarget = null; }
             else {
                 const angle = Math.atan2(wy, wx);
-                moveCreature(elite, elite.x + Math.cos(angle) * elite.speed, elite.y + Math.sin(angle) * elite.speed);
+                moveCreature(elite, elite.x + Math.cos(angle) * _effSpeed(elite), elite.y + Math.sin(angle) * _effSpeed(elite));
             }
         }
     }

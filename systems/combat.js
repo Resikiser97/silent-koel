@@ -150,6 +150,13 @@ function handleKill(c, isHostile) {
 function playerAttack() {
     const p = gameState.player;
     const now = Date.now();
+
+    // 遠程角色（阿奇爾）→ 分派至射水攻擊
+    if (p.isRanged) {
+        _archerAttack();
+        return;
+    }
+
     // 鱷魚死亡翻滾硬控：無法攻擊
     if (p._stunUntil && now < p._stunUntil) return;
     // 攻速：加法公式 interval = 1000ms / (1 + totalBonus)
@@ -194,11 +201,28 @@ function playerAttack() {
         anyHit = true;
         if (isCrit) anyCrit = true;
 
+        // 鯊魚葉：對低血量目標處決加成
+        const sharkLv = getOrganLevel('sharkLeaf');
+        if (sharkLv > 0) {
+            const sharkCfg = ORGANS.sharkLeaf.levels[sharkLv - 1].effects.executeBonus;
+            const hpRatio  = c.hp / (c.maxHp || c.hp);
+            if (hpRatio < sharkCfg.threshold) {
+                dmg = Math.round(dmg * (1 + sharkCfg.bonus));
+            }
+        }
+
         // 追蹤特殊目標（精英/Boss/巨人化/Alpha/殺手化），毒傷tick不更新此值
         if (isElite || isBoss || c.isGiantized || c.isKiller) gameState.topBarTarget = c;
 
         c.hp -= dmg;
         showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FF4444');
+
+        // 嘴器Lv3：命中施加減速 -20% / 2秒（韌性縮短）
+        if (getOrganLevel('mouthOrgan') >= 3) {
+            c._slowUntil     = now + applyTenacity(2000, c);
+            c._slowStartTime = now;
+            c._slowMult      = 0.8;
+        }
 
         // 蟹鉗：等級化流血
         const crabLv = getOrganLevel('crabClaw');
@@ -206,7 +230,8 @@ function playerAttack() {
             const bleedChance = getOrganCumulative('crabClaw', 'bleedChance');
             if (Math.random() < bleedChance) {
                 const baseDmg = getOrganCumulative('crabClaw', 'bleedDmg');
-                c.bleedEndTime = now + getOrganCumulative('crabClaw', 'bleedDur');
+                c.bleedEndTime    = now + getOrganCumulative('crabClaw', 'bleedDur');
+                c._bleedStartTime = now;
                 // 蟹鉗+搏擊拳套組合：流血傷害翻倍
                 c.bleedDmg = p.comboCrabGloves ? baseDmg * 2 : baseDmg;
                 c.lastBleedTick = now;
@@ -231,8 +256,9 @@ function playerAttack() {
             if (p.comboCrabPoison) finalPoisonDmg *= 2;
             if (finalPoisonDmg > 0 && finalPoisonDur > 0) {
                 const wasAlreadyPoisoned = c.poisonEndTime && now < c.poisonEndTime;
-                c.poisonEndTime = now + finalPoisonDur;
-                c.poisonDmg = finalPoisonDmg;
+                c.poisonEndTime    = now + finalPoisonDur;
+                c._poisonStartTime = now;
+                c.poisonDmg        = finalPoisonDmg;
                 if (!wasAlreadyPoisoned) c.lastPoisonTick = now;
             }
         }
@@ -242,8 +268,9 @@ function playerAttack() {
         if (fangLv > 0) {
             const stunChance = getOrganCumulative('fang', 'stunChance');
             if (Math.random() < stunChance || (p.comboEyeFang && isCrit)) {
-                const stunDur = getOrganCumulative('fang', 'stunDurAdd');
-                c.stunnedUntil = now + (stunDur || 500);
+                const stunDur      = getOrganCumulative('fang', 'stunDurAdd');
+                c.stunnedUntil     = now + (stunDur || 500);
+                c._stunStartTime   = now;
             }
         }
 
