@@ -236,7 +236,7 @@ function showSettings(fromHome) {
         { label: t('keyLeft'),   sk: 'left',   fallback: '← ArrowLeft'  },
         { label: t('keyRight'),  sk: 'right',  fallback: '→ ArrowRight' },
         { label: t('keyAttack'), sk: 'attack', fallback: t('mouseLeft') },
-        { label: t('keyDash'),   sk: 'dash',   fallback: 'F'            }
+        { label: t('keyDash'),   sk: 'dash',   fallback: ''             }
     ];
     const rebindBtns = {};
 
@@ -246,7 +246,8 @@ function showSettings(fromHome) {
         const tgt = gameState._rebindTarget;
         if (tgt && rebindBtns[tgt]) {
             const def = keyDefs.find(x => x.sk === tgt);
-            rebindBtns[tgt].textContent = _keyDisplay(gameState.settings.keys[tgt]) + '  /  ' + (def ? def.fallback : '');
+            const _fb1 = def ? def.fallback : '';
+            rebindBtns[tgt].textContent = _keyDisplay(gameState.settings.keys[tgt]) + (_fb1 ? '  /  ' + _fb1 : '');
             rebindBtns[tgt].style.cssText = rebindBtns[tgt]._baseStyle;
         }
         gameState._rebindTarget = null;
@@ -259,7 +260,8 @@ function showSettings(fromHome) {
         gameState._rebindTarget = null;
         if (rebindBtns[sk]) {
             const def = keyDefs.find(x => x.sk === sk);
-            rebindBtns[sk].textContent = _keyDisplay(newKey) + '  /  ' + (def ? def.fallback : '');
+            const _fb2 = def ? def.fallback : '';
+            rebindBtns[sk].textContent = _keyDisplay(newKey) + (_fb2 ? '  /  ' + _fb2 : '');
             rebindBtns[sk].style.cssText = rebindBtns[sk]._baseStyle;
         }
         AudioManager.play('eatFruit');
@@ -313,7 +315,7 @@ function showSettings(fromHome) {
         const btn = document.createElement('button');
         btn._baseStyle = 'flex:1;padding:6px 10px;cursor:pointer;background:#2a2a2a;color:white;border:1px solid #666;border-radius:4px;font-size:13px;text-align:left;';
         btn.style.cssText = btn._baseStyle;
-        btn.textContent = _keyDisplay(gameState.settings.keys[sk]) + '  /  ' + fallback;
+        btn.textContent = _keyDisplay(gameState.settings.keys[sk]) + (fallback ? '  /  ' + fallback : '');
         btn.onclick = (e) => {
             e.stopPropagation();
             if (gameState._rebindTarget === sk) { _cancelRebind(); return; }

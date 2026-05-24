@@ -800,15 +800,16 @@ function drawGame() {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = 'white';
+        const _dashKeyLabel = (gameState.settings.keys.dash || 'f').toUpperCase();
         if (dashCD <= 0) {
             ctx.globalAlpha = 0.15;
             ctx.font = '28px Arial';
-            ctx.fillText('💨 F', dashCX, dashCY);
+            ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
         } else {
             // 圖示（暗）
             ctx.globalAlpha = 0.08;
             ctx.font = '28px Arial';
-            ctx.fillText('💨 F', dashCX, dashCY);
+            ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
             // 冷卻進度條（從上往下）
             const prog = dashCD / 15000;
             ctx.globalAlpha = 0.55;
