@@ -2,6 +2,17 @@
 
 ---
 
+## 文件修正 - 2026-05-24（不更新版本號）
+
+### 修復
+
+- **XP Popup 顯示數值未反映變異 XP 倍率**（`systems/player.js`、`systems/combat.js`、`systems/organs.js`）：
+  `addXP()` 改為回傳實際加入的 XP 值（已乘 `mutationXpBonus`）；
+  `handleGiantKill`、`handleKillerKill`、`handleKill`、`checkTreasureCollision`、`_collectFruit`、`handleEliteKill`
+  所有 `showXPPopup` 呼叫點統一改用回傳值，確保 popup 顯示與實際獲得 XP 一致
+
+---
+
 ## v0.54.0 - 2026-05-24
 
 ### 新增
