@@ -5,7 +5,7 @@
 const DEFAULT_SETTINGS = {
     language: 'zh-TW',
     volume: { master: 80, music: 70, sfx: 80, masterOn: true, musicOn: true, sfxOn: true },
-    keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ' },
+    keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ', dash: 'f' },
     deviceMode: null,
     autoAttack: false,
     showOrganTooltip: true,  // 手機版器官提示開關（桌機版不使用）
@@ -113,6 +113,7 @@ const gameState = {
     tutorialOrganPhase: false,  // 戰鬥教學：器官鎖定中（只能選攻擊器官）
     tutorialCombatActive: false,// 戰鬥教學：木樁存活中
     tutorialStump: null,        // 教學木樁物件
+    dashEffect: null,           // 閃現特效狀態（{ ax,ay,bx,by,startTime,duration }）
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
 };
 

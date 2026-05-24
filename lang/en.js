@@ -80,6 +80,7 @@ LANG['en'] = {
         keyLeft:    'Move Left',
         keyRight:   'Move Right',
         keyAttack:  'Attack',
+        keyDash:    'Special Skill',
         mouseLeft:  'Left Click',
         pressNewKey: 'Press a new key...',
         restartGame: 'Restart Game',

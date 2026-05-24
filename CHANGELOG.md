@@ -2,6 +2,23 @@
 
 ---
 
+## v0.54.0 - 2026-05-24
+
+### 新增
+
+- **閃現視覺特效**（`systems/hud.js`、`systems/player.js`）：
+  閃現觸發後播放 150ms 三段特效：出發點金色煙霧（0~100ms 擴散消散）、到達點白色光球（50ms~結束 漸淡）、A→B 光線掃過（頭部 t=0→1，尾巴延遲 0.35 出發，線性漸層）
+- **閃現直線果子吸收**（`systems/player.js`）：
+  閃現路徑 A→B 直線上（寬度 = radius + pickupRange）的果子全部吸收，給予正常 XP；複用 `_collectFruit()` 函式，不重複 XP 邏輯
+- **特殊技能鍵可自訂**（`systems/gameState.js`、`systems/ui.js`、`systems/input.js`）：
+  `DEFAULT_SETTINGS.keys.dash = 'f'`；設定介面按鍵設定區塊新增「特殊技能鍵」一欄，玩家可任意重綁
+
+### 調整
+
+- 提取 `_collectFruit(p, fruit)` 函式（`systems/player.js`）：原 `checkFruitCollision` 的吸收邏輯改由此函式處理，`playerDash` 也共用
+
+---
+
 ## v0.53.1 - 2026-05-24
 
 ### 調整

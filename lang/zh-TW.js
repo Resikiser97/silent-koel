@@ -82,6 +82,7 @@ LANG['zh-TW'] = {
         keyLeft:    '移動左',
         keyRight:   '移動右',
         keyAttack:  '攻擊鍵',
+        keyDash:    '特殊技能鍵',
         mouseLeft:  '滑鼠左鍵',
         pressNewKey: '請按下新按鍵...',
         restartGame: '重啟遊戲',

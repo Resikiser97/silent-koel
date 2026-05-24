@@ -36,7 +36,7 @@ function handleKeyDown(e) {
             saveSettings();
         }
     }
-    if (key === 'f') {
+    if (key === (gameState.settings.keys.dash || 'f')) {
         if (!gameState.organSelectionActive && !gameState.settingsOpen &&
             !gameState.skillTreeOpen && !gameState.gameOver && !gameState.victory &&
             !gameState.mutationPanelOpen && !gameState.tutorialOpen) {

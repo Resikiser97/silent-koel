@@ -33,6 +33,7 @@ systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeF
                           checkXPMilestone, addXP, checkLevelUp
                           findBestPerceptionPath
                           playerDash（閃現技能：瞬移+無敵+冷卻，v0.53.0）
+                          _collectFruit（果子吸收 XP 共用函式，v0.54.0）
 systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTutorialStump，handleTutorialStumpKill
                           （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
 systems/combat.js         showFloatingText, applyDamageToPlayer, handleKill, playerAttack
@@ -547,11 +548,14 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 ## 閃現技能系統（v0.53.0）
 
 - **觸發**：桌機 `F` 鍵（`input.js handleKeyDown`）；手機版點擊 `_dashZone()` 矩形區域（攻擊區正上方）
-- **函式**：`playerDash()`（`systems/player.js`）
+- **函式**：`playerDash()`、`_collectFruit(p, fruit)`（`systems/player.js`）
 - **效果**：朝 `lastMoveDir` 方向瞬移 `speed × 50`（最遠 500px），夾在地圖邊界內
 - **無敵**：`dashInvincible = true`，持續 500ms（`dashInvincibleEnd = Date.now() + 500`），`applyDamageToPlayer` 開頭返回跳過所有外部傷害
 - **冷卻**：`dashCooldown = 15000`（ms），每幀扣 `FIXED_DELTA`（≈16.67ms）
 - **方向優先序**：手機搖桿 `mobileInput` > `player.lastMoveDir`（移動時持續更新正規化方向，初始值 `{dx:0, dy:-1}` 朝上）
+- **特效**：觸發後在 `gameState.dashEffect` 記錄起終點，`drawGame` 步驟 9f 繪製 150ms 三段特效（金色煙霧/白色光球/流光線）
+- **直線果子吸收**：閃現路徑 A→B 直線寬度 = `radius + pickupRange`，路徑上果子全部吸收（複用 `_collectFruit`）
+- **按鍵可自訂**：`DEFAULT_SETTINGS.keys.dash = 'f'`；設定介面「特殊技能鍵」欄，`input.js` 讀 `settings.keys.dash`
 
 ### player 新增欄位
 
@@ -561,6 +565,7 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 | `dashInvincible` | `false` | 無敵旗標（`applyDamageToPlayer` 開頭判斷） |
 | `dashInvincibleEnd` | `0` | 無敵結束時間戳（ms，由 `updatePlayerMovement` 檢查清除） |
 | `lastMoveDir` | `{dx:0, dy:-1}` | 最後移動方向（正規化，每幀移動時更新；閃現方向依據） |
+| `dashEffect` | `null` | 閃現特效狀態（`{ ax,ay,bx,by,startTime,duration:150 }`，v0.54.0）|
 
 ### 桌機版指示器（`hud.js drawGame` 步驟 12b）
 

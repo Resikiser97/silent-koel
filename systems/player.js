@@ -5,6 +5,19 @@
 //            checkXPMilestone / addXP / checkLevelUp
 // =============================================================
 
+// 提取果子吸收邏輯，供 checkFruitCollision 和 playerDash 共用
+function _collectFruit(p, fruit) {
+    const ev = p.evolution;
+    let herbBonus = 0;
+    for (let h = 1; h < ev.herbivore; h++) {
+        herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
+    }
+    const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
+    addXP(fruitXP);
+    AudioManager.play('eatFruit');
+    showXPPopup(p.x, p.y, fruitXP);
+}
+
 function playerDash() {
     const p = gameState.player;
     if (p.dashCooldown > 0) return;
@@ -27,6 +40,7 @@ function playerDash() {
     dirY /= len;
 
     const distance = Math.min(p.speed * 50, 500);
+    const prevX = p.x, prevY = p.y;
     const targetX = Math.max(p.radius, Math.min(MAP_WIDTH  - p.radius, p.x + dirX * distance));
     const targetY = Math.max(p.radius, Math.min(MAP_HEIGHT - p.radius, p.y + dirY * distance));
 
@@ -35,6 +49,38 @@ function playerDash() {
     p.dashCooldown      = 15000;
     p.dashInvincible    = true;
     p.dashInvincibleEnd = Date.now() + 500;
+
+    // 閃現特效
+    gameState.dashEffect = {
+        ax: prevX, ay: prevY,
+        bx: targetX, by: targetY,
+        startTime: Date.now(),
+        duration: 150
+    };
+
+    // A→B 直線範圍果子吸收
+    const pickupWidth = p.radius + p.pickupRange;
+    const lineDx = targetX - prevX;
+    const lineDy = targetY - prevY;
+    const lineLen = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
+    if (lineLen > 0) {
+        const nx = lineDx / lineLen;
+        const ny = lineDy / lineLen;
+        gameState.fruits = gameState.fruits.filter(fruit => {
+            const fx = fruit.x - prevX;
+            const fy = fruit.y - prevY;
+            const proj = fx * nx + fy * ny;
+            if (proj < 0 || proj > lineLen) return true;
+            const perpX = fx - proj * nx;
+            const perpY = fy - proj * ny;
+            const perpDist = Math.sqrt(perpX * perpX + perpY * perpY);
+            if (perpDist <= pickupWidth) {
+                _collectFruit(p, fruit);
+                return false;
+            }
+            return true;
+        });
+    }
 }
 
 function updatePlayerMovement() {
@@ -95,17 +141,8 @@ function checkFruitCollision() {
     for (let i = gameState.fruits.length - 1; i >= 0; i--) {
         const fruit = gameState.fruits[i];
         if (wrappedDistance(p.x, p.y, fruit.x, fruit.y) < collisionRadius) {
-            const ev = p.evolution;
-            // 草食性fruitXPBonus：Lv2以上累計
-            let herbBonus = 0;
-            for (let h = 1; h < ev.herbivore; h++) {
-                herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
-            }
-            const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
-            addXP(fruitXP);
-            AudioManager.play('eatFruit');
+            _collectFruit(p, fruit);
             gameState.fruits.splice(i, 1);
-            showXPPopup(p.x, p.y, fruitXP);
             return true;
         }
     }

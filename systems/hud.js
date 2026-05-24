@@ -529,6 +529,70 @@ function drawGame() {
         ctx.lineWidth = 1;
     }
 
+    // 9f. 閃現特效（出發金色煙霧 / 到達白色光球 / A→B 光線掃過）
+    if (gameState.dashEffect) {
+        const ef      = gameState.dashEffect;
+        const elapsed = Date.now() - ef.startTime;
+        const t       = Math.min(elapsed / ef.duration, 1);
+        if (t >= 1) {
+            gameState.dashEffect = null;
+        } else {
+            const sa = worldToScreen(ef.ax, ef.ay);
+            const sb = worldToScreen(ef.bx, ef.by);
+            ctx.save();
+
+            // 特效 1：出發點 A 金色煙霧（0~100ms）
+            if (elapsed < 100) {
+                const smokeAlpha = (1 - elapsed / 100) * 0.6;
+                const smokeR     = 20 + elapsed * 0.3;
+                const grad = ctx.createRadialGradient(sa.x, sa.y, 0, sa.x, sa.y, smokeR);
+                grad.addColorStop(0, 'rgba(255,200,50,' + smokeAlpha + ')');
+                grad.addColorStop(1, 'rgba(255,150,0,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(sa.x, sa.y, smokeR, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 特效 2：到達點 B 白色光球（50ms~結束）
+            if (elapsed > 50) {
+                const ballProgress = (elapsed - 50) / (ef.duration - 50);
+                const ballAlpha    = (1 - ballProgress) * 0.8;
+                const ballR        = 15 + ballProgress * 10;
+                const gradB = ctx.createRadialGradient(sb.x, sb.y, 0, sb.x, sb.y, ballR);
+                gradB.addColorStop(0, 'rgba(255,255,255,' + ballAlpha + ')');
+                gradB.addColorStop(1, 'rgba(200,220,255,0)');
+                ctx.fillStyle = gradB;
+                ctx.beginPath();
+                ctx.arc(sb.x, sb.y, ballR, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 特效 3：A→B 光線掃過（整個 duration）
+            const headT = t;
+            const tailT = Math.max(0, t - 0.35);
+            const headX = sa.x + (sb.x - sa.x) * headT;
+            const headY = sa.y + (sb.y - sa.y) * headT;
+            const tailX = sa.x + (sb.x - sa.x) * tailT;
+            const tailY = sa.y + (sb.y - sa.y) * tailT;
+            const lineLen = Math.sqrt((headX - tailX) * (headX - tailX) + (headY - tailY) * (headY - tailY));
+            if (lineLen > 1) {
+                const lineGrad = ctx.createLinearGradient(tailX, tailY, headX, headY);
+                lineGrad.addColorStop(0,   'rgba(255,255,255,0)');
+                lineGrad.addColorStop(0.5, 'rgba(200,240,255,0.5)');
+                lineGrad.addColorStop(1,   'rgba(255,255,255,0.9)');
+                ctx.strokeStyle = lineGrad;
+                ctx.lineWidth   = 3;
+                ctx.lineCap     = 'round';
+                ctx.beginPath();
+                ctx.moveTo(tailX, tailY);
+                ctx.lineTo(headX, headY);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+
     // 9. 繪製玩家角色 (噪鵑)
     const drawRadius = Math.max(1, p.radius);
     if (gameState.isNight) {
@@ -728,8 +792,8 @@ function drawGame() {
         const atkH = VIEW_H * 0.25;
         const dashH = atkH * 0.5;
         const dashW = dashH;  // 正方形：寬＝高
-        const dashCX = VIEW_W * 0.75;
-        const dashCY = VIEW_H * 0.875 - atkH;  // = VIEW_H * 0.625
+        const dashCX = VIEW_W * 0.90;   // 靠右緣，小地圖正下方
+        const dashCY = VIEW_H * 0.65;
         const dashL  = dashCX - dashW / 2;
         const dashT  = dashCY - dashH / 2;
         ctx.save();

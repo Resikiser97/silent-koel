@@ -235,7 +235,8 @@ function showSettings(fromHome) {
         { label: t('keyDown'),   sk: 'down',   fallback: '↓ ArrowDown'  },
         { label: t('keyLeft'),   sk: 'left',   fallback: '← ArrowLeft'  },
         { label: t('keyRight'),  sk: 'right',  fallback: '→ ArrowRight' },
-        { label: t('keyAttack'), sk: 'attack', fallback: t('mouseLeft') }
+        { label: t('keyAttack'), sk: 'attack', fallback: t('mouseLeft') },
+        { label: t('keyDash'),   sk: 'dash',   fallback: 'F'            }
     ];
     const rebindBtns = {};
 
