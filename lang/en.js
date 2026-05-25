@@ -32,6 +32,7 @@ LANG['en'] = {
         lbColVersion:  'Version',
         lbColDate:     'Date',
         lbColName:     'Name',
+        lbColCharacter: 'Character',
         lbColTime:     'Time',
         lbColScore:    'Score',
         lbColLevel:    'Level',

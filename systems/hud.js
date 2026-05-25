@@ -557,9 +557,20 @@ function drawTopBarUI() {
         barColor    = '#FF8800'; // 殺手化橙色血條
     }
 
-    // 繪製 UI（頂部中央，寬400，高50）
-    const barW = 400, barH = 50;
-    const x = (VIEW_W - barW) / 2;
+    // 收集目標身上的有效 Debuff
+    const _activeDebuffs = [];
+    const _debuffDefs = [
+        { color: '#33FF66', label: '毒', endTime: target.poisonEndTime,  startTime: target._poisonStartTime },
+        { color: '#FF4444', label: '血', endTime: target.bleedEndTime,   startTime: target._bleedStartTime  },
+        { color: '#4488FF', label: '緩', endTime: target._slowUntil,     startTime: target._slowStartTime   },
+        { color: '#FFE533', label: '暈', endTime: target.stunnedUntil,   startTime: target._stunStartTime   },
+    ];
+    _debuffDefs.forEach(d => { if (d.endTime && now < d.endTime) _activeDebuffs.push(d); });
+
+    // 繪製 UI（頂部中央，寬400，有 Debuff 時高68，無時高50）
+    const barW  = 400;
+    const barH  = _activeDebuffs.length > 0 ? 68 : 50;
+    const x     = (VIEW_W - barW) / 2;
 
     // 動態偵測左上角 UI 高度，換算為 Canvas 邏輯座標
     let topBarY = 10;
@@ -608,6 +619,45 @@ function drawTopBarUI() {
         Math.max(0, Math.ceil(target.hp)) + ' / ' + (target.maxHp || 100),
         x + barW / 2, topBarY + 37
     );
+
+    // Debuff 圖示列（有 Debuff 時在 HP 數字下方顯示）
+    if (_activeDebuffs.length > 0) {
+        const iconSize = 14;
+        const iconGap  = 4;
+        const totalW   = _activeDebuffs.length * (iconSize + iconGap) - iconGap;
+        let ix = x + (barW - totalW) / 2;
+        const iconY = topBarY + 51;
+
+        ctx.textBaseline = 'middle';
+        for (const d of _activeDebuffs) {
+            // 背景方塊
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(ix, iconY, iconSize, iconSize);
+            // 彩色邊框
+            ctx.strokeStyle = d.color;
+            ctx.lineWidth   = 1.5;
+            ctx.strokeRect(ix, iconY, iconSize, iconSize);
+            // 標籤（垂直置中）
+            ctx.fillStyle = d.color;
+            ctx.font      = 'bold 8px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(d.label, ix + iconSize / 2, iconY + iconSize / 2);
+            // 剩餘時間弧（順時針）
+            const total    = (d.endTime - (d.startTime || (d.endTime - 5000)));
+            const remain   = d.endTime - now;
+            const progress = Math.max(0, Math.min(1, remain / total));
+            const cx = ix + iconSize / 2;
+            const cy = iconY + iconSize / 2;
+            const arcR = iconSize / 2 - 2;
+            ctx.beginPath();
+            ctx.strokeStyle = d.color;
+            ctx.lineWidth   = 1.5;
+            ctx.arc(cx, cy, arcR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+            ctx.stroke();
+
+            ix += iconSize + iconGap;
+        }
+    }
 
     ctx.restore();
 }

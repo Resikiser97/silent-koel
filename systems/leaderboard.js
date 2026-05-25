@@ -59,7 +59,7 @@ function showLeaderboard() {
 
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    const cols = ['lbColRank','lbColVersion','lbColDate','lbColName','lbColTime','lbColScore','lbColLevel','lbColResult'];
+    const cols = ['lbColRank','lbColVersion','lbColDate','lbColName','lbColCharacter','lbColTime','lbColScore','lbColLevel','lbColResult'];
     cols.forEach(key => {
         const th = document.createElement('th');
         th.style.cssText = 'padding:6px 8px;border-bottom:1px solid #444;color:#FFD700;text-align:left;position:sticky;top:0;background:#111;';
@@ -98,7 +98,7 @@ function showLeaderboard() {
     function loadPage(page) {
         tbody.innerHTML = '';
         if (allRows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbError') + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa;">' + t('lbError') + '</td></tr>';
             return;
         }
         const start = (page - 1) * PAGE_SIZE;
@@ -114,6 +114,7 @@ function showLeaderboard() {
             if (rank <= 3) tr.style.cssText = 'background:' + rowColors[rank - 1] + ';';
             const cells = [rankIcon, row.version || '—', dateStr,
                 row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name,
+                t('char' + (row.character || 'koel').charAt(0).toUpperCase() + (row.character || 'koel').slice(1)),
                 mm + ':' + ss, row.score, row.level, result];
             cells.forEach(val => {
                 const td = document.createElement('td');
@@ -134,7 +135,7 @@ function showLeaderboard() {
 
     // 依目前 _lbDifficulty 重新從 Supabase 載入資料
     function loadAllRows() {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
         allRows = [];
         currentPage = 1;
         fetchVictoryRecords(_lbDifficulty).then(function(victoryRows) {
@@ -149,7 +150,7 @@ function showLeaderboard() {
         }).then(function() {
             loadPage(1);
         }).catch(function() {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
         });
     }
 
@@ -415,6 +416,7 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             version: GAME_INFO.version,
             version_order: Math.floor(parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4))),
             difficulty: gameState.lastDifficulty || 'easy',
+            character: gameState.selectedCharacter || 'koel',
         };
         submitScore(data).then(() => {
             statusMsg.textContent = t('lbSubmitOk');

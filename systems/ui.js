@@ -1415,12 +1415,17 @@ function showStartScreen() {
                 const timeStr = mm + ':' + ss;
                 const result = row.is_victory ? t('lbVictoryIcon') : t('lbDefeatIcon');
                 const rankIcon = getRankIcon(rank);
+                const charKey = 'char' + (row.character || 'koel').charAt(0).toUpperCase() + (row.character || 'koel').slice(1);
+                const charLabel = t(charKey);
                 const row_el = document.createElement('div');
-                row_el.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
-                row_el.innerHTML = '<span style="min-width:28px;text-align:center;">' + rankIcon + '</span>' +
-                    '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</span>' +
-                    '<span style="color:#aaa;">' + timeStr + '</span>' +
-                    '<span>' + result + '</span>';
+                row_el.style.cssText = 'display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;';
+                row_el.innerHTML = '<span style="min-width:28px;text-align:center;padding-top:2px;">' + rankIcon + '</span>' +
+                    '<span style="flex:1;overflow:hidden;min-width:0;">' +
+                        '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</div>' +
+                        '<div style="font-size:11px;color:#aaa;">' + charLabel + '</div>' +
+                    '</span>' +
+                    '<span style="color:#aaa;white-space:nowrap;padding-top:2px;">' + timeStr + '</span>' +
+                    '<span style="padding-top:2px;">' + result + '</span>';
                 top10List.appendChild(row_el);
             });
         }).catch(() => { top10List.textContent = t('lbError'); });

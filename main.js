@@ -108,13 +108,25 @@ function _applyCharacterStats() {
     p.attackTimer    = 0;
     p.isRanged       = char.isRanged || false;
 
-    // ── 起始器官：推入並立即套用效果（applyOrganEffects 會略過不存在的 id）
+    // ── 起始器官：推入並逐級套用累計效果（同 evolution.js 的 fang 處理邏輯）
     if (char.startOrgans && char.startOrgans.length > 0) {
         for (const o of char.startOrgans) {
             if (!p.organs.find(eo => eo.id === o.id)) {
-                const organObj = { id: o.id, level: o.level };
+                const def = (typeof ORGANS !== 'undefined') ? ORGANS[o.id] : null;
+                const organObj = {
+                    id:    o.id,
+                    name:  def ? def.name : o.id,
+                    type:  def ? def.type : 'attack',
+                    level: 1,
+                    desc:  (def && def.levels[0]) ? def.levels[0].desc : ''
+                };
                 p.organs.push(organObj);
-                applyOrganEffects(organObj);
+                // 逐級套用：Lv1→Lv2→…→目標等級，確保累計效果完整
+                for (let lv = 1; lv <= o.level; lv++) {
+                    organObj.level = lv;
+                    organObj.desc  = (def && def.levels[lv - 1]) ? def.levels[lv - 1].desc : '';
+                    applyOrganEffects(organObj);
+                }
             }
         }
     }
