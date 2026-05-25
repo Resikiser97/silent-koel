@@ -116,16 +116,24 @@ function loadSettings() {
             if (parsed.cameraMode !== undefined) {
                 gameState.settings.cameraMode = parsed.cameraMode;
             }
-            // cameraZoomLevel：手機預設6，桌機預設10
+            // cameraZoomLevel：先嘗試從 localStorage 讀取
             if (parsed.cameraZoomLevel !== undefined) {
                 gameState.settings.cameraZoomLevel = parsed.cameraZoomLevel;
-            } else {
-                gameState.settings.cameraZoomLevel = gameState.isMobile ? 6 : 10;
             }
+            // 若 localStorage 沒有此欄位，會在 applyDeviceMode() 後補設（見下方）
         }
     } catch(e) {}
     applyLanguage(gameState.language);
-    applyDeviceMode();
+    applyDeviceMode(); // 此後 gameState.isMobile 才正確
+
+    // cameraZoomLevel 未存過時，依平台設預設值（需在 applyDeviceMode 之後判斷）
+    const _rawSaved = localStorage.getItem('gameSettings');
+    const _rawParsed = _rawSaved ? JSON.parse(_rawSaved) : {};
+    if (_rawParsed.cameraZoomLevel === undefined) {
+        gameState.settings.cameraZoomLevel = gameState.isMobile ? 6 : 10;
+    }
+
+    saveSettings(); // 確保新版本新增的欄位預設值都寫入 localStorage
 }
 
 // 切換語言：寫入 settings、重新套用 LANG 資料表、即時刷新開啟中的介面
@@ -641,6 +649,7 @@ function showSettings(fromHome) {
         if (!confirm(t('confirmRestart'))) return;
         saveLastRunOrgans();
         localStorage.setItem('skillPoints', String(gameState.skillPoints));
+        saveSettings(); // 重啟前確保設定已存入 localStorage
         window.location.reload();
     };
     otherSec.appendChild(restartBtn);
