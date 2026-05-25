@@ -140,6 +140,13 @@ let _atkFeedbackTime = 0;
 let _atkFeedbackX    = 0;
 let _atkFeedbackY    = 0;
 
+// 阿奇爾手機方向滑動追蹤（攻擊區觸碰時記錄滑動起點→終點，放開時發射）
+let _archerDirTouchId = null;
+let _archerDirStartX  = 0;
+let _archerDirStartY  = 0;
+let _archerDirCurX    = 0;
+let _archerDirCurY    = 0;
+
 function _joyZone(x, y) {
     return !_attackZone(x, y);
 }
@@ -381,11 +388,20 @@ function _attachJoystickListeners() {
             // 攻擊區
             if (_attackZone(x, y)) {
                 handled = true;
-                playerAttack();
-                if (gameState.orientation === 'landscape') {
-                    _atkFeedbackTime = Date.now();
-                    _atkFeedbackX = x;
-                    _atkFeedbackY = y;
+                if (gameState.player.isRanged && _archerDirTouchId === null) {
+                    // 阿奇爾：記錄起始座標，等放開後計算方向並發射
+                    _archerDirTouchId = touch.identifier;
+                    _archerDirStartX  = x;
+                    _archerDirStartY  = y;
+                    _archerDirCurX    = x;
+                    _archerDirCurY    = y;
+                } else {
+                    playerAttack();
+                    if (gameState.orientation === 'landscape') {
+                        _atkFeedbackTime = Date.now();
+                        _atkFeedbackX = x;
+                        _atkFeedbackY = y;
+                    }
                 }
                 continue;
             }
@@ -405,33 +421,84 @@ function _attachJoystickListeners() {
     };
 
     const onMove = (e) => {
-        if (_joyTouchId === null) return;
         for (const touch of e.changedTouches) {
-            if (touch.identifier !== _joyTouchId) continue;
-            e.preventDefault();
-            const ddx  = touch.clientX - _joyBaseX;
-            const ddy  = touch.clientY - _joyBaseY;
-            const dist = Math.sqrt(ddx * ddx + ddy * ddy);
-            const clamp  = Math.min(dist, JOY_OUTER);
-            const factor = dist > 0 ? clamp / dist : 0;
-            _joyKnobX = _joyBaseX + ddx * factor;
-            _joyKnobY = _joyBaseY + ddy * factor;
-            const spd = clamp / JOY_OUTER;
-            gameState.mobileInput = {
-                dx: dist > 0 ? (ddx / dist) * spd : 0,
-                dy: dist > 0 ? (ddy / dist) * spd : 0
-            };
-            _renderMobileOverlay();
+            // 搖桿移動
+            if (touch.identifier === _joyTouchId) {
+                e.preventDefault();
+                const ddx  = touch.clientX - _joyBaseX;
+                const ddy  = touch.clientY - _joyBaseY;
+                const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+                const clamp  = Math.min(dist, JOY_OUTER);
+                const factor = dist > 0 ? clamp / dist : 0;
+                _joyKnobX = _joyBaseX + ddx * factor;
+                _joyKnobY = _joyBaseY + ddy * factor;
+                const spd = clamp / JOY_OUTER;
+                gameState.mobileInput = {
+                    dx: dist > 0 ? (ddx / dist) * spd : 0,
+                    dy: dist > 0 ? (ddy / dist) * spd : 0
+                };
+                _renderMobileOverlay();
+            }
+            // 阿奇爾方向追蹤：更新當前位置
+            if (touch.identifier === _archerDirTouchId) {
+                e.preventDefault();
+                _archerDirCurX = touch.clientX;
+                _archerDirCurY = touch.clientY;
+            }
         }
     };
 
     const onEnd = (e) => {
         for (const touch of e.changedTouches) {
-            if (touch.identifier !== _joyTouchId) continue;
-            _joyActive  = false;
-            _joyTouchId = null;
-            gameState.mobileInput = { dx: 0, dy: 0 };
-            _renderMobileOverlay();
+            // 搖桿放開
+            if (touch.identifier === _joyTouchId) {
+                _joyActive  = false;
+                _joyTouchId = null;
+                gameState.mobileInput = { dx: 0, dy: 0 };
+                _renderMobileOverlay();
+            }
+            // 阿奇爾攻擊區放開：計算方向並發射
+            if (touch.identifier === _archerDirTouchId) {
+                _archerDirTouchId = null;
+                const ddx = _archerDirCurX - _archerDirStartX;
+                const ddy = _archerDirCurY - _archerDirStartY;
+                const len = Math.sqrt(ddx * ddx + ddy * ddy);
+                const p   = gameState.player;
+                if (p && p.isRanged && p.reloadCharges > 0) {
+                    p.reloadCharges--;
+                    p.reloadTimer = 0;
+                    // 有滑動方向（> 8px）→ 往滑動方向發射；否則往 lastMoveDir 發射
+                    let dx, dy;
+                    if (len > 8) {
+                        dx = ddx / len;
+                        dy = ddy / len;
+                    } else {
+                        const ld = p.lastMoveDir || { dx: 0, dy: -1 };
+                        const ll = Math.sqrt(ld.dx * ld.dx + ld.dy * ld.dy) || 1;
+                        dx = ld.dx / ll;
+                        dy = ld.dy / ll;
+                    }
+                    const dmg = Math.max(1, Math.round(p.attack));
+                    gameState.projectiles.push({
+                        x: p.x, y: p.y,
+                        vx: dx * 9, vy: dy * 9,
+                        damage: dmg,
+                        maxRange: p.attackRange * 1.2,
+                        distTraveled: 0,
+                        radius: 5,
+                        ownerId: 'player',
+                        hasCrit: false,
+                    });
+                    p.attackVisual = Date.now();
+                    AudioManager.play('attackNormal');
+                    // 橫向模式攻擊回饋動畫
+                    if (gameState.orientation === 'landscape') {
+                        _atkFeedbackTime = Date.now();
+                        _atkFeedbackX    = _archerDirStartX;
+                        _atkFeedbackY    = _archerDirStartY;
+                    }
+                }
+            }
         }
     };
 

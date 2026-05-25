@@ -107,6 +107,8 @@ function applyOrganEffects(organ) {
     if (fx.regenIntervalDelta)     p.naturalRegenInterval = Math.max(2000, p.naturalRegenInterval + fx.regenIntervalDelta);
     if (fx.regenHpMaxPercent)      p.naturalRegenHpMaxPercent += fx.regenHpMaxPercent;
     if (fx.perceptionRangeAdd)     p.perceptionRange += fx.perceptionRangeAdd;
+    if (fx.tenacityAdd)            p.tenacity = Math.min(1, (p.tenacity || 0) + fx.tenacityAdd);
+    // onHitSlow / executeBonus：效果由 combat.js / player.js 命中時即時讀取器官等級，不在此預計算
     // 毒囊特有欄位：不影響 player stats，combat.js 直接讀 getOrganCumulative
 
     checkComboEffects();

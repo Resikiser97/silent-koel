@@ -589,6 +589,62 @@ function drawBoss() {
     ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
     ctx.fillStyle = '#FF4400';
     ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+
+    // Debuff 圖示（血條下方）
+    _drawBossDebuffIcons(boss, bBarX, bBarY, bBarW);
+}
+
+// Boss 血條下方 Debuff 圖示（毒/流血/減速/暈眩）
+function _drawBossDebuffIcons(boss, barX, barY, barW) {
+    const now      = Date.now();
+    const iconSize = 12;
+    const iconGap  = 2;
+    const iconY    = barY + 8; // 血條下方 2px
+
+    const debuffs = [
+        { color: '#33FF66', label: '毒', endTime: boss.poisonEndTime,  startTime: boss._poisonStartTime },
+        { color: '#FF4444', label: '血', endTime: boss.bleedEndTime,   startTime: boss._bleedStartTime  },
+        { color: '#4488FF', label: '緩', endTime: boss._slowUntil,     startTime: boss._slowStartTime   },
+        { color: '#FFE533', label: '暈', endTime: boss.stunnedUntil,   startTime: boss._stunStartTime   },
+    ];
+
+    const active = debuffs.filter(d => d.endTime && now < d.endTime);
+    if (active.length === 0) return;
+
+    const totalW = active.length * (iconSize + iconGap) - iconGap;
+    let ix = barX + (barW - totalW) / 2;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+
+    for (const d of active) {
+        // 背景方塊
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillRect(ix, iconY, iconSize, iconSize);
+        // 彩色邊框
+        ctx.strokeStyle = d.color;
+        ctx.lineWidth   = 1.5;
+        ctx.strokeRect(ix, iconY, iconSize, iconSize);
+        // 標籤
+        ctx.fillStyle = d.color;
+        ctx.font      = 'bold 7px Arial';
+        ctx.fillText(d.label, ix + iconSize / 2, iconY + iconSize - 2);
+        // 逆時針進度弧（剩餘比例）
+        const total   = d.endTime - (d.startTime || (d.endTime - 5000));
+        const remain  = d.endTime - now;
+        const progress = Math.max(0, Math.min(1, remain / total));
+        const cx = ix + iconSize / 2;
+        const cy = iconY + iconSize / 2;
+        const arcR = iconSize / 2 - 1.5;
+        ctx.beginPath();
+        ctx.strokeStyle = d.color;
+        ctx.lineWidth   = 1.5;
+        ctx.arc(cx, cy, arcR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+        ctx.stroke();
+
+        ix += iconSize + iconGap;
+    }
+    ctx.restore();
 }
 
 function spawnBoss() {
@@ -691,7 +747,7 @@ function updateBoss() {
                     boss._chargeTarget.y - boss.y,
                     boss._chargeTarget.x - boss.x
                 );
-                const chargeSpeed = boss.speed * 4;
+                const chargeSpeed = _effSpeed(boss) * 4;
                 boss._chargeVx = Math.cos(angle) * chargeSpeed;
                 boss._chargeVy = Math.sin(angle) * chargeSpeed;
             }
@@ -798,7 +854,7 @@ function updateBoss() {
             }
         } else {
             const angle = Math.atan2(dy, dx);
-            moveCreature(boss, boss.x + Math.cos(angle) * boss.speed, boss.y + Math.sin(angle) * boss.speed);
+            moveCreature(boss, boss.x + Math.cos(angle) * _effSpeed(boss), boss.y + Math.sin(angle) * _effSpeed(boss));
         }
     } else {
         if (!boss.wanderTarget || now - boss.lastWanderTime >= 3000) {
@@ -811,7 +867,7 @@ function updateBoss() {
             if (wDist < 2) { boss.wanderTarget = null; }
             else {
                 const angle = Math.atan2(wy, wx);
-                moveCreature(boss, boss.x + Math.cos(angle) * boss.speed, boss.y + Math.sin(angle) * boss.speed);
+                moveCreature(boss, boss.x + Math.cos(angle) * _effSpeed(boss), boss.y + Math.sin(angle) * _effSpeed(boss));
             }
         }
     }

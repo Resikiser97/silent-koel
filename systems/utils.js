@@ -1,6 +1,22 @@
 // =============================================================
 // 共用繪圖工具 - drawArrow / drawHealthBar / drawNameTag / drawGlowEffect
+// 韌性計算      - applyTenacity
 // =============================================================
+
+/**
+ * 韌性計算：用目標自身的韌性縮短控制效果持續時間。
+ * @param {number} durationMs  原始持續毫秒
+ * @param {object} target      被控制的目標（player 或 creature）
+ * @returns {number} 縮短後的毫秒數（最小值 0）
+ *
+ * 範例：
+ *   玩家被暈眩 1000ms，魚鱗韌性 30% → applyTenacity(1000, p) = 700ms
+ *   敵人被嘴器減速 2000ms，c.tenacity 目前為 0 → 仍為 2000ms
+ */
+function applyTenacity(durationMs, target) {
+    const t = (target && target.tenacity) || 0;
+    return Math.max(0, Math.round(durationMs * (1 - t)));
+}
 
 // 在玩家螢幕座標 (px, py) 周圍，朝世界座標 (targetWorldX, targetWorldY) 畫一個指向箭頭
 // 距離 = playerRadius + 20px；透明度每 0.5 秒在 0.6↔1.0 之間閃爍

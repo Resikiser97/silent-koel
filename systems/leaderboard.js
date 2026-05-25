@@ -59,7 +59,7 @@ function showLeaderboard() {
 
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    const cols = ['lbColRank','lbColVersion','lbColDate','lbColName','lbColTime','lbColScore','lbColLevel','lbColResult'];
+    const cols = ['lbColRank','lbColVersion','lbColDate','lbColName','lbColCharacter','lbColTime','lbColScore','lbColLevel','lbColResult'];
     cols.forEach(key => {
         const th = document.createElement('th');
         th.style.cssText = 'padding:6px 8px;border-bottom:1px solid #444;color:#FFD700;text-align:left;position:sticky;top:0;background:#111;';
@@ -98,7 +98,7 @@ function showLeaderboard() {
     function loadPage(page) {
         tbody.innerHTML = '';
         if (allRows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbError') + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa;">' + t('lbError') + '</td></tr>';
             return;
         }
         const start = (page - 1) * PAGE_SIZE;
@@ -114,6 +114,7 @@ function showLeaderboard() {
             if (rank <= 3) tr.style.cssText = 'background:' + rowColors[rank - 1] + ';';
             const cells = [rankIcon, row.version || '—', dateStr,
                 row.name.length > 20 ? row.name.slice(0, 20) + '…' : row.name,
+                t('char' + (row.character || 'koel').charAt(0).toUpperCase() + (row.character || 'koel').slice(1)),
                 mm + ':' + ss, row.score, row.level, result];
             cells.forEach(val => {
                 const td = document.createElement('td');
@@ -134,7 +135,7 @@ function showLeaderboard() {
 
     // 依目前 _lbDifficulty 重新從 Supabase 載入資料
     function loadAllRows() {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa;">' + t('lbLoading') + '</td></tr>';
         allRows = [];
         currentPage = 1;
         fetchVictoryRecords(_lbDifficulty).then(function(victoryRows) {
@@ -149,7 +150,7 @@ function showLeaderboard() {
         }).then(function() {
             loadPage(1);
         }).catch(function() {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#f66;">' + t('lbError') + '</td></tr>';
         });
     }
 
@@ -415,6 +416,7 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             version: GAME_INFO.version,
             version_order: Math.floor(parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4))),
             difficulty: gameState.lastDifficulty || 'easy',
+            character: gameState.selectedCharacter || 'koel',
         };
         submitScore(data).then(() => {
             statusMsg.textContent = t('lbSubmitOk');
@@ -539,7 +541,7 @@ function showFunLeaderboard(difficulty) {
     tableWrap.appendChild(table);
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    ['排名','名字','數值','版本','日期'].forEach(h => {
+    ['排名','名字','角色','數值','版本','日期'].forEach(h => {
         const th = document.createElement('th');
         th.style.cssText = 'padding:6px 8px;border-bottom:1px solid #444;color:#FFD700;text-align:left;position:sticky;top:0;background:#111;';
         th.textContent = h;
@@ -552,13 +554,13 @@ function showFunLeaderboard(difficulty) {
     table.appendChild(tbody);
 
     function loadFunRows() {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">讀取中...</td></tr>';
-        // update value column header
-        headerRow.cells[2].textContent = currentCat.colLabel;
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">讀取中...</td></tr>';
+        // update value column header（角色欄在 cells[2]，數值欄在 cells[3]）
+        headerRow.cells[3].textContent = currentCat.colLabel;
         currentCat.fetchFn().then(rows => {
             tbody.innerHTML = '';
             if (!rows || rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">暫無記錄</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">暫無記錄</td></tr>';
                 return;
             }
             rows.forEach((row, i) => {
@@ -567,8 +569,10 @@ function showFunLeaderboard(difficulty) {
                 if (rank <= 3) tr.style.background = ['rgba(255,215,0,0.12)', 'rgba(192,192,192,0.12)', 'rgba(205,127,50,0.12)'][rank - 1];
                 const dateStr = row.created_at ? row.created_at.slice(0, 10) : '—';
                 const nameStr = row.name ? (row.name.length > 16 ? row.name.slice(0, 16) + '…' : row.name) : '—';
+                const funCharKey = 'char' + (row.character || 'koel').charAt(0).toUpperCase() + (row.character || 'koel').slice(1);
+                const charStr = t(funCharKey);
                 const valStr = currentCat.format(row[currentCat.colName]);
-                [getRankIcon(rank), nameStr, valStr, row.version || '—', dateStr].forEach(v => {
+                [getRankIcon(rank), nameStr, charStr, valStr, row.version || '—', dateStr].forEach(v => {
                     const td = document.createElement('td');
                     td.style.cssText = 'padding:6px 8px;border-bottom:1px solid #222;';
                     td.innerHTML = String(v);
@@ -577,7 +581,7 @@ function showFunLeaderboard(difficulty) {
                 tbody.appendChild(tr);
             });
         }).catch(() => {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#f66;">載入失敗</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#f66;">載入失敗</td></tr>';
         });
     }
 

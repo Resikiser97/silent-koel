@@ -139,6 +139,41 @@ const ORGANS = {
         ]
     },
 
+    // ── 阿奇爾專屬／新器官
+    mouthOrgan: {
+        id: 'mouthOrgan', name: '嘴器', type: 'attack', maxLevel: 3,
+        levels: [
+            { desc: '攻擊+4',
+              effects: { attackAdd: 4 } },
+            { desc: '攻擊+4',
+              effects: { attackAdd: 4 } },
+            { desc: '攻擊+2，命中使目標移動速度-20%持續2秒',
+              effects: { attackAdd: 2, onHitSlow: { amount: 0.2, duration: 2000 } } }
+        ]
+    },
+    fishScale: {
+        id: 'fishScale', name: '魚鱗', type: 'defense', maxLevel: 3,
+        levels: [
+            { desc: '韌性+5%（減少控制時間5%）',
+              effects: { tenacityAdd: 0.05 } },
+            { desc: '韌性+10%（累計15%）',
+              effects: { tenacityAdd: 0.10 } },
+            { desc: '韌性+15%（累計30%）',
+              effects: { tenacityAdd: 0.15 } }
+        ]
+    },
+    sharkLeaf: {
+        id: 'sharkLeaf', name: '鯊魚嗅葉', type: 'spirit', maxLevel: 3,
+        levels: [
+            { desc: '對血量15%以下的敵人傷害+10%',
+              effects: { executeBonus: { threshold: 0.15, bonus: 0.10 } } },
+            { desc: '對血量30%以下的敵人傷害+15%',
+              effects: { executeBonus: { threshold: 0.30, bonus: 0.15 } } },
+            { desc: '對血量50%以下的敵人傷害+20%',
+              effects: { executeBonus: { threshold: 0.50, bonus: 0.20 } } }
+        ]
+    },
+
     // ── 特殊器官（不出現在技能池，不可繼承）
     poisonSac: {
         id: 'poisonSac', name: '毒囊', type: 'special', maxLevel: 10,

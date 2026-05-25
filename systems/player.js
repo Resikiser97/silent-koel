@@ -3,7 +3,238 @@
 //            updateTreeFruitProduction / showXPPopup
 //            checkTreasureCollision / updatePassiveOrgans
 //            checkXPMilestone / addXP / checkLevelUp
+//            updateProjectiles / _checkProjectileHit（子彈系統）
+//            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
 // =============================================================
+
+// =============================================================
+// 子彈系統（阿奇爾 Archerfish 射水）
+// =============================================================
+
+function updateProjectiles() {
+    const projs = gameState.projectiles;
+    for (let i = projs.length - 1; i >= 0; i--) {
+        const b = projs[i];
+        b.x += b.vx;
+        b.y += b.vy;
+        b.distTraveled += Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+
+        // 超出射程消失
+        if (b.distTraveled >= b.maxRange) {
+            projs.splice(i, 1);
+            continue;
+        }
+
+        // 地圖包裹
+        b.x = ((b.x % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
+        b.y = ((b.y % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
+
+        // 命中偵測
+        if (_checkProjectileHit(b, i)) continue;
+    }
+}
+
+function _checkProjectileHit(b, idx) {
+    const targets = [
+        ...gameState.hostileCreatures,
+        ...gameState.neutralCreatures,
+        ...(gameState.boss && gameState.boss.hp > 0 ? [gameState.boss] : []),
+        ...(gameState.eliteCreature && gameState.eliteCreature.hp > 0 ? [gameState.eliteCreature] : []),
+    ];
+
+    for (const c of targets) {
+        if (c.hp <= 0) continue;
+        if (wrappedDistance(b.x, b.y, c.x, c.y) > b.radius + (c.radius || 0)) continue;
+
+        let dmg = b.damage;
+        const isCrit = b.hasCrit;
+
+        // 鯊魚葉：對低血量目標處決加成
+        const sharkLv = getOrganLevel('sharkLeaf');
+        if (sharkLv > 0) {
+            const sharkCfg = ORGANS.sharkLeaf.levels[sharkLv - 1].effects.executeBonus;
+            const hpRatio  = c.hp / (c.maxHp || c.hp);
+            if (hpRatio < sharkCfg.threshold) {
+                dmg = Math.round(dmg * (1 + sharkCfg.bonus));
+            }
+        }
+
+        // 嘴器Lv3：命中施加減速 -20% / 2秒（韌性縮短）
+        if (getOrganLevel('mouthOrgan') >= 3) {
+            const _nowHit    = Date.now();
+            c._slowUntil     = _nowHit + applyTenacity(2000, c);
+            c._slowStartTime = _nowHit;
+            c._slowMult      = 0.8;
+        }
+
+        c.hp -= dmg;
+        showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg,
+            isCrit ? '#FFD700' : '#FF4444');
+
+        // 追蹤特殊目標
+        if (c.isGiantized || c.isKiller || c === gameState.boss || c === gameState.eliteCreature) {
+            gameState.topBarTarget = c;
+        }
+
+        // 子彈消失
+        gameState.projectiles.splice(idx, 1);
+
+        // 目標死亡路由
+        if (c.hp <= 0) {
+            if (c === gameState.boss) {
+                showVictory();
+            } else if (c === gameState.eliteCreature) {
+                handleEliteKill(c);
+            } else if (c.isGiantized) {
+                handleGiantKill(c);
+            } else if (c.isTutorialStump) {
+                handleTutorialStumpKill();
+            } else {
+                const isHostile = gameState.hostileCreatures.includes(c);
+                handleKill(c, isHostile);
+            }
+        }
+        return true; // 命中，子彈已消失
+    }
+    return false;
+}
+
+// =============================================================
+// 阿奇爾攻擊系統
+// =============================================================
+
+function _getAllAttackTargets() {
+    return [
+        ...gameState.hostileCreatures.filter(c => c.hp > 0),
+        ...gameState.neutralCreatures.filter(c => c.hp > 0),
+        ...(gameState.boss && gameState.boss.hp > 0 ? [gameState.boss] : []),
+        ...(gameState.eliteCreature && gameState.eliteCreature.hp > 0 ? [gameState.eliteCreature] : []),
+    ];
+}
+
+/**
+ * 自動攻擊目標選擇（供 _getArcherShootDir 與 hud.js _drawArcherLockOn 共用）
+ *
+ * 優先規則：
+ *   P1 — 在子彈射程（attackRange×1.2）內，且在移動方向 ±45° 扇形中的最近敵人（迎面敵人）
+ *   P2 — 無 P1 目標時：全場最近的敵人
+ *
+ * @returns {object|null}
+ */
+function _findArcherAutoTarget() {
+    const p    = gameState.player;
+    const tgts = _getAllAttackTargets();
+    if (tgts.length === 0) return null;
+
+    const bulletRange = p.attackRange * 1.2;
+    const moveAngle   = Math.atan2(p.lastMoveDir.dy || 0, p.lastMoveDir.dx || 0);
+
+    // P1：射程內 + ±45° 扇形（迎面優先）
+    let best = null, bestDist = Infinity;
+    for (const c of tgts) {
+        const { dx, dy } = wrappedDelta(p.x, p.y, c.x, c.y);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > bulletRange) continue;
+        const angle = Math.atan2(dy, dx);
+        let diff = Math.abs(angle - moveAngle);
+        if (diff > Math.PI) diff = Math.PI * 2 - diff;
+        if (diff <= Math.PI / 4 && dist < bestDist) { best = c; bestDist = dist; }
+    }
+
+    // P2：全場最近
+    if (!best) {
+        for (const c of tgts) {
+            const { dx, dy } = wrappedDelta(p.x, p.y, c.x, c.y);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < bestDist) { best = c; bestDist = dist; }
+        }
+    }
+
+    return best;
+}
+
+function _getArcherShootDir() {
+    const p = gameState.player;
+
+    if (gameState.settings.autoAttack) {
+        // 自動模式：使用優先規則（迎面 > 全場最近），每次攻擊前即時查詢
+        const best = _findArcherAutoTarget();
+        if (best) {
+            const { dx, dy } = wrappedDelta(p.x, p.y, best.x, best.y);
+            const len = Math.sqrt(dx * dx + dy * dy);
+            if (len > 0) return { dx: dx / len, dy: dy / len };
+        }
+        // 無目標 → 射移動方向
+        return { dx: p.lastMoveDir.dx || 0, dy: p.lastMoveDir.dy || -1 };
+
+    } else {
+        // 手動模式（電腦）：
+        // 使用 mouseScreen（canvas 螢幕座標），攻擊瞬間從玩家螢幕位置算方向
+        // 不用 mouseWorld，避免玩家移動後攝影機偏移造成方向陳舊
+        const ms = gameState.mouseScreen;
+        if (ms) {
+            const ps = worldToScreen(p.x, p.y);
+            const ddx = ms.sx - ps.x;
+            const ddy = ms.sy - ps.y;
+            const len = Math.sqrt(ddx * ddx + ddy * ddy);
+            if (len > 5) return { dx: ddx / len, dy: ddy / len };
+        }
+        // fallback：移動方向
+        return { dx: p.lastMoveDir.dx || 0, dy: p.lastMoveDir.dy || -1 };
+    }
+}
+
+function _archerAttack() {
+    const p = gameState.player;
+    const now = Date.now();
+
+    // 攻速冷卻（基於 attackSpeedBonus）
+    const totalBonus     = p.attackSpeedBonus || 0;
+    const attackInterval = Math.round(1500 / (1 + totalBonus));
+    if (now - p.attackTimer < attackInterval) return;
+    p.attackTimer = now;
+
+    if (p.attack <= 0) {
+        showFloatingText(p.x, p.y - 30, t('noAttackOrgan'), '#FF8800');
+        return;
+    }
+
+    // 取得射擊方向
+    const dir = _getArcherShootDir();
+    if (!dir) return;
+
+    // 消耗充能（最少1格）
+    const charges  = Math.max(1, p.reloadCharges);
+    const dmgMult  = charges;
+    let dmg        = Math.round(p.attack * dmgMult);
+
+    // 暴擊判定
+    let isCrit = false;
+    if (p.critChance > 0 && Math.random() < p.critChance) {
+        dmg    = Math.round(dmg * p.critMultiplier);
+        isCrit = true;
+    }
+
+    p.reloadCharges = Math.max(0, p.reloadCharges - 1);
+    p.reloadTimer   = 0;
+
+    // 建立子彈（單顆，方向由 _getArcherShootDir 決定：P1 正前方敵人 / P2 全場最近敵人）
+    const bulletSpeed = 9;
+    gameState.projectiles.push({
+        x: p.x, y: p.y,
+        vx: dir.dx * bulletSpeed,
+        vy: dir.dy * bulletSpeed,
+        damage:       dmg,
+        maxRange:     p.attackRange * 1.2,
+        distTraveled: 0,
+        radius:       5,
+        ownerId:      'player',
+        hasCrit:      isCrit,
+    });
+
+    p.attackVisual = now;
+    AudioManager.play('attackNormal');
+}
 
 // 提取果子吸收邏輯，供 checkFruitCollision 和 playerDash 共用
 function _collectFruit(p, fruit) {
@@ -23,7 +254,28 @@ function playerDash() {
     if (p.dashCooldown > 0) return;
     if (_joyPaused()) return;
 
-    // 取方向：手機優先 mobileInput，否則用 lastMoveDir
+    // ── 阿奇爾 F技：加速衝刺（持續 3 秒，陸地+3 水中+5）
+    if (gameState.selectedCharacter === 'archerfish') {
+        const now = Date.now();
+        const inWater = getBiome(p.x, p.y) === 'ocean';
+        const dashSpeedAdd = inWater ? 5 : 3;
+
+        p.archerDashActive = true;
+        p.archerDashEnd    = now + 3000;
+        p.archerDashSpeed  = dashSpeedAdd;
+        p.dashCooldown     = 15000;
+
+        const dir = p.lastMoveDir;
+        gameState.dashEffect = {
+            ax: p.x, ay: p.y,
+            bx: p.x + dir.dx * dashSpeedAdd * 60,
+            by: p.y + dir.dy * dashSpeedAdd * 60,
+            startTime: now, duration: 150
+        };
+        return;
+    }
+
+    // ── 噪鵑閃現：取方向（手機優先 mobileInput，否則用 lastMoveDir）
     const mi = gameState.mobileInput;
     let dirX, dirY;
     if (mi.dx !== 0 || mi.dy !== 0) {
@@ -96,6 +348,55 @@ function updatePlayerMovement() {
     // 鱷魚死亡翻滾：暈眩期間無法移動
     if (p._stunUntil && now < p._stunUntil) return;
 
+    // ── 阿奇爾 F技衝刺計時與撞怪
+    if (p.archerDashActive) {
+        if (now >= p.archerDashEnd) {
+            p.archerDashActive = false;
+            p.archerDashSpeed  = 0;
+        } else {
+            // 衝刺期間撞怪：附近生物暈眩 0.5 秒並扣血
+            const allCreatures = [
+                ...gameState.hostileCreatures,
+                ...gameState.neutralCreatures,
+            ];
+            for (const c of allCreatures) {
+                if (c.hp <= 0) continue;
+                if (wrappedDistance(p.x, p.y, c.x, c.y) > p.radius + (c.radius || 0) + 5) continue;
+                if (c._stunUntil && now < c._stunUntil) continue; // 避免重複暈眩
+                c._stunUntil = now + 500;
+                const dashDmg = Math.max(1, Math.round(p.attack));
+                c.hp -= dashDmg;
+                showFloatingText(c.x, c.y - 15, dashDmg, '#4FC3F7');
+                if (c.hp <= 0) {
+                    const isHostile = gameState.hostileCreatures.includes(c);
+                    if (c.isGiantized) handleGiantKill(c);
+                    else handleKill(c, isHostile);
+                }
+            }
+        }
+    }
+
+    // ── 阿奇爾充能計時（每幀遞增）
+    if (p.isRanged) {
+        const totalBonus     = p.attackSpeedBonus || 0;
+        const reloadInterval = Math.round(1000 / (1 + totalBonus));
+        p.reloadTimer += FIXED_DELTA;
+        if (p.reloadTimer >= reloadInterval && p.reloadCharges < 3) {
+            p.reloadCharges++;
+            p.reloadTimer = 0;
+        }
+        // 蓄力手動模式：每 500ms 消耗 1 格（持續按住攻擊鍵時）
+        if (p.chargeHolding && !gameState.settings.autoAttack) {
+            p.chargeHoldTime += FIXED_DELTA;
+            while (p.chargeHoldTime >= 500 && p.reloadCharges > 0 && p.chargeConsumed < 3) {
+                p.reloadCharges--;
+                p.chargeConsumed++;
+                p.chargeHoldTime -= 500;
+                p.reloadTimer = 0;
+            }
+        }
+    }
+
     const sk = gameState.settings.keys;
     let dx = 0, dy = 0;
     if (gameState.keys[sk.up]   || gameState.keys['arrowup'])    dy -= p.speed;
@@ -119,6 +420,27 @@ function updatePlayerMovement() {
     if (p._inSandstorm) {
         dx *= 0.6;
         dy *= 0.6;
+    }
+
+    // ── 阿奇爾水中速度 +50%
+    if (gameState.selectedCharacter === 'archerfish') {
+        const biome = getBiome(p.x, p.y);
+        if (biome === 'ocean') {
+            dx *= 1.5;
+            dy *= 1.5;
+        }
+        // F技衝刺附加速度
+        if (p.archerDashActive && p.archerDashSpeed > 0) {
+            const dlen = Math.sqrt(dx * dx + dy * dy);
+            if (dlen > 0) {
+                dx += (dx / dlen) * p.archerDashSpeed;
+                dy += (dy / dlen) * p.archerDashSpeed;
+            } else {
+                // 靜止時沿 lastMoveDir 衝刺
+                dx += p.lastMoveDir.dx * p.archerDashSpeed;
+                dy += p.lastMoveDir.dy * p.archerDashSpeed;
+            }
+        }
     }
 
     if (dx === 0 && dy === 0) return;
