@@ -27,8 +27,8 @@ function worldToScreen(wx, wy) {
     else if (sx >  MAP_WIDTH  / 2) sx -= MAP_WIDTH;
     if (sy < -MAP_HEIGHT / 2) sy += MAP_HEIGHT;
     else if (sy >  MAP_HEIGHT / 2) sy -= MAP_HEIGHT;
-    // 手機視野縮放：以螢幕中心為基準縮放
-    const zoom = (gameState.isMobile && gameState.cameraZoom && gameState.cameraZoom !== 1.0)
+    // 視野縮放：以螢幕中心為基準縮放
+    const zoom = (gameState.cameraZoom && gameState.cameraZoom !== 1.0)
         ? gameState.cameraZoom : 1.0;
     if (zoom !== 1.0) {
         sx = (sx - VIEW_W / 2) * zoom + VIEW_W / 2;
@@ -37,14 +37,27 @@ function worldToScreen(wx, wy) {
     return { x: sx, y: sy };
 }
 
-// 手機視野縮放：隨玩家體型增大而縮小鏡頭
-function _updateMobileCameraZoom() {
-    if (!gameState.isMobile) return;
+// 視野縮放：由 cameraZoomLevel 決定 baseZoom，智能模式隨體型縮小
+function _updateCameraZoom() {
+    const settings = gameState.settings;
+
+    // 計算基礎 zoom（1格=0.64，6格=0.84，10格=1.0）
+    // 公式：zoom = cameraZoomLevel / 10 * 0.4 + 0.6
+    const baseZoom = (settings.cameraZoomLevel / 10) * 0.4 + 0.6;
+
+    if (settings.cameraMode === 'manual') {
+        // 手動模式：固定 zoom，不受體型影響
+        gameState.cameraZoom = baseZoom;
+        return;
+    }
+
+    // 智能模式：體型越大 zoom 越小（在 baseZoom 基礎上往下縮）
     const p = gameState.player;
-    const baseRadius    = 8;                               // 初始體型
+    const baseRadius    = 8;
     const increaseRatio = Math.max(0, (p.radius - baseRadius) / baseRadius);
-    const zoomReduction = increaseRatio * 0.25;            // 體型每增加 20% → 縮小 5%
-    gameState.cameraZoom = Math.max(0.6, 1.0 - zoomReduction);
+    const zoomReduction = increaseRatio * 0.25;
+    // 智能模式的最小 zoom = baseZoom * 0.6（不低於 0.3）
+    gameState.cameraZoom = Math.max(0.3, baseZoom - zoomReduction);
 }
 
 function updateCamera() {

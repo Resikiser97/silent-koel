@@ -2,6 +2,14 @@
 
 ---
 
+## v0.58.0 - 2026-05-25
+
+### 新增
+- **小地圖大小調整**（`systems/gameState.js`、`systems/hud.js`、`systems/ui.js`）：設定面板新增小地圖大小區塊（0~10 格色塊），OFF 時隱藏 minimapCanvas 並將 minimap-info 移至 top-left 同高；數值以 `minimapSize` 儲存於 localStorage，版本更新不重置
+- **視野智能/手動模式**（`systems/gameState.js`、`systems/camera.js`、`systems/ui.js`）：`_updateMobileCameraZoom()` 重構為 `_updateCameraZoom()`，支援桌機與手機；新增 `cameraMode`（smart/manual）與 `cameraZoomLevel`（1~10）設定；`worldToScreen()` 與 `drawTerrain()` 的 zoom 條件移除 `isMobile` 限制；設定面板新增 10 格縮放刻度調整器與智能/手動切換按鈕
+
+---
+
 ## v0.57.7 - 2026-05-25
 
 ### 修復

@@ -10,6 +10,8 @@
 
 // ── Tooltip 全域變數
 let _organHitRegions = [];
+// ── 小地圖大小：記住上次非零值（用於 ON/OFF 切換）
+let _lastMinimapSize = 10;
 const _ttEl = document.getElementById('game-tooltip');
 document.addEventListener('mousemove', function(e) {
     if (_ttEl && _ttEl.style.display !== 'none') _moveTooltip(e.clientX, e.clientY);
@@ -105,6 +107,20 @@ function loadSettings() {
             }
             if (parsed.alwaysCenter !== undefined) {
                 gameState.settings.alwaysCenter = parsed.alwaysCenter;
+            }
+            // minimapSize（0=關閉，1~10）：版本更新不重置
+            if (parsed.minimapSize !== undefined) {
+                gameState.settings.minimapSize = parsed.minimapSize;
+            }
+            // cameraMode：版本更新不重置
+            if (parsed.cameraMode !== undefined) {
+                gameState.settings.cameraMode = parsed.cameraMode;
+            }
+            // cameraZoomLevel：手機預設6，桌機預設10
+            if (parsed.cameraZoomLevel !== undefined) {
+                gameState.settings.cameraZoomLevel = parsed.cameraZoomLevel;
+            } else {
+                gameState.settings.cameraZoomLevel = gameState.isMobile ? 6 : 10;
             }
         }
     } catch(e) {}
@@ -230,6 +246,147 @@ function showSettings(fromHome) {
         volSec.appendChild(row);
     });
     panel.appendChild(volSec);
+
+    // ─── 小地圖大小 ───
+    const mmSec = _buildSettingsSection(t('sectionMinimap'));
+
+    // 標題列：左側標籤 + 右側 ON/OFF 開關
+    const mmTitleRow = document.createElement('div');
+    mmTitleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
+    const mmLabel = document.createElement('div');
+    mmLabel.style.cssText = 'font-size:13px;color:#ccc;';
+    mmLabel.textContent = t('minimapSize');
+    mmTitleRow.appendChild(mmLabel);
+
+    const mmOnOffTog = document.createElement('button');
+    mmOnOffTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const _refreshMmTog = () => {
+        const on = gameState.settings.minimapSize > 0;
+        mmOnOffTog.textContent   = on ? t('on') : t('off');
+        mmOnOffTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    _refreshMmTog();
+
+    // 10格色塊容器
+    const mmBlocksRow = document.createElement('div');
+    mmBlocksRow.style.cssText = 'display:flex;gap:3px;margin-top:4px;';
+
+    const _buildMmBlocks = () => {
+        mmBlocksRow.innerHTML = '';
+        const cur = gameState.settings.minimapSize;
+        for (let i = 1; i <= 10; i++) {
+            const blk = document.createElement('div');
+            blk.style.cssText = [
+                'flex:1', 'height:18px', 'border-radius:3px', 'cursor:pointer',
+                'background:' + (i <= cur ? '#4a9a4a' : '#333'),
+                'border:1px solid ' + (i <= cur ? '#6aba6a' : '#555'),
+                'transition:background 0.1s'
+            ].join(';');
+            blk.title = i + '/10';
+            blk.addEventListener('click', () => {
+                gameState.settings.minimapSize = i;
+                _lastMinimapSize = i;
+                saveSettings();
+                _refreshMmTog();
+                _buildMmBlocks();
+                mmBlocksRow.style.display = 'flex';
+            });
+            mmBlocksRow.appendChild(blk);
+        }
+        mmBlocksRow.style.display = gameState.settings.minimapSize > 0 ? 'flex' : 'none';
+    };
+    _buildMmBlocks();
+
+    mmOnOffTog.onclick = () => {
+        if (gameState.settings.minimapSize > 0) {
+            // 目前 ON → 關閉
+            _lastMinimapSize = gameState.settings.minimapSize;
+            gameState.settings.minimapSize = 0;
+        } else {
+            // 目前 OFF → 開啟
+            gameState.settings.minimapSize = _lastMinimapSize || 10;
+        }
+        saveSettings();
+        _refreshMmTog();
+        _buildMmBlocks();
+    };
+
+    mmTitleRow.appendChild(mmOnOffTog);
+    mmSec.appendChild(mmTitleRow);
+    mmSec.appendChild(mmBlocksRow);
+    panel.appendChild(mmSec);
+
+    // ─── 視野模式 ───
+    const camSec = _buildSettingsSection(t('sectionCamera'));
+
+    // 標題列：左側標籤 + 右側智能/手動按鈕
+    const camTitleRow = document.createElement('div');
+    camTitleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
+    const camModeLabel = document.createElement('div');
+    camModeLabel.style.cssText = 'font-size:13px;color:#ccc;';
+    camModeLabel.textContent = t('cameraMode');
+    camTitleRow.appendChild(camModeLabel);
+
+    const camModeBtns = document.createElement('div');
+    camModeBtns.style.cssText = 'display:flex;gap:4px;';
+    const _camBtnStyle = (active) => [
+        'padding:2px 10px', 'font-size:12px', 'border-radius:4px', 'cursor:pointer',
+        active
+            ? 'background:#2a5a8a;color:#7FC8FF;border:1px solid #7FC8FF;font-weight:bold;'
+            : 'background:#2a2a2a;color:#aaa;border:1px solid #555;'
+    ].join(';');
+
+    const camSmartBtn  = document.createElement('button');
+    const camManualBtn = document.createElement('button');
+    const _refreshCamBtns = () => {
+        const sm = gameState.settings.cameraMode === 'smart';
+        camSmartBtn.style.cssText  = _camBtnStyle(sm);
+        camManualBtn.style.cssText = _camBtnStyle(!sm);
+    };
+    camSmartBtn.textContent  = t('cameraSmart');
+    camManualBtn.textContent = t('cameraManual');
+    camSmartBtn.onclick = () => {
+        gameState.settings.cameraMode = 'smart';
+        saveSettings(); _refreshCamBtns();
+    };
+    camManualBtn.onclick = () => {
+        gameState.settings.cameraMode = 'manual';
+        saveSettings(); _refreshCamBtns();
+    };
+    _refreshCamBtns();
+    camModeBtns.appendChild(camSmartBtn);
+    camModeBtns.appendChild(camManualBtn);
+    camTitleRow.appendChild(camModeBtns);
+
+    // 10格縮放調整器（永遠顯示）
+    const camBlocksRow = document.createElement('div');
+    camBlocksRow.style.cssText = 'display:flex;gap:3px;margin-top:4px;';
+    const _buildCamBlocks = () => {
+        camBlocksRow.innerHTML = '';
+        const cur = gameState.settings.cameraZoomLevel;
+        for (let i = 1; i <= 10; i++) {
+            const blk = document.createElement('div');
+            blk.style.cssText = [
+                'flex:1', 'height:18px', 'border-radius:3px', 'cursor:pointer',
+                'background:' + (i <= cur ? '#2a5a8a' : '#333'),
+                'border:1px solid ' + (i <= cur ? '#4a8abc' : '#555'),
+                'transition:background 0.1s'
+            ].join(';');
+            blk.title = i + '/10';
+            blk.addEventListener('click', () => {
+                gameState.settings.cameraZoomLevel = i;
+                saveSettings();
+                _buildCamBlocks();
+                if (typeof _updateCameraZoom === 'function') _updateCameraZoom();
+            });
+            camBlocksRow.appendChild(blk);
+        }
+    };
+    _buildCamBlocks();
+
+    camSec.appendChild(camTitleRow);
+    camSec.appendChild(camBlocksRow);
+    panel.appendChild(camSec);
 
     // ─── 按鍵設定 ───
     const keySec = _buildSettingsSection(t('sectionKeys'));

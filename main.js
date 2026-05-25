@@ -33,7 +33,7 @@ function updateGameLogic() {
     updateCreatureSpawning();
     updatePlayerMovement();
     updateCamera();
-    _updateMobileCameraZoom();  // 手機視野縮放（非手機時直接 return）
+    _updateCameraZoom();  // 視野縮放（智能/手動模式，依 cameraZoomLevel 計算）
     checkFruitCollision();
     updateTreeFruitProduction(FIXED_DELTA);
     updateNeutralCreatures();

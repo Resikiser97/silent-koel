@@ -304,7 +304,11 @@ function updateMinimapFog() {
     }
 }
 
-function _mmSize() { return gameState.isMobile ? 200 : 300; }
+function _mmSize() {
+    const size = gameState.settings.minimapSize;
+    const max  = gameState.isMobile ? 200 : 300;
+    return Math.round(size / 10 * max);
+}
 
 function _drawMinimapFog(mctx) {
     if (!gameState.fogMap) return;
@@ -450,6 +454,32 @@ function _drawMinimapEntities(mctx) {
 }
 
 function drawMinimap() {
+    // ── 小地圖關閉（minimapSize === 0）
+    if (!gameState.settings.minimapSize || gameState.settings.minimapSize === 0) {
+        const mc = document.getElementById('minimapCanvas');
+        const mi = document.getElementById('minimap-info');
+        const tl = document.getElementById('top-left');
+        if (mc) mc.style.display = 'none';
+        if (mi && tl) {
+            const tlRect = tl.getBoundingClientRect();
+            mi.style.position = 'fixed';
+            mi.style.top      = tlRect.top + 'px';
+            mi.style.right    = '10px';
+            mi.style.width    = 'auto';
+        }
+        return;
+    }
+    // ── 小地圖開啟：恢復正常位置
+    const mc2 = document.getElementById('minimapCanvas');
+    const mi2 = document.getElementById('minimap-info');
+    if (mc2) mc2.style.display = '';
+    if (mi2) {
+        mi2.style.position = '';
+        mi2.style.top      = '';
+        mi2.style.right    = '';
+        mi2.style.width    = '';
+    }
+
     if (!_minimapCanvas) {
         _minimapCanvas = document.getElementById('minimapCanvas');
         if (!_minimapCanvas) return;

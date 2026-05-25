@@ -405,7 +405,7 @@ function drawTerrain() {
     const camY = gameState.camera.y;
 
     // 取得與 worldToScreen() 相同的縮放值
-    const zoom = (gameState.isMobile && gameState.cameraZoom && gameState.cameraZoom !== 1.0)
+    const zoom = (gameState.cameraZoom && gameState.cameraZoom !== 1.0)
         ? gameState.cameraZoom : 1.0;
 
     // zoom = 1.0：原本邏輯，1:1 貼圖，關閉平滑

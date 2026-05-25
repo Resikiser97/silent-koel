@@ -26,7 +26,7 @@ systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
                           spawnLootCircle
 systems/audio.js          AudioManager, initAudio
 systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera
-                          _updateMobileCameraZoom（手機視野縮放，v0.56.0）
+                          _updateCameraZoom（視野縮放，重構自 _updateMobileCameraZoom，v0.58.0）
                           updateCamera：alwaysCenter 設定為 true 時 edgeThreshold=0.5，角色永遠居中（v0.57.5）
 systems/input.js          handleKeyDown, handleKeyUp（含設定介面按鍵 handler refs）
 systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature, spawnTreasure
@@ -880,11 +880,13 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
-## 手機視野縮放（v0.56.0）
-- `gameState.cameraZoom`（預設 1.0，手機才生效）
-- 公式：`cameraZoom = max(0.6, 1.0 - (radiusIncrease% / 0.2) × 0.05)`
-- `worldToScreen()`：手機時座標乘以 `cameraZoom`，以螢幕中心為基準
-- `_updateMobileCameraZoom()` 每幀呼叫（`updateGameLogic` 內，非手機直接 return）
+## 視野縮放（v0.58.0，重構自 v0.56.0 手機視野縮放）
+- `gameState.cameraZoom`（預設 1.0，桌機與手機均生效）
+- `gameState.settings.cameraZoomLevel`（1~10，決定 baseZoom；公式：`baseZoom = level/10 * 0.4 + 0.6`）
+- `gameState.settings.cameraMode`（`'smart'` 體型自動縮放 / `'manual'` 固定 baseZoom）
+- 智能模式公式：`cameraZoom = max(0.3, baseZoom - increaseRatio * 0.25)`
+- `worldToScreen()` / `drawTerrain()`：zoom 條件移除 `isMobile` 限制，統一使用 `cameraZoom`
+- `_updateCameraZoom()` 每幀呼叫（`updateGameLogic` 內）
 
 ---
 
