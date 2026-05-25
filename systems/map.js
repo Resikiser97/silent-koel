@@ -392,7 +392,9 @@ function buildTerrainCanvas() {
     console.log("--- 地形預渲染完成（" + MAP_WIDTH + "x" + MAP_HEIGHT + " px）---");
 }
 
-// 把離屏 Canvas 對應視窗的區域貼到主 Canvas，支援地圖環繞
+// 把離屏 Canvas 對應視窗的區域貼到主 Canvas，支援地圖環繞 + 手機視野縮放
+// 手機 cameraZoom < 1.0 時（玩家體型變大），需採樣更大的地形區域（VIEW_W/zoom × VIEW_H/zoom）
+// 並縮放貼到螢幕，確保地形與 worldToScreen() 的樹木/生物座標完全對齊
 function drawTerrain() {
     if (!_terrainCanvas) {
         ctx.fillStyle = getBgColor();
@@ -401,28 +403,51 @@ function drawTerrain() {
     }
     const camX = gameState.camera.x;
     const camY = gameState.camera.y;
-    ctx.imageSmoothingEnabled = false;
 
-    const wrapX = camX + VIEW_W > MAP_WIDTH;
-    const wrapY = camY + VIEW_H > MAP_HEIGHT;
+    // 取得與 worldToScreen() 相同的縮放值
+    const zoom = (gameState.isMobile && gameState.cameraZoom && gameState.cameraZoom !== 1.0)
+        ? gameState.cameraZoom : 1.0;
+
+    // zoom = 1.0：原本邏輯，1:1 貼圖，關閉平滑
+    // zoom < 1.0：採樣更大區域後縮小，開啟平滑避免鋸齒
+    ctx.imageSmoothingEnabled = (zoom !== 1.0);
+
+    // 採樣區域：以螢幕中心對應的世界點為中心，寬高 = VIEW / zoom
+    const srcW = Math.round(VIEW_W / zoom);
+    const srcH = Math.round(VIEW_H / zoom);
+    // 採樣原點（世界座標），正規化到地圖範圍內
+    let srcX = Math.round(camX + VIEW_W / 2 - srcW / 2);
+    let srcY = Math.round(camY + VIEW_H / 2 - srcH / 2);
+    srcX = ((srcX % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
+    srcY = ((srcY % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
+
+    // 依環繞情況拆成最多 4 段，各段按比例對應螢幕區域
+    const wrapX = srcX + srcW > MAP_WIDTH;
+    const wrapY = srcY + srcH > MAP_HEIGHT;
 
     if (!wrapX && !wrapY) {
-        ctx.drawImage(_terrainCanvas, camX, camY, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
+        ctx.drawImage(_terrainCanvas, srcX, srcY, srcW, srcH, 0, 0, VIEW_W, VIEW_H);
     } else if (wrapX && !wrapY) {
-        const w1 = MAP_WIDTH - camX;
-        ctx.drawImage(_terrainCanvas, camX, camY, w1,          VIEW_H, 0,  0, w1,          VIEW_H);
-        ctx.drawImage(_terrainCanvas, 0,    camY, VIEW_W - w1, VIEW_H, w1, 0, VIEW_W - w1, VIEW_H);
+        const w1s = MAP_WIDTH - srcX;
+        const w1d = Math.round(w1s / srcW * VIEW_W);
+        const w2s = srcW - w1s, w2d = VIEW_W - w1d;
+        ctx.drawImage(_terrainCanvas, srcX, srcY, w1s, srcH, 0,   0, w1d, VIEW_H);
+        ctx.drawImage(_terrainCanvas, 0,    srcY, w2s, srcH, w1d, 0, w2d, VIEW_H);
     } else if (!wrapX && wrapY) {
-        const h1 = MAP_HEIGHT - camY;
-        ctx.drawImage(_terrainCanvas, camX, camY, VIEW_W, h1,          0, 0,  VIEW_W, h1);
-        ctx.drawImage(_terrainCanvas, camX, 0,    VIEW_W, VIEW_H - h1, 0, h1, VIEW_W, VIEW_H - h1);
+        const h1s = MAP_HEIGHT - srcY;
+        const h1d = Math.round(h1s / srcH * VIEW_H);
+        const h2s = srcH - h1s, h2d = VIEW_H - h1d;
+        ctx.drawImage(_terrainCanvas, srcX, srcY, srcW, h1s, 0, 0,   VIEW_W, h1d);
+        ctx.drawImage(_terrainCanvas, srcX, 0,    srcW, h2s, 0, h1d, VIEW_W, h2d);
     } else {
-        const w1 = MAP_WIDTH  - camX, w2 = VIEW_W  - w1;
-        const h1 = MAP_HEIGHT - camY, h2 = VIEW_H - h1;
-        ctx.drawImage(_terrainCanvas, camX, camY, w1, h1, 0,  0,  w1, h1);
-        ctx.drawImage(_terrainCanvas, 0,    camY, w2, h1, w1, 0,  w2, h1);
-        ctx.drawImage(_terrainCanvas, camX, 0,    w1, h2, 0,  h1, w1, h2);
-        ctx.drawImage(_terrainCanvas, 0,    0,    w2, h2, w1, h1, w2, h2);
+        const w1s = MAP_WIDTH  - srcX, w2s = srcW - w1s;
+        const h1s = MAP_HEIGHT - srcY, h2s = srcH - h1s;
+        const w1d = Math.round(w1s / srcW * VIEW_W), w2d = VIEW_W - w1d;
+        const h1d = Math.round(h1s / srcH * VIEW_H), h2d = VIEW_H - h1d;
+        ctx.drawImage(_terrainCanvas, srcX, srcY, w1s, h1s, 0,   0,   w1d, h1d);
+        ctx.drawImage(_terrainCanvas, 0,    srcY, w2s, h1s, w1d, 0,   w2d, h1d);
+        ctx.drawImage(_terrainCanvas, srcX, 0,    w1s, h2s, 0,   h1d, w1d, h2d);
+        ctx.drawImage(_terrainCanvas, 0,    0,    w2s, h2s, w1d, h1d, w2d, h2d);
     }
 
     // 夜晚遮罩
