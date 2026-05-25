@@ -48,7 +48,7 @@ LANG['en'] = {
         diffNormal: '⚔️ Normal',
         diffHard:   '💀 Hard',
         diffHell:   '🔥 Hell',
-        charKoel:        '🐦 The Koel',
+        charKoel:        '🐦 Koel',
         charArcherfish:  '🐟 Archerfish',
         charSoon:        '❓ Coming Soon',
         btnBack:    '← Back',
