@@ -240,11 +240,18 @@ function _archerAttack() {
 // 提取果子吸收邏輯，供 checkFruitCollision 和 playerDash 共用
 function _collectFruit(p, fruit) {
     const ev = p.evolution;
-    let herbBonus = 0;
-    for (let h = 1; h < ev.herbivore; h++) {
-        herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
+    let fruitXP;
+    if (ev.herbivore >= 1) {
+        // 有草食性 Lv1+：正常計算（基礎5 + forager + 草食bonus）
+        let herbBonus = 0;
+        for (let h = 1; h < ev.herbivore; h++) {
+            herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
+        }
+        fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
+    } else {
+        // 無草食性：只得 1 XP（可吃但效益極低，避免刷巨人時靠果子回血）
+        fruitXP = 1;
     }
-    const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
     const actualFruitXP = addXP(fruitXP);
     AudioManager.play('eatFruit');
     showXPPopup(p.x, p.y, actualFruitXP);
