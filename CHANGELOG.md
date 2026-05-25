@@ -2,6 +2,13 @@
 
 ---
 
+## v0.57.7 - 2026-05-25
+
+### 修復
+- **技能樹 forceStart 路徑未讀 localStorage**（`systems/evolution.js`）：`buildSkillTreeOverlay(forceStart)` 現在與 `fromHome` 走相同流程——開啟時讀取 `skillPoints` / `playerSkills`，器官繼承列表改讀 `lastRunOrgans`；原本讀記憶體 `gameState.player.organs` 的邏輯限縮至 `postGame` 模式（遊戲剛結束記憶體仍完整的情況）；修復了刷新後進入技能樹看不到技能點與可繼承器官的問題
+
+---
+
 ## v0.57.6 - 2026-05-25
 
 ### 調整

@@ -276,7 +276,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     _skillTreeMode = effectiveMode;
     _skillTreeFromHome = (effectiveMode === 'fromHome');
     if (effectiveMode === 'fromHome' || effectiveMode === 'forceStart') applyDeviceMode();
-    if (fromHome) {
+    if (fromHome || effectiveMode === 'forceStart') {
         try {
             const ss = localStorage.getItem('playerSkills');
             if (ss) gameState.playerSkills = JSON.parse(ss);
@@ -365,9 +365,9 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         });
         organSection.appendChild(organGrid);
     }
-    if (effectiveMode !== 'fromHome' && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) overlay.appendChild(organSection);
+    if (effectiveMode === 'postGame' && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) overlay.appendChild(organSection);
 
-    if (effectiveMode !== 'fromHome' && hiddenOrgans.length > 0) {
+    if (effectiveMode === 'postGame' && hiddenOrgans.length > 0) {
         const hiddenSection = document.createElement('div');
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const hiddenTitle = document.createElement('div');
@@ -473,7 +473,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     let _lrData = null;
     try { if (_lrRaw) _lrData = JSON.parse(_lrRaw); } catch(e) {}
 
-    if (effectiveMode === 'fromHome') {
+    if (effectiveMode === 'fromHome' || effectiveMode === 'forceStart') {
         const inheritSec = document.createElement('div');
         inheritSec.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #665500;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const homeOrgansToKeep = gameState.playerSkills.organMemory || 0;

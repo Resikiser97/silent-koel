@@ -63,6 +63,9 @@ systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, apply
                           loadSavedOrgans（獨立函式，v0.57.5；initializeGame() 在 applySkillBonuses() 前呼叫確保器官不丟失；buildSkillTreeOverlay(fromHome) 只讀 skillPoints 不再重複套用）
                           applySkillBonuses, saveLastRunOrgans, showSkillTree
                           buildSkillTreeOverlay, upgradeSkill
+                          buildSkillTreeOverlay 模式說明（v0.57.7）：
+                            fromHome / forceStart → 讀 localStorage skillPoints/playerSkills + 讀 lastRunOrgans 顯示繼承器官
+                            postGame → 讀記憶體 gameState.player.organs（遊戲剛結束，資料仍完整）
                           _grantPoisonSac（雜食性 Lv1 時自動授予毒囊器官）
 systems/creatures.js      updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯）
                           drawNeutralCreatures
