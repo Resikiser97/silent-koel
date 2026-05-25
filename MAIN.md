@@ -38,7 +38,7 @@ systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeF
                           checkXPMilestone, addXP, checkLevelUp
                           findBestPerceptionPath
                           playerDash（閃現技能：瞬移+無敵+冷卻，v0.53.0）
-                          _collectFruit（果子吸收 XP 共用函式，v0.54.0）
+                          _collectFruit（果子吸收 XP 共用函式，v0.54.0；v0.57.6 加入草食性判斷：ev.herbivore >= 1 才套正常 XP 計算，否則固定 1 XP）
                           updateProjectiles, _checkProjectileHit（子彈系統，v0.56.0；v0.57.5 補入 tutorialStump）
                           _archerAttack, _getArcherShootDir, _findArcherAutoTarget（阿奇爾攻擊，v0.56.0）
 systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTutorialStump，handleTutorialStumpKill
