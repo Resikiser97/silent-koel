@@ -1245,7 +1245,8 @@ function showMapSelect() {
     if (typeof CHARACTERS !== 'undefined') {
         for (const cid of Object.keys(CHARACTERS)) {
             const c = CHARACTERS[cid];
-            chars.push({ id: cid, label: c.icon + ' ' + c.name + '（' + c.nameEn + '）', locked: !c.unlocked });
+            const charKey = 'char' + cid.charAt(0).toUpperCase() + cid.slice(1);
+            chars.push({ id: cid, label: t(charKey), locked: !c.unlocked });
         }
     } else {
         chars.push({ id: 'koel', label: t('charKoel'), locked: false });
