@@ -676,6 +676,7 @@ function hideSettings() {
     if (_rebindBlink)   { clearInterval(_rebindBlink);  _rebindBlink   = null; }
     if (_rebindTimeout) { clearTimeout(_rebindTimeout); _rebindTimeout = null; }
     gameState._rebindTarget = null;
+    saveSettings(); // 關閉設定時自動存入 localStorage
     const overlay = document.getElementById('settings-overlay');
     if (overlay) overlay.remove();
     gameState.settingsOpen = false;
