@@ -541,7 +541,7 @@ function showFunLeaderboard(difficulty) {
     tableWrap.appendChild(table);
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    ['排名','名字','數值','版本','日期'].forEach(h => {
+    ['排名','名字','角色','數值','版本','日期'].forEach(h => {
         const th = document.createElement('th');
         th.style.cssText = 'padding:6px 8px;border-bottom:1px solid #444;color:#FFD700;text-align:left;position:sticky;top:0;background:#111;';
         th.textContent = h;
@@ -554,13 +554,13 @@ function showFunLeaderboard(difficulty) {
     table.appendChild(tbody);
 
     function loadFunRows() {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">讀取中...</td></tr>';
-        // update value column header
-        headerRow.cells[2].textContent = currentCat.colLabel;
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">讀取中...</td></tr>';
+        // update value column header（角色欄在 cells[2]，數值欄在 cells[3]）
+        headerRow.cells[3].textContent = currentCat.colLabel;
         currentCat.fetchFn().then(rows => {
             tbody.innerHTML = '';
             if (!rows || rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">暫無記錄</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">暫無記錄</td></tr>';
                 return;
             }
             rows.forEach((row, i) => {
@@ -568,11 +568,11 @@ function showFunLeaderboard(difficulty) {
                 const tr = document.createElement('tr');
                 if (rank <= 3) tr.style.background = ['rgba(255,215,0,0.12)', 'rgba(192,192,192,0.12)', 'rgba(205,127,50,0.12)'][rank - 1];
                 const dateStr = row.created_at ? row.created_at.slice(0, 10) : '—';
-                const nameDisplay = row.name ? (row.name.length > 16 ? row.name.slice(0, 16) + '…' : row.name) : '—';
+                const nameStr = row.name ? (row.name.length > 16 ? row.name.slice(0, 16) + '…' : row.name) : '—';
                 const funCharKey = 'char' + (row.character || 'koel').charAt(0).toUpperCase() + (row.character || 'koel').slice(1);
-                const nameStr = nameDisplay + '<div style="font-size:11px;color:#aaa;">' + t(funCharKey) + '</div>';
+                const charStr = t(funCharKey);
                 const valStr = currentCat.format(row[currentCat.colName]);
-                [getRankIcon(rank), nameStr, valStr, row.version || '—', dateStr].forEach(v => {
+                [getRankIcon(rank), nameStr, charStr, valStr, row.version || '—', dateStr].forEach(v => {
                     const td = document.createElement('td');
                     td.style.cssText = 'padding:6px 8px;border-bottom:1px solid #222;';
                     td.innerHTML = String(v);
@@ -581,7 +581,7 @@ function showFunLeaderboard(difficulty) {
                 tbody.appendChild(tr);
             });
         }).catch(() => {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#f66;">載入失敗</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#f66;">載入失敗</td></tr>';
         });
     }
 

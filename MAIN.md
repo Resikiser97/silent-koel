@@ -83,6 +83,7 @@ systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）
 systems/hud.js            drawGame, updateUI, drawTopBarUI
                           drawMinimap（含所有 _minimap 變數）, drawTreasures
+                          _drawArcherfish（夜晚三角光圈 + F技紅色三角框，v0.57.4）
 systems/ui.js             showTooltip, hideTooltip, showMapSelect
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式

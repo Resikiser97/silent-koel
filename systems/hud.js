@@ -91,12 +91,32 @@ function _drawArcherfish(ctx, sx, sy, r, p) {
     ctx.translate(sx, sy);
     if (!facingRight) ctx.scale(-1, 1); // 向左翻轉
 
-    // 夜晚發光外圈
+    // 夜晚發光外圈（三角形，包覆本體）
     if (gameState.isNight) {
-        ctx.fillStyle = 'rgba(79,195,247,0.35)';
+        const ng = 1.55; // 夜光三角放大比例
+        ctx.fillStyle = 'rgba(79,195,247,0.30)';
         ctx.beginPath();
-        ctx.arc(0, 0, r + 4, 0, Math.PI * 2);
+        ctx.moveTo( r * 1.2 * ng,  0);
+        ctx.lineTo(-r * 0.8 * ng, -r * 0.9 * ng);
+        ctx.lineTo(-r * 0.8 * ng,  r * 0.9 * ng);
+        ctx.closePath();
         ctx.fill();
+    }
+
+    // F技衝刺：紅色三角形邊框繞在角色外圍
+    if (p.archerDashActive) {
+        const ds = 1.45; // 衝刺三角放大比例
+        ctx.beginPath();
+        ctx.moveTo( r * 1.2 * ds,  0);
+        ctx.lineTo(-r * 0.8 * ds, -r * 0.9 * ds);
+        ctx.lineTo(-r * 0.8 * ds,  r * 0.9 * ds);
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(255,60,60,0.9)';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#ff3030';
+        ctx.shadowBlur  = 14;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
     }
 
     // 三角形本體（尖端朝右，形如播放按鈕）
