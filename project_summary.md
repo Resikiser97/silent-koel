@@ -87,6 +87,16 @@ Goblinnest（單人獨立開發，AI 輔助）
 4. 「🏠 回首頁」（直接）→ warn-once → 回首頁（`lastRunOrgans` 保留，首頁可補選）
 5. 「⚔️ 再來一場」（直接）→ 強制進技能樹（`mode='forceStart'`）→ 底部只有「開始遊戲」
 
+### buildSkillTreeOverlay 三種模式資料來源（v0.57.7 確立）
+| 模式 | 觸發時機 | skillPoints/playerSkills | 器官繼承列表 |
+|---|---|---|---|
+| `fromHome` | 首頁「📊 技能」按鈕 | 讀 localStorage | 讀 `lastRunOrgans` |
+| `forceStart` | 開始遊戲→選角色→無 savedOrgans | 讀 localStorage（同 fromHome） | 讀 `lastRunOrgans`（同 fromHome） |
+| `postGame` | 結算畫面「前往技能樹」 | 讀記憶體（剛存入） | 讀記憶體 `player.organs`（剛死/勝利仍完整） |
+
+- `fromHome` 和 `forceStart` 完全走相同路徑，刷新後資料也不會消失（已存入 `lastRunOrgans`）
+- 勝利／死亡瞬間（submit score **之前**）即呼叫 `saveLastRunOrgans()`，確保 refresh 也保留
+
 ### 圖鑑系統（v0.31.0 / v0.47.1 擴充）
 - 主選單「📖 圖鑑」取代原「遊戲說明」；遊戲內左下角 📖 按鈕（預設開器官圖鑑 Tab）
 - 書本翻頁樣式，三個 Tab：操作說明／器官圖鑑／進化圖鑑
@@ -292,7 +302,7 @@ map/
 - 每次 commit 後必須執行 git push origin master
 
 ### 版本與部署
-- 目前版本：**v0.57.6**
+- 目前版本：**v0.57.7**
 
 ### Branch 工作流程
 - `master`：主開發分支，所有日常開發在此進行
@@ -330,7 +340,7 @@ map/
 
 ### 未來待開發功能
 - [x] 新手教學系統（v0.43.0 移動教學 / v0.44.0 設定開關 / v0.45.0 戰鬥教學，共三版完成）
-- [ ] 海洋和沙漠專屬生物差異化（目前只有顏色不同）
+- [x] 海洋和沙漠專屬生物差異化（目前只有顏色不同）
 - [ ] 角色美術素材替換（目前用圓形代替）
 - [ ] 遊戲封面圖（itch.io 上架需要）
 - [ ] itch.io 上架
