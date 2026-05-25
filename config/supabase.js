@@ -53,7 +53,7 @@ async function fetchTop10(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,score,play_time,is_victory,version_order' + diffFilter + '&order=version_order.desc,is_victory.desc,play_time.asc,boss_kill_time.asc&limit=10'
+        '?select=name,score,play_time,is_victory,version_order,character' + diffFilter + '&order=version_order.desc,is_victory.desc,play_time.asc,boss_kill_time.asc&limit=10'
     );
 }
 
@@ -63,7 +63,7 @@ async function fetchFunSpeedVictory(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,play_time,version,created_at' + diffFilter + '&is_victory=eq.true&play_time=not.is.null&order=play_time.asc&limit=10'
+        '?select=name,play_time,version,created_at,character' + diffFilter + '&is_victory=eq.true&play_time=not.is.null&order=play_time.asc&limit=10'
     );
 }
 // 最速死亡（失敗，play_time 最短）
@@ -71,7 +71,7 @@ async function fetchFunSpeedDeath(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,play_time,score,version,created_at' + diffFilter + '&is_victory=eq.false&order=play_time.asc&limit=10'
+        '?select=name,play_time,score,version,created_at,character' + diffFilter + '&is_victory=eq.false&order=play_time.asc&limit=10'
     );
 }
 // 巨人獵人（giant_kills 最多）
@@ -79,7 +79,7 @@ async function fetchFunGiantKills(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,giant_kills,version,created_at' + diffFilter + '&giant_kills=gt.0&order=giant_kills.desc&limit=10'
+        '?select=name,giant_kills,version,created_at,character' + diffFilter + '&giant_kills=gt.0&order=giant_kills.desc&limit=10'
     );
 }
 // 殺手獵人（killer_kills 最多）
@@ -87,7 +87,7 @@ async function fetchFunKillerKills(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,killer_kills,version,created_at' + diffFilter + '&killer_kills=gt.0&order=killer_kills.desc&limit=10'
+        '?select=name,killer_kills,version,created_at,character' + diffFilter + '&killer_kills=gt.0&order=killer_kills.desc&limit=10'
     );
 }
 // 殺手克星（killer_max_level 最高）
@@ -95,7 +95,7 @@ async function fetchFunKillerMaxLevel(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,killer_max_level,version,created_at' + diffFilter + '&killer_max_level=gt.0&order=killer_max_level.desc&limit=10'
+        '?select=name,killer_max_level,version,created_at,character' + diffFilter + '&killer_max_level=gt.0&order=killer_max_level.desc&limit=10'
     );
 }
 // 最快擊殺 Boss（boss_kill_time 最短，只有勝利記錄才有此欄位）
@@ -103,7 +103,7 @@ async function fetchFunBossKillSpeed(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,boss_kill_time,version,created_at' + diffFilter +
+        '?select=name,boss_kill_time,version,created_at,character' + diffFilter +
         '&is_victory=eq.true&boss_kill_time=not.is.null&order=boss_kill_time.asc&limit=10'
     );
 }
@@ -113,7 +113,7 @@ async function fetchFunMaxLevel(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,level,version,created_at' + diffFilter +
+        '?select=name,level,version,created_at,character' + diffFilter +
         '&level=not.is.null&order=level.desc&limit=10'
     );
 }

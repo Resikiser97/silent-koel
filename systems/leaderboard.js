@@ -568,7 +568,9 @@ function showFunLeaderboard(difficulty) {
                 const tr = document.createElement('tr');
                 if (rank <= 3) tr.style.background = ['rgba(255,215,0,0.12)', 'rgba(192,192,192,0.12)', 'rgba(205,127,50,0.12)'][rank - 1];
                 const dateStr = row.created_at ? row.created_at.slice(0, 10) : '—';
-                const nameStr = row.name ? (row.name.length > 16 ? row.name.slice(0, 16) + '…' : row.name) : '—';
+                const nameDisplay = row.name ? (row.name.length > 16 ? row.name.slice(0, 16) + '…' : row.name) : '—';
+                const funCharKey = 'char' + (row.character || 'koel').charAt(0).toUpperCase() + (row.character || 'koel').slice(1);
+                const nameStr = nameDisplay + '<div style="font-size:11px;color:#aaa;">' + t(funCharKey) + '</div>';
                 const valStr = currentCat.format(row[currentCat.colName]);
                 [getRankIcon(rank), nameStr, valStr, row.version || '—', dateStr].forEach(v => {
                     const td = document.createElement('td');

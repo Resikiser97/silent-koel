@@ -2,6 +2,14 @@
 
 ---
 
+## v0.57.3 - 2026-05-25
+
+### 修復
+- **TOP 10 角色欄位全顯示「噪鵑」**（`config/supabase.js`）：`fetchTop10` 的 select 缺少 `character` 欄位，導致 `row.character` 永遠為 `undefined` 而 fallback 到 `koel`；已補上
+- **趣味排行榜無角色顯示**（`config/supabase.js`、`systems/leaderboard.js`）：所有 `fetchFun*` 查詢的 select 補上 `character`；`loadFunRows` 顯示邏輯在名字下方加角色小字
+
+---
+
 ## v0.57.2 - 2026-05-25
 
 ### 修復
