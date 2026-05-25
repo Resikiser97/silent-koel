@@ -63,6 +63,8 @@ LANG['en'] = {
         autoAttack:      'Auto Attack',
         autoAttackHint:  'Z key to toggle',
         organTooltip:    'Organ Tooltip',
+        alwaysCenter:     'Always Center',
+        alwaysCenterHint: 'Player is always centered on screen',
         patchNotes:       '📋 Patch Notes',
         patchNotesTitle:  '📋 Version Update Notes',
         patchAdded:       '✅ Added',

@@ -116,6 +116,39 @@ function _setFangLevel(targetLv) {
     }
 }
 
+// 獨立函式：從 localStorage 載入已儲存的器官並套用效果
+// 供 initializeGame() 與 buildSkillTreeOverlay(fromHome) 共用
+// initializeGame() 在 applySkillBonuses() 之前呼叫，確保器官不因跳過技能樹而丟失
+// buildSkillTreeOverlay(fromHome) 路徑只讀取 skillPoints，不再重複呼叫此函式
+function loadSavedOrgans() {
+    const p = gameState.player;
+    try {
+        const so = localStorage.getItem('savedOrgans');
+        if (so) {
+            const organs = JSON.parse(so);
+            p.organs = p.organs || [];
+            organs.forEach(organ => {
+                if (p.organs.find(o => o.id === organ.id)) return;
+                p.organs.push(Object.assign({}, organ));
+                applyOrganEffects(organ);
+            });
+        }
+    } catch(e) {}
+    try {
+        const sho = localStorage.getItem('savedHiddenOrgans');
+        if (sho) {
+            const hiddenOrgans = JSON.parse(sho);
+            p.hiddenOrgans = p.hiddenOrgans || [];
+            hiddenOrgans.forEach(organ => {
+                if (p.hiddenOrgans.find(h => h.id === organ.id)) return;
+                p.hiddenOrgans.push(Object.assign({}, organ));
+                applyHiddenOrganEffects(organ);
+            });
+        }
+    } catch(e) {}
+}
+window.loadSavedOrgans = loadSavedOrgans;
+
 function applySkillBonuses() {
     const sk = gameState.playerSkills;
     const p = gameState.player;
@@ -133,33 +166,7 @@ function applySkillBonuses() {
     } else if (terribleFangLv >= 3) {
         _setFangLevel(1);
     }
-    // 記憶器官：載入玩家死亡時手動選擇保留的器官（只用一次）
-    const savedOrgans = localStorage.getItem('savedOrgans');
-    if (savedOrgans) {
-        try {
-            const organs = JSON.parse(savedOrgans);
-            organs.forEach(organ => {
-                if (p.organs.find(o => o.id === organ.id)) return;
-                const o = Object.assign({}, organ, { inherited: true, level: organ.level || 1 });
-                p.organs.push(o);
-                applyOrganEffects(o);
-            });
-        } catch(e) {}
-        localStorage.removeItem('savedOrgans');
-    }
-    // 隱藏器官繼承
-    const savedHiddenOrgans = localStorage.getItem('savedHiddenOrgans');
-    if (savedHiddenOrgans) {
-        try {
-            const hOrgans = JSON.parse(savedHiddenOrgans);
-            hOrgans.forEach(organ => {
-                if (p.hiddenOrgans.find(h => h.id === organ.id)) return;
-                p.hiddenOrgans.push(Object.assign({}, organ));
-                applyHiddenOrganEffects(organ);
-            });
-        } catch(e) {}
-        localStorage.removeItem('savedHiddenOrgans');
-    }
+    // 注意：器官載入已移至獨立函式 loadSavedOrgans()，由 initializeGame() 在此函式之前呼叫
 }
 
 function saveLastRunOrgans() {

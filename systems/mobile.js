@@ -147,6 +147,9 @@ let _archerDirStartY  = 0;
 let _archerDirCurX    = 0;
 let _archerDirCurY    = 0;
 
+// 近戰蓄力攻擊追蹤（touchstart 即開始計時，touchend 依蓄力時間發動普通或蓄力攻擊）
+let _mobileAtkTouchId = null;
+
 function _joyZone(x, y) {
     return !_attackZone(x, y);
 }
@@ -395,13 +398,11 @@ function _attachJoystickListeners() {
                     _archerDirStartY  = y;
                     _archerDirCurX    = x;
                     _archerDirCurY    = y;
-                } else {
-                    playerAttack();
-                    if (gameState.orientation === 'landscape') {
-                        _atkFeedbackTime = Date.now();
-                        _atkFeedbackX = x;
-                        _atkFeedbackY = y;
-                    }
+                } else if (!gameState.player.isRanged && _mobileAtkTouchId === null) {
+                    // 近戰（噪鵑）：touchstart 立即開始蓄力計時
+                    _mobileAtkTouchId = touch.identifier;
+                    gameState._mobileChargeStart = Date.now();
+                    gameState._mobileCharging    = true;
                 }
                 continue;
             }
@@ -457,6 +458,26 @@ function _attachJoystickListeners() {
                 gameState.mobileInput = { dx: 0, dy: 0 };
                 _renderMobileOverlay();
             }
+            // 近戰蓄力攻擊放開：依蓄力時間發動普通或蓄力攻擊
+            if (touch.identifier === _mobileAtkTouchId) {
+                _mobileAtkTouchId = null;
+                if (gameState._mobileCharging) {
+                    const chargeTime = Date.now() - (gameState._mobileChargeStart || Date.now());
+                    gameState._mobileCharging    = false;
+                    gameState._mobileChargeStart = null;
+                    // 蓄力時間 >= 500ms 視為蓄力攻擊，否則普通攻擊
+                    if (chargeTime >= 500) {
+                        gameState._mobileChargeAttack = true;
+                    }
+                    playerAttack();
+                    gameState._mobileChargeAttack = false;
+                    if (gameState.orientation === 'landscape') {
+                        _atkFeedbackTime = Date.now();
+                        _atkFeedbackX = touch.clientX;
+                        _atkFeedbackY = touch.clientY;
+                    }
+                }
+            }
             // 阿奇爾攻擊區放開：計算方向並發射
             if (touch.identifier === _archerDirTouchId) {
                 _archerDirTouchId = null;
@@ -502,20 +523,33 @@ function _attachJoystickListeners() {
         }
     };
 
-    document.addEventListener('touchstart',  onStart, { passive: false });
-    document.addEventListener('touchmove',   onMove,  { passive: false });
-    document.addEventListener('touchend',    onEnd,   { passive: false });
-    document.addEventListener('touchcancel', onEnd,   { passive: false });
-    _joyDocListeners = { onStart, onMove, onEnd };
+    const onCancel = (e) => {
+        for (const touch of e.changedTouches) {
+            // 近戰蓄力重置
+            if (touch.identifier === _mobileAtkTouchId) {
+                _mobileAtkTouchId            = null;
+                gameState._mobileCharging    = false;
+                gameState._mobileChargeStart = null;
+                gameState._mobileChargeAttack = false;
+            }
+        }
+        onEnd(e);
+    };
+
+    document.addEventListener('touchstart',  onStart,   { passive: false });
+    document.addEventListener('touchmove',   onMove,    { passive: false });
+    document.addEventListener('touchend',    onEnd,     { passive: false });
+    document.addEventListener('touchcancel', onCancel,  { passive: false });
+    _joyDocListeners = { onStart, onMove, onEnd, onCancel };
 }
 
 function _detachJoystickListeners() {
     if (!_joyDocListeners) return;
-    const { onStart, onMove, onEnd } = _joyDocListeners;
-    document.removeEventListener('touchstart',  onStart, { passive: false });
-    document.removeEventListener('touchmove',   onMove,  { passive: false });
-    document.removeEventListener('touchend',    onEnd,   { passive: false });
-    document.removeEventListener('touchcancel', onEnd,   { passive: false });
+    const { onStart, onMove, onEnd, onCancel } = _joyDocListeners;
+    document.removeEventListener('touchstart',  onStart,  { passive: false });
+    document.removeEventListener('touchmove',   onMove,   { passive: false });
+    document.removeEventListener('touchend',    onEnd,    { passive: false });
+    document.removeEventListener('touchcancel', onCancel, { passive: false });
     _joyDocListeners = null;
 }
 

@@ -179,6 +179,9 @@ function initializeGame() {
     gameState.brainShockwaves     = [];
     gameState.venomPuddles        = [];   // 蠍王定點毒霧陣列
     gameState.projectiles         = [];   // 阿奇爾子彈陣列
+    gameState._mobileCharging     = false;
+    gameState._mobileChargeStart  = null;
+    gameState._mobileChargeAttack = false;
     gameState.neutralCreatures    = [];
     gameState.hostileCreatures    = [];
     gameState.camera              = { x: 3200, y: 3550 };
@@ -365,6 +368,10 @@ function initializeGame() {
         const savedPoints = localStorage.getItem('skillPoints');
         if (savedPoints) gameState.skillPoints = Math.max(0, parseInt(savedPoints, 10) || 0);
     } catch(e) {}
+
+    // ← 確保器官效果在技能加成之前套用，不依賴技能樹面板開啟
+    loadSavedOrgans();
+
     applySkillBonuses();
     applyEvolutionEffects();
     applyAllMutationBonuses(); // 套用變異器官 Final 值加成（一次性，在所有器官效果之後）

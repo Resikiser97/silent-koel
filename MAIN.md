@@ -27,6 +27,7 @@ systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
 systems/audio.js          AudioManager, initAudio
 systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera
                           _updateMobileCameraZoom（手機視野縮放，v0.56.0）
+                          updateCamera：alwaysCenter 設定為 true 時 edgeThreshold=0.5，角色永遠居中（v0.57.5）
 systems/input.js          handleKeyDown, handleKeyUp（含設定介面按鍵 handler refs）
 systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature, spawnTreasure
                           _randomPointInBiome, _makeHerbCreature, _makeCarnCreature
@@ -38,7 +39,7 @@ systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeF
                           findBestPerceptionPath
                           playerDash（閃現技能：瞬移+無敵+冷卻，v0.53.0）
                           _collectFruit（果子吸收 XP 共用函式，v0.54.0）
-                          updateProjectiles, _checkProjectileHit（子彈系統，v0.56.0）
+                          updateProjectiles, _checkProjectileHit（子彈系統，v0.56.0；v0.57.5 補入 tutorialStump）
                           _archerAttack, _getArcherShootDir, _findArcherAutoTarget（阿奇爾攻擊，v0.56.0）
 systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTutorialStump，handleTutorialStumpKill
                           （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
@@ -59,6 +60,7 @@ systems/mutation.js       initMutationData, saveMutationData, addMutationPoints
                           applyMutationEffects, applyAllMutationBonuses
                           checkMutationCompensation, showMutationPanel
 systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, applyEvolutionEffects
+                          loadSavedOrgans（獨立函式，v0.57.5；initializeGame() 在 applySkillBonuses() 前呼叫確保器官不丟失；buildSkillTreeOverlay(fromHome) 只讀 skillPoints 不再重複套用）
                           applySkillBonuses, saveLastRunOrgans, showSkillTree
                           buildSkillTreeOverlay, upgradeSkill
                           _grantPoisonSac（雜食性 Lv1 時自動授予毒囊器官）

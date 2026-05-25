@@ -174,6 +174,9 @@ function playerAttack() {
 
     p.attackVisual = now;
 
+    // 手機蓄力攻擊判斷（原有蓄力邏輯不變，只是觸發來源改為旗標）
+    const isChargeAttack = gameState._chargeAttack || gameState._mobileChargeAttack;
+
     const targets = [
         ...gameState.hostileCreatures.map(c => ({ c, hostile: true, isBoss: false, isElite: false })),
         ...gameState.neutralCreatures.map(c => ({ c, hostile: false, isBoss: false, isElite: false })),
@@ -193,6 +196,8 @@ function playerAttack() {
         if (wrappedDistance(p.x, p.y, c.x, c.y) >= p.attackRange + (c.radius || 0) * 0.5) continue;
 
         let dmg = p.attack;
+        // 蓄力攻擊：傷害 ×2（近戰手機持按 ≥500ms 觸發）
+        if (isChargeAttack) dmg = Math.round(dmg * 2);
         let isCrit = false;
         if (p.critChance > 0 && Math.random() < p.critChance) {
             dmg = Math.round(dmg * p.critMultiplier);

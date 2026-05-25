@@ -292,7 +292,7 @@ map/
 - 每次 commit 後必須執行 git push origin master
 
 ### 版本與部署
-- 目前版本：**v0.57.4**
+- 目前版本：**v0.57.5**
 
 ### Branch 工作流程
 - `master`：主開發分支，所有日常開發在此進行

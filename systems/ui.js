@@ -103,6 +103,9 @@ function loadSettings() {
             if (parsed.showOrganTooltip !== undefined) {
                 gameState.settings.showOrganTooltip = parsed.showOrganTooltip;
             }
+            if (parsed.alwaysCenter !== undefined) {
+                gameState.settings.alwaysCenter = parsed.alwaysCenter;
+            }
         }
     } catch(e) {}
     applyLanguage(gameState.language);
@@ -410,6 +413,33 @@ function showSettings(fromHome) {
     tutHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;margin-bottom:4px;';
     tutHint.textContent = '開啟後，下一場遊戲開始時會顯示教學';
     accSec.appendChild(tutHint);
+
+    // ── 永遠居中 Toggle
+    const centerRow = document.createElement('div');
+    centerRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const centerTog = document.createElement('button');
+    centerTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshCenterTog = () => {
+        const on = gameState.settings.alwaysCenter;
+        centerTog.textContent = on ? t('on') : t('off');
+        centerTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshCenterTog();
+    centerTog.onclick = () => {
+        gameState.settings.alwaysCenter = !gameState.settings.alwaysCenter;
+        refreshCenterTog();
+        saveSettings();
+    };
+    const centerLbl = document.createElement('div');
+    centerLbl.style.cssText = 'font-size:13px;';
+    centerLbl.textContent = t('alwaysCenter');
+    centerRow.appendChild(centerTog);
+    centerRow.appendChild(centerLbl);
+    accSec.appendChild(centerRow);
+    const centerHintEl = document.createElement('div');
+    centerHintEl.style.cssText = 'font-size:11px;color:#888;margin-top:2px;margin-bottom:4px;';
+    centerHintEl.textContent = t('alwaysCenterHint');
+    accSec.appendChild(centerHintEl);
 
     const keyAccWrapper = document.createElement('div');
     keyAccWrapper.style.cssText = 'display:flex;flex-direction:row;gap:8px;margin-bottom:14px;';

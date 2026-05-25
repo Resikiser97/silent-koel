@@ -50,8 +50,10 @@ function _updateMobileCameraZoom() {
 function updateCamera() {
     const p = gameState.player;
     const cam = gameState.camera;
-    const marginX = VIEW_W * 0.30;
-    const marginY = VIEW_H * 0.30;
+    // 永遠居中：閾值設為 50% → 等效鎖定中心；預設 30%
+    const edgeThreshold = gameState.settings.alwaysCenter ? 0.5 : 0.3;
+    const marginX = VIEW_W * edgeThreshold;
+    const marginY = VIEW_H * edgeThreshold;
     let screenX = p.x - cam.x;
     let screenY = p.y - cam.y;
     if (screenX < -MAP_WIDTH  / 2) screenX += MAP_WIDTH;

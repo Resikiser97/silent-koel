@@ -65,6 +65,8 @@ LANG['zh-TW'] = {
         autoAttack:      '自動攻擊',
         autoAttackHint:  'Z 鍵切換',
         organTooltip:    '器官提示',
+        alwaysCenter:     '永遠居中',
+        alwaysCenterHint: '角色固定於畫面正中央',
         patchNotes:       '📋 更新日誌',
         patchNotesTitle:  '📋 版本更新公告',
         patchAdded:       '✅ 新增',

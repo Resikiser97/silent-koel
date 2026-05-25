@@ -2,6 +2,20 @@
 
 ---
 
+## v0.57.5 - 2026-05-25
+
+### 修復
+- **阿奇爾子彈穿透教學木樁**（`systems/player.js`）：`_checkProjectileHit()` 的 targets 陣列補入 `gameState.tutorialStump`，並確認死亡路由包含 `isTutorialStump` 判斷
+- **開始遊戲跳過技能樹導致所有屬性丟失**（`main.js`、`systems/evolution.js`）：`loadSavedOrgans()` 抽出為獨立函式並在 `initializeGame()` 步驟 8 的 `applySkillBonuses()` 之前呼叫，確保器官效果不依賴技能樹面板開啟；`buildSkillTreeOverlay()` 的 `fromHome` 路徑移除重複的器官載入呼叫
+
+### 新增
+- **輔助功能「永遠居中」選項**（`systems/gameState.js`、`systems/camera.js`、`systems/ui.js`）：設定面板輔助功能區塊新增 Toggle；開啟後視角邊界閾值從 30% 改為 50%，角色永遠固定於畫面正中央；預設關閉，玩家自由選擇
+
+### 調整
+- **手機攻擊蓄力改為 touchstart 即開始計時**（`systems/mobile.js`）：攻擊按鈕 touchstart 瞬間開始蓄力計時，touchend 時依蓄力時間（≥500ms）發動蓄力攻擊（傷害 ×2），否則普通攻擊；touchcancel 重置蓄力狀態；`initializeGame()` 補齊三個蓄力旗標的重置
+
+---
+
 ## v0.57.4 - 2026-05-25
 
 ### 修復

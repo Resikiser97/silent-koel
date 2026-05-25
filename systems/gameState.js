@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS = {
     deviceMode: null,
     autoAttack: false,
     showOrganTooltip: true,  // 手機版器官提示開關（桌機版不使用）
+    alwaysCenter: false,     // 角色永遠固定於畫面正中央（預設關閉）
 };
 
 const gameState = {

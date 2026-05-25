@@ -40,6 +40,7 @@ function _checkProjectileHit(b, idx) {
         ...gameState.neutralCreatures,
         ...(gameState.boss && gameState.boss.hp > 0 ? [gameState.boss] : []),
         ...(gameState.eliteCreature && gameState.eliteCreature.hp > 0 ? [gameState.eliteCreature] : []),
+        ...(gameState.tutorialStump && gameState.tutorialStump.hp > 0 ? [gameState.tutorialStump] : []),
     ];
 
     for (const c of targets) {
