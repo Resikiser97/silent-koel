@@ -90,7 +90,6 @@ systems/chat.js           _sha256, loadChatSettings, saveChatSettings
                           initChat, disconnectChat, sendChatMessage
                           buildChatUI, _renderChatSettingsPanel, renderChat
                           showChat, hideChat
-                          _saveChatPosition, _loadChatPosition, _makeDraggable
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
                           _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）
