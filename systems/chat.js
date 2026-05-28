@@ -54,6 +54,24 @@ let _chatLastFetchTime = null;   // polling 用：上次拉取時間
 const CHAT_IDLE_MS = 60 * 60 * 1000; // 1 小時閒置斷線
 const CHAT_POLL_MS = 8000;            // polling 間隔（ms）
 
+// 拖拽狀態（供 _makeDraggable 與 gearBtn.onclick 共用）
+const _chatDragState = { wasDragging: false };
+
+// ─────────────────────────────────────────────
+// 聊天室位置 localStorage 讀寫
+// ─────────────────────────────────────────────
+
+function _saveChatPosition(pos) {
+    try { localStorage.setItem('chatPosition', JSON.stringify(pos)); } catch(e) {}
+}
+
+function _loadChatPosition() {
+    try {
+        const raw = localStorage.getItem('chatPosition');
+        return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+}
+
 // ─────────────────────────────────────────────
 // localStorage 聊天室帳號設定
 // ─────────────────────────────────────────────
@@ -519,6 +537,88 @@ function hideChat() {
     });
 }
 
+function _makeDraggable(handle, panels) {
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let startPositions = [];
+
+    const onStart = (clientX, clientY) => {
+        isDragging = false;
+        startX = clientX;
+        startY = clientY;
+        startPositions = panels.map(p => ({
+            left:   parseFloat(p.style.left)   || p.getBoundingClientRect().left,
+            bottom: parseFloat(p.style.bottom) ||
+                    (window.innerHeight - p.getBoundingClientRect().bottom)
+        }));
+    };
+
+    const onMove = (clientX, clientY) => {
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+        if (!isDragging && Math.abs(dx) + Math.abs(dy) > 5) isDragging = true;
+        if (!isDragging) return;
+
+        panels.forEach((p, i) => {
+            let newLeft   = startPositions[i].left + dx;
+            let newBottom = startPositions[i].bottom - dy;
+            const rect    = p.getBoundingClientRect();
+            newLeft   = Math.max(0, Math.min(newLeft,   window.innerWidth  - rect.width));
+            newBottom = Math.max(0, Math.min(newBottom, window.innerHeight - rect.height));
+            p.style.left   = newLeft + 'px';
+            p.style.right  = 'auto';
+            p.style.bottom = newBottom + 'px';
+        });
+    };
+
+    const onEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        _chatDragState.wasDragging = true;
+        const pos = {};
+        panels.forEach(p => { pos[p.id] = { left: p.style.left, bottom: p.style.bottom }; });
+        _saveChatPosition(pos);
+    };
+
+    // 桌機版 mouse 事件
+    handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        onStart(e.clientX, e.clientY);
+        const onMoveG = (e) => onMove(e.clientX, e.clientY);
+        const onEndG  = () => { onEnd(); document.removeEventListener('mousemove', onMoveG); document.removeEventListener('mouseup', onEndG); };
+        document.addEventListener('mousemove', onMoveG);
+        document.addEventListener('mouseup',   onEndG);
+    });
+
+    // 手機版 touch 事件
+    handle.addEventListener('touchstart', (e) => {
+        const t = e.touches[0]; onStart(t.clientX, t.clientY);
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', (e) => {
+        const t = e.touches[0]; onMove(t.clientX, t.clientY);
+        if (isDragging) e.preventDefault();
+    }, { passive: false });
+
+    handle.addEventListener('touchend', onEnd);
+}
+
+// ─────────────────────────────────────────────
+// 視窗調整時重新夾住邊界
+// ─────────────────────────────────────────────
+window.addEventListener('resize', () => {
+    ['chat-history-panel', 'chat-input-panel']
+        .map(id => document.getElementById(id))
+        .filter(Boolean)
+        .forEach(p => {
+            const rect = p.getBoundingClientRect();
+            let left   = Math.max(0, Math.min(parseFloat(p.style.left)   || 0, window.innerWidth  - rect.width));
+            let bottom = Math.max(0, Math.min(parseFloat(p.style.bottom) || 0, window.innerHeight - rect.height));
+            p.style.left   = left   + 'px';
+            p.style.bottom = bottom + 'px';
+        });
+});
+
 // 渲染設定面板內容（依登入狀態切換，可重複呼叫）
 function _renderChatSettingsPanel(panel) {
     panel.innerHTML = '';
@@ -808,8 +908,9 @@ function buildChatUI() {
             document.body.appendChild(settingsPanel);
         }
 
-        // 齒輪：位置跟著 #chat-history-panel 右上角
+        // 齒輪：拖拽後不觸發設定面板；否則依 #chat-history-panel 位置定位
         gearBtn.onclick = (e) => {
+            if (_chatDragState.wasDragging) { _chatDragState.wasDragging = false; return; }
             e.stopPropagation();
             const sp = document.getElementById('chat-settings-panel');
             if (!sp) return;
@@ -853,6 +954,24 @@ function buildChatUI() {
         document.body.appendChild(historyPanel);
         document.body.appendChild(scrollBtn);
         document.body.appendChild(inputPanel);
+
+        // ── 套用上次儲存的位置
+        const _savedPos = _loadChatPosition();
+        if (_savedPos) {
+            if (_savedPos['chat-history-panel']) {
+                historyPanel.style.left   = _savedPos['chat-history-panel'].left;
+                historyPanel.style.bottom = _savedPos['chat-history-panel'].bottom;
+                historyPanel.style.right  = 'auto';
+            }
+            if (_savedPos['chat-input-panel']) {
+                inputPanel.style.left   = _savedPos['chat-input-panel'].left;
+                inputPanel.style.bottom = _savedPos['chat-input-panel'].bottom;
+                inputPanel.style.right  = 'auto';
+            }
+        }
+
+        // ── 啟動拖拽（以齒輪按鈕為 handle）
+        _makeDraggable(gearBtn, [historyPanel, inputPanel]);
 
     } else {
         // ════════════════════════════════════════

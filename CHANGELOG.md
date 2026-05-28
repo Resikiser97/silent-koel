@@ -2,6 +2,16 @@
 
 ---
 
+## v0.64.0 - 2026-05-28
+
+### 新增
+- **聊天室可拖拽移動**（`systems/chat.js`）：新增 `_makeDraggable(handle, panels)` 函式，以 `#chat-settings-btn` 為拖拽把手，同步移動 `#chat-history-panel` 與 `#chat-input-panel`；超過 5px 才判定為拖拽，滑動過程以邊界夾住防止拖出畫面外
+- **記住最後位置**（`systems/chat.js`）：拖拽結束後呼叫 `_saveChatPosition()` 存入 `localStorage`；`buildChatUI()` 建立手機版面板後以 `_loadChatPosition()` 還原上次位置
+- **拖拽後不誤觸齒輪**（`systems/chat.js`）：`_chatDragState.wasDragging` 旗標確保拖拽結束後的 click 事件不會開啟設定面板
+- **視窗調整邊界保護**（`systems/chat.js`）：`window.resize` 監聽器確保轉屏後面板不跑出畫面外
+
+---
+
 ## v0.63.1 - 2026-05-28
 
 ### 新增
