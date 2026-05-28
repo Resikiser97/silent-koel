@@ -812,7 +812,7 @@ function drawGame() {
         ctx.fillStyle   = 'rgba(255,255,255,' + (alpha * 0.12).toFixed(2) + ')';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(ps.x, ps.y, p.attackRange, 0, Math.PI * 2);
+        ctx.arc(ps.x, ps.y, p.attackRange * (gameState.cameraZoom || 1), 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.lineWidth = 1;

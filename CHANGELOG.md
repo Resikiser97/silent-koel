@@ -2,6 +2,25 @@
 
 ---
 
+## v0.0.66.0 - 2026-05-29
+
+### 修復
+- **攻擊範圍圈縮放修正**（`systems/hud.js`）：攻擊範圍圈半徑乘上 `cameraZoom`，修復縮放不為 1 時圈圈大小錯誤的問題
+- **置頂訊息自動過期**（`systems/chat.js`）：`renderChat()` 開頭新增 `_pinnedMessage.pinUntil` 過期檢查；過期後清除本地置頂狀態並同步清除訊息陣列中的 `is_pinned`
+
+### 新增
+- **排行榜賽季版本制**（`config/gameConfig.js`、`systems/leaderboard.js`）：版本號格式改為四段 `v0.x.y.z`；`version_order` 改取第二段 x，同一個 x 的記錄互相競爭（x=0 為初始賽季）
+- **`/unpin` 指令**（`systems/chat.js`）：GM 可輸入 `/unpin` 取消當前置頂訊息（`_handleUnpinCommand()`），同步更新資料庫與本地狀態
+- **等級顏色辨識系統**（`systems/chat.js`）：變異等級顯示獨立放大（13px, bold）並依等級套色（0 白/50 綠/100 藍/150 紫/200 粉/250 金/300 紅/350 橘/400+ 彩虹漸層）；`_lvColor(lvNum)` 函式
+- **GM 彩虹【GM】標籤 + 金色說話內容**（`systems/chat.js`）：GM 的【GM】標籤改為彩虹漸層色，說話內容以金色 `#FFD700` 顯示
+- **彩色字標籤系統**（`systems/chat.js`）：支援 `[c=red]文字[/c]` 語法，一般玩家限 red/green/blue 三色；`_parseColorTags(escapedContent, isVIP)` 函式
+- **先驅者 VIP TODO 索引**（`systems/chat.js`）：新增 `isVipPlayer(msg)` 函式（目前回傳 false），作為未來先驅者解鎖任意顏色彩色字的交接點
+
+### 調整
+- **聊天訊息移除版本號顯示**（`systems/chat.js`）：`_buildMsgHTML()` 和置頂展開版均移除 `[版本號]` 欄位，介面更簡潔
+
+---
+
 ## v0.64.0 - 2026-05-28
 
 ### 新增

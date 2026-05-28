@@ -91,6 +91,10 @@ systems/chat.js           _sha256, loadChatSettings, saveChatSettings
                           buildChatUI, _renderChatSettingsPanel, renderChat
                           showChat, hideChat
                           _saveChatPosition, _loadChatPosition, _makeDraggable
+                          _handlePinCommand, _handleUnpinCommand（GM 置頂/取消置頂）
+                          _lvColor（等級數字 → 顏色 CSS 字串，v0.0.66.0）
+                          _parseColorTags（[c=color]文字[/c] 彩色字解析，v0.0.66.0）
+                          isVipPlayer（先驅者判斷 TODO 索引，v0.0.66.0，目前回傳 false）
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
                           _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）

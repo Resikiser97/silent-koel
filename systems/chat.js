@@ -428,6 +428,11 @@ async function sendChatMessage(content) {
         await _handlePinCommand(content.trim());
         return;
     }
+    // /unpin 取消置頂（GM 限定）
+    if (settings.isGM && content.trim().toLowerCase() === '/unpin') {
+        await _handleUnpinCommand();
+        return;
+    }
 
     const displayName = settings.playerName.trim() || '匿名者';
     const titlePart   = settings.title ? '|' + settings.title : '';
@@ -487,6 +492,31 @@ async function _handlePinCommand(cmd) {
     // 在本地陣列也更新
     const idx = _chatMessages.findIndex(m => m.id === myMsg.id);
     if (idx >= 0) _chatMessages[idx] = { ..._chatMessages[idx], is_pinned: true };
+    renderChat();
+}
+
+async function _handleUnpinCommand() {
+    const pinned = _chatMessages.find(m => m.is_pinned);
+    if (!pinned) return;
+
+    try {
+        if (_sbClient) {
+            await _sbClient
+                .from('chat_messages')
+                .update({ is_pinned: false })
+                .eq('id', pinned.id);
+        } else {
+            await supabaseQuery(
+                'chat_messages', 'PATCH',
+                { is_pinned: false },
+                '?id=eq.' + pinned.id
+            );
+        }
+    } catch(e) {}
+
+    _pinnedMessage = null;
+    const idx = _chatMessages.findIndex(m => m.id === pinned.id);
+    if (idx >= 0) _chatMessages[idx] = { ..._chatMessages[idx], is_pinned: false };
     renderChat();
 }
 
@@ -1189,12 +1219,13 @@ function _formatChatTime(isoStr) {
 }
 
 function _buildMsgHTML(msg) {
-    const { lvTag, gmLabel, titleHtml, nameHtml } = _parseName(msg);
+    const { lvTagHtml, gmLabel, titleHtml, nameHtml } = _parseName(msg);
     return '<div style="margin-bottom:2px;word-break:break-all;line-height:1.4;">' +
         '<span style="color:rgba(255,255,255,0.5);font-size:10px;">[' +
-        _formatChatTime(msg.created_at) + '][' + _esc(msg.version || '') +
-        '][' + _esc(lvTag) + ']</span> ' +
-        gmLabel + titleHtml + nameHtml + '：' + _esc(msg.content) +
+        _formatChatTime(msg.created_at) + ']</span>' +
+        lvTagHtml + ' ' +
+        gmLabel + titleHtml + nameHtml + '：' +
+        (msg.is_gm ? '<span style="color:#FFD700;">' + _parseColorTags(_esc(msg.content)) + '</span>' : _parseColorTags(_esc(msg.content), isVipPlayer(msg))) +
         '</div>';
 }
 
@@ -1205,6 +1236,14 @@ function _buildMsgText(msg) {
 }
 
 function renderChat() {
+    // 檢查 pin 是否過期
+    if (_pinnedMessage && _pinnedMessage.pinUntil) {
+        if (new Date(_pinnedMessage.pinUntil).getTime() < Date.now()) {
+            _pinnedMessage = null;
+            _chatMessages.forEach(m => { m.is_pinned = false; });
+        }
+    }
+
     const nonPinned = _chatMessages.filter(m => !m.is_pinned);
     const pinnedMsg = _chatMessages.find(m => m.is_pinned);
 
@@ -1223,12 +1262,13 @@ function renderChat() {
     const expandedPinned = document.getElementById('chat-expanded-pinned');
     if (expandedPinned) {
         if (pinnedMsg) {
-            const { lvTag, gmLabel, titleHtml, nameHtml } = _parseName(pinnedMsg);
+            const { lvTagHtml, gmLabel, titleHtml, nameHtml } = _parseName(pinnedMsg);
             expandedPinned.innerHTML =
                 '📌 <span style="color:rgba(255,255,255,0.5);font-size:10px;">[' +
-                _formatChatTime(pinnedMsg.created_at) + '][' + _esc(pinnedMsg.version || '') +
-                '][' + _esc(lvTag) + ']</span> ' +
-                gmLabel + titleHtml + nameHtml + '：' + _esc(pinnedMsg.content);
+                _formatChatTime(pinnedMsg.created_at) + ']</span>' +
+                lvTagHtml + ' ' +
+                gmLabel + titleHtml + nameHtml + '：' +
+                (pinnedMsg.is_gm ? '<span style="color:#FFD700;">' + _parseColorTags(_esc(pinnedMsg.content)) + '</span>' : _parseColorTags(_esc(pinnedMsg.content), isVipPlayer(pinnedMsg)));
             expandedPinned.style.display = 'block';
         } else {
             expandedPinned.style.display = 'none';
@@ -1260,14 +1300,29 @@ function renderChat() {
     }
 }
 
+// 根據變異等級數字回傳對應顏色 CSS 字串（inline style 用）
+function _lvColor(lvNum) {
+    if (lvNum >= 400) return 'background:linear-gradient(90deg,#ff0000,#ff7700,#ffff00,#00ff00,#0099ff,#aa00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;';
+    if (lvNum >= 350) return 'color:#FF8C00;';
+    if (lvNum >= 300) return 'color:#FF3333;';
+    if (lvNum >= 250) return 'color:#FFD700;';
+    if (lvNum >= 200) return 'color:#FF69B4;';
+    if (lvNum >= 150) return 'color:#CC44FF;';
+    if (lvNum >= 100) return 'color:#4488FF;';
+    if (lvNum >=  50) return 'color:#44CC44;';
+    return 'color:rgba(255,255,255,0.7);';
+}
+
 // 解析 player_name（格式：lv30|Kiser 或 lv30|Kiser|先驅者）
 function _parseName(msg) {
     const parts     = (msg.player_name || '').split('|');
     const lvTag     = parts[0] || '';
     const name      = (parts.length >= 2 ? parts[1] : parts[0]) || '匿名者';
     const titleStr  = parts[2] || '';
+    const lvNum     = parseInt((lvTag || '').replace(/\D/g, '')) || 0;
+    const lvTagHtml = '<span style="' + _lvColor(lvNum) + 'font-size:13px;font-weight:bold;margin-right:3px;">' + _esc(lvTag) + '</span>';
     const gmLabel   = msg.is_gm
-        ? '<span style="color:#FFD700;font-weight:bold;">【GM】</span>'
+        ? '<span style="background:linear-gradient(90deg,#ff0000,#ff7700,#ffff00,#00ff00,#0099ff,#aa00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:bold;">【GM】</span>'
         : '';
     const titleHtml = titleStr
         ? '<span style="color:#88CCFF;">[' + _esc(titleStr) + ']</span>'
@@ -1275,7 +1330,7 @@ function _parseName(msg) {
     const nameHtml  = msg.is_gm
         ? '<span style="color:#FFD700;">' + _esc(name) + '</span>'
         : _esc(name);
-    return { lvTag, name, titleStr, gmLabel, titleHtml, nameHtml };
+    return { lvTag, lvTagHtml, lvNum, name, titleStr, gmLabel, titleHtml, nameHtml, isGm: msg.is_gm };
 }
 
 function _esc(s) {
@@ -1283,4 +1338,34 @@ function _esc(s) {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+// 解析彩色字標籤 [c=red]文字[/c]
+// 支援顏色：red, green, blue（一般玩家）
+// 先驅者玩家未來可支援任意 CSS 顏色（TODO）
+// 傳入的 content 已經過 _esc() 處理，為 HTML 安全字串
+function _parseColorTags(escapedContent, isVIP) {
+    const allowedColors = isVIP
+        ? null  // null = 允許任意顏色（VIP 未來實作）
+        : ['red', 'green', 'blue'];
+
+    return escapedContent.replace(
+        /\[c=([^\]]+)\](.*?)\[\/c\]/gi,
+        function(match, color, text) {
+            if (allowedColors && !allowedColors.includes(color.toLowerCase())) {
+                return text;
+            }
+            const safeColor = /^[a-zA-Z]+$/.test(color) || /^#[0-9a-fA-F]{3,6}$/.test(color)
+                ? color : 'white';
+            return '<span style="color:' + safeColor + ';">' + text + '</span>';
+        }
+    );
+}
+
+// TODO: 先驅者判斷函式 — 交接點
+// 實作時在此填入判斷邏輯（例如查 chat_users.is_pioneer 欄位或 titleStr === '先驅者'）
+// 目前暫時回傳 false（所有玩家使用一般顏色限制）
+function isVipPlayer(msg) {
+    // TODO: 先驅者系統實作點
+    return false;
 }

@@ -151,10 +151,20 @@ Goblinnest（單人獨立開發，AI 輔助）
 - 使用開發者模式的記錄不上傳（`gameState.devModeUsed = true`）
 - 首頁右側 TOP10 浮窗（v0.40.0 起支援難度切換按鈕，`_top10Difficulty` 模組變數）
 - 排行榜面板（`showLeaderboard()`）亦支援難度切換，`_lbDifficulty` 模組變數；兩者保持同步
+- **賽季版本制（v0.0.66.0）**：`version_order` 取版本第二段 x，同一個 x 的記錄互相競爭；x 升級後排行榜重新開始（x 只由開發者手動升級）
 - 趣味排行榜（v0.47.0）：`showFunLeaderboard(difficulty)`，7 類排名（最速通關、最速死亡、巨人獵人、殺手獵人、殺手克星、最快擊殺Boss、最高等級）
   - `sessionStats` 新增欄位：`giantKills`（巨人獵人）、`killerKills`（殺手獵人）、`killerMaxLevel`（殺手克星）
   - 「🎲 種類」按鈕（`showLeaderboard()` 標題列）→ `showFunLeaderboard()`
   - 新增 Supabase 查詢：`fetchFunSpeedVictory`、`fetchFunSpeedDeath`、`fetchFunGiantKills`、`fetchFunKillerKills`、`fetchFunKillerMaxLevel`、`fetchFunBossKillSpeed`、`fetchFunMaxLevel`（v0.51.0）
+
+### 聊天系統（systems/chat.js）
+
+- 帳號系統：SHA-256 密碼雜湊，Supabase 儲存，登入後雲端同步進度
+- 置頂訊息：GM 用 `/pin 1H` 置頂指定時間，`_pinnedMessage.pinUntil` 到期自動清除；`/unpin` 立即取消（v0.0.66.0）
+- **GM 專屬視覺**（v0.0.66.0）：【GM】標籤彩虹漸層色；說話內容金色 `#FFD700`
+- **等級顏色辨識**（v0.0.66.0，`_lvColor()`）：lv0 白/lv50 綠/lv100 藍/lv150 紫/lv200 粉/lv250 金/lv300 紅/lv350 橘/lv400+ 彩虹；等級標籤獨立顯示 13px bold
+- **彩色字標籤系統**（v0.0.66.0，`_parseColorTags()`）：語法 `[c=red]文字[/c]`；一般玩家限 red/green/blue；先驅者（TODO）解鎖任意顏色
+- **先驅者 VIP TODO 索引**（v0.0.66.0）：`isVipPlayer(msg)` 函式（`systems/chat.js`），目前回傳 false，待交接實作
 
 ### 真實遊玩時間（realPlayTime）
 - `gameState.realPlayTime`：累積毫秒數，上傳時 `Math.floor(realPlayTime / 1000)` 轉秒
@@ -302,7 +312,8 @@ map/
 - 每次 commit 後必須執行 git push origin master
 
 ### 版本與部署
-- 目前版本：**v0.64.0**
+- 目前版本：**v0.0.66.0**
+- 版本格式：四段 `v0.x.y.z`（x=賽季版本、y=功能版本、z=修復版本）
 
 ### Branch 工作流程
 - `master`：主開發分支，所有日常開發在此進行

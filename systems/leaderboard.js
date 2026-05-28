@@ -415,7 +415,10 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             is_victory: isVictory,
             boss_kill_time: bossKillTime !== null && bossKillTime !== undefined ? Math.floor(bossKillTime) : null,
             version: GAME_INFO.version,
-            version_order: Math.floor(parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4))),
+            version_order: (function() {
+                const parts = GAME_INFO.version.replace('v', '').split('.');
+                return parseInt(parts[1]) || 0;
+            })(),
             difficulty: gameState.lastDifficulty || 'easy',
             character: gameState.selectedCharacter || 'koel',
         };
