@@ -65,10 +65,11 @@ function loadChatSettings() {
         return {
             playerName: d.playerName || '',
             isGM:       d.isGM       || false,
+            title:      d.title      || '',
             loggedIn:   d.loggedIn   || false
         };
     } catch(e) {
-        return { playerName: '', isGM: false, loggedIn: false };
+        return { playerName: '', isGM: false, title: '', loggedIn: false };
     }
 }
 
@@ -189,7 +190,7 @@ async function chatLogin(username, password) {
         syncMsg = '✅ 資料已是最新';
     }
 
-    saveChatSettings({ playerName: username, isGM: user.is_gm, loggedIn: true });
+    saveChatSettings({ playerName: username, isGM: user.is_gm, title: user.title || '', loggedIn: true });
     return { ok: true, msg: syncMsg, isGM: user.is_gm };
 }
 
@@ -409,7 +410,8 @@ async function sendChatMessage(content) {
     }
 
     const displayName = settings.playerName.trim() || '匿名者';
-    const fullName    = 'lv' + mutLevel + '|' + displayName;
+    const titlePart   = settings.title ? '|' + settings.title : '';
+    const fullName    = 'lv' + mutLevel + '|' + displayName + titlePart;
 
     const row = {
         player_name: fullName,
@@ -723,16 +725,21 @@ function buildChatUI() {
     // ── 訊息列表
     const msgDiv = document.createElement('div');
     msgDiv.id = 'chat-messages';
-    msgDiv.style.cssText = 'flex:1;overflow-y:auto;min-height:0;padding:4px 8px;';
+    msgDiv.style.cssText = [
+        'flex:1', 'overflow-y:scroll', 'overflow-x:hidden', 'min-height:0',
+        'padding:4px 8px',
+        'scrollbar-width:thin',
+        'scrollbar-color:rgba(255,255,255,0.3) transparent'
+    ].join(';');
 
     // ── 輸入列
     const inputRow = document.createElement('div');
     inputRow.id = 'chat-input-row';
     inputRow.style.cssText = [
         'display:flex', 'align-items:center', 'gap:4px',
-        'padding:4px 6px',
+        'padding:4px 6px', 'width:100%',
         'border-top:1px solid rgba(255,255,255,0.1)',
-        'flex-shrink:0'
+        'flex-shrink:0', 'box-sizing:border-box'
     ].join(';');
 
     const input = document.createElement('input');
@@ -886,12 +893,12 @@ function renderChat() {
     // ── 置頂區
     const pinnedMsg = _chatMessages.find(m => m.is_pinned);
     if (pinnedMsg && pinnedDiv) {
-        const { lvTag, name, gmLabel, nameHtml } = _parseName(pinnedMsg);
+        const { lvTag, gmLabel, titleHtml, nameHtml } = _parseName(pinnedMsg);
         pinnedDiv.innerHTML =
             '📌 <span style="color:rgba(255,255,255,0.5);font-size:10px;">[' + _formatChatTime(pinnedMsg.created_at) +
             '][' + _esc(pinnedMsg.version || '') +
             '][' + _esc(lvTag) + ']</span> ' +
-            gmLabel + nameHtml + '：' + _esc(pinnedMsg.content);
+            gmLabel + titleHtml + nameHtml + '：' + _esc(pinnedMsg.content);
         pinnedDiv.style.display = 'block';
     } else if (pinnedDiv) {
         pinnedDiv.style.display = 'none';
@@ -901,14 +908,14 @@ function renderChat() {
     msgDiv.innerHTML = '';
     const nonPinned = _chatMessages.filter(m => !m.is_pinned);
     for (const msg of nonPinned) {
-        const { lvTag, gmLabel, nameHtml } = _parseName(msg);
+        const { lvTag, gmLabel, titleHtml, nameHtml } = _parseName(msg);
         const line = document.createElement('div');
         line.style.cssText = 'margin-bottom:2px;word-break:break-all;line-height:1.4;';
         line.innerHTML =
             '<span style="color:rgba(255,255,255,0.5);font-size:10px;">[' + _formatChatTime(msg.created_at) +
             '][' + _esc(msg.version || '') +
             '][' + _esc(lvTag) + ']</span> ' +
-            gmLabel + nameHtml + '：' + _esc(msg.content);
+            gmLabel + titleHtml + nameHtml + '：' + _esc(msg.content);
         msgDiv.appendChild(line);
     }
 
@@ -921,18 +928,22 @@ function renderChat() {
     }
 }
 
-// 解析 player_name（格式：lv30|Kiser）
+// 解析 player_name（格式：lv30|Kiser 或 lv30|Kiser|先驅者）
 function _parseName(msg) {
-    const parts  = (msg.player_name || '').split('|');
-    const lvTag  = parts[0] || '';
-    const name   = (parts.length >= 2 ? parts[1] : parts[0]) || '匿名者';
-    const gmLabel = msg.is_gm
+    const parts     = (msg.player_name || '').split('|');
+    const lvTag     = parts[0] || '';
+    const name      = (parts.length >= 2 ? parts[1] : parts[0]) || '匿名者';
+    const titleStr  = parts[2] || '';
+    const gmLabel   = msg.is_gm
         ? '<span style="color:#FFD700;font-weight:bold;">【GM】</span>'
         : '';
-    const nameHtml = msg.is_gm
+    const titleHtml = titleStr
+        ? '<span style="color:#88CCFF;">[' + _esc(titleStr) + ']</span>'
+        : '';
+    const nameHtml  = msg.is_gm
         ? '<span style="color:#FFD700;">' + _esc(name) + '</span>'
         : _esc(name);
-    return { lvTag, name, gmLabel, nameHtml };
+    return { lvTag, name, titleStr, gmLabel, titleHtml, nameHtml };
 }
 
 function _esc(s) {

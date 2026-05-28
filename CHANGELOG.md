@@ -2,6 +2,17 @@
 
 ---
 
+## v0.62.0 - 2026-05-28
+
+### 修復
+- **聊天室滾動修復**（`systems/chat.js`）：`#chat-messages` 改用 `overflow-y:scroll` 強制顯示滾動條，補上 `overflow-x:hidden`、`scrollbar-width:thin`；`#chat-input-row` 補 `width:100%`，確保輸入框永遠固定於面板底部不被推出
+
+### 新增
+- **GM 名字金色**（`systems/chat.js`）：`_parseName()` 中 GM 發言的名字欄位套用 `#FFD700` 金色，與【GM】標籤一致
+- **稱號系統**（`systems/chat.js`）：`player_name` 格式擴充為 `lv{N}|{name}|{title}`（稱號選填）；登入時從 `chat_users.title` 讀取並存入 `chatSettings`；訊息格式新增 `[稱號]`（淡藍色 `#88CCFF`），顯示於【GM】後、名字前
+
+---
+
 ## v0.61.0 - 2026-05-28
 
 ### 新增
