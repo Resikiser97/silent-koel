@@ -679,7 +679,7 @@ function buildChatUI() {
 
     if (isMob) {
         panel.style.cssText = [
-            'position:absolute', 'bottom:0', 'left:5%', 'right:5%',
+            'position:fixed', 'bottom:0', 'left:5%', 'right:5%',
             'height:25vh', 'z-index:201',
             'display:flex', 'flex-direction:column',
             'background:rgba(0,0,0,0.70)',
@@ -690,7 +690,7 @@ function buildChatUI() {
         ].join(';');
     } else {
         panel.style.cssText = [
-            'position:absolute', 'left:10px', 'bottom:10px',
+            'position:fixed', 'left:10px', 'bottom:10px',
             'width:320px', 'height:220px', 'z-index:201',
             'display:flex', 'flex-direction:column',
             'background:rgba(0,0,0,0.70)',
@@ -771,17 +771,22 @@ function buildChatUI() {
     const settingsPanel = document.createElement('div');
     settingsPanel.id = 'chat-settings-panel';
     settingsPanel.style.cssText = [
-        'display:none', 'position:absolute', 'bottom:38px', 'right:6px',
+        'display:none', 'position:fixed',
         'background:#1c1c1c', 'border:1px solid #444', 'border-radius:6px',
-        'padding:10px 12px', 'width:210px', 'z-index:203', 'font-size:12px'
+        'padding:10px 12px', 'width:210px', 'z-index:9999', 'font-size:12px'
     ].join(';');
     _renderChatSettingsPanel(settingsPanel);
 
-    // 齒輪：切換設定面板
+    // 齒輪：切換設定面板，位置跟著 #chat-panel 右上角
     gearBtn.onclick = (e) => {
         e.stopPropagation();
         const sp = document.getElementById('chat-settings-panel');
-        if (sp) sp.style.display = (sp.style.display === 'none') ? 'block' : 'none';
+        if (!sp) return;
+        if (sp.style.display !== 'none') { sp.style.display = 'none'; return; }
+        const panelRect = document.getElementById('chat-panel').getBoundingClientRect();
+        sp.style.left   = (panelRect.right - 216) + 'px';
+        sp.style.bottom = (window.innerHeight - panelRect.top + 4) + 'px';
+        sp.style.display = 'block';
     };
 
     // 發送訊息
@@ -823,9 +828,9 @@ function buildChatUI() {
     panel.appendChild(msgDiv);
     panel.appendChild(scrollBtn);
     panel.appendChild(inputRow);
-    panel.appendChild(settingsPanel);
+    document.body.appendChild(settingsPanel);
 
-    document.getElementById('game-container').appendChild(panel);
+    document.body.appendChild(panel);
 
     // 捲動偵測：不在底部時顯示往下按鈕
     msgDiv.addEventListener('scroll', () => {

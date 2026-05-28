@@ -2,6 +2,14 @@
 
 ---
 
+## v0.62.1 - 2026-05-28
+
+### 修復
+- **聊天室移至 body fixed 定位**（`systems/chat.js`）：`#chat-panel` 從 `#game-container` 移至 `document.body`，`position` 改為 `fixed`（桌機 left:10px bottom:10px，手機 bottom:0 left:5% right:5%），完全脫離遊戲容器 CSS 遮蔽，修復滾動與輸入被攔截的問題
+- **設定面板不再被裁切**（`systems/chat.js`）：`#chat-settings-panel` 移至 `document.body`，`position:fixed`、`z-index:9999`；齒輪按鈕 onclick 改用 `getBoundingClientRect()` 動態計算位置，對齊 `#chat-panel` 右上角，解決 `overflow:hidden` 裁切問題
+
+---
+
 ## v0.62.0 - 2026-05-28
 
 ### 修復
