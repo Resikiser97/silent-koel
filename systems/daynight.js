@@ -73,6 +73,24 @@ function showGameOver() {
             document.getElementById('game-container').appendChild(overlay);
         }
     };
+    // 自動雲端保存進度（已登入才執行）
+    if (typeof loadChatSettings === 'function' && typeof chatSaveProgress === 'function') {
+        const _cs = loadChatSettings();
+        if (_cs.loggedIn) {
+            chatSaveProgress().then(result => {
+                if (result.ok) {
+                    const tip = document.createElement('div');
+                    tip.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);' +
+                        'background:rgba(0,0,0,0.8);color:#fff;padding:8px 18px;border-radius:8px;' +
+                        'font-size:14px;z-index:9999;pointer-events:none;';
+                    tip.textContent = result.msg;
+                    document.body.appendChild(tip);
+                    setTimeout(() => tip.remove(), 2000);
+                }
+            });
+        }
+    }
+
     if (gameState.devModeUsed) {
         doShowOverlay();
     } else {

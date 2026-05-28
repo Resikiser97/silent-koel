@@ -83,6 +83,12 @@ systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayT
 systems/leaderboard.js    _lbDifficulty, _top10Difficulty, _diffKey
                           showLeaderboard, showScoreSubmitPopup
                           showFunLeaderboard（趣味排行榜，v0.47.0；👑 最高等級分類 v0.51.0）
+systems/chat.js           _sha256, loadChatSettings, saveChatSettings
+                          _calcProgressScore, _collectLocalData, _applyRemoteData
+                          chatLogin（查帳/自動註冊/SHA-256/進度比較同步）
+                          chatSaveProgress, chatSyncData, chatLogout
+                          initChat, disconnectChat, sendChatMessage
+                          buildChatUI, _renderChatSettingsPanel, renderChat
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
                           _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）

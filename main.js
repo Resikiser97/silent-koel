@@ -146,6 +146,11 @@ function _applyCharacterStats() {
 function initializeGame() {
     localStorage.setItem('hasPlayedBefore', 'true');
 
+    // 離開首頁時斷開聊天室並隱藏面板
+    if (typeof disconnectChat === 'function') disconnectChat();
+    const _chatPanel = document.getElementById('chat-panel');
+    if (_chatPanel) _chatPanel.style.display = 'none';
+
     // ── 完整重置遊戲狀態（確保「再來一場」直接呼叫時不殘留舊資料）──
     gameState.gameOver            = false;
     gameState.skillTreeOpen       = false;

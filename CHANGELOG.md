@@ -2,6 +2,31 @@
 
 ---
 
+## v0.60.1 - 2026-05-28
+
+### 修復
+- **同步資料不覆蓋本地 SAVE_VERSION**（`systems/chat.js`）：`_applyRemoteData()` 寫回 localStorage 時排除 `SAVE_VERSION`，防止雲端舊版本號覆蓋本地，避免存檔格式判斷錯誤
+
+---
+
+## v0.60.0 - 2026-05-28
+
+### 新增
+- **聊天室帳號系統**（`systems/chat.js`）：⚙️ 設定面板改版為登入/已登入兩狀態；新增 `chatLogin`（查帳/自動註冊/密碼 SHA-256 驗證/進度比較同步）、`chatSaveProgress`、`chatSyncData`、`chatLogout`（清除本地所有遊戲進度）
+- **遊戲結束自動保存**（`systems/boss.js`、`systems/daynight.js`）：死亡與勝利結算前，若已登入則自動呼叫 `chatSaveProgress()` 並顯示 2 秒提示
+
+### 注意
+- ⚠️ 帳號與密碼綁定，忘記密碼請聯絡開發者 Kiser；登出前請先手動保存進度
+
+---
+
+## v0.59.0 - 2026-05-28
+
+### 新增
+- **首頁即時聊天室**（`systems/chat.js`、`systems/ui.js`、`main.js`、`index.html`）：首頁顯示 Supabase Realtime 聊天室面板（桌機 320×220px，手機 25vh）；支援 GM 驗證、置頂訊息（`/pin 1H`）、1 小時閒置自動斷線、24 小時舊訊息自動清理；無 JS Client 時自動降級為 8 秒輪詢
+
+---
+
 ## v0.58.0 - 2026-05-25
 
 ### 新增

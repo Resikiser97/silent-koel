@@ -1725,6 +1725,12 @@ function showStartScreen() {
 
     document.getElementById('game-container').appendChild(overlay);
     checkPatchNotesPopup();
+
+    // 聊天室：建立 UI（只建一次），顯示面板並連線
+    if (typeof buildChatUI === 'function') buildChatUI();
+    const _cp = document.getElementById('chat-panel');
+    if (_cp) _cp.style.display = '';
+    if (typeof initChat === 'function') initChat();
 }
 
 // =============================================================
