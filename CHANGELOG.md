@@ -2,6 +2,22 @@
 
 ---
 
+## v0.63.1 - 2026-05-28
+
+### 新增
+- **聊天室首頁專屬顯示**（`systems/chat.js`、`systems/ui.js`、`systems/evolution.js`、`systems/leaderboard.js`）：新增 `showChat()` / `hideChat()` 工具函式；首頁 7 個按鈕（開始遊戲、技能樹、圖鑑、排行榜、設定、故事、更新）點擊時呼叫 `hideChat()`；`closeCompendium()`、`hideSettings()`、`closeLb()`、故事關閉、更新日誌關閉、技能樹 fromHome 關閉時若仍在首頁則呼叫 `showChat()`；`showStartScreen()` 末尾改用 `showChat()` 取代原本手動顯示 `#chat-panel`
+
+---
+
+## v0.63.0 - 2026-05-28
+
+### 重構
+- **手機版聊天室 UI 重新設計**（`systems/chat.js`）：拆分為兩個獨立 fixed 元素 — `#chat-history-panel`（bottom:23vh, height:18vh，可捲動歷史區，含 sticky 齒輪與置頂訊息）與 `#chat-input-panel`（bottom:5vh, height:5vh，獨立輸入列）；移除舊版 `#chat-panel` 手機分支與 `_adjustMobileChatHeight()`
+- **renderChat() 雙路徑**（`systems/chat.js`）：偵測 `#chat-history-panel` 存在時走手機版路徑（訊息以 `<p>` 直接 append），否則走桌機版路徑（行為不變）
+- **_isAtBottom() 更新**（`systems/chat.js`）：優先抓取 `#chat-history-panel`，桌機版 fallback 至 `#chat-messages`
+
+---
+
 ## v0.62.2 - 2026-05-28
 
 ### 修復

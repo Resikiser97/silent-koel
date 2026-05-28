@@ -503,6 +503,22 @@ async function verifyGM(code) {
 // 階段 3：聊天室 UI
 // ─────────────────────────────────────────────
 
+function showChat() {
+    ['chat-history-panel', 'chat-input-panel', 'chat-scroll-btn',
+     'chat-panel'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = '';
+    });
+}
+
+function hideChat() {
+    ['chat-history-panel', 'chat-input-panel', 'chat-scroll-btn',
+     'chat-settings-panel', 'chat-panel'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+}
+
 // 渲染設定面板內容（依登入狀態切換，可重複呼叫）
 function _renderChatSettingsPanel(panel) {
     panel.innerHTML = '';
@@ -671,24 +687,180 @@ function _renderChatSettingsPanel(panel) {
 }
 
 function buildChatUI() {
-    if (document.getElementById('chat-panel')) return; // 已建立，不重複
+    // 清除舊結構（重建時清理）
+    ['chat-panel', 'chat-history-panel', 'chat-input-panel'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    });
 
     const isMob = (typeof gameState !== 'undefined') && gameState.isMobile;
-    const panel = document.createElement('div');
-    panel.id = 'chat-panel';
 
     if (isMob) {
-        panel.style.cssText = [
-            'position:fixed', 'bottom:5vh', 'left:5%', 'right:5%',
-            'height:20vh', 'z-index:201',
-            'display:flex', 'flex-direction:column',
+        // ════════════════════════════════════════
+        // 手機版：歷史區 + 輸入列 分離獨立定位
+        // ════════════════════════════════════════
+
+        // ── 歷史訊息區
+        const historyPanel = document.createElement('div');
+        historyPanel.id = 'chat-history-panel';
+        historyPanel.style.cssText = [
+            'position:fixed', 'bottom:23vh', 'left:5%', 'right:5%',
+            'height:18vh', 'z-index:201',
             'background:rgba(0,0,0,0.70)',
             'border:1px solid rgba(255,255,255,0.15)',
             'border-radius:8px',
+            'overflow-y:scroll', 'overflow-x:hidden',
+            'box-sizing:border-box', 'padding:4px 8px',
             'color:white', 'font-family:Arial,sans-serif', 'font-size:12px',
-            'box-sizing:border-box', 'overflow:hidden', 'pointer-events:all'
+            '-webkit-overflow-scrolling:touch'
         ].join(';');
+
+        // ── 齒輪按鈕（sticky 釘在頂部靠右）
+        const gearBtn = document.createElement('button');
+        gearBtn.id = 'chat-settings-btn';
+        gearBtn.textContent = '⚙️';
+        gearBtn.style.cssText = [
+            'position:sticky', 'top:0', 'float:right',
+            'background:transparent', 'border:none', 'color:white',
+            'font-size:14px', 'cursor:pointer',
+            'z-index:202', 'pointer-events:all'
+        ].join(';');
+
+        // ── 置頂訊息（sticky 頂部）
+        const pinnedDiv = document.createElement('div');
+        pinnedDiv.id = 'chat-pinned';
+        pinnedDiv.style.cssText = [
+            'display:none', 'position:sticky', 'top:0',
+            'background:rgba(255,215,0,0.15)',
+            'border-bottom:1px solid rgba(255,215,0,0.3)',
+            'font-size:11px', 'padding:3px 8px', 'z-index:1'
+        ].join(';');
+
+        historyPanel.appendChild(gearBtn);
+        historyPanel.appendChild(pinnedDiv);
+
+        // ── 往下按鈕（fixed，貼在歷史區右下角）
+        const scrollBtn = document.createElement('div');
+        scrollBtn.id = 'chat-scroll-btn';
+        scrollBtn.textContent = '↓';
+        scrollBtn.style.cssText = [
+            'display:none', 'position:fixed', 'bottom:23vh', 'right:calc(5% + 8px)',
+            'width:28px', 'height:28px',
+            'background:rgba(255,255,255,0.15)',
+            'border:1px solid rgba(255,255,255,0.3)',
+            'border-radius:50%', 'cursor:pointer',
+            'font-size:14px', 'color:white',
+            'text-align:center', 'line-height:28px',
+            'z-index:202', 'user-select:none'
+        ].join(';');
+
+        // ── 輸入列
+        const inputPanel = document.createElement('div');
+        inputPanel.id = 'chat-input-panel';
+        inputPanel.style.cssText = [
+            'position:fixed', 'bottom:5vh', 'left:5%', 'right:5%',
+            'height:5vh', 'min-height:36px',
+            'display:flex', 'align-items:center', 'gap:4px',
+            'background:rgba(0,0,0,0.70)',
+            'border:1px solid rgba(255,255,255,0.15)',
+            'border-radius:8px',
+            'padding:0 6px', 'box-sizing:border-box',
+            'z-index:201'
+        ].join(';');
+
+        const input = document.createElement('input');
+        input.id = 'chat-input';
+        input.type = 'text';
+        input.placeholder = '輸入訊息...';
+        input.maxLength = 200;
+        input.style.cssText = [
+            'flex:1', 'height:28px',
+            'background:rgba(255,255,255,0.08)',
+            'border:1px solid rgba(255,255,255,0.2)',
+            'border-radius:4px', 'color:white', 'font-size:12px',
+            'padding:3px 6px', 'outline:none', 'font-family:Arial,sans-serif'
+        ].join(';');
+
+        const sendBtn = document.createElement('button');
+        sendBtn.id = 'chat-send-btn';
+        sendBtn.textContent = '↩';
+        sendBtn.style.cssText = [
+            'width:36px', 'height:28px', 'flex-shrink:0',
+            'background:rgba(60,120,60,0.6)',
+            'border:1px solid #4a8a4a', 'color:white',
+            'border-radius:4px', 'cursor:pointer', 'font-size:14px'
+        ].join(';');
+
+        inputPanel.appendChild(input);
+        inputPanel.appendChild(sendBtn);
+
+        // ── 設定面板（掛在 body）
+        let settingsPanel = document.getElementById('chat-settings-panel');
+        if (!settingsPanel) {
+            settingsPanel = document.createElement('div');
+            settingsPanel.id = 'chat-settings-panel';
+            settingsPanel.style.cssText = [
+                'display:none', 'position:fixed',
+                'background:#1c1c1c', 'border:1px solid #444', 'border-radius:6px',
+                'padding:10px 12px', 'width:210px', 'z-index:9999', 'font-size:12px'
+            ].join(';');
+            _renderChatSettingsPanel(settingsPanel);
+            document.body.appendChild(settingsPanel);
+        }
+
+        // 齒輪：位置跟著 #chat-history-panel 右上角
+        gearBtn.onclick = (e) => {
+            e.stopPropagation();
+            const sp = document.getElementById('chat-settings-panel');
+            if (!sp) return;
+            if (sp.style.display !== 'none') { sp.style.display = 'none'; return; }
+            const hp   = document.getElementById('chat-history-panel');
+            const rect = hp.getBoundingClientRect();
+            sp.style.right  = (window.innerWidth - rect.right) + 'px';
+            sp.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+            sp.style.top    = 'auto';
+            sp.style.left   = 'auto';
+            sp.style.display = 'block';
+        };
+
+        // 發送訊息
+        const _doSend = () => {
+            const inp = document.getElementById('chat-input');
+            if (!inp || !inp.value.trim()) return;
+            sendChatMessage(inp.value);
+            inp.value = '';
+            _resetIdleTimer();
+        };
+        sendBtn.onclick = _doSend;
+
+        input.addEventListener('keydown', (e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter') { e.preventDefault(); _doSend(); }
+        });
+        input.addEventListener('keyup',    (e) => e.stopPropagation());
+        input.addEventListener('keypress', (e) => e.stopPropagation());
+
+        // 捲動偵測
+        historyPanel.addEventListener('scroll', () => {
+            const atBottom = historyPanel.scrollTop + historyPanel.clientHeight >= historyPanel.scrollHeight - 60;
+            scrollBtn.style.display = atBottom ? 'none' : 'block';
+        });
+        scrollBtn.addEventListener('click', () => {
+            historyPanel.scrollTop = historyPanel.scrollHeight;
+            scrollBtn.style.display = 'none';
+        });
+
+        document.body.appendChild(historyPanel);
+        document.body.appendChild(scrollBtn);
+        document.body.appendChild(inputPanel);
+
     } else {
+        // ════════════════════════════════════════
+        // 桌機版：結構不動
+        // ════════════════════════════════════════
+
+        const panel = document.createElement('div');
+        panel.id = 'chat-panel';
         panel.style.cssText = [
             'position:fixed', 'left:10px', 'bottom:10px',
             'width:320px', 'height:220px', 'z-index:201',
@@ -699,183 +871,140 @@ function buildChatUI() {
             'color:white', 'font-family:Arial,sans-serif', 'font-size:12px',
             'box-sizing:border-box', 'overflow:hidden', 'pointer-events:all'
         ].join(';');
-    }
 
-    // ── 置頂訊息區
-    const pinnedDiv = document.createElement('div');
-    pinnedDiv.id = 'chat-pinned';
-    pinnedDiv.style.cssText = [
-        'display:none', 'padding:4px 28px 4px 8px',
-        'background:rgba(255,215,0,0.15)',
-        'border-bottom:1px solid rgba(255,215,0,0.3)',
-        'font-size:11px', 'flex-shrink:0', 'word-break:break-all', 'line-height:1.4'
-    ].join(';');
+        const pinnedDiv = document.createElement('div');
+        pinnedDiv.id = 'chat-pinned';
+        pinnedDiv.style.cssText = [
+            'display:none', 'padding:4px 28px 4px 8px',
+            'background:rgba(255,215,0,0.15)',
+            'border-bottom:1px solid rgba(255,215,0,0.3)',
+            'font-size:11px', 'flex-shrink:0', 'word-break:break-all', 'line-height:1.4'
+        ].join(';');
 
-    // ── ⚙️ 齒輪按鈕（右上角）
-    const gearBtn = document.createElement('button');
-    gearBtn.id = 'chat-settings-btn';
-    gearBtn.textContent = '⚙️';
-    gearBtn.style.cssText = [
-        'position:absolute', 'top:6px', 'right:6px',
-        'background:transparent', 'border:none', 'color:white',
-        'font-size:14px', 'cursor:pointer', 'pointer-events:all',
-        'padding:0', 'line-height:1', 'z-index:202'
-    ].join(';');
+        const gearBtn = document.createElement('button');
+        gearBtn.id = 'chat-settings-btn';
+        gearBtn.textContent = '⚙️';
+        gearBtn.style.cssText = [
+            'position:absolute', 'top:6px', 'right:6px',
+            'background:transparent', 'border:none', 'color:white',
+            'font-size:14px', 'cursor:pointer', 'pointer-events:all',
+            'padding:0', 'line-height:1', 'z-index:202'
+        ].join(';');
 
-    // ── 訊息列表
-    const msgDiv = document.createElement('div');
-    msgDiv.id = 'chat-messages';
-    msgDiv.style.cssText = [
-        'flex:1', 'overflow-y:scroll', 'overflow-x:hidden', 'min-height:0',
-        'padding:4px 8px',
-        'scrollbar-width:thin',
-        'scrollbar-color:rgba(255,255,255,0.3) transparent'
-    ].join(';');
+        const msgDiv = document.createElement('div');
+        msgDiv.id = 'chat-messages';
+        msgDiv.style.cssText = [
+            'flex:1', 'overflow-y:scroll', 'overflow-x:hidden', 'min-height:0',
+            'padding:4px 8px',
+            'scrollbar-width:thin',
+            'scrollbar-color:rgba(255,255,255,0.3) transparent'
+        ].join(';');
 
-    // ── 輸入列
-    const inputRow = document.createElement('div');
-    inputRow.id = 'chat-input-row';
-    inputRow.style.cssText = [
-        'display:flex', 'align-items:center', 'gap:4px',
-        'padding:4px 6px', 'width:100%',
-        'border-top:1px solid rgba(255,255,255,0.1)',
-        'flex-shrink:0', 'box-sizing:border-box'
-    ].join(';');
+        const inputRow = document.createElement('div');
+        inputRow.id = 'chat-input-row';
+        inputRow.style.cssText = [
+            'display:flex', 'align-items:center', 'gap:4px',
+            'padding:4px 6px', 'width:100%',
+            'border-top:1px solid rgba(255,255,255,0.1)',
+            'flex-shrink:0', 'box-sizing:border-box'
+        ].join(';');
 
-    const input = document.createElement('input');
-    input.id = 'chat-input';
-    input.type = 'text';
-    input.placeholder = '輸入訊息...';
-    input.maxLength = 200;
-    input.style.cssText = [
-        'flex:1', 'background:rgba(255,255,255,0.08)',
-        'border:1px solid rgba(255,255,255,0.2)',
-        'border-radius:4px', 'color:white', 'font-size:12px',
-        'padding:3px 6px', 'outline:none', 'font-family:Arial,sans-serif'
-    ].join(';');
+        const input = document.createElement('input');
+        input.id = 'chat-input';
+        input.type = 'text';
+        input.placeholder = '輸入訊息...';
+        input.maxLength = 200;
+        input.style.cssText = [
+            'flex:1', 'background:rgba(255,255,255,0.08)',
+            'border:1px solid rgba(255,255,255,0.2)',
+            'border-radius:4px', 'color:white', 'font-size:12px',
+            'padding:3px 6px', 'outline:none', 'font-family:Arial,sans-serif'
+        ].join(';');
 
-    const sendBtn = document.createElement('button');
-    sendBtn.id = 'chat-send-btn';
-    sendBtn.textContent = '↩';
-    sendBtn.style.cssText = [
-        'width:36px', 'height:26px',
-        'background:rgba(60,120,60,0.6)',
-        'border:1px solid #4a8a4a', 'color:white',
-        'border-radius:4px', 'cursor:pointer', 'font-size:14px', 'flex-shrink:0'
-    ].join(';');
+        const sendBtn = document.createElement('button');
+        sendBtn.id = 'chat-send-btn';
+        sendBtn.textContent = '↩';
+        sendBtn.style.cssText = [
+            'width:36px', 'height:26px',
+            'background:rgba(60,120,60,0.6)',
+            'border:1px solid #4a8a4a', 'color:white',
+            'border-radius:4px', 'cursor:pointer', 'font-size:14px', 'flex-shrink:0'
+        ].join(';');
 
-    inputRow.appendChild(input);
-    inputRow.appendChild(sendBtn);
+        inputRow.appendChild(input);
+        inputRow.appendChild(sendBtn);
 
-    // ── 手機版子元素補丁（確保 flex 佈局撐滿固定高度）
-    if (isMob) {
-        msgDiv.style.cssText   += ';box-sizing:border-box';
-        inputRow.style.cssText += ';height:36px';
-        gearBtn.style.cssText  += ';flex-shrink:0';
-    }
+        const settingsPanel = document.createElement('div');
+        settingsPanel.id = 'chat-settings-panel';
+        settingsPanel.style.cssText = [
+            'display:none', 'position:fixed',
+            'background:#1c1c1c', 'border:1px solid #444', 'border-radius:6px',
+            'padding:10px 12px', 'width:210px', 'z-index:9999', 'font-size:12px'
+        ].join(';');
+        _renderChatSettingsPanel(settingsPanel);
 
-    // ── 設定面板（預設隱藏，內容由 _renderChatSettingsPanel 動態產生）
-    const settingsPanel = document.createElement('div');
-    settingsPanel.id = 'chat-settings-panel';
-    settingsPanel.style.cssText = [
-        'display:none', 'position:fixed',
-        'background:#1c1c1c', 'border:1px solid #444', 'border-radius:6px',
-        'padding:10px 12px', 'width:210px', 'z-index:9999', 'font-size:12px'
-    ].join(';');
-    _renderChatSettingsPanel(settingsPanel);
+        gearBtn.onclick = (e) => {
+            e.stopPropagation();
+            const sp = document.getElementById('chat-settings-panel');
+            if (!sp) return;
+            if (sp.style.display !== 'none') { sp.style.display = 'none'; return; }
+            const panelRect = document.getElementById('chat-panel').getBoundingClientRect();
+            sp.style.left   = (panelRect.right - 216) + 'px';
+            sp.style.bottom = (window.innerHeight - panelRect.top + 4) + 'px';
+            sp.style.display = 'block';
+        };
 
-    // 齒輪：切換設定面板，位置跟著 #chat-panel 右上角
-    gearBtn.onclick = (e) => {
-        e.stopPropagation();
-        const sp = document.getElementById('chat-settings-panel');
-        if (!sp) return;
-        if (sp.style.display !== 'none') { sp.style.display = 'none'; return; }
-        const panelRect = document.getElementById('chat-panel').getBoundingClientRect();
-        sp.style.left   = (panelRect.right - 216) + 'px';
-        sp.style.bottom = (window.innerHeight - panelRect.top + 4) + 'px';
-        sp.style.display = 'block';
-    };
+        const _doSend = () => {
+            const inp = document.getElementById('chat-input');
+            if (!inp || !inp.value.trim()) return;
+            sendChatMessage(inp.value);
+            inp.value = '';
+            _resetIdleTimer();
+        };
+        sendBtn.onclick = _doSend;
 
-    // 發送訊息
-    const _doSend = () => {
-        const inp = document.getElementById('chat-input');
-        if (!inp || !inp.value.trim()) return;
-        sendChatMessage(inp.value);
-        inp.value = '';
-        _resetIdleTimer();
-    };
-    sendBtn.onclick = _doSend;
+        input.addEventListener('keydown', (e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter') { e.preventDefault(); _doSend(); }
+        });
+        input.addEventListener('keyup',    (e) => e.stopPropagation());
+        input.addEventListener('keypress', (e) => e.stopPropagation());
 
-    // Enter 發送，阻止遊戲鍵盤事件
-    input.addEventListener('keydown', (e) => {
-        e.stopPropagation();
-        if (e.key === 'Enter') { e.preventDefault(); _doSend(); }
-    });
-    input.addEventListener('keyup',    (e) => e.stopPropagation());
-    input.addEventListener('keypress', (e) => e.stopPropagation());
+        const scrollBtn = document.createElement('div');
+        scrollBtn.id = 'chat-scroll-btn';
+        scrollBtn.textContent = '↓';
+        scrollBtn.style.cssText = [
+            'display:none', 'position:absolute', 'bottom:48px', 'right:8px',
+            'width:28px', 'height:28px',
+            'background:rgba(255,255,255,0.15)',
+            'border:1px solid rgba(255,255,255,0.3)',
+            'border-radius:50%', 'cursor:pointer',
+            'font-size:14px', 'color:white',
+            'text-align:center', 'line-height:28px',
+            'z-index:10', 'user-select:none'
+        ].join(';');
 
-    // ── 往下按鈕（訊息區右下角，不在底部時顯示）
-    const scrollBtn = document.createElement('div');
-    scrollBtn.id = 'chat-scroll-btn';
-    scrollBtn.textContent = '↓';
-    scrollBtn.style.cssText = [
-        'display:none', 'position:absolute', 'bottom:48px', 'right:8px',
-        'width:28px', 'height:28px',
-        'background:rgba(255,255,255,0.15)',
-        'border:1px solid rgba(255,255,255,0.3)',
-        'border-radius:50%', 'cursor:pointer',
-        'font-size:14px', 'color:white',
-        'text-align:center', 'line-height:28px',
-        'z-index:10', 'user-select:none'
-    ].join(';');
+        panel.appendChild(pinnedDiv);
+        panel.appendChild(gearBtn);
+        panel.appendChild(msgDiv);
+        panel.appendChild(scrollBtn);
+        panel.appendChild(inputRow);
+        document.body.appendChild(settingsPanel);
+        document.body.appendChild(panel);
 
-    // 組合結構
-    panel.appendChild(pinnedDiv);
-    panel.appendChild(gearBtn);
-    panel.appendChild(msgDiv);
-    panel.appendChild(scrollBtn);
-    panel.appendChild(inputRow);
-    document.body.appendChild(settingsPanel);
-
-    document.body.appendChild(panel);
-
-    // 捲動偵測：不在底部時顯示往下按鈕
-    msgDiv.addEventListener('scroll', () => {
-        const atBottom = msgDiv.scrollTop + msgDiv.clientHeight >= msgDiv.scrollHeight - 10;
-        scrollBtn.style.display = atBottom ? 'none' : 'block';
-    });
-    scrollBtn.addEventListener('click', () => {
-        msgDiv.scrollTop = msgDiv.scrollHeight;
-        scrollBtn.style.display = 'none';
-    });
-
-    // 手機版：延後檢查是否與首頁按鈕重疊，必要時縮小高度
-    if (isMob) {
-        setTimeout(() => _adjustMobileChatHeight(panel), 60);
-    }
-}
-
-function _adjustMobileChatHeight(panel) {
-    const startScreen = document.getElementById('start-screen');
-    if (!startScreen) return;
-    // 找所有主選單按鈕的最低 bottom
-    const buttons = startScreen.querySelectorAll('button');
-    let lowestBottom = 0;
-    buttons.forEach(btn => {
-        const r = btn.getBoundingClientRect();
-        if (r.bottom > lowestBottom) lowestBottom = r.bottom;
-    });
-    // 依序縮減直到不重疊
-    const tryHeights = ['25vh', '20vh', '15vh', '10vh'];
-    for (const h of tryHeights) {
-        panel.style.height = h;
-        const r = panel.getBoundingClientRect();
-        if (r.top >= lowestBottom) break;
+        msgDiv.addEventListener('scroll', () => {
+            const atBottom = msgDiv.scrollTop + msgDiv.clientHeight >= msgDiv.scrollHeight - 10;
+            scrollBtn.style.display = atBottom ? 'none' : 'block';
+        });
+        scrollBtn.addEventListener('click', () => {
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+            scrollBtn.style.display = 'none';
+        });
     }
 }
 
 function _isAtBottom() {
-    const el = document.getElementById('chat-messages');
+    const el = document.getElementById('chat-history-panel') || document.getElementById('chat-messages');
     if (!el) return true;
     return el.scrollTop + el.clientHeight >= el.scrollHeight - 60;
 }
@@ -895,15 +1024,12 @@ function _formatChatTime(isoStr) {
 }
 
 function renderChat() {
-    const msgDiv    = document.getElementById('chat-messages');
-    const pinnedDiv = document.getElementById('chat-pinned');
-    const scrollBtn = document.getElementById('chat-scroll-btn');
-    if (!msgDiv) return;
+    const scrollBtn  = document.getElementById('chat-scroll-btn');
+    const pinnedDiv  = document.getElementById('chat-pinned');
+    const pinnedMsg  = _chatMessages.find(m => m.is_pinned);
+    const nonPinned  = _chatMessages.filter(m => !m.is_pinned);
 
-    const wasAtBottom = _isAtBottom();
-
-    // ── 置頂區
-    const pinnedMsg = _chatMessages.find(m => m.is_pinned);
+    // ── 置頂區（共用）
     if (pinnedMsg && pinnedDiv) {
         const { lvTag, gmLabel, titleHtml, nameHtml } = _parseName(pinnedMsg);
         pinnedDiv.innerHTML =
@@ -916,9 +1042,36 @@ function renderChat() {
         pinnedDiv.style.display = 'none';
     }
 
-    // ── 一般訊息
+    const hp = document.getElementById('chat-history-panel');
+    if (hp) {
+        // ── 手機版：訊息直接 append 為 <p> 到 #chat-history-panel
+        const wasAtBottom = hp.scrollTop + hp.clientHeight >= hp.scrollHeight - 60;
+        Array.from(hp.querySelectorAll('p')).forEach(el => el.remove());
+        for (const msg of nonPinned) {
+            const { lvTag, gmLabel, titleHtml, nameHtml } = _parseName(msg);
+            const p = document.createElement('p');
+            p.style.cssText = 'margin:2px 0;line-height:1.4;word-break:break-all;';
+            p.innerHTML =
+                '<span style="color:rgba(255,255,255,0.5);font-size:10px;">[' + _formatChatTime(msg.created_at) +
+                '][' + _esc(msg.version || '') +
+                '][' + _esc(lvTag) + ']</span> ' +
+                gmLabel + titleHtml + nameHtml + '：' + _esc(msg.content);
+            hp.appendChild(p);
+        }
+        if (wasAtBottom) {
+            hp.scrollTop = hp.scrollHeight;
+            if (scrollBtn) scrollBtn.style.display = 'none';
+        } else {
+            if (scrollBtn) scrollBtn.style.display = 'block';
+        }
+        return;
+    }
+
+    // ── 桌機版：訊息 append 到 #chat-messages
+    const msgDiv = document.getElementById('chat-messages');
+    if (!msgDiv) return;
+    const wasAtBottom = _isAtBottom();
     msgDiv.innerHTML = '';
-    const nonPinned = _chatMessages.filter(m => !m.is_pinned);
     for (const msg of nonPinned) {
         const { lvTag, gmLabel, titleHtml, nameHtml } = _parseName(msg);
         const line = document.createElement('div');
@@ -930,8 +1083,6 @@ function renderChat() {
             gmLabel + titleHtml + nameHtml + '：' + _esc(msg.content);
         msgDiv.appendChild(line);
     }
-
-    // 捲動：在底部才自動往下，否則顯示往下按鈕
     if (wasAtBottom) {
         msgDiv.scrollTop = msgDiv.scrollHeight;
         if (scrollBtn) scrollBtn.style.display = 'none';

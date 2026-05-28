@@ -690,6 +690,7 @@ function hideSettings() {
     if (overlay) overlay.remove();
     gameState.settingsOpen = false;
     gameState.lastTimeTick = Date.now();
+    if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
 }
 
 // =============================================================
@@ -1344,6 +1345,7 @@ function showCompendium(startTab) {
             document.removeEventListener('keydown', _compKeyHandler);
             _compKeyHandler = null;
         }
+        if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
     }
 
     prevBtn.onclick = () => { if (curPage > 0) { curPage--; render(); } };
@@ -1539,31 +1541,31 @@ function showStartScreen() {
     const startBtn = document.createElement('button');
     startBtn.style.cssText = menuBtnStyle + 'background:#2a5a2a;border:1px solid #4a8a4a;';
     startBtn.textContent = t('startGame');
-    startBtn.onclick = () => showMapSelect();
+    startBtn.onclick = () => { hideChat(); showMapSelect(); };
     overlay.appendChild(startBtn);
 
     const skillBtn = document.createElement('button');
     skillBtn.style.cssText = menuBtnStyle + 'background:rgba(60,100,60,0.3);border:1px solid #4a7a4a;';
     skillBtn.textContent = t('skillTree');
-    skillBtn.onclick = () => buildSkillTreeOverlay(null, true);
+    skillBtn.onclick = () => { hideChat(); buildSkillTreeOverlay(null, true); };
     overlay.appendChild(skillBtn);
 
     const guideBtn = document.createElement('button');
     guideBtn.style.cssText = menuBtnStyle + 'background:rgba(90,80,40,0.3);border:1px solid #8a7a4a;';
     guideBtn.textContent = t('compendium');
-    guideBtn.onclick = () => showCompendium('guide');
+    guideBtn.onclick = () => { hideChat(); showCompendium('guide'); };
     overlay.appendChild(guideBtn);
 
     const lbMenuBtn = document.createElement('button');
     lbMenuBtn.style.cssText = menuBtnStyle + 'background:rgba(80,60,10,0.3);border:1px solid #8a7a2a;';
     lbMenuBtn.textContent = t('leaderboard');
-    lbMenuBtn.onclick = () => showLeaderboard();
+    lbMenuBtn.onclick = () => { hideChat(); showLeaderboard(); };
     overlay.appendChild(lbMenuBtn);
 
     const settingsBtn = document.createElement('button');
     settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
     settingsBtn.textContent = t('settings');
-    settingsBtn.onclick = () => showSettings(true);
+    settingsBtn.onclick = () => { hideChat(); showSettings(true); };
     overlay.appendChild(settingsBtn);
 
     const footerEl = document.createElement('div');
@@ -1674,7 +1676,7 @@ function showStartScreen() {
         bookBtn.style.transform = 'scale(1)';
         bookBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
     };
-    bookBtn.onclick = () => showGuideStory();
+    bookBtn.onclick = () => { hideChat(); showGuideStory(); };
 
     // ── 更新日誌按鈕（在故事書按鈕下方）
     const patchBtn = document.createElement('div');
@@ -1719,7 +1721,7 @@ function showStartScreen() {
         patchBtn.style.transform = 'scale(1)';
         patchBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
     };
-    patchBtn.onclick = () => showPatchNotes();
+    patchBtn.onclick = () => { hideChat(); showPatchNotes(); };
     overlay.appendChild(bookBtn);
     overlay.appendChild(patchBtn);
 
@@ -1728,8 +1730,7 @@ function showStartScreen() {
 
     // 聊天室：建立 UI（只建一次），顯示面板並連線
     if (typeof buildChatUI === 'function') buildChatUI();
-    const _cp = document.getElementById('chat-panel');
-    if (_cp) _cp.style.display = '';
+    if (typeof showChat === 'function') showChat();
     if (typeof initChat === 'function') initChat();
 }
 
@@ -1779,7 +1780,10 @@ function showPatchNotes() {
         'border-radius:4px', 'width:28px', 'height:28px', 'cursor:pointer',
         'font-size:14px', 'pointer-events:all', 'flex-shrink:0'
     ].join(';');
-    closeBtn.onclick = () => overlay.remove();
+    closeBtn.onclick = () => {
+        overlay.remove();
+        if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
+    };
     titleBar.appendChild(titleText);
     titleBar.appendChild(closeBtn);
     panel.appendChild(titleBar);
@@ -2074,7 +2078,10 @@ function showGuideStory() {
     `;
     closeBtn.onmouseenter = () => closeBtn.style.color = 'rgba(255,255,255,0.95)';
     closeBtn.onmouseleave = () => closeBtn.style.color = 'rgba(255,255,255,0.6)';
-    closeBtn.onclick = () => overlay.remove();
+    closeBtn.onclick = () => {
+        overlay.remove();
+        if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
+    };
 
     book.appendChild(closeBtn);
     book.appendChild(illustrationArea);

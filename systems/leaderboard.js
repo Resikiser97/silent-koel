@@ -175,6 +175,7 @@ function showLeaderboard() {
     function closeLb() {
         overlay.remove();
         document.removeEventListener('keydown', lbKeyHandler);
+        if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
     }
     closeBtn.onclick = closeLb;
     overlay.addEventListener('click', e => { if (e.target === overlay) closeLb(); });

@@ -617,7 +617,10 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         const closeBtn = document.createElement('button');
         closeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
         closeBtn.textContent = t('close');
-        closeBtn.onclick = () => { hideTooltip(); overlay.remove(); };
+        closeBtn.onclick = () => {
+            hideTooltip(); overlay.remove();
+            if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
+        };
         btnRow.appendChild(closeBtn);
     } else {
         // mode === 'postGame'：從技能樹進入，直接執行，不再有警告
