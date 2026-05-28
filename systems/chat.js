@@ -506,6 +506,21 @@ function _renderChatSettingsPanel(panel) {
     panel.innerHTML = '';
     const cs = loadChatSettings();
 
+    // 關閉按鈕（右上角）
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = [
+        'position:absolute', 'top:6px', 'right:8px',
+        'background:transparent', 'border:none',
+        'color:white', 'font-size:16px', 'cursor:pointer',
+        'padding:0', 'line-height:1'
+    ].join(';');
+    closeBtn.onclick = () => {
+        const sp = document.getElementById('chat-settings-panel');
+        if (sp) sp.style.display = 'none';
+    };
+    panel.appendChild(closeBtn);
+
     const _inputStyle = [
         'width:100%', 'background:rgba(255,255,255,0.08)',
         'border:1px solid #555', 'border-radius:3px',
