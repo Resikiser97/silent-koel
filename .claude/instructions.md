@@ -8,6 +8,8 @@
 ## 開發規則（每次必須遵守）
 - `gameLoop` 裡絕對不能出現字面上的 `\n` 字符
 - 每次修改完必須更新 `CHANGELOG.md` 和版本號
+- **版本號必須三處同步**：`CHANGELOG.md`、`config/gameConfig.js`（GAME_INFO.version）、`project_summary.md`
+  - `config/gameConfig.js` 的版本號是玩家在遊戲畫面和排行榜看到的版本，絕對不能落後
 - 新增任何函式或功能必須更新 `MAIN.md` 對應模組說明
 - 函式如果已被移除或合併，必須從 `MAIN.md` 對應區塊刪除
 - 數值只能在 `config/` 資料夾修改
