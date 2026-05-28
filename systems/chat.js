@@ -723,7 +723,7 @@ function buildChatUI() {
     // ── 訊息列表
     const msgDiv = document.createElement('div');
     msgDiv.id = 'chat-messages';
-    msgDiv.style.cssText = 'flex:1;overflow-y:auto;padding:4px 8px;';
+    msgDiv.style.cssText = 'flex:1;overflow-y:auto;min-height:0;padding:4px 8px;';
 
     // ── 輸入列
     const inputRow = document.createElement('div');
@@ -795,14 +795,40 @@ function buildChatUI() {
     input.addEventListener('keyup',    (e) => e.stopPropagation());
     input.addEventListener('keypress', (e) => e.stopPropagation());
 
+    // ── 往下按鈕（訊息區右下角，不在底部時顯示）
+    const scrollBtn = document.createElement('div');
+    scrollBtn.id = 'chat-scroll-btn';
+    scrollBtn.textContent = '↓';
+    scrollBtn.style.cssText = [
+        'display:none', 'position:absolute', 'bottom:48px', 'right:8px',
+        'width:28px', 'height:28px',
+        'background:rgba(255,255,255,0.15)',
+        'border:1px solid rgba(255,255,255,0.3)',
+        'border-radius:50%', 'cursor:pointer',
+        'font-size:14px', 'color:white',
+        'text-align:center', 'line-height:28px',
+        'z-index:10', 'user-select:none'
+    ].join(';');
+
     // 組合結構
     panel.appendChild(pinnedDiv);
     panel.appendChild(gearBtn);
     panel.appendChild(msgDiv);
+    panel.appendChild(scrollBtn);
     panel.appendChild(inputRow);
     panel.appendChild(settingsPanel);
 
     document.getElementById('game-container').appendChild(panel);
+
+    // 捲動偵測：不在底部時顯示往下按鈕
+    msgDiv.addEventListener('scroll', () => {
+        const atBottom = msgDiv.scrollTop + msgDiv.clientHeight >= msgDiv.scrollHeight - 10;
+        scrollBtn.style.display = atBottom ? 'none' : 'block';
+    });
+    scrollBtn.addEventListener('click', () => {
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+        scrollBtn.style.display = 'none';
+    });
 
     // 手機版：延後檢查是否與首頁按鈕重疊，必要時縮小高度
     if (isMob) {
@@ -829,17 +855,41 @@ function _adjustMobileChatHeight(panel) {
     }
 }
 
+function _isAtBottom() {
+    const el = document.getElementById('chat-messages');
+    if (!el) return true;
+    return el.scrollTop + el.clientHeight >= el.scrollHeight - 60;
+}
+
+function _formatChatTime(isoStr) {
+    if (!isoStr) return '';
+    const diff = Date.now() - new Date(isoStr).getTime();
+    const sec  = Math.floor(diff / 1000);
+    const min  = Math.floor(sec / 60);
+    const hr   = Math.floor(min / 60);
+    if (sec < 60)  return '剛剛';
+    if (min < 60)  return min + '分鐘前';
+    if (hr  < 24)  return hr  + '小時前';
+    const d = new Date(isoStr);
+    return '昨天 ' + d.getHours().toString().padStart(2, '0') + ':' +
+           d.getMinutes().toString().padStart(2, '0');
+}
+
 function renderChat() {
     const msgDiv    = document.getElementById('chat-messages');
     const pinnedDiv = document.getElementById('chat-pinned');
+    const scrollBtn = document.getElementById('chat-scroll-btn');
     if (!msgDiv) return;
+
+    const wasAtBottom = _isAtBottom();
 
     // ── 置頂區
     const pinnedMsg = _chatMessages.find(m => m.is_pinned);
     if (pinnedMsg && pinnedDiv) {
         const { lvTag, name, gmLabel, nameHtml } = _parseName(pinnedMsg);
         pinnedDiv.innerHTML =
-            '📌 <span style="color:#888;font-size:10px;">[' + _esc(pinnedMsg.version || '') +
+            '📌 <span style="color:rgba(255,255,255,0.5);font-size:10px;">[' + _formatChatTime(pinnedMsg.created_at) +
+            '][' + _esc(pinnedMsg.version || '') +
             '][' + _esc(lvTag) + ']</span> ' +
             gmLabel + nameHtml + '：' + _esc(pinnedMsg.content);
         pinnedDiv.style.display = 'block';
@@ -855,14 +905,20 @@ function renderChat() {
         const line = document.createElement('div');
         line.style.cssText = 'margin-bottom:2px;word-break:break-all;line-height:1.4;';
         line.innerHTML =
-            '<span style="color:#666;font-size:10px;">[' + _esc(msg.version || '') +
+            '<span style="color:rgba(255,255,255,0.5);font-size:10px;">[' + _formatChatTime(msg.created_at) +
+            '][' + _esc(msg.version || '') +
             '][' + _esc(lvTag) + ']</span> ' +
             gmLabel + nameHtml + '：' + _esc(msg.content);
         msgDiv.appendChild(line);
     }
 
-    // 捲到最新訊息
-    msgDiv.scrollTop = msgDiv.scrollHeight;
+    // 捲動：在底部才自動往下，否則顯示往下按鈕
+    if (wasAtBottom) {
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+        if (scrollBtn) scrollBtn.style.display = 'none';
+    } else {
+        if (scrollBtn) scrollBtn.style.display = 'block';
+    }
 }
 
 // 解析 player_name（格式：lv30|Kiser）
