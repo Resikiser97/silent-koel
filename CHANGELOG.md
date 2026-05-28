@@ -2,6 +2,14 @@
 
 ---
 
+## v0.62.2 - 2026-05-28
+
+### 修復
+- **手機版聊天室底部留空**（`systems/chat.js`）：`#chat-panel` 手機版 `bottom:0` 改為 `bottom:5vh`、`height:25vh` 改為 `height:20vh`，避免與畫面最底部操作區重疊；`border-radius` 改為四角圓（不再貼底）
+- **手機版 flex 佈局補強**（`systems/chat.js`）：手機版專屬補丁補上 `#chat-messages` 的 `box-sizing:border-box`、`#chat-input-row` 的 `height:36px`、`#chat-settings-btn` 的 `flex-shrink:0`，確保輸入列固定底部且不被內容撐出
+
+---
+
 ## v0.62.1 - 2026-05-28
 
 ### 修復

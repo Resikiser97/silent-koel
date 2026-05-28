@@ -679,12 +679,12 @@ function buildChatUI() {
 
     if (isMob) {
         panel.style.cssText = [
-            'position:fixed', 'bottom:0', 'left:5%', 'right:5%',
-            'height:25vh', 'z-index:201',
+            'position:fixed', 'bottom:5vh', 'left:5%', 'right:5%',
+            'height:20vh', 'z-index:201',
             'display:flex', 'flex-direction:column',
             'background:rgba(0,0,0,0.70)',
             'border:1px solid rgba(255,255,255,0.15)',
-            'border-radius:8px 8px 0 0',
+            'border-radius:8px',
             'color:white', 'font-family:Arial,sans-serif', 'font-size:12px',
             'box-sizing:border-box', 'overflow:hidden', 'pointer-events:all'
         ].join(';');
@@ -766,6 +766,13 @@ function buildChatUI() {
 
     inputRow.appendChild(input);
     inputRow.appendChild(sendBtn);
+
+    // ── 手機版子元素補丁（確保 flex 佈局撐滿固定高度）
+    if (isMob) {
+        msgDiv.style.cssText   += ';box-sizing:border-box';
+        inputRow.style.cssText += ';height:36px';
+        gearBtn.style.cssText  += ';flex-shrink:0';
+    }
 
     // ── 設定面板（預設隱藏，內容由 _renderChatSettingsPanel 動態產生）
     const settingsPanel = document.createElement('div');
