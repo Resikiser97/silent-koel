@@ -12,6 +12,10 @@ let _skillTreeMode        = '';
 
 function handleKeyDown(e) {
     if (e.key === 'Escape') {
+        if (typeof _chatExpanded !== 'undefined' && _chatExpanded) {
+            if (typeof _collapseChat === 'function') _collapseChat();
+            return;
+        }
         if (gameState.settingsOpen) { hideSettings(); } else if (!gameState.gameOver) { showSettings(); }
         return;
     }
