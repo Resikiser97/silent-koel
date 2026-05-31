@@ -1,3 +1,5 @@
+## v0.0.65.0
+
 # The Silent Koel — 模組架構說明
 
 ## 載入順序（index.html `<body>` 末端）
