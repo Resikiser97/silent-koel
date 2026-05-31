@@ -1,3 +1,30 @@
+// =============================================================
+// config/supabase.js — Supabase 連線設定與排行榜 REST API 封裝
+// =============================================================
+//
+// 【對外公開函式】（其他檔案可直接呼叫）
+//   supabaseQuery(table, method, body, params) — 通用 Supabase REST 請求
+//   submitScore(data) — 提交一筆分數紀錄到 leaderboard 資料表
+//   fetchVictoryRecords(difficulty) — 拉取勝利排行（勝利、遊玩時間最短）
+//   fetchDefeatRecords(limit, difficulty) — 拉取失敗排行（遊玩時間最長）
+//   fetchTop10(difficulty) — 拉取首頁 TOP10 摘要
+//   fetchFunSpeedVictory(difficulty) — 趣味榜：最速通關
+//   fetchFunSpeedDeath(difficulty) — 趣味榜：最速死亡
+//   fetchFunGiantKills(difficulty) — 趣味榜：巨人獵人（giant_kills 最多）
+//   fetchFunKillerKills(difficulty) — 趣味榜：殺手獵人（killer_kills 最多）
+//   fetchFunKillerMaxLevel(difficulty) — 趣味榜：殺手克星（killer_max_level 最高）
+//   fetchFunBossKillSpeed(difficulty) — 趣味榜：最快擊殺 Boss
+//   fetchFunMaxLevel(difficulty) — 趣味榜：最高等級 TOP10
+//   fetchAvailableDifficulties() — 取得排行榜中有資料的難度陣列
+//
+// 【依賴的跨檔案函式】（修改時注意這些來自外部）
+//   gameState  ← 來自 systems/gameState.js（submitScore 讀取 sessionStats）
+//
+// 【重要規則／陷阱】
+//   ⚠️ SUPABASE_KEY 為 publishable key（anon），可安全公開於前端
+//   ⚠️ submitScore 的趣味統計欄位若未傳入會自動從 gameState.sessionStats 補填
+// =============================================================
+
 const SUPABASE_URL = 'https://wrcblrcihzsuwivowxbw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_OXb03F0LNFzkJnMfgmd-uw_c2T3t4Rk';
 

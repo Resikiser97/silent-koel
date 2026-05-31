@@ -20,6 +20,7 @@
 - 不使用 ES Modules，全部用傳統 `<script>` 標籤
 - 新增任何函式或功能必須更新 `MAIN.md` 對應模組說明
 - 函式如果已被移除或合併，必須從 `MAIN.md` 對應區塊刪除
+- 新增任何 JS 檔案時，必須同時在該檔案加上 File Header（格式見 SKILL_FILEHEADER.md）
 
 ---
 
@@ -47,6 +48,12 @@ QUICKREF.md         ← 第一行
 
 ### Step 1 — 讀取本次變更範圍
 讀取 `CHANGELOG.md` 最上方最新一條 entry，確認本次 commit 涉及哪些檔案和系統。
+
+### Step 1.5 — 強制檢查 JS 檔案結構變動
+讀取本次 commit 的異動清單。
+如果有任何 JS 檔案被新增或刪除：
+→ 強制執行「file-header 全部」檢查（不可跳過，不可等用戶提醒）
+→ 輸出檢查報告，等用戶回覆「確認修正」後才繼續 Step 2
 
 ### Step 2 — 更新 CHANGELOG.md 頂部版本號
 將 `CHANGELOG.md` 第一行改為當前版本號。

@@ -1,14 +1,26 @@
 // =============================================================
-// 聊天室系統 - Supabase Realtime 即時聊天
-// 依賴：SUPABASE_URL, SUPABASE_KEY (config/supabase.js)
-//       GAME_INFO (config/gameConfig.js)
-//       supabaseQuery (config/supabase.js) ← REST 備用
-//       gameState (systems/gameState.js)
+// systems/chat.js — 首頁聊天室系統（Supabase Realtime 即時聊天 + 帳號管理）
+// =============================================================
 //
-// 注意：使用 Supabase Realtime 需在 Supabase Dashboard：
-//   1. 啟用 chat_messages 表的 Realtime
-//   2. 設定 RLS 允許 anon 的 SELECT / INSERT
-//   3. GM UPDATE（pin）/ DELETE（24hr 清理）需額外 RLS policy
+// 【對外公開函式】（其他檔案可直接呼叫）
+//   buildChatUI() — 建立聊天室 DOM（只建一次，重複呼叫無效）
+//   initChat() — 連線 Supabase Realtime 頻道並開始接收訊息
+//   showChat() — 顯示聊天室面板（收合狀態）
+//   hideChat() — 隱藏聊天室面板
+//   loadChatSettings() — 從 localStorage 讀取聊天帳號設定（登入狀態等）
+//   chatSaveProgress() — 將目前遊戲進度儲存到 Supabase 雲端（已登入才執行）
+//
+// 【依賴的跨檔案函式】（修改時注意這些來自外部）
+//   SUPABASE_URL, SUPABASE_KEY  ← 來自 config/supabase.js
+//   supabaseQuery()             ← 來自 config/supabase.js（REST 備用路徑）
+//   GAME_INFO                   ← 來自 config/gameConfig.js
+//   gameState                   ← 來自 systems/gameState.js
+//
+// 【重要規則／陷阱】
+//   ⚠️ 使用 Supabase Realtime 需在 Dashboard 啟用 chat_messages 表的 Realtime，
+//      並設定 RLS 允許 anon SELECT / INSERT；GM UPDATE(pin) / DELETE 需額外 policy
+//   ⚠️ 密碼以 SHA-256 雜湊儲存，絕不明文上傳；帳號一旦建立無法自行重設密碼
+//   ⚠️ _chatExpanded 狀態由 systems/input.js 的 ESC 鍵處理讀取，不可隨意重命名
 // =============================================================
 
 // ─────────────────────────────────────────────
