@@ -138,6 +138,7 @@ function showOrganSelection() {
     }
     const p = gameState.player;
     gameState.organSelectionActive = true;
+    const _organSelectOpenTime = Date.now();
 
     const organSlotsUsed = getOrganSlotsUsed();
     const slotsFull = organSlotsUsed >= p.organSlots;
@@ -259,6 +260,7 @@ function showOrganSelection() {
                     hideTooltip();
                 };
                 btn.onclick = () => {
+                    if (Date.now() - _organSelectOpenTime < 500) return;
                     if (isUpgrade) {
                         existingOrgan.level = targetLevel;
                         existingOrgan.desc = def.levels[targetLevel - 1].desc;

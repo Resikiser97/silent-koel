@@ -1,4 +1,4 @@
-## v0.0.66.0
+## v0.0.66.1
 
 # QUICKREF — Claude Code 快速參考索引
 

@@ -13,6 +13,12 @@
  *   玩家被暈眩 1000ms，魚鱗韌性 30% → applyTenacity(1000, p) = 700ms
  *   敵人被嘴器減速 2000ms，c.tenacity 目前為 0 → 仍為 2000ms
  */
+function getGameFont(baseSize, baseBold) {
+    const size = gameState.settings.fontLarge ? baseSize + 2 : baseSize;
+    const bold = (gameState.settings.fontBold || baseBold) ? 'bold ' : '';
+    return bold + size + 'px Arial';
+}
+
 function applyTenacity(durationMs, target) {
     const t = (target && target.tenacity) || 0;
     return Math.max(0, Math.round(durationMs * (1 - t)));

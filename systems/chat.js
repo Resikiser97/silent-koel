@@ -1151,7 +1151,69 @@ function buildChatUI() {
         'border:1px solid #4a8a4a', 'color:white',
         'border-radius:4px', 'cursor:pointer', 'font-size:14px', 'flex-shrink:0'
     ].join(';');
+    // 顏色選擇面板（輸入框上方，預設隱藏）
+    const colorPanel = document.createElement('div');
+    colorPanel.id = 'chat-color-panel';
+    colorPanel.style.cssText = [
+        'display:none', 'align-items:center', 'gap:6px',
+        'padding:5px 8px', 'background:#1a1a2e',
+        'border-top:1px solid rgba(255,255,255,0.12)',
+        'border-left:1px solid rgba(255,255,255,0.12)',
+        'border-right:1px solid rgba(255,255,255,0.12)',
+        'border-radius:6px 6px 0 0', 'flex-shrink:0', 'box-sizing:border-box'
+    ].join(';');
+    const _colorDefs = [
+        { label: '紅字', tag: 'red',   bg: '#993333' },
+        { label: '藍字', tag: 'blue',  bg: '#336699' },
+        { label: '綠字', tag: 'green', bg: '#337744' }
+    ];
+    _colorDefs.forEach(({ label, tag, bg }) => {
+        const cb = document.createElement('button');
+        cb.textContent = label;
+        cb.style.cssText = 'padding:3px 8px;background:' + bg + ';color:white;border:none;border-radius:3px;cursor:pointer;font-size:12px;flex-shrink:0;';
+        cb.onclick = (e) => {
+            e.stopPropagation();
+            const inp2 = document.getElementById('chat-input');
+            if (!inp2) return;
+            const open = '[c=' + tag + ']';
+            const close = '[/c]';
+            const st = inp2.selectionStart;
+            const en = inp2.selectionEnd;
+            inp2.value = inp2.value.slice(0, st) + open + inp2.value.slice(st, en) + close + inp2.value.slice(en);
+            const cur = st + open.length + (en - st);
+            inp2.setSelectionRange(cur, cur);
+            inp2.focus();
+        };
+        colorPanel.appendChild(cb);
+    });
+
+    // 🎨 按鈕
+    const colorBtn = document.createElement('button');
+    colorBtn.id = 'chat-color-btn';
+    colorBtn.textContent = '🎨';
+    colorBtn.title = '插入顏色標籤';
+    colorBtn.style.cssText = [
+        'width:28px', 'height:26px',
+        'background:rgba(60,60,110,0.6)',
+        'border:1px solid rgba(255,255,255,0.2)', 'color:white',
+        'border-radius:4px', 'cursor:pointer', 'font-size:13px', 'flex-shrink:0'
+    ].join(';');
+    let _colorPanelOpen = false;
+    const _toggleColorPanel = (e) => {
+        e.stopPropagation();
+        _colorPanelOpen = !_colorPanelOpen;
+        colorPanel.style.display = _colorPanelOpen ? 'flex' : 'none';
+    };
+    colorBtn.addEventListener('click', _toggleColorPanel);
+    document.addEventListener('click', (e) => {
+        if (_colorPanelOpen && !colorPanel.contains(e.target) && e.target !== colorBtn) {
+            _colorPanelOpen = false;
+            colorPanel.style.display = 'none';
+        }
+    });
+
     inputRow.appendChild(input);
+    inputRow.appendChild(colorBtn);
     inputRow.appendChild(sendBtn);
 
     // 捲動偵測
@@ -1185,6 +1247,7 @@ function buildChatUI() {
     expandedPanel.appendChild(expandedPinned);
     expandedPanel.appendChild(expandedMessages);
     expandedPanel.appendChild(scrollBtn);
+    expandedPanel.appendChild(colorPanel);
     expandedPanel.appendChild(inputRow);
     document.body.appendChild(expandedPanel);
 
@@ -1339,7 +1402,7 @@ function _parseName(msg) {
     const lvNum     = parseInt((lvTag || '').replace(/\D/g, '')) || 0;
     const lvTagHtml = '<span style="' + _lvColor(lvNum) + 'font-size:13px;font-weight:bold;margin-right:3px;">' + _esc(lvTag) + '</span>';
     const gmLabel   = msg.is_gm
-        ? '<span style="background:linear-gradient(90deg,#ff0000,#ff7700,#ffff00,#00ff00,#0099ff,#aa00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:bold;">【GM】</span>'
+        ? '<span style="color:#4B9CD3;font-weight:bold;">【GM】</span>'
         : '';
     const titleHtml = titleStr
         ? '<span style="color:#88CCFF;">[' + _esc(titleStr) + ']</span>'

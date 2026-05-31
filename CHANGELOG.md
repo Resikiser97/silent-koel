@@ -1,6 +1,18 @@
-## v0.0.66.0
+## v0.0.66.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.0.66.1 - 2026-06-01
+
+### 新增
+- **GM 標籤改靛藍色**（`systems/chat.js`）：`_parseName()` 中 GM 的【GM】標籤由彩虹漸層改為固定靛藍色 `#4B9CD3`，移除 `-webkit-background-clip` 等漸層 CSS
+- **聊天顏色按鈕**（`systems/chat.js`）：聊天輸入框新增 🎨 按鈕，點擊彈出面板可插入 `[c=red]`、`[c=blue]`、`[c=green]` 彩色字標籤，游標自動置於兩 tag 中間
+- **角色居中更名**（`lang/zh-TW.js`、`lang/en.js`、`systems/ui.js`）：設定面板「永遠居中」改名為「角色居中」（英文 Center Camera），並刪除底部 hint 提示文字
+- **地圖透明開關**（`systems/gameState.js`、`systems/ui.js`、`systems/hud.js`、`lang/`）：輔助功能新增「地圖透明」Toggle；開啟後移動時小地圖每 0.5 秒降低 0.15 透明度（最低 0.5），停止後緩慢回復至 1.0
+- **器官選擇防誤觸**（`systems/organs.js`）：器官選擇面板開啟後 0.5 秒內點擊無效，防止升級/選擇器官介面一開即誤觸
+- **字體輔助功能**（`systems/gameState.js`、`systems/ui.js`、`systems/utils.js`、`lang/`）：輔助功能新增「字體加大」（+2px）與「字體加粗」兩個 Toggle；新增全域 `getGameFont(baseSize, baseBold)` 函式，套用至 `hud.js`、`creatures.js` 所有 canvas ctx.font 設定
 
 ---
 

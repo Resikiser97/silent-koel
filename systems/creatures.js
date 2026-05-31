@@ -1156,7 +1156,7 @@ function drawNeutralCreatures() {
             ctx.save();
             ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
             ctx.fillStyle = creature.isAlpha ? '#FFD700' : '#FFFFFF';
-            ctx.font = creature.isGiantized ? 'bold 13px Arial' : '12px Arial';
+            ctx.font = creature.isGiantized ? getGameFont(13, true) : getGameFont(12, false);
             ctx.textAlign = 'center';
             ctx.fillText(displayName, s.x, s.y - creature.radius - 10);
             ctx.restore();
@@ -1599,7 +1599,7 @@ function drawHostileCreatures() {
             ctx.save();
             ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
             ctx.fillStyle   = creature.isKiller ? '#FF8800' : '#FFFFFF';
-            ctx.font        = creature.isKiller  ? 'bold 12px Arial' : '12px Arial';
+            ctx.font        = creature.isKiller  ? getGameFont(12, true) : getGameFont(12, false);
             ctx.textAlign   = 'center';
             ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius - 10);
             ctx.restore();

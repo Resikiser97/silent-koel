@@ -49,6 +49,9 @@ let _minimapFogImageData   = null;
 let _minimapFogRenderCanvas = null;
 let _minimapFogRenderCtx    = null;
 let _fogCloudCanvas         = null;
+let _minimapAlpha           = 1.0;
+let _minimapFadeTimer       = 0;
+let _minimapStopTimer       = 0;
 
 // =============================================================
 // 小地圖系統
@@ -456,6 +459,31 @@ function _drawMinimapEntities(mctx) {
 }
 
 function drawMinimap() {
+    // ── 地圖透明：每幀更新淡化計時器
+    if (gameState.settings.minimapFade) {
+        const ks = gameState.settings.keys;
+        const pressed = gameState.keys || {};
+        const mob = gameState.mobileInput || {};
+        const isMoving = pressed[ks.up] || pressed[ks.down] || pressed[ks.left] || pressed[ks.right] ||
+            mob.dx !== 0 || mob.dy !== 0;
+        if (isMoving) {
+            _minimapStopTimer = 0;
+            _minimapFadeTimer += FIXED_DELTA;
+            if (_minimapFadeTimer >= 500) {
+                _minimapFadeTimer -= 500;
+                _minimapAlpha = Math.max(0.5, _minimapAlpha - 0.15);
+            }
+        } else {
+            _minimapFadeTimer = 0;
+            _minimapAlpha += (1.0 - _minimapAlpha) * 0.008;
+            if (_minimapAlpha > 0.999) _minimapAlpha = 1.0;
+        }
+    } else {
+        _minimapAlpha = 1.0;
+        _minimapFadeTimer = 0;
+        _minimapStopTimer = 0;
+    }
+
     // ── 小地圖關閉（minimapSize === 0）
     if (!gameState.settings.minimapSize || gameState.settings.minimapSize === 0) {
         const mc = document.getElementById('minimapCanvas');
@@ -504,6 +532,7 @@ function drawMinimap() {
         _drawMinimapFog(_minimapCtx);
         _drawMinimapEntities(_minimapCtx);
     }
+    if (_minimapCanvas) _minimapCanvas.style.opacity = String(_minimapAlpha);
     _drawSunMoonIndicator();
 }
 
@@ -647,7 +676,7 @@ function drawTopBarUI() {
 
     // 目標名稱
     ctx.fillStyle = target.isAlpha ? '#FFD700' : '#FFFFFF';
-    ctx.font = 'bold 13px Arial';
+    ctx.font = getGameFont(13, true);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(displayName, x + barW / 2, topBarY + 5);
@@ -664,7 +693,7 @@ function drawTopBarUI() {
 
     // HP 數值
     ctx.fillStyle = '#CCC';
-    ctx.font = '11px Arial';
+    ctx.font = getGameFont(11, false);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(
@@ -691,7 +720,7 @@ function drawTopBarUI() {
             ctx.strokeRect(ix, iconY, iconSize, iconSize);
             // 標籤（垂直置中）
             ctx.fillStyle = d.color;
-            ctx.font      = 'bold 8px Arial';
+            ctx.font      = getGameFont(8, true);
             ctx.textAlign = 'center';
             ctx.fillText(d.label, ix + iconSize / 2, iconY + iconSize / 2);
             // 剩餘時間弧（順時針）
@@ -731,7 +760,7 @@ function drawGame() {
         if (gameState.devMode) {
             const maxN = tree.isLarge ? 5 : 3;
             ctx.save();
-            ctx.font = '9px Arial';
+            ctx.font = getGameFont(9, false);
             ctx.fillStyle = '#FFD700';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
@@ -790,7 +819,7 @@ function drawGame() {
             ctx.save();
             ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
             ctx.fillStyle   = '#FFFFFF';
-            ctx.font        = '12px Arial';
+            ctx.font        = getGameFont(12, false);
             ctx.textAlign   = 'center';
             ctx.fillText(st.name, ss.x, ss.y - st.radius - 10);
             ctx.restore();
@@ -1046,7 +1075,7 @@ function drawGame() {
     ctx.save();
     ctx.globalAlpha = 0.6;
     ctx.fillStyle = 'white';
-    ctx.font = '12px Arial';
+    ctx.font = getGameFont(12, false);
     ctx.textAlign = 'left';
     ctx.fillText('© ' + GAME_INFO.author, 6, VIEW_H - 20);
     ctx.fillText(GAME_INFO.version, 6, VIEW_H - 5);
@@ -1059,7 +1088,7 @@ function drawGame() {
         ctx.save();
         ctx.globalAlpha = lvAlpha;
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 40px Arial';
+        ctx.font = getGameFont(40, true);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(lvMsg.text, VIEW_W / 2, VIEW_H / 2 - 60);
@@ -1073,7 +1102,7 @@ function drawGame() {
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 36px Arial';
+        ctx.font = getGameFont(36, true);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(msg.text, VIEW_W / 2, VIEW_H / 2);
@@ -1086,7 +1115,7 @@ function drawGame() {
         ctx.save();
         ctx.globalAlpha = 0.2;
         ctx.fillStyle = 'white';
-        ctx.font = '100px Arial';
+        ctx.font = getGameFont(100, false);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(t('autoAttackIndicator'), VIEW_W / 2, VIEW_H / 2);
@@ -1110,12 +1139,12 @@ function drawGame() {
         const _dashKeyLabel = (gameState.settings.keys.dash || 'f').toUpperCase();
         if (dashCD <= 0) {
             ctx.globalAlpha = 0.15;
-            ctx.font = '28px Arial';
+            ctx.font = getGameFont(28, false);
             ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
         } else {
             // 圖示（暗）
             ctx.globalAlpha = 0.08;
-            ctx.font = '28px Arial';
+            ctx.font = getGameFont(28, false);
             ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
             // 冷卻進度條（從上往下）
             const prog = dashCD / 15000;
@@ -1125,7 +1154,7 @@ function drawGame() {
             // 倒數秒數
             ctx.globalAlpha = 0.7;
             ctx.fillStyle = 'white';
-            ctx.font = '20px Arial';
+            ctx.font = getGameFont(20, false);
             ctx.fillText(Math.ceil(dashCD / 1000) + 's', dashCX, dashCY);
         }
         ctx.restore();

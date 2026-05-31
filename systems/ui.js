@@ -115,6 +115,15 @@ function loadSettings() {
             if (parsed.alwaysCenter !== undefined) {
                 gameState.settings.alwaysCenter = parsed.alwaysCenter;
             }
+            if (parsed.minimapFade !== undefined) {
+                gameState.settings.minimapFade = parsed.minimapFade;
+            }
+            if (parsed.fontLarge !== undefined) {
+                gameState.settings.fontLarge = parsed.fontLarge;
+            }
+            if (parsed.fontBold !== undefined) {
+                gameState.settings.fontBold = parsed.fontBold;
+            }
             // minimapSize（0=關閉，1~10）：版本更新不重置
             if (parsed.minimapSize !== undefined) {
                 gameState.settings.minimapSize = parsed.minimapSize;
@@ -608,10 +617,75 @@ function showSettings(fromHome) {
     centerRow.appendChild(centerTog);
     centerRow.appendChild(centerLbl);
     accSec.appendChild(centerRow);
-    const centerHintEl = document.createElement('div');
-    centerHintEl.style.cssText = 'font-size:11px;color:#888;margin-top:2px;margin-bottom:4px;';
-    centerHintEl.textContent = t('alwaysCenterHint');
-    accSec.appendChild(centerHintEl);
+
+    // ── 地圖透明 Toggle
+    const mmFadeRow = document.createElement('div');
+    mmFadeRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const mmFadeTog = document.createElement('button');
+    mmFadeTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshMmFadeTog = () => {
+        const on = gameState.settings.minimapFade;
+        mmFadeTog.textContent = on ? t('on') : t('off');
+        mmFadeTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshMmFadeTog();
+    mmFadeTog.onclick = () => {
+        gameState.settings.minimapFade = !gameState.settings.minimapFade;
+        refreshMmFadeTog();
+        saveSettings();
+    };
+    const mmFadeLbl = document.createElement('div');
+    mmFadeLbl.style.cssText = 'font-size:13px;';
+    mmFadeLbl.textContent = t('minimapFade');
+    mmFadeRow.appendChild(mmFadeTog);
+    mmFadeRow.appendChild(mmFadeLbl);
+    accSec.appendChild(mmFadeRow);
+
+    // ── 字體加大 Toggle
+    const fontLargeRow = document.createElement('div');
+    fontLargeRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const fontLargeTog = document.createElement('button');
+    fontLargeTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshFontLargeTog = () => {
+        const on = gameState.settings.fontLarge;
+        fontLargeTog.textContent = on ? t('on') : t('off');
+        fontLargeTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshFontLargeTog();
+    fontLargeTog.onclick = () => {
+        gameState.settings.fontLarge = !gameState.settings.fontLarge;
+        refreshFontLargeTog();
+        saveSettings();
+    };
+    const fontLargeLbl = document.createElement('div');
+    fontLargeLbl.style.cssText = 'font-size:13px;';
+    fontLargeLbl.textContent = t('fontLarge');
+    fontLargeRow.appendChild(fontLargeTog);
+    fontLargeRow.appendChild(fontLargeLbl);
+    accSec.appendChild(fontLargeRow);
+
+    // ── 字體加粗 Toggle
+    const fontBoldRow = document.createElement('div');
+    fontBoldRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const fontBoldTog = document.createElement('button');
+    fontBoldTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshFontBoldTog = () => {
+        const on = gameState.settings.fontBold;
+        fontBoldTog.textContent = on ? t('on') : t('off');
+        fontBoldTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshFontBoldTog();
+    fontBoldTog.onclick = () => {
+        gameState.settings.fontBold = !gameState.settings.fontBold;
+        refreshFontBoldTog();
+        saveSettings();
+    };
+    const fontBoldLbl = document.createElement('div');
+    fontBoldLbl.style.cssText = 'font-size:13px;';
+    fontBoldLbl.textContent = t('fontBold');
+    fontBoldRow.appendChild(fontBoldTog);
+    fontBoldRow.appendChild(fontBoldLbl);
+    accSec.appendChild(fontBoldRow);
 
     const keyAccWrapper = document.createElement('div');
     keyAccWrapper.style.cssText = 'display:flex;flex-direction:row;gap:8px;margin-bottom:14px;';
