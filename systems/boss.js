@@ -1,5 +1,6 @@
 // =============================================================
-// 首領系統 - spawnBoss / updateBoss / showVictory / drawBossArrow
+// 首領系統 - spawnBoss / updateBoss / showVictory
+//            drawBoss / drawBossShape / drawBossArrow
 // =============================================================
 
 // ── Boss 顏色常數 ─────────────────────────────────────────────

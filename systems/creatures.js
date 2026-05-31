@@ -1,5 +1,6 @@
 // =============================================================
-// 生物系統 - updateNeutralCreatures / drawNeutralCreatures
+// 生物系統 - drawCreatureShape
+//            updateNeutralCreatures / drawNeutralCreatures
 //            updateHostileCreatures / drawCorpses / drawHostileCreatures
 // =============================================================
 

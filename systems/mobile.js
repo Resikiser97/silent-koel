@@ -16,7 +16,7 @@
 // 跨模組依賴：
 //   - systems/gameState.js：gameState.isMobile / gameState.orientation
 //   - systems/combat.js：playerAttack()
-//   - main.js：isGamePaused()
+//   - systems/player.js：playerDash()
 // =============================================================
 
 // =============================================================

@@ -1,7 +1,14 @@
 ﻿// =============================================================
-// UI 系統 - Tooltip / drawGame / updateUI / drawTreasures
-//           Settings / updateTimer / Dev Mode
-//           showGuide / hideGuide / showStartScreen
+// UI 系統 - showTooltip / hideTooltip / showAlphaAnnouncement
+//           loadSettings / saveSettings / switchLanguage
+//           showSettings / hideSettings / updateTimer
+//           toggleDevMode / devAddXP / devAddHP / devFullHP
+//           devSpawnFruits / devKillHostiles / devSpawnNeutral / devSpawnHostile
+//           devFastForward / devRewind / devToggleDayNight
+//           showGuide / hideGuide / showGuideStory
+//           getOrganDisplayName / buildEvoLevelDesc / showCompendium
+//           showMapSelect / showStartScreen / showPatchNotes / checkPatchNotesPopup
+// （drawGame / updateUI / drawTopBarUI / drawMinimap / drawTreasures 已移至 systems/hud.js）
 // =============================================================
 
 // _lbDifficulty / _top10Difficulty / _diffKey() 已移至 systems/leaderboard.js

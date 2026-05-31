@@ -1,6 +1,6 @@
 // =============================================================
 // 進化與技能系統 - checkEvolutionUnlock / applyEvolutionLevelEffect
-//                 applyEvolutionEffects / applySkillBonuses
+//                 applyEvolutionEffects / loadSavedOrgans / applySkillBonuses
 //                 saveLastRunOrgans / showSkillTree
 //                 buildSkillTreeOverlay / upgradeSkill
 // =============================================================

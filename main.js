@@ -1,5 +1,6 @@
 // =============================================================
-// 主程式入口 - isGamePaused / gameLoop / initializeGame
+// 主程式入口 - pausePlayTimer / resumePlayTimer / isGamePaused
+//             updateGameLogic / gameLoop / initializeGame
 // =============================================================
 
 const FIXED_FPS = 60;

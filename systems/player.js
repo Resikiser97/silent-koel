@@ -1,9 +1,10 @@
 // =============================================================
-// 玩家系統 - updatePlayerMovement / checkFruitCollision
+// 玩家系統 - updatePlayerMovement / playerDash / checkFruitCollision
 //            updateTreeFruitProduction / showXPPopup
 //            checkTreasureCollision / updatePassiveOrgans
 //            checkXPMilestone / addXP / checkLevelUp
-//            updateProjectiles / _checkProjectileHit（子彈系統）
+//            updateProjectiles / findBestPerceptionPath
+//            _checkProjectileHit（子彈系統）
 //            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
 // =============================================================
 

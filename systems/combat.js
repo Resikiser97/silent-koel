@@ -1,8 +1,9 @@
 // =============================================================
 // 戰鬥系統 - showFloatingText / applyDamageToPlayer / handleKill
+//            handleGiantKill / handleKillerKill / addMutationPoints
 //            playerAttack / updateStatusEffects
-//            updateCorpseEating / drawCorpseEatingBars
-//            updateBones / drawBones
+//            updateCorpseEating / updateBoneEating
+//            drawCorpseEatingBars / drawBones
 // =============================================================
 
 function showFloatingText(wx, wy, text, color, fontSize) {

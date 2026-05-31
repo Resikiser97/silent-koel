@@ -1,5 +1,7 @@
 // =============================================================
 // 新手教學系統 - showTutorial / 三步驟教學流程
+//               spawnTutorialStump / showTutorialCombatHint
+//               handleTutorialStumpKill / showTutorialCombatComplete
 // 觸發時機：initializeGame() 結束後，若 localStorage 無 tutorialCompleted
 // =============================================================
 

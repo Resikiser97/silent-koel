@@ -5,6 +5,7 @@
 //   - _lbDifficulty / _top10Difficulty：模組級難度狀態，兩個面板同步
 //   - showLeaderboard()：全屏排行榜面板，支援勝利/失敗切換、難度篩選、分頁
 //   - showScoreSubmitPopup()：遊戲結束前彈出名字輸入，提交或跳過後進入結算畫面
+//   - showFunLeaderboard()：趣味排行榜面板（各類特殊統計）
 //
 // 跨模組依賴：
 //   - config/supabase.js：fetchVictoryRecords / fetchDefeatRecords / submitScore

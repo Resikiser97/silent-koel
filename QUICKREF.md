@@ -142,3 +142,4 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | CC 效果新增 | 必須同步更新 4 個位置：`updateNeutralCreatures`、`updateHostileCreatures`、`updateEliteCreature`（elite.js）、`updateBoss`（boss.js） |
 | 數值修改 | 只能在 `config/` 資料夾修改，不要在 systems/ 寫死數值 |
 | gameLoop | 絕對不能出現字面上的 `\n` 字符 |
+| 版本號格式 | 四段 `v0.x.y.z`；排行榜 `version_order` 取第二段 x，同一個 x 的記錄互相競爭（x 升版時排行榜重置） |

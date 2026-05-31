@@ -1,6 +1,7 @@
 // =============================================================
 // 地圖系統 - MAP 常數 / Simplex Noise / getBiome / getBgColor
-//            generateTerrain / generateTrees
+//            labelBiomeRegions / mergeSmallRegions / ensureRequiredBiomes
+//            generateTerrain / buildTerrainCanvas / drawTerrain / generateTrees
 // =============================================================
 
 const MAP_WIDTH  = 8000;

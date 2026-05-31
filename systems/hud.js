@@ -7,6 +7,8 @@
 //   - drawTopBarUI()：玩家附近有精英/Boss/巨人化/Alpha時顯示上方血條
 //   - drawMinimap()：右上角小地圖，含霧、生物點、日月圖示
 //   - drawTreasures()：繪製地圖上的寶物
+//   - drawProjectiles()：繪製子彈（阿奇爾射水）
+//   - updateMinimapFog()：更新小地圖霧效
 //
 // 繪製順序（drawGame 內部）：
 //   1. 地形（drawTerrain）

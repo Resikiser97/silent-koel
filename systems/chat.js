@@ -8,6 +8,11 @@
 //   showChat() — 顯示聊天室面板（收合狀態）
 //   hideChat() — 隱藏聊天室面板
 //   loadChatSettings() — 從 localStorage 讀取聊天帳號設定（登入狀態等）
+//   saveChatSettings(obj) — 將帳號設定寫回 localStorage
+//   chatLogout() — 登出並清除本地登入狀態
+//   disconnectChat() — 斷開 Supabase Realtime 連線
+//   renderChat() — 重新渲染聊天訊息列表
+//   isVipPlayer(msg) — 判斷訊息是否來自 VIP 玩家
 //   chatSaveProgress() — 將目前遊戲進度儲存到 Supabase 雲端（已登入才執行）
 //
 // 【依賴的跨檔案函式】（修改時注意這些來自外部）
