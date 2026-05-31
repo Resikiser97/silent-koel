@@ -886,7 +886,7 @@ function drawGame() {
 
     // 9. 繪製玩家角色（根據 selectedCharacter 分派不同外觀）
     const drawRadius = Math.max(1, p.radius);
-    if (gameState.selectedCharacter === 'archerfish') {
+    if (p.isRanged) {
         _drawArcherfish(ctx, ps.x, ps.y, drawRadius, p);
     } else {
         // 噪鵑（預設）：夜晚發光圓 + 黑色圓形
@@ -909,7 +909,7 @@ function drawGame() {
     drawProjectiles();
 
     // 9-charge. 阿奇爾充能格 + 蓄力氣泡
-    if (gameState.selectedCharacter === 'archerfish') {
+    if (p.isRanged) {
         _drawArcherChargeVisual(ctx, ps.x, ps.y, p);
     }
 
@@ -1089,7 +1089,7 @@ function drawGame() {
         ctx.font = '100px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('⚔️ 自動', VIEW_W / 2, VIEW_H / 2);
+        ctx.fillText(t('autoAttackIndicator'), VIEW_W / 2, VIEW_H / 2);
         ctx.restore();
     }
 
@@ -1324,7 +1324,7 @@ function updateUI() {
         if (mutLvEl) {
             const totalLv = (mutData.levels.fang || 0) + (mutData.levels.tail || 0) +
                             (mutData.levels.wing || 0) + (mutData.levels.eye  || 0);
-            mutLvEl.textContent = '變異器官 ⚗️ Lv.' + totalLv;
+            mutLvEl.textContent = t('mutationOrgLabel', { lv: totalLv });
         }
         const mutDotEl = document.getElementById('mutation-red-dot');
         if (mutDotEl) {

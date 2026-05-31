@@ -631,13 +631,13 @@ function _applyLynxBiomeBonus(lynx) {
         lynx._critMult    = 2.0;
         lynx._critSlowAmt = 0.3;
         lynx._critSlowDur = 3000;
-        lynx._critText    = '喵嗚咬死你！';
+        lynx._critText    = t('lynxCritText');
     } else {
         lynx._critChance  = 0.25;
         lynx._critMult    = 1.5;
         lynx._critSlowAmt = 0.15;
         lynx._critSlowDur = 1500;
-        lynx._critText    = '喵嗚咬死你！';
+        lynx._critText    = t('lynxCritText');
     }
 }
 

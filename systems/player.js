@@ -221,7 +221,7 @@ function _archerAttack() {
     p.reloadTimer   = 0;
 
     // 建立子彈（單顆，方向由 _getArcherShootDir 決定：P1 正前方敵人 / P2 全場最近敵人）
-    const bulletSpeed = 9;
+    const bulletSpeed = ARCHER_BULLET_SPEED;
     gameState.projectiles.push({
         x: p.x, y: p.y,
         vx: dir.dx * bulletSpeed,
@@ -264,7 +264,7 @@ function playerDash() {
     if (_joyPaused()) return;
 
     // ── 阿奇爾 F技：加速衝刺（持續 3 秒，陸地+3 水中+5）
-    if (gameState.selectedCharacter === 'archerfish') {
+    if (p.isRanged) {
         const now = Date.now();
         const inWater = getBiome(p.x, p.y) === 'ocean';
         const dashSpeedAdd = inWater ? 5 : 3;
@@ -432,7 +432,7 @@ function updatePlayerMovement() {
     }
 
     // ── 阿奇爾水中速度 +50%
-    if (gameState.selectedCharacter === 'archerfish') {
+    if (p.isRanged) {
         const biome = getBiome(p.x, p.y);
         if (biome === 'ocean') {
             dx *= 1.5;

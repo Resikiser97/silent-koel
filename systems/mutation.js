@@ -247,13 +247,13 @@ function showMutationPanel() {
     // 標題
     const title = document.createElement('div');
     title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin-bottom:8px;color:#FFD700;';
-    title.textContent = '⚗️ 變異器官';
+    title.textContent = t('mutationPanelTitle');
     panel.appendChild(title);
 
     // 可用變異點
     const pointsEl = document.createElement('div');
     pointsEl.style.cssText = 'text-align:center;font-size:13px;color:#aaa;margin-bottom:16px;';
-    pointsEl.textContent = '可用變異點：' + data.points;
+    pointsEl.textContent = t('mutationPointsLabel', { n: data.points });
     panel.appendChild(pointsEl);
 
     // 計算當前實際倍率（確保最新值）
@@ -329,7 +329,7 @@ function showMutationPanel() {
                 ? 'background:rgba(255,215,0,0.15);border:1px solid #FFD700;color:#FFD700;cursor:pointer;'
                 : 'background:#1a1a1a;border:1px solid #333;color:#555;cursor:default;'
         ].join(';');
-        btn.textContent = '升級（費' + cost + '點）';
+        btn.textContent = t('mutationUpgradeBtn', { n: cost });
         if (canAfford) {
             btn.onclick = () => {
                 upgradeMutation(org.id);

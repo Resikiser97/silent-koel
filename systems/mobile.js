@@ -210,7 +210,7 @@ function _renderMobileOverlay() {
         if (autoAtk) {
             jctx.globalAlpha = 0.2;
             jctx.font = '32px Arial';
-            jctx.fillText('⚔️ 自動', atkCX, atkCY);
+            jctx.fillText(t('autoAttackIndicator'), atkCX, atkCY);
         } else {
             jctx.globalAlpha = 0.2;
             jctx.font = '60px Arial';
@@ -286,7 +286,7 @@ function _renderMobileOverlay() {
         if (autoAtk) {
             jctx.globalAlpha = 0.2;
             jctx.font = '32px Arial';
-            jctx.fillText('⚔️ 自動', atkCX, atkCY);
+            jctx.fillText(t('autoAttackIndicator'), atkCX, atkCY);
         } else {
             jctx.globalAlpha = 0.2;
             jctx.font = '60px Arial';

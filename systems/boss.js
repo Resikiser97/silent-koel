@@ -681,7 +681,8 @@ function spawnBoss() {
         name: cfg.name, label: cfg.label,
         color: cfg.color, colorChasing: cfg.colorChasing,
         glowColor: cfg.glowColor,
-        biome: playerBiome
+        biome: playerBiome,
+        poisonResist: cfg.poisonResist || 0
     };
     gameState.bossSpawned = true;
     gameState.bossSpawnTime = Date.now();
@@ -712,7 +713,7 @@ function updateBoss() {
     }
 
     // ── 黑熊 (<40% 狂暴)
-    if (boss.name && boss.name.includes('黑熊')) {
+    if (boss.biome === 'forest') {
         if (!boss._enraged && boss.hp / boss.maxHp < 0.4) {
             boss._enraged = true;
             boss.speed *= 1.5;
@@ -723,7 +724,7 @@ function updateBoss() {
     }
 
     // ── 大白鯊 衝刺攻擊
-    if (boss.name && boss.name.includes('鯊')) {
+    if (boss.biome === 'ocean') {
         if (boss._chargeState === 'charging') {
             // 衝刺移動
             boss.x = ((boss.x + boss._chargeVx + MAP_WIDTH)  % MAP_WIDTH);
@@ -771,7 +772,7 @@ function updateBoss() {
     }
 
     // ── 沙漠蠍王：毒霧 + 沙暴
-    if (boss.name && boss.name.includes('蠍')) {
+    if (boss.biome === 'desert') {
         // 毒液投擲：每5秒鎖定玩家位置，不限距離
         if (!boss._venomTimer) boss._venomTimer = now;
         if (now - boss._venomTimer > 5000) {
@@ -961,7 +962,7 @@ function showVictory() {
         if (gameState.devModeUsed) {
             const devWarn = document.createElement('div');
             devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
-            devWarn.textContent = '⚠️ 本局使用了開發者模式，分數不計入排行榜';
+            devWarn.textContent = t('devModeWarning');
             overlay.appendChild(devWarn);
         }
         document.getElementById('game-container').appendChild(overlay);

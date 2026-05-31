@@ -15,7 +15,7 @@ const CREATURE_CONFIG = {
 };
 
 const ELITE_CONFIG = {
-    base: { hp: 50, speed: 1.0, damage: 8 },
+    base: { hp: 50, speed: 1.0, damage: 8, poisonResist: 0.2 },
     nights: [
         { hpMult: 5,   speed: 3.9, damage: 12, xp: 150, label: '★精英',   color: '#5B0EA6' },
         { hpMult: 7.5, speed: 4.5, damage: 15, xp: 225, label: '★★精英',  color: '#8B0000' },
@@ -47,18 +47,21 @@ const BOSS_CONFIG = {
         name: '🌿 黑熊',    label: '⚠️🌿黑熊',
         radius: 25, hp: 500,  speed: 3.0, damage: 15, aggroRange: 99999, attackRange: 30,
         color: '#3B1E08', colorChasing: '#2A0D00', glowColor: '#8B4513',
-        spawnX: null, spawnY: null
+        spawnX: null, spawnY: null,
+        poisonResist: 0.3
     },
     ocean: {
         name: '🌊 大白鯊',  label: '🦈🌊大白鯊',
         radius: 30, hp: 600,  speed: 3.9, damage: 18, aggroRange: 99999, attackRange: 35,
         color: '#003388', colorChasing: '#001A44', glowColor: '#1a3a5c',
-        spawnX: 6500, spawnY: 6500
+        spawnX: 6500, spawnY: 6500,
+        poisonResist: 0.3
     },
     desert: {
         name: '🏜️ 沙漠蠍王', label: '🦂🏜️蠍王',
         radius: 28, hp: 550,  speed: 3.6, damage: 20, aggroRange: 99999, attackRange: 32,
         color: '#8B7355', colorChasing: '#5C4A2A', glowColor: '#8B6914',
-        spawnX: 2000, spawnY: 2000
+        spawnX: 2000, spawnY: 2000,
+        poisonResist: 0.5
     }
 };

@@ -24,6 +24,17 @@
 
 ---
 
+**Magic Code / Magic Number 禁止規則：**
+- 禁止在 systems/ 寫死數值，所有遊戲數值必須定義在 config/ 的常數後引用
+- 禁止用名稱字串做邏輯判斷（如 name.includes('蠍王')），
+  必須在對應的 config 物件加入專屬欄位（如 poisonResist: 0.5）後引用
+- 禁止寫死角色 id 字串（如 characterId === 'koel'），
+  必須讀取 gameState.selectedCharacter 或角色 config 的對應欄位
+- UI 顯示文字禁止硬寫，必須使用 t('key') 引用語言包
+- 例外：CSS 樣式字串、lang/ 語言包檔案本身不在此限
+
+---
+
 ## 版本號同步規則（最高優先）
 
 每次完成 commit，以下 **4 個檔案的頂部版本號必須全部同步**，缺一不可：

@@ -577,13 +577,13 @@ function showSettings(fromHome) {
     };
     const tutLbl = document.createElement('div');
     tutLbl.style.cssText = 'font-size:13px;';
-    tutLbl.textContent = '新手教學';
+    tutLbl.textContent = t('tutorialLabel');
     tutRow.appendChild(tutTog);
     tutRow.appendChild(tutLbl);
     accSec.appendChild(tutRow);
     const tutHint = document.createElement('div');
     tutHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;margin-bottom:4px;';
-    tutHint.textContent = '開啟後，下一場遊戲開始時會顯示教學';
+    tutHint.textContent = t('tutorialHint');
     accSec.appendChild(tutHint);
 
     // ── 永遠居中 Toggle
@@ -2144,7 +2144,7 @@ function showGuideStory() {
         prevBtn.style.cursor = idx === 0 ? 'not-allowed' : 'pointer';
 
         if (idx === PAGES.length - 1) {
-            nextBtn.textContent = '⚔️  開始冒險';
+            nextBtn.textContent = t('btnStartAdventure');
             nextBtn.style.background = 'rgba(80,160,40,0.25)';
             nextBtn.style.borderColor = 'rgba(60,130,20,0.5)';
             nextBtn.style.color = '#2a5008';

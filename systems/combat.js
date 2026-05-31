@@ -326,11 +326,7 @@ function updateStatusEffects() {
 
         if (c.poisonEndTime && now < c.poisonEndTime && now - c.lastPoisonTick >= 1000) {
             const poisonAmt = c.poisonDmg || 2;
-            // 毒傷減免：精英20%、Boss通用30%、沙漠蠍王50%
-            let poisonResist = 0;
-            if (isElite) poisonResist = 0.2;
-            if (isBoss)  poisonResist = 0.3;
-            if (isBoss && c.name && c.name.includes('蠍王')) poisonResist = 0.5;
+            const poisonResist = c.poisonResist || 0;
             const actualPoison = Math.round(poisonAmt * (1 - poisonResist));
             const hpBefore = c.hp;
             c.hp -= actualPoison;
@@ -368,8 +364,8 @@ function updateCorpseEating() {
     const lvData = EVOLUTION_PATHS.carnivore.levels[ev.carnivore - 1];
     const totalTime = lvData.eatTime;
     const totalXP = _getTotalCorpseXP();
-    const totalHp = 3.0;
-    const tickInterval = 500;
+    const totalHp = CORPSE_EAT_HP;
+    const tickInterval = CORPSE_BONE_EAT_TICK;
     const numTicks = Math.max(1, totalTime / tickInterval);
     const xpPerTick = totalXP / numTicks;
     const hpPerTick = totalHp / numTicks;
@@ -379,7 +375,7 @@ function updateCorpseEating() {
         const corpse = gameState.corpses[i];
 
         // 屍體60秒到期未被吃 → 轉換為白骨
-        if (now - corpse.spawnTime >= 60000) {
+        if (now - corpse.spawnTime >= CORPSE_EXPIRE_MS) {
             _spawnBone(corpse.x, corpse.y, corpse.radius);
             gameState.corpses.splice(i, 1);
             continue;
@@ -436,7 +432,7 @@ function updateBoneEating() {
         const bone = gameState.bones[i];
 
         // 白骨180秒後消失
-        if (now - bone.spawnTime >= 180000) {
+        if (now - bone.spawnTime >= BONE_EXPIRE_MS) {
             gameState.bones.splice(i, 1);
             continue;
         }
@@ -450,11 +446,11 @@ function updateBoneEating() {
         if (boneEatTime === 0) {
             // 立刻吞噬
             _addBoneMaterial(boneMaterialAdd);
-            showFloatingText(bone.x, bone.y - 15, '+' + boneMaterialAdd + ' 白骨素', '#CCCCFF', 11);
+            showFloatingText(bone.x, bone.y - 15, t('boneMaterialFloat', { n: boneMaterialAdd }), '#CCCCFF', 11);
             gameState.bones.splice(i, 1);
         } else {
             // 分段吞噬
-            const tickInterval = 500;
+            const tickInterval = CORPSE_BONE_EAT_TICK;
             const numTicks = Math.max(1, boneEatTime / tickInterval);
             if (!bone.lastEatTick) bone.lastEatTick = now;
             if (bone.eatProgress == null) bone.eatProgress = 0;
@@ -464,7 +460,7 @@ function updateBoneEating() {
                 bone.eatProgress = Math.min(1, bone.eatProgress + 1 / numTicks);
                 if (bone.eatProgress >= 1) {
                     _addBoneMaterial(boneMaterialAdd);
-                    showFloatingText(bone.x, bone.y - 15, '+' + boneMaterialAdd + ' 白骨素', '#CCCCFF', 11);
+                    showFloatingText(bone.x, bone.y - 15, t('boneMaterialFloat', { n: boneMaterialAdd }), '#CCCCFF', 11);
                     gameState.bones.splice(i, 1);
                 }
             }
@@ -491,7 +487,7 @@ function _checkPoisonSacUpgrade(p) {
         sacOrgan.level = currentLv + 1;
         sacOrgan.desc = ORGANS.poisonSac.levels[currentLv].desc;
         applyOrganEffects(sacOrgan); // 套用增量效果
-        showFloatingText(p.x, p.y - 50, '✨ 毒囊升級 Lv' + sacOrgan.level + '！', '#AA88FF');
+        showFloatingText(p.x, p.y - 50, t('poisonSacLevelUp', { lv: sacOrgan.level }), '#AA88FF');
         // 繼續檢查是否可再升
         _checkPoisonSacUpgrade(p);
     }

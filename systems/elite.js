@@ -19,6 +19,7 @@ function spawnEliteCreature(nightNum) {
         speed: tier.speed, damage: tier.damage,
         aggroRange: 1000, attackRange: 28,
         attackCooldown: 0, state: 'patrolling',
+        poisonResist: ELITE_CONFIG.base.poisonResist || 0,
         wanderTarget: null, lastWanderTime: Date.now(),
         label: tier.label, color: tier.color, xp: tier.xp,
         diet: Math.random() < 0.5 ? 'herbivore' : 'carnivore',

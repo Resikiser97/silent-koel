@@ -256,7 +256,7 @@ function showSkillTree(cause) {
         if (gameState.devModeUsed) {
             const devWarn = document.createElement('div');
             devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
-            devWarn.textContent = '⚠️ 本局使用了開發者模式，分數不計入排行榜';
+            devWarn.textContent = t('devModeWarning');
             overlay.appendChild(devWarn);
         }
         document.getElementById('game-container').appendChild(overlay);
