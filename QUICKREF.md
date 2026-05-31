@@ -94,7 +94,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `boss.js` | spawnBoss / updateBoss / showVictory |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
 | `daynight.js` | getDayNightPhaseIndex / updateDayNightCycle / showGameOver |
-| `chat.js` | 聊天室系統（等級色、GM彩虹標籤、彩色字標籤、置頂指令） |
+| `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息） |
 | `leaderboard.js` | 排行榜面板 / 分數提交 / 難度狀態管理 |
 | `mobile.js` | 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層 |
 | `hud.js` | drawGame 主渲染 / HUD 更新 / 小地圖 / 上方血條 |
@@ -105,6 +105,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 |------|------|
 | `map.md` | 地形設計文件 |
 | `easymap.js` | EASY_MAP（簡單難度地形參數、生物倍率、精英怪配置） |
+| `normalmap.js` | NORMAL_MAP（普通難度：生物×1.5、aggroRange 400、巨人化/殺手化/Boss回血開啟） |
 
 ---
 

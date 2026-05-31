@@ -43,7 +43,7 @@ QUICKREF.md         ← 第一行
 
 ---
 
-## sync-docs 流程（每次 commit 後自動執行）
+## sync-docs 流程（每次 commit 前必須執行）
 
 ### Step 1 — 讀取本次變更範圍
 讀取 `CHANGELOG.md` 最上方最新一條 entry，確認本次 commit 涉及哪些檔案和系統。
