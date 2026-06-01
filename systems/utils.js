@@ -14,7 +14,7 @@
  *   敵人被嘴器減速 2000ms，c.tenacity 目前為 0 → 仍為 2000ms
  */
 function getGameFont(baseSize, baseBold) {
-    const size = gameState.settings.fontLarge ? baseSize + 2 : baseSize;
+    const size = gameState.settings.fontLarge ? baseSize + 5 : baseSize;
     const bold = (gameState.settings.fontBold || baseBold) ? 'bold ' : '';
     return bold + size + 'px Arial';
 }
