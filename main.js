@@ -230,6 +230,8 @@ function initializeGame() {
         console.log('[v0.47.0 B1] currentMap restored:', gameState.currentMap ? gameState.currentMap.name : 'null');
     }
 
+    gameState.spawnProtectUntil    = 0;
+    if (typeof resetPackNames === 'function') resetPackNames();
     gameState.mutationPanelOpen    = false;
     gameState.tutorialOpen         = false;
     gameState.tutorialOrganPhase   = false;

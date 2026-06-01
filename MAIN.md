@@ -1,4 +1,4 @@
-## v0.0.66.1
+## v0.0.66.2
 
 # The Silent Koel — 模組架構說明
 
@@ -34,8 +34,9 @@ systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCa
 systems/input.js          handleKeyDown, handleKeyUp（含設定介面按鍵 handler refs）
 systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature, spawnTreasure
                           _randomPointInBiome, _makeHerbCreature, _makeCarnCreature
-                          spawnBiomeCreatures, spawnCreatureAtEdgeBiome
-                          updateCreatureSpawning
+                          spawnBiomeCreatures（開局設 spawnProtectUntil +3s，中心保護區不生肉食怪，v0.0.66.2）
+                          spawnCreatureAtEdgeBiome
+                          updateCreatureSpawning（spawnProtectUntil 期間跳過肉食補充，v0.0.66.2）
 systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction
                           showXPPopup, checkTreasureCollision, updatePassiveOrgans
                           checkXPMilestone, addXP, checkLevelUp
@@ -72,7 +73,8 @@ systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, apply
                             fromHome / forceStart → 讀 localStorage skillPoints/playerSkills + 讀 lastRunOrgans 顯示繼承器官
                             postGame → 讀記憶體 gameState.player.organs（遊戲剛結束，資料仍完整）
                           _grantPoisonSac（雜食性 Lv1 時自動授予毒囊器官）
-systems/creatures.js      drawCreatureShape（物種形狀主分派，含旋轉/翻轉邏輯）
+systems/creatures.js      _PACK_NAMES / _usedPackNames / resetPackNames()（隊伍名稱池，v0.0.66.2）
+                          drawCreatureShape（物種形狀主分派，含旋轉/翻轉邏輯）
                           updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯）
                           drawNeutralCreatures
                           updateHostileCreatures（三態移動 + hostileEatMeat 門控）

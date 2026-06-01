@@ -132,8 +132,10 @@ function _makeCarnCreature(x, y, biome, spec, strength, mapConfig) {
 function spawnBiomeCreatures() {
     gameState.neutralCreatures = [];
     gameState.hostileCreatures = [];
+    gameState.spawnProtectUntil = Date.now() + 3000; // 出生後 3 秒內中心附近不生肉食怪
     const map      = gameState.currentMap;
     const strength = map ? map.creatureStrength : null;
+    const centerProtectR = (map && map.terrain && map.terrain.forestCenterRadius) || 400;
 
     for (const biome of ['forest', 'ocean', 'desert']) {
         const herbSpec = BIOME_CREATURES[biome].herbivore;
@@ -144,6 +146,8 @@ function spawnBiomeCreatures() {
         }
         for (let i = 0; i < 8; i++) {
             const { x, y } = _randomPointInBiome(biome);
+            const dx = x - 4000, dy = y - 4000;
+            if (Math.sqrt(dx * dx + dy * dy) < centerProtectR) continue;
             gameState.hostileCreatures.push(_makeCarnCreature(x, y, biome, carnSpec, strength, map));
         }
     }
@@ -199,6 +203,7 @@ function updateCreatureSpawning() {
         const carnKey   = biome + '_carn';
         const carnAlive = gameState.hostileCreatures.filter(c => c.hp > 0 && c.biome === biome).length;
         const carnTimer = carnAlive < 3 ? CARN_INTERVAL * 0.3 : CARN_INTERVAL; // 少於3隻加速70%
+        if (now < (gameState.spawnProtectUntil || 0)) continue; // 出生保護期間不補充肉食怪
         if (carnAlive < 15 && now - (gameState.spawnTimers[carnKey] || 0) >= carnTimer) {
             spawnCreatureAtEdgeBiome(biome, 'carn');
             gameState.spawnTimers[carnKey] = now;

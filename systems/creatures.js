@@ -4,6 +4,16 @@
 //            updateHostileCreatures / drawCorpses / drawHostileCreatures
 // =============================================================
 
+// ── 隊伍名稱池 ──────────────────────────────────────────────
+const _PACK_NAMES = [
+    'SKT','T1','Fnatic','Cloud9','NaVi','FaZe','G2','100T','TSM','SEN',
+    'LOUD','DRX','Gen.G','BLG','WBG','NEWJEANS','AESPA','TWICE','IVE',
+    'LE SSERAFIM','MAMAMOO','BLACKPINK','ITZY','STAYC','ILLIT','HYPE'
+];
+let _usedPackNames = [];
+
+function resetPackNames() { _usedPackNames = []; }
+
 // ── 物種固定顏色常數 ──────────────────────────────────────────
 const CREATURE_COLORS = {
     moose:      '#8B4513',   // 深棕
@@ -448,7 +458,7 @@ function _triggerGiantization(creature) {
     creature.hp               = creature.maxHp;
     creature.radius           = creature.radius * 1.5;
     creature.aggroRange       = 400;
-    creature.guardianRange    = 1000;
+    creature.guardianRange    = 500;
     creature.diet             = 'herbivore';
     creature.canFight         = true;
     creature.fruitsEaten      = 0;
@@ -456,6 +466,11 @@ function _triggerGiantization(creature) {
     creature.packLeader       = true;
     creature.packMembers      = [];
     creature.packLeaderRef    = null;
+    // 分配隊伍名稱
+    const _pnAvail = _PACK_NAMES.filter(n => !_usedPackNames.includes(n));
+    const _pnPool  = _pnAvail.length > 0 ? _pnAvail : _PACK_NAMES;
+    creature.packName = _pnPool[Math.floor(Math.random() * _pnPool.length)];
+    _usedPackNames.push(creature.packName);
     creature._packJoinTimer   = 0;
     creature._fruitTarget     = null;
     creature._fruitTargetTimer = 0;
@@ -496,6 +511,10 @@ function _checkGuardianRange(giant) {
         for (const hostile of gameState.hostileCreatures) {
             if (hostile.hp <= 0) continue;
             if (wrappedDistance(neutral.x, neutral.y, hostile.x, hostile.y) < 150) {
+                // 殺手在巨人 guardianRange 以外時，不觸發保護（悄悄獵殺機制）
+                if (hostile.isKiller && wrappedDistance(giant.x, giant.y, hostile.x, hostile.y) > (giant.guardianRange || 500)) {
+                    continue;
+                }
                 // 立刻把巨人的target設為這個肉食者，進入攻擊狀態
                 giant.guardianTarget = hostile;
                 giant.state = 'attacking';
@@ -879,6 +898,7 @@ function updateNeutralCreatures() {
                                 const d = wrappedDistance(creature.x, creature.y, n.x, n.y);
                                 if (d < followRange && Math.random() < 0.2) {
                                     n.packLeaderRef = creature;
+                                    n.packName = creature.packName;
                                     creature.packMembers.push(n);
                                 }
                             }
@@ -1159,6 +1179,20 @@ function drawNeutralCreatures() {
             ctx.font = creature.isGiantized ? getGameFont(13, true) : getGameFont(12, false);
             ctx.textAlign = 'center';
             ctx.fillText(displayName, s.x, s.y - creature.radius - 10);
+            ctx.restore();
+        }
+        if (creature.packName) {
+            const leader = creature.packLeader ? creature : creature.packLeaderRef;
+            const memberCount = leader
+                ? 1 + (leader.packMembers ? leader.packMembers.filter(m => m.hp > 0).length : 0)
+                : 1;
+            const packLimit = leader ? _getPackLimit(leader) : 5;
+            ctx.save();
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 2;
+            ctx.font = getGameFont(10, false);
+            ctx.fillStyle = 'rgba(255,230,150,0.85)';
+            ctx.textAlign = 'center';
+            ctx.fillText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius - 22);
             ctx.restore();
         }
     }

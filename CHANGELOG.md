@@ -1,6 +1,16 @@
-## v0.0.66.1
+## v0.0.66.2
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.0.66.2 - 2026-06-01
+
+### 新增
+- **出生保護區**（`systems/spawning.js`、`systems/gameState.js`、`main.js`）：遊戲開始後 3 秒內不補充生成肉食怪；初始生成時，距地圖中心 forestCenterRadius 以內的位置也不生成肉食怪
+- **巨人 guardianRange 縮小**（`systems/creatures.js`）：`_triggerGiantization()` 中巨人保護範圍由 1000px 縮小為 500px（Alpha 的 1500px 不變）
+- **殺手悄悄獵殺**（`systems/creatures.js`）：殺手化生物在巨人 guardianRange（500px）以外攻擊草食性時，不觸發巨人的 guardianTarget 保護，讓殺手可在外圍悄悄捕獵
+- **隊伍名稱標籤**（`systems/creatures.js`）：巨人化隊長自動分配隊伍名稱（SKT、T1、Fnatic 等，共 26 組）；隊員繼承名稱；名字下方顯示隊伍標籤與成員比（如 `T1(3/6)`）
 
 ---
 
