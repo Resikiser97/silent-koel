@@ -1,6 +1,17 @@
-## v0.0.66.2
+## v0.0.66.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.0.66.3 - 2026-06-01
+
+### 修復 / 效能
+- **getGameFont cache**（`systems/utils.js`）：新增字體字串快取，相同設定下直接回傳快取值，避免每幀對所有生物重複建立新字串物件；以數字 key 取代字串 key 加快查詢
+- **字大又粗合併 Toggle**（`systems/gameState.js`、`systems/ui.js`、`lang/`）：移除獨立的「字體加大」與「字體加粗」兩個選項，合併為單一「字大又粗」Toggle（+7px + bold），並保留舊 localStorage 自動遷移
+- **showXPPopup DOM 物件池**（`systems/player.js`、`main.js`）：預建 10 個可重複使用的 DOM 元素，吃果子時從池取得而非每次 createElement；池滿時直接跳過，不建立新元素
+- **_checkGuardianRange 節流**（`systems/creatures.js`）：加入 200ms 節流，避免每幀對每隻巨人執行 O(中立×敵意) 雙重迴圈距離計算
+- **視野縮放公式調整**（`systems/camera.js`、`systems/ui.js`）：手機版改用 `0.48 + level × 0.04`（10格=0.84），電腦版改用 `0.80 + level × 0.04`（6格=1.00）；v0.0.66.3 一次性強制覆蓋玩家存檔預設值
 
 ---
 

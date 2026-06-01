@@ -37,13 +37,14 @@
 
 ## 版本號同步規則（最高優先）
 
-每次完成 commit，以下 **4 個檔案的頂部版本號必須全部同步**，缺一不可：
+每次完成 commit，以下 **5 個檔案的頂部版本號必須全部同步**，缺一不可：
 
 ```
 CHANGELOG.md        ← 第一行
 MAIN.md             ← 第一行
 project_summary.md  ← 第一行
-QUICKREF.md         ← 第一行
+QUICKREF.md         ← 第一行 + 第十一行
+gameConfig.js       ← 第九行
 ```
 
 格式統一為：
@@ -68,6 +69,9 @@ QUICKREF.md         ← 第一行
 
 ### Step 2 — 更新 CHANGELOG.md 頂部版本號
 將 `CHANGELOG.md` 第一行改為當前版本號。
+
+### Step 2.5 — 更新 CHANGELOG.md 頂部版本號
+將 `gameConfig.js` version 改為當前版本號。
 
 ### Step 3 — 檢查並更新 QUICKREF.md
 比對本次變更，逐一確認以下觸發條件：
@@ -114,7 +118,8 @@ CHANGELOG.md    ：[已更新｜無需變動] → （一句話說明）
 QUICKREF.md     ：[已更新｜無需變動] → （一句話說明）
 MAIN.md         ：[已更新｜無需變動] → （一句話說明）
 project_summary ：[已更新｜無需變動] → （一句話說明）
-版本號同步      ：✅ 4 個檔案頂部一致
+gameConfig      ：[已更新｜無需變動] → （一句話說明）
+版本號同步       ：✅ 5 個檔案頂部一致
 ────────────────────
 ```
 

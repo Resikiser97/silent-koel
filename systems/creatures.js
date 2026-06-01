@@ -500,6 +500,9 @@ function _triggerAlpha(creature) {
 
 // ── GuardianRange：巨人/Alpha 保護同族草食性 ──
 function _checkGuardianRange(giant) {
+    const now = Date.now();
+    if (now - (giant._guardianCheckTimer || 0) < 200) return;
+    giant._guardianCheckTimer = now;
     const range = giant.guardianRange || 1000;
     for (const neutral of gameState.neutralCreatures) {
         if (neutral.hp <= 0) continue;

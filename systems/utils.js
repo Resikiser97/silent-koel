@@ -13,10 +13,24 @@
  *   玩家被暈眩 1000ms，魚鱗韌性 30% → applyTenacity(1000, p) = 700ms
  *   敵人被嘴器減速 2000ms，c.tenacity 目前為 0 → 仍為 2000ms
  */
+// 字體 cache — 設定不變時直接回傳快取字串，避免每幀對所有生物建立新物件
+let _fontCacheOn  = null; // null = 未初始化，強制第一次建構
+let _fontCacheMap = new Map();
+
 function getGameFont(baseSize, baseBold) {
-    const size = gameState.settings.fontLarge ? baseSize + 5 : baseSize;
-    const bold = (gameState.settings.fontBold || baseBold) ? 'bold ' : '';
-    return bold + size + 'px Arial';
+    const on = !!gameState.settings.fontBoldLarge;
+    if (on !== _fontCacheOn) {
+        _fontCacheOn  = on;
+        _fontCacheMap = new Map();
+    }
+    const key = baseSize * 2 + (baseBold ? 1 : 0); // 數字 key，比字串 key 快
+    let cached = _fontCacheMap.get(key);
+    if (cached !== undefined) return cached;
+    const size = on ? baseSize + 7 : baseSize;
+    const bold = (on || baseBold) ? 'bold ' : '';
+    cached = bold + size + 'px Arial';
+    _fontCacheMap.set(key, cached);
+    return cached;
 }
 
 function applyTenacity(durationMs, target) {

@@ -118,11 +118,11 @@ function loadSettings() {
             if (parsed.minimapFade !== undefined) {
                 gameState.settings.minimapFade = parsed.minimapFade;
             }
-            if (parsed.fontLarge !== undefined) {
-                gameState.settings.fontLarge = parsed.fontLarge;
-            }
-            if (parsed.fontBold !== undefined) {
-                gameState.settings.fontBold = parsed.fontBold;
+            if (parsed.fontBoldLarge !== undefined) {
+                gameState.settings.fontBoldLarge = parsed.fontBoldLarge;
+            } else if (parsed.fontLarge !== undefined || parsed.fontBold !== undefined) {
+                // 舊版 fontLarge/fontBold 遷移至 fontBoldLarge
+                gameState.settings.fontBoldLarge = !!(parsed.fontLarge || parsed.fontBold);
             }
             // minimapSize（0=關閉，1~10）：版本更新不重置
             if (parsed.minimapSize !== undefined) {
@@ -146,7 +146,14 @@ function loadSettings() {
     const _rawSaved = localStorage.getItem('gameSettings');
     const _rawParsed = _rawSaved ? JSON.parse(_rawSaved) : {};
     if (_rawParsed.cameraZoomLevel === undefined) {
-        gameState.settings.cameraZoomLevel = gameState.isMobile ? 6 : 10;
+        gameState.settings.cameraZoomLevel = gameState.isMobile ? 10 : 6;
+    }
+
+    // 視野預設值強制更新（v0.0.66.3 一次性覆蓋，對齊新公式預設值）
+    const _ZOOM_RESET_VERSION = 'v0.0.66.3';
+    if (localStorage.getItem('zoomResetVersion') !== _ZOOM_RESET_VERSION) {
+        gameState.settings.cameraZoomLevel = gameState.isMobile ? 10 : 6;
+        localStorage.setItem('zoomResetVersion', _ZOOM_RESET_VERSION);
     }
 
     saveSettings(); // 確保新版本新增的欄位預設值都寫入 localStorage
@@ -641,51 +648,28 @@ function showSettings(fromHome) {
     mmFadeRow.appendChild(mmFadeLbl);
     accSec.appendChild(mmFadeRow);
 
-    // ── 字體加大 Toggle
-    const fontLargeRow = document.createElement('div');
-    fontLargeRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
-    const fontLargeTog = document.createElement('button');
-    fontLargeTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
-    const refreshFontLargeTog = () => {
-        const on = gameState.settings.fontLarge;
-        fontLargeTog.textContent = on ? t('on') : t('off');
-        fontLargeTog.style.background = on ? '#2a8a2a' : '#555';
+    // ── 字大又粗 Toggle
+    const fontBoldLargeRow = document.createElement('div');
+    fontBoldLargeRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const fontBoldLargeTog = document.createElement('button');
+    fontBoldLargeTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshFontBoldLargeTog = () => {
+        const on = gameState.settings.fontBoldLarge;
+        fontBoldLargeTog.textContent = on ? t('on') : t('off');
+        fontBoldLargeTog.style.background = on ? '#2a8a2a' : '#555';
     };
-    refreshFontLargeTog();
-    fontLargeTog.onclick = () => {
-        gameState.settings.fontLarge = !gameState.settings.fontLarge;
-        refreshFontLargeTog();
+    refreshFontBoldLargeTog();
+    fontBoldLargeTog.onclick = () => {
+        gameState.settings.fontBoldLarge = !gameState.settings.fontBoldLarge;
+        refreshFontBoldLargeTog();
         saveSettings();
     };
-    const fontLargeLbl = document.createElement('div');
-    fontLargeLbl.style.cssText = 'font-size:13px;';
-    fontLargeLbl.textContent = t('fontLarge');
-    fontLargeRow.appendChild(fontLargeTog);
-    fontLargeRow.appendChild(fontLargeLbl);
-    accSec.appendChild(fontLargeRow);
-
-    // ── 字體加粗 Toggle
-    const fontBoldRow = document.createElement('div');
-    fontBoldRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
-    const fontBoldTog = document.createElement('button');
-    fontBoldTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
-    const refreshFontBoldTog = () => {
-        const on = gameState.settings.fontBold;
-        fontBoldTog.textContent = on ? t('on') : t('off');
-        fontBoldTog.style.background = on ? '#2a8a2a' : '#555';
-    };
-    refreshFontBoldTog();
-    fontBoldTog.onclick = () => {
-        gameState.settings.fontBold = !gameState.settings.fontBold;
-        refreshFontBoldTog();
-        saveSettings();
-    };
-    const fontBoldLbl = document.createElement('div');
-    fontBoldLbl.style.cssText = 'font-size:13px;';
-    fontBoldLbl.textContent = t('fontBold');
-    fontBoldRow.appendChild(fontBoldTog);
-    fontBoldRow.appendChild(fontBoldLbl);
-    accSec.appendChild(fontBoldRow);
+    const fontBoldLargeLbl = document.createElement('div');
+    fontBoldLargeLbl.style.cssText = 'font-size:13px;';
+    fontBoldLargeLbl.textContent = t('fontBoldLarge');
+    fontBoldLargeRow.appendChild(fontBoldLargeTog);
+    fontBoldLargeRow.appendChild(fontBoldLargeLbl);
+    accSec.appendChild(fontBoldLargeRow);
 
     const keyAccWrapper = document.createElement('div');
     keyAccWrapper.style.cssText = 'display:flex;flex-direction:row;gap:8px;margin-bottom:14px;';

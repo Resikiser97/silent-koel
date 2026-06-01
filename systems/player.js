@@ -238,6 +238,26 @@ function _archerAttack() {
     AudioManager.play('attackNormal');
 }
 
+// =============================================================
+// XP Popup 物件池 — 預建固定數量 DOM 元素重複使用，避免每次 createElement
+// =============================================================
+const _XP_POOL_SIZE = 10;
+let _xpPopupPool = [];
+let _xpPoolReady = false;
+
+function _initXpPool() {
+    if (_xpPoolReady) return;
+    const overlay = document.getElementById('ui-overlay');
+    if (!overlay) return;
+    for (let i = 0; i < _XP_POOL_SIZE; i++) {
+        const el = document.createElement('div');
+        el.style.cssText = 'position:absolute;pointer-events:none;display:none;font-size:13px;font-weight:bold;color:#FFD700;text-shadow:0 0 4px #000;transition:opacity 0.8s,transform 0.8s;';
+        overlay.appendChild(el);
+        _xpPopupPool.push({ el, inUse: false });
+    }
+    _xpPoolReady = true;
+}
+
 // 提取果子吸收邏輯，供 checkFruitCollision 和 playerDash 共用
 function _collectFruit(p, fruit) {
     const ev = p.evolution;
@@ -501,15 +521,27 @@ function updateTreeFruitProduction(deltaTime) {
 }
 
 function showXPPopup(wx, wy, amount) {
+    _initXpPool();
     const s = worldToScreen(wx, wy);
     if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
-    const popup = document.createElement('div');
-    popup.id = 'xp-popup';
-    popup.innerText = `+${amount} XP`;
-    popup.style.left = `${s.x - 15}px`;
-    popup.style.top = `${s.y - 20}px`;
-    document.getElementById('ui-overlay').appendChild(popup);
-    setTimeout(() => { popup.remove(); }, 1000);
+    const slot = _xpPopupPool.find(sl => !sl.inUse);
+    if (!slot) return; // 池滿時跳過，不建立新元素
+    slot.inUse = true;
+    const el = slot.el;
+    el.textContent = '+' + amount + ' XP';
+    el.style.left      = (s.x - 15) + 'px';
+    el.style.top       = (s.y - 20) + 'px';
+    el.style.opacity   = '1';
+    el.style.transform = 'translateY(0)';
+    el.style.display   = 'block';
+    requestAnimationFrame(() => {
+        el.style.opacity   = '0';
+        el.style.transform = 'translateY(-30px)';
+    });
+    setTimeout(() => {
+        el.style.display = 'none';
+        slot.inUse = false;
+    }, 900);
 }
 
 function checkTreasureCollision() {

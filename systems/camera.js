@@ -41,9 +41,11 @@ function worldToScreen(wx, wy) {
 function _updateCameraZoom() {
     const settings = gameState.settings;
 
-    // 計算基礎 zoom（1格=0.64，6格=0.84，10格=1.0）
-    // 公式：zoom = cameraZoomLevel / 10 * 0.4 + 0.6
-    const baseZoom = (settings.cameraZoomLevel / 10) * 0.4 + 0.6;
+    // 手機：10格=0.84，每格差 0.04（公式：0.48 + level * 0.04）
+    // 電腦：6格=1.00，每格差 0.04（公式：0.80 + level * 0.04）
+    const baseZoom = gameState.isMobile
+        ? 0.48 + settings.cameraZoomLevel * 0.04
+        : 0.80 + settings.cameraZoomLevel * 0.04;
 
     if (settings.cameraMode === 'manual') {
         // 手動模式：固定 zoom，不受體型影響

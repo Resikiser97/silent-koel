@@ -12,8 +12,7 @@ const DEFAULT_SETTINGS = {
     alwaysCenter: false,     // 角色永遠固定於畫面正中央（預設關閉）
     minimapFade: false,      // 移動時小地圖漸漸淡化（預設關閉）
     minimapSize: 10,         // 小地圖大小（0=關閉，1~10格）
-    fontLarge: false,        // 字體加大（canvas 字型 +2px）
-    fontBold: false,         // 字體加粗（canvas 字型加 bold）
+    fontBoldLarge: false,    // 字大又粗（canvas 字型 +7px + bold）
     cameraMode: 'smart',     // 視野模式：'smart'（智能）/ 'manual'（手動）
     cameraZoomLevel: 10,     // 視野縮放刻度（1~10，決定 baseZoom）
 };
