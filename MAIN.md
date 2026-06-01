@@ -1,4 +1,4 @@
-## v0.0.67.0
+## v0.0.67.1
 
 # The Silent Koel — 模組架構說明
 
@@ -119,7 +119,7 @@ systems/ui.js             showTooltip, hideTooltip, showMapSelect
                           showGuideStory, _getGuideStoryPages
                           showPatchNotes, checkPatchNotesPopup
                           buildEvoLevelDesc（全域，動態生成進化圖鑑描述）
-                          showCompendium → _renderGuide（Guide 分頁，讀 COMPENDIUM_DATA，桌機雙欄/手機 Tab）
+                          showCompendium → _renderGuide / _renderOrgans / _renderEvo（三分頁均為桌機雙欄/手機 Tab 版面，讀 COMPENDIUM_DATA / ORGANS / EVOLUTION_PATHS / SKILLS）
 
 main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
                           updateGameLogic, gameLoop, initializeGame, window.onload

@@ -117,6 +117,14 @@ const COMPENDIUM_DATA = (function () {
                             'zh-TW': '遊戲提供簡單與普通兩個難度。\n🌿 簡單：生物強度正常、Boss 較為溫和，適合熟悉遊戲機制的入門選擇。\n⚔️ 普通：生物全面強化（HP/速度/傷害均提升）、追擊範圍更廣，並開放巨人化（草食生物吃飽後化身巨人）、殺手化（肉食生物吃屍化為殺手）、精英/Boss 回血等特殊機制；Boss 擁有各自獨特技能。建議先在簡單難度熟悉系統，再挑戰普通難度。',
                             'en': 'Two difficulty modes are available.\n🌿 Easy: standard creature stats and milder Bosses — ideal for learning the game.\n⚔️ Normal: all creatures are stronger (HP, speed, damage boosted), aggro range is wider, and special mechanics are unlocked: Giantization (herbivores that eat enough fruits become Giants), Killer-mode (carnivores that eat enough corpses become Killers), and Elite/Boss HP regeneration. Bosses also have unique skills. Recommended: learn the systems on Easy before tackling Normal.'
                         }
+                    },
+                    {
+                        id: 'mutation_organs',
+                        title: { 'zh-TW': '變異器官', 'en': 'Mutation Organs' },
+                        content: {
+                            'zh-TW': '變異器官是跨局永久保存的成長系統，共四種器官，各自強化攻擊力（憤怒的獠牙）、HP上限（懦弱的尾巴）、速度（勇敢的翅膀）及XP倍率（好奇的眼睛），每升一級各+1%。\n擊殺巨人化生物、Alpha、殺手化生物可獲得變異點數，升級費用起始1費，每5級+1費。\n首頁左上角的⚗️圖示可查看並升級，效果永久跨局保留，不受局數重置。',
+                            'en': 'Mutation Organs are a permanent progression system that carries over between runs. Four organs — Raging Fang, Cowardly Tail, Brave Wing, and Curious Eye — each boost Attack, Max HP, Speed, or XP multiplier by 1% per level.\nEarn Mutation Points by defeating Giantized creatures, Alpha, and Killers. Upgrade cost starts at 1 point and increases by 1 every 5 levels.\nOpen the ⚗️ icon on the home screen to upgrade. Effects are permanent and never reset between runs.'
+                        }
                     }
                 ]
             },
@@ -200,27 +208,19 @@ const COMPENDIUM_DATA = (function () {
                 label: { 'zh-TW': '生物百科', 'en': 'Bestiary' },
                 entries: [
                     {
+                        id: 'elite',
+                        title: { 'zh-TW': '精英怪', 'en': 'Elite Creatures' },
+                        content: {
+                            'zh-TW': '精英怪是每個夜晚出現的強化版普通生物，對毒傷有 ' + bPr + '% 減免。\n★ 第一夜：基礎 HP ' + bHp + ' ×' + n1.hpMult + ' = ' + (bHp * n1.hpMult) + '，傷害 ' + n1.damage + '，擊殺 +' + n1.xp + ' XP，+1 技能點。\n★★ 第二夜：HP ×' + n2.hpMult + ' = ' + (bHp * n2.hpMult) + '，傷害 ' + n2.damage + '，+' + n2.xp + ' XP，+1 技能點。\n★★★ 第三夜：HP ×' + n3.hpMult + ' = ' + (bHp * n3.hpMult) + '，傷害 ' + n3.damage + '，+' + n3.xp + ' XP，+2 技能點。\n擊殺精英怪提前結束夜晚，並有 50% 機率獲得隱藏器官。精英怪在畫面頂部顯示血條，並有方向箭頭指示位置。普通難度下精英怪還具備回血特性。',
+                            'en': 'Elites are supercharged versions of regular creatures that appear each night, with ' + bPr + '% poison resistance.\n★ Night 1: base HP ' + bHp + ' ×' + n1.hpMult + ' = ' + (bHp * n1.hpMult) + ', damage ' + n1.damage + ', kill XP +' + n1.xp + ', +1 skill point.\n★★ Night 2: HP ×' + n2.hpMult + ' = ' + (bHp * n2.hpMult) + ', dmg ' + n2.damage + ', +' + n2.xp + ' XP, +1 pt.\n★★★ Night 3: HP ×' + n3.hpMult + ' = ' + (bHp * n3.hpMult) + ', dmg ' + n3.damage + ', +' + n3.xp + ' XP, +2 pts.\nKilling an Elite ends the current night early and has a 50% chance to drop a Hidden Organ. A health bar appears at the top of the screen and a direction arrow helps track the Elite\'s position. In Normal mode Elites also regenerate HP.'
+                        }
+                    },
+                    {
                         id: 'moose',
                         title: { 'zh-TW': '🌿 駝鹿（草食性）', 'en': '🌿 Moose (Herbivore)' },
                         content: {
                             'zh-TW': '駝鹿是森林生態區的草食性生物，體型小（半徑 8）、HP 30、移速 2.4。個性溫和，遇到玩家通常逃跑（草食性 Lv2 後不再逃跑）。有 50% 機率具備戰鬥能力（傷害 3）。危險等級：低。\n在普通難度中，吃飽 5 顆果子後觸發巨人化：HP ×10、體型 ×1.5、攻擊 +20，並會召集同族組成護衛隊（最多 8 隻）。血量低時會逃向果子回血，不要主動挑釁正在護隊的巨人駝鹿。',
                             'en': 'Moose are the Forest biome\'s herbivore creature — small (radius 8), HP 30, speed 2.4. Docile by nature; they flee from players unless you reach Herbivore Lv2+. Half of them can fight (damage 3). Danger: Low.\nIn Normal mode, a Moose that eats 5 fruits Giantizes — HP ×10, size ×1.5, attack +20 — and recruits a protective pack of up to 8 members. At low HP they flee to fruits to heal. Don\'t provoke a Giantized pack carelessly.'
-                        }
-                    },
-                    {
-                        id: 'beetle',
-                        title: { 'zh-TW': '🌊 巨型甲蟲（草食性）', 'en': '🌊 Giant Beetle (Herbivore)' },
-                        content: {
-                            'zh-TW': '巨型甲蟲是海洋生態區的草食性生物，體型小（半徑 8）、HP 30、移速 2.4。行為與駝鹿類似，通常在水邊覓食。高等級草食性玩家靠近時甲蟲不會逃跑，甚至完全友善。危險等級：低。\n在普通難度中也可能巨人化，形成水邊防衛隊。需注意：海洋中的鱷魚會捕食甲蟲，吃夠屍體後鱷魚持續成長壯大，間接使你的戰場更危險。',
-                            'en': 'Giant Beetles are the Ocean biome\'s herbivore creature — small (radius 8), HP 30, speed 2.4. Similar behavior to Moose, foraging near the water. High-level Herbivore players can approach safely. Danger: Low.\nIn Normal mode they can also Giantize, forming a waterside defense pack. Note: in Normal mode, Crocodiles hunt Beetles and grow stronger from their corpses — this indirectly makes the ocean area more hazardous over time.'
-                        }
-                    },
-                    {
-                        id: 'camel',
-                        title: { 'zh-TW': '🏜️ 駱駝（草食性）', 'en': '🏜️ Camel (Herbivore)' },
-                        content: {
-                            'zh-TW': '駱駝是沙漠生態區的草食性生物，體型小（半徑 8）、HP 30、移速 2.4。外觀呈淺沙黃色，在沙漠地形中有視覺融合感。危險等級：低。\n在普通難度中可能巨人化，組成沙漠護衛隊。值得注意：鬣狗以群體戰術著稱，玩家在沙漠移動時要留意，駱駝屍體可能吸引附近的鬣狗群前來，讓局面迅速惡化。',
-                            'en': 'Camels are the Desert biome\'s herbivore creature — small (radius 8), HP 30, speed 2.4. Their sandy yellow color blends naturally with the desert. Danger: Low.\nIn Normal mode they can Giantize, forming desert escort packs. Note: Hyenas hunt in packs, and Camel corpses in the desert can draw nearby Hyena groups toward you — situations can escalate quickly.'
                         }
                     },
                     {
@@ -232,6 +232,14 @@ const COMPENDIUM_DATA = (function () {
                         }
                     },
                     {
+                        id: 'beetle',
+                        title: { 'zh-TW': '🌊 巨型甲蟲（草食性）', 'en': '🌊 Giant Beetle (Herbivore)' },
+                        content: {
+                            'zh-TW': '巨型甲蟲是海洋生態區的草食性生物，體型小（半徑 8）、HP 30、移速 2.4。行為與駝鹿類似，通常在水邊覓食。高等級草食性玩家靠近時甲蟲不會逃跑，甚至完全友善。危險等級：低。\n在普通難度中也可能巨人化，形成水邊防衛隊。需注意：海洋中的鱷魚會捕食甲蟲，吃夠屍體後鱷魚持續成長壯大，間接使你的戰場更危險。',
+                            'en': 'Giant Beetles are the Ocean biome\'s herbivore creature — small (radius 8), HP 30, speed 2.4. Similar behavior to Moose, foraging near the water. High-level Herbivore players can approach safely. Danger: Low.\nIn Normal mode they can also Giantize, forming a waterside defense pack. Note: in Normal mode, Crocodiles hunt Beetles and grow stronger from their corpses — this indirectly makes the ocean area more hazardous over time.'
+                        }
+                    },
+                    {
                         id: 'croc',
                         title: { 'zh-TW': '🌊 鱷魚（肉食性）', 'en': '🌊 Crocodile (Carnivore)' },
                         content: {
@@ -240,19 +248,19 @@ const COMPENDIUM_DATA = (function () {
                         }
                     },
                     {
+                        id: 'camel',
+                        title: { 'zh-TW': '🏜️ 駱駝（草食性）', 'en': '🏜️ Camel (Herbivore)' },
+                        content: {
+                            'zh-TW': '駱駝是沙漠生態區的草食性生物，體型小（半徑 8）、HP 30、移速 2.4。外觀呈淺沙黃色，在沙漠地形中有視覺融合感。危險等級：低。\n在普通難度中可能巨人化，組成沙漠護衛隊。值得注意：鬣狗以群體戰術著稱，玩家在沙漠移動時要留意，駱駝屍體可能吸引附近的鬣狗群前來，讓局面迅速惡化。',
+                            'en': 'Camels are the Desert biome\'s herbivore creature — small (radius 8), HP 30, speed 2.4. Their sandy yellow color blends naturally with the desert. Danger: Low.\nIn Normal mode they can Giantize, forming desert escort packs. Note: Hyenas hunt in packs, and Camel corpses in the desert can draw nearby Hyena groups toward you — situations can escalate quickly.'
+                        }
+                    },
+                    {
                         id: 'hyena',
                         title: { 'zh-TW': '🏜️ 鬣狗（肉食性）', 'en': '🏜️ Hyena (Carnivore)' },
                         content: {
                             'zh-TW': '鬣狗是沙漠生態區的肉食性生物，體型中等（半徑 10）、HP 50、移速 3.6、傷害 5。最大特色是群體戰術：每隻存活夥伴提供 +20% 攻擊、+5% 速度；任一成員鎖定目標後立刻通報 600px 內所有夥伴出動。沙漠內移速 ×1.1；離開沙漠 3 秒後攻擊與速度各降至 ×0.5。危險等級：高（群體戰術）。\n在普通難度中可吃屍體並觸發殺手化。獨遇時尚可應付，多隻同時出現時極為致命。',
                             'en': 'Hyenas are the Desert biome\'s carnivore creature — medium (radius 10), HP 50, speed 3.6, damage 5. Their defining trait is pack tactics: each surviving packmate grants +20% attack and +5% speed, and any member locking onto you alerts all packmates within 600px instantly. In-desert speed bonus ×1.1; 3 seconds after leaving, attack and speed both halve. Danger: High (pack tactics).\nIn Normal mode they eat corpses and can enter Killer-mode. A lone Hyena is manageable; multiple together are lethal.'
-                        }
-                    },
-                    {
-                        id: 'elite',
-                        title: { 'zh-TW': '精英怪', 'en': 'Elite Creatures' },
-                        content: {
-                            'zh-TW': '精英怪是每個夜晚出現的強化版普通生物，對毒傷有 ' + bPr + '% 減免。\n★ 第一夜：基礎 HP ' + bHp + ' ×' + n1.hpMult + ' = ' + (bHp * n1.hpMult) + '，傷害 ' + n1.damage + '，擊殺 +' + n1.xp + ' XP，+1 技能點。\n★★ 第二夜：HP ×' + n2.hpMult + ' = ' + (bHp * n2.hpMult) + '，傷害 ' + n2.damage + '，+' + n2.xp + ' XP，+1 技能點。\n★★★ 第三夜：HP ×' + n3.hpMult + ' = ' + (bHp * n3.hpMult) + '，傷害 ' + n3.damage + '，+' + n3.xp + ' XP，+2 技能點。\n擊殺精英怪提前結束夜晚，並有 50% 機率獲得隱藏器官。精英怪在畫面頂部顯示血條，並有方向箭頭指示位置。普通難度下精英怪還具備回血特性。',
-                            'en': 'Elites are supercharged versions of regular creatures that appear each night, with ' + bPr + '% poison resistance.\n★ Night 1: base HP ' + bHp + ' ×' + n1.hpMult + ' = ' + (bHp * n1.hpMult) + ', damage ' + n1.damage + ', kill XP +' + n1.xp + ', +1 skill point.\n★★ Night 2: HP ×' + n2.hpMult + ' = ' + (bHp * n2.hpMult) + ', dmg ' + n2.damage + ', +' + n2.xp + ' XP, +1 pt.\n★★★ Night 3: HP ×' + n3.hpMult + ' = ' + (bHp * n3.hpMult) + ', dmg ' + n3.damage + ', +' + n3.xp + ' XP, +2 pts.\nKilling an Elite ends the current night early and has a 50% chance to drop a Hidden Organ. A health bar appears at the top of the screen and a direction arrow helps track the Elite\'s position. In Normal mode Elites also regenerate HP.'
                         }
                     }
                 ]

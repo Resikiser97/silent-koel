@@ -1,6 +1,15 @@
-## v0.0.67.0
+## v0.0.67.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.0.67.1 - 2026-06-02
+
+### 調整
+- **圖鑑生物百科重新排序**（`config/compendium_data.js`）：精英怪移至最前（特殊生物優先），一般生物改依地區排列（森林→海洋→沙漠）
+- **圖鑑遊戲機制新增「變異器官」條目**（`config/compendium_data.js`）：說明四種變異器官、獲得與升級方式
+- **器官圖鑑與進化系統分頁改為雙欄版面**（`systems/ui.js`）：移除舊式翻頁按鈕，改為桌機左側目錄 + 右側內容、手機橫向 Tab 切換，與遊戲說明分頁風格統一；新增 `_renderOrgans()`、`_renderEvo()` 函式，移除 `buildOrganPages()`、`buildEvoPages()`、`getPages()`
 
 ---
 

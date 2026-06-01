@@ -1140,6 +1140,8 @@ function showCompendium(startTab) {
     let curTab = tabs.includes(startTab) ? startTab : 'guide';
     let curPage = 0;
     let curGuideEntryId = null;
+    let curOrganEntryId = null;
+    let curEvoEntryId = null;
 
     const overlay = document.createElement('div');
     overlay.id = 'compendium-overlay';
@@ -1199,14 +1201,6 @@ function showCompendium(startTab) {
     function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function _h2(t) { return '<div style="font-size:15px;font-weight:bold;color:#FFD700;margin:10px 0 6px;">' + _esc(t) + '</div>'; }
     function _p(t)  { return '<div style="margin-bottom:5px;">' + _esc(t) + '</div>'; }
-
-    function getPages() {
-        if (curTab === 'organs') {
-            return buildOrganPages();
-        } else {
-            return buildEvoPages();
-        }
-    }
 
     // Guide 分頁：從 COMPENDIUM_DATA 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
     function _renderGuide(container) {
@@ -1351,76 +1345,318 @@ function showCompendium(startTab) {
         }
     }
 
-    function buildOrganPages() {
-        const pages = [];
-        const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF', special: '#AAAAFF' };
-        // 普通器官每頁3個
-        const allOrgans = Object.values(ORGANS).filter(o => !o.noSelection);
-        for (let i = 0; i < allOrgans.length; i += 3) {
-            const chunk = allOrgans.slice(i, i + 3);
-            let html = '';
-            chunk.forEach(org => {
-                const c = typeColor[org.type] || '#FFD700';
-                html += '<div style="margin-bottom:12px;border-left:3px solid ' + c + ';padding-left:8px;">';
-                html += '<div style="font-weight:bold;color:' + c + ';font-size:14px;">' + _esc(org.name) + '</div>';
-                org.levels.forEach((lv, idx) => {
-                    html += '<div style="color:#ccc;font-size:11px;margin-top:2px;"><span style="color:#aaa;">Lv' + (idx+1) + ':</span> ' + _esc(lv.desc) + '</div>';
-                });
-                html += '</div>';
-            });
-            // 特殊器官：毒囊
-            if (i === 0) {
-                const sac = ORGANS.poisonSac;
-                const sacLang = (LANG[gameState.language] || LANG['zh-TW']).organs.poisonSac;
-                html += '<div style="margin-bottom:12px;border-left:3px solid #AAAAFF;padding-left:8px;">';
-                html += '<div style="font-weight:bold;color:#AAAAFF;font-size:14px;">☠ ' + _esc(sac.name) + ' <span style="font-size:10px;color:#888;">（雜食性Lv1獲得，自動升級）</span></div>';
-                html += '<div style="color:#aaa;font-size:11px;margin-top:3px;">' + t('compendiumSacHint') + '</div>';
-                html += '<div style="margin-top:5px;">';
-                sac.levels.forEach((lv, idx) => {
-                    const desc = sacLang ? sacLang.levels[idx] : lv.desc;
-                    const threshold = sac.thresholds[idx];
-                    html += '<div style="font-size:11px;color:#ccc;line-height:1.6;">'
-                        + '<span style="color:#AAAAFF;margin-right:4px;">Lv' + (idx + 1) + '</span>'
-                        + '<span style="color:#777;margin-right:6px;">[白骨素≥' + threshold + ']</span>'
-                        + _esc(desc || lv.desc)
-                        + '</div>';
-                });
-                html += '</div>';
-                html += '</div>';
+    // Organs 分頁：從 ORGANS/HIDDEN_ORGANS/COMBOS 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
+    function _renderOrgans(container) {
+        container.innerHTML = '';
+        var typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
+        var organSections = [
+            {
+                id: 'attack', label: '⚔️ 攻擊', color: '#FF9999',
+                entries: Object.values(ORGANS).filter(function(o) { return o.type === 'attack'; })
+                    .map(function(o) { return { id: 'organ_' + o.id, data: o, type: 'organ' }; })
+            },
+            {
+                id: 'defense', label: '🛡️ 防禦', color: '#88CCFF',
+                entries: Object.values(ORGANS).filter(function(o) { return o.type === 'defense'; })
+                    .map(function(o) { return { id: 'organ_' + o.id, data: o, type: 'organ' }; })
+            },
+            {
+                id: 'spirit', label: '🔮 靈力', color: '#CC99FF',
+                entries: Object.values(ORGANS).filter(function(o) { return o.type === 'spirit'; })
+                    .map(function(o) { return { id: 'organ_' + o.id, data: o, type: 'organ' }; })
+            },
+            {
+                id: 'special', label: '特殊器官', color: '#AAAAFF',
+                entries: [{ id: 'organ_poisonSac', data: ORGANS.poisonSac, type: 'poisonSac' }]
+            },
+            {
+                id: 'hidden', label: '✨ 隱藏器官', color: '#FFD700',
+                entries: Object.values(HIDDEN_ORGANS).map(function(h) { return { id: 'hidden_' + h.id, data: h, type: 'hidden' }; })
+            },
+            {
+                id: 'combo', label: '⚡ 組合效果', color: '#88FF88',
+                entries: COMBOS.map(function(c) { return { id: 'combo_' + c.key, data: c, type: 'combo' }; })
             }
-            pages.push(html);
+        ];
+
+        if (!curOrganEntryId) curOrganEntryId = organSections[0].entries[0].id;
+
+        var foundEntry = null, foundSection = null;
+        for (var si = 0; si < organSections.length; si++) {
+            for (var ei = 0; ei < organSections[si].entries.length; ei++) {
+                if (organSections[si].entries[ei].id === curOrganEntryId) {
+                    foundEntry = organSections[si].entries[ei];
+                    foundSection = organSections[si];
+                }
+            }
         }
-        // 隱藏器官頁
-        let hiddenHtml = _h2(t('compendiumHiddenOrgans'));
-        Object.values(HIDDEN_ORGANS).forEach(h => {
-            hiddenHtml += '<div style="margin-bottom:10px;border-left:3px solid #FFD700;padding-left:8px;">';
-            hiddenHtml += '<div style="font-weight:bold;color:#FFD700;">✨ ' + _esc(h.name) + '</div>';
-            hiddenHtml += '<div style="color:#ccc;font-size:11px;margin-top:2px;">' + _esc(h.desc) + '</div>';
-            hiddenHtml += '</div>';
-        });
-        // 組合效果頁
-        hiddenHtml += _h2(t('compendiumCombos'));
-        COMBOS.forEach(combo => {
-            hiddenHtml += '<div style="margin-bottom:8px;">';
-            hiddenHtml += '<div style="color:#FFD700;font-size:12px;">' + _esc(combo.ids.map(id => getOrganDisplayName(id)).join(' + ')) + '</div>';
-            hiddenHtml += '<div style="color:#ccc;font-size:11px;">' + _esc(combo.desc) + '</div>';
-            hiddenHtml += '</div>';
-        });
-        pages.push(hiddenHtml);
-        return pages;
+        if (!foundEntry) {
+            curOrganEntryId = organSections[0].entries[0].id;
+            foundEntry = organSections[0].entries[0];
+            foundSection = organSections[0];
+        }
+
+        function _entryLabel(entry) {
+            if (entry.type === 'organ' || entry.type === 'poisonSac') return entry.data.name;
+            if (entry.type === 'hidden') return entry.data.name;
+            return entry.data.ids.map(function(id) { return getOrganDisplayName(id); }).join('+');
+        }
+
+        function _buildOrganContent(pane, entry, section) {
+            var badge = document.createElement('div');
+            badge.style.cssText = 'display:inline-block;font-size:10px;color:' + section.color + ';border:1px solid ' + section.color + ';border-radius:3px;padding:1px 6px;margin-bottom:8px;';
+            badge.textContent = section.label;
+            pane.appendChild(badge);
+
+            if (entry.type === 'organ') {
+                var org = entry.data;
+                var c = typeColor[org.type] || section.color;
+                var t1 = document.createElement('div');
+                t1.style.cssText = 'font-size:16px;font-weight:bold;color:' + c + ';margin-bottom:10px;';
+                t1.textContent = org.name;
+                pane.appendChild(t1);
+                org.levels.forEach(function(lv, idx) {
+                    var d = document.createElement('div');
+                    d.style.cssText = 'margin-bottom:6px;';
+                    d.innerHTML = '<span style="color:#FFD700;">Lv' + (idx+1) + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(lv.desc) + '</span>';
+                    pane.appendChild(d);
+                });
+            } else if (entry.type === 'poisonSac') {
+                var sac = entry.data;
+                var t2 = document.createElement('div');
+                t2.style.cssText = 'font-size:16px;font-weight:bold;color:#AAAAFF;margin-bottom:6px;';
+                t2.textContent = '☠ ' + sac.name;
+                pane.appendChild(t2);
+                var note = document.createElement('div');
+                note.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:10px;';
+                note.textContent = '無法主動選擇，透過累積白骨素自動升級';
+                pane.appendChild(note);
+                sac.levels.forEach(function(lv, idx) {
+                    var d = document.createElement('div');
+                    d.style.cssText = 'font-size:12px;color:#ccc;line-height:1.6;margin-bottom:2px;';
+                    d.innerHTML = '<span style="color:#AAAAFF;margin-right:4px;">Lv' + (idx+1) + '</span>' +
+                        '<span style="color:#777;margin-right:6px;">[白骨素≥' + sac.thresholds[idx] + ']</span>' +
+                        _esc(lv.desc);
+                    pane.appendChild(d);
+                });
+            } else if (entry.type === 'hidden') {
+                var h = entry.data;
+                var t3 = document.createElement('div');
+                t3.style.cssText = 'font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:6px;';
+                t3.textContent = '✨ ' + h.name;
+                pane.appendChild(t3);
+                var hn = document.createElement('div');
+                hn.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:8px;';
+                hn.textContent = '擊敗精英怪有機率獲得';
+                pane.appendChild(hn);
+                var hd = document.createElement('div');
+                hd.style.cssText = 'font-size:13px;color:#ccc;';
+                hd.textContent = h.desc;
+                pane.appendChild(hd);
+            } else if (entry.type === 'combo') {
+                var combo = entry.data;
+                var t4 = document.createElement('div');
+                t4.style.cssText = 'font-size:15px;font-weight:bold;color:#88FF88;margin-bottom:8px;';
+                t4.textContent = combo.ids.map(function(id) { return getOrganDisplayName(id); }).join(' + ');
+                pane.appendChild(t4);
+                var cd = document.createElement('div');
+                cd.style.cssText = 'font-size:13px;color:#ccc;';
+                cd.textContent = combo.desc;
+                pane.appendChild(cd);
+            }
+        }
+
+        if (gameState.isMobile) {
+            container.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+            var tabStrip = document.createElement('div');
+            tabStrip.style.cssText = 'display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid #333;scrollbar-width:none;-ms-overflow-style:none;padding:0 4px;';
+            var flatIdx = 0, selIdx = 0;
+            organSections.forEach(function(sec) {
+                sec.entries.forEach(function(entry, ei) {
+                    var isSel = entry.id === curOrganEntryId;
+                    if (isSel) selIdx = flatIdx;
+                    var label = (ei === 0 ? (sec.label + '｜') : '') + _entryLabel(entry);
+                    var tab = document.createElement('div');
+                    tab.style.cssText = 'padding:6px 10px;white-space:nowrap;cursor:pointer;font-size:11px;flex-shrink:0;' +
+                        'border-bottom:' + (isSel ? '2px' : '1px') + ' solid ' + (isSel ? sec.color : 'transparent') + ';' +
+                        'color:' + (isSel ? sec.color : '#aaa') + ';font-weight:' + (isSel ? 'bold' : 'normal') + ';';
+                    tab.textContent = label;
+                    (function(eid) { tab.onclick = function() { curOrganEntryId = eid; _renderOrgans(container); }; })(entry.id);
+                    tabStrip.appendChild(tab);
+                    flatIdx++;
+                });
+            });
+            container.appendChild(tabStrip);
+            setTimeout(function() { var el = tabStrip.children[selIdx]; if (el) el.scrollIntoView({ block: 'nearest', inline: 'center' }); }, 0);
+            var ca = document.createElement('div');
+            ca.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
+            _buildOrganContent(ca, foundEntry, foundSection);
+            container.appendChild(ca);
+        } else {
+            container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
+            var sidebar = document.createElement('div');
+            sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
+            organSections.forEach(function(sec) {
+                var sh = document.createElement('div');
+                sh.style.cssText = 'font-size:10px;font-weight:bold;color:' + sec.color + ';padding:6px 8px 2px 8px;border-left:3px solid ' + sec.color + ';margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
+                sh.textContent = sec.label;
+                sidebar.appendChild(sh);
+                sec.entries.forEach(function(entry) {
+                    var isSel = entry.id === curOrganEntryId;
+                    var item = document.createElement('div');
+                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
+                        'color:' + (isSel ? '#fff' : '#bbb') + ';background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
+                        'border-left:2px solid ' + (isSel ? sec.color : 'transparent') + ';';
+                    item.textContent = _entryLabel(entry);
+                    (function(eid) { item.onclick = function() { curOrganEntryId = eid; _renderOrgans(container); }; })(entry.id);
+                    sidebar.appendChild(item);
+                });
+            });
+            container.appendChild(sidebar);
+            var rp = document.createElement('div');
+            rp.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
+            _buildOrganContent(rp, foundEntry, foundSection);
+            container.appendChild(rp);
+        }
     }
 
-    function buildEvoPages() {
-        const pages = [];
-        Object.values(EVOLUTION_PATHS).forEach(path => {
-            let html = _h2(path.icon + ' ' + path.name + '  (最高Lv' + path.maxLevel + ')');
-            path.levels.forEach((lv, i) => {
-                // 使用 buildEvoLevelDesc 動態生成累計描述，config 改數值後自動同步
-                html += '<div style="margin-bottom:6px;"><span style="color:#FFD700;">Lv' + (i+1) + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(buildEvoLevelDesc(path.id, i + 1)) + '</span></div>';
+    // Evo 分頁：從 EVOLUTION_PATHS/SKILLS 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
+    function _renderEvo(container) {
+        container.innerHTML = '';
+        var pathColors = { herbivore: '#88cc88', carnivore: '#FF9999', omnivore: '#CCAAFF' };
+        var skillColor = '#FFD700';
+        var evoSections = [
+            {
+                id: 'paths', label: '進化路線', color: '#88cc88',
+                entries: Object.values(EVOLUTION_PATHS).map(function(p) {
+                    return { id: 'path_' + p.id, data: p, type: 'path', color: pathColors[p.id] || '#88cc88' };
+                })
+            },
+            {
+                id: 'skills', label: '技能樹', color: skillColor,
+                entries: Object.values(SKILLS).map(function(s) {
+                    return { id: 'skill_' + s.id, data: s, type: 'skill', color: skillColor };
+                })
+            }
+        ];
+
+        if (!curEvoEntryId) curEvoEntryId = evoSections[0].entries[0].id;
+
+        var foundEntry = null, foundSection = null;
+        for (var si = 0; si < evoSections.length; si++) {
+            for (var ei = 0; ei < evoSections[si].entries.length; ei++) {
+                if (evoSections[si].entries[ei].id === curEvoEntryId) {
+                    foundEntry = evoSections[si].entries[ei];
+                    foundSection = evoSections[si];
+                }
+            }
+        }
+        if (!foundEntry) {
+            curEvoEntryId = evoSections[0].entries[0].id;
+            foundEntry = evoSections[0].entries[0];
+            foundSection = evoSections[0];
+        }
+
+        function _buildEvoContent(pane, entry) {
+            if (!entry) return;
+            if (entry.type === 'path') {
+                var path = entry.data;
+                var c = pathColors[path.id] || '#88cc88';
+                var unlockMap = { herbivore: '初始解鎖，無前置條件', carnivore: '無前置條件', omnivore: '需草食性 Lv1 + 肉食性 Lv1' };
+                var t1 = document.createElement('div');
+                t1.style.cssText = 'font-size:16px;font-weight:bold;color:' + c + ';margin-bottom:6px;';
+                t1.textContent = path.icon + ' ' + path.name + '（最高 Lv' + path.maxLevel + '）';
+                pane.appendChild(t1);
+                if (unlockMap[path.id]) {
+                    var ul = document.createElement('div');
+                    ul.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:10px;';
+                    ul.textContent = '解鎖條件：' + unlockMap[path.id];
+                    pane.appendChild(ul);
+                }
+                for (var i = 1; i <= path.maxLevel; i++) {
+                    var d = document.createElement('div');
+                    d.style.cssText = 'margin-bottom:6px;';
+                    d.innerHTML = '<span style="color:#FFD700;">Lv' + i + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(buildEvoLevelDesc(path.id, i)) + '</span>';
+                    pane.appendChild(d);
+                }
+            } else if (entry.type === 'skill') {
+                var skill = entry.data;
+                var t2 = document.createElement('div');
+                t2.style.cssText = 'font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:8px;';
+                t2.textContent = skill.name;
+                pane.appendChild(t2);
+                var desc = document.createElement('div');
+                desc.style.cssText = 'font-size:13px;color:#ccc;margin-bottom:10px;';
+                desc.textContent = skill.desc;
+                pane.appendChild(desc);
+                for (var i = 1; i <= skill.maxLevel; i++) {
+                    var lv = document.createElement('div');
+                    lv.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:3px;';
+                    lv.innerHTML = '<span style="color:#FFD700;">Lv' + i + '</span><span style="color:#666;margin:0 6px;">費用 ' + i + ' 點</span>';
+                    pane.appendChild(lv);
+                }
+                var hint = document.createElement('div');
+                hint.style.cssText = 'font-size:11px;color:#888;margin-top:10px;border-top:1px solid #333;padding-top:8px;';
+                hint.textContent = '擊殺精英怪、Boss、遊戲時長皆可獲得技能點，技能跨局繼承';
+                pane.appendChild(hint);
+            }
+        }
+
+        if (gameState.isMobile) {
+            container.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+            var tabStrip = document.createElement('div');
+            tabStrip.style.cssText = 'display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid #333;scrollbar-width:none;-ms-overflow-style:none;padding:0 4px;';
+            var flatIdx = 0, selIdx = 0;
+            evoSections.forEach(function(sec) {
+                sec.entries.forEach(function(entry, ei) {
+                    var isSel = entry.id === curEvoEntryId;
+                    if (isSel) selIdx = flatIdx;
+                    var eLabel = entry.type === 'path' ? (entry.data.icon + ' ' + entry.data.name) : entry.data.name;
+                    var label = (sec.id === 'skills' && ei === 0) ? ('技能樹｜' + eLabel) : eLabel;
+                    var tabColor = entry.color;
+                    var tab = document.createElement('div');
+                    tab.style.cssText = 'padding:6px 10px;white-space:nowrap;cursor:pointer;font-size:11px;flex-shrink:0;' +
+                        'border-bottom:' + (isSel ? '2px' : '1px') + ' solid ' + (isSel ? tabColor : 'transparent') + ';' +
+                        'color:' + (isSel ? tabColor : '#aaa') + ';font-weight:' + (isSel ? 'bold' : 'normal') + ';';
+                    tab.textContent = label;
+                    (function(eid) { tab.onclick = function() { curEvoEntryId = eid; _renderEvo(container); }; })(entry.id);
+                    tabStrip.appendChild(tab);
+                    flatIdx++;
+                });
             });
-            pages.push(html);
-        });
-        return pages;
+            container.appendChild(tabStrip);
+            setTimeout(function() { var el = tabStrip.children[selIdx]; if (el) el.scrollIntoView({ block: 'nearest', inline: 'center' }); }, 0);
+            var ca = document.createElement('div');
+            ca.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
+            _buildEvoContent(ca, foundEntry);
+            container.appendChild(ca);
+        } else {
+            container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
+            var sidebar = document.createElement('div');
+            sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
+            evoSections.forEach(function(sec) {
+                var sh = document.createElement('div');
+                sh.style.cssText = 'font-size:10px;font-weight:bold;color:' + sec.color + ';padding:6px 8px 2px 8px;border-left:3px solid ' + sec.color + ';margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
+                sh.textContent = sec.label;
+                sidebar.appendChild(sh);
+                sec.entries.forEach(function(entry) {
+                    var isSel = entry.id === curEvoEntryId;
+                    var eLabel = entry.type === 'path' ? (entry.data.icon + ' ' + entry.data.name) : entry.data.name;
+                    var item = document.createElement('div');
+                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
+                        'color:' + (isSel ? '#fff' : '#bbb') + ';background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
+                        'border-left:2px solid ' + (isSel ? entry.color : 'transparent') + ';';
+                    item.textContent = eLabel;
+                    (function(eid) { item.onclick = function() { curEvoEntryId = eid; _renderEvo(container); }; })(entry.id);
+                    sidebar.appendChild(item);
+                });
+            });
+            container.appendChild(sidebar);
+            var rp = document.createElement('div');
+            rp.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
+            _buildEvoContent(rp, foundEntry);
+            container.appendChild(rp);
+        }
     }
 
     function render() {
@@ -1431,32 +1667,13 @@ function showCompendium(startTab) {
             tabBtns[tab].style.color = 'white';
         });
 
-        if (curTab === 'guide') {
-            // Guide 分頁：雙欄/Tab 版面，不需要翻頁按鈕
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-            pageLbl.style.display = 'none';
-            content.style.cssText = 'display:flex;flex:1;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;overflow:hidden;min-height:0;padding:0;';
-            _renderGuide(content);
-            return;
-        }
-
-        // Organs / Evo 分頁：恢復翻頁按鈕與原本版面
-        prevBtn.style.display = '';
-        nextBtn.style.display = '';
-        pageLbl.style.display = '';
-        content.style.cssText = 'font-size:13px;line-height:1.7;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:14px 16px;flex:1;overflow-y:auto;min-height:0;';
-
-        const pages = getPages();
-        const total = pages.length;
-        curPage = Math.max(0, Math.min(curPage, total - 1));
-        content.innerHTML = pages[curPage] || '';
-        content.scrollTop = 0;
-        pageLbl.textContent = t('guidePage', {'0': curPage + 1, '1': total});
-        prevBtn.disabled = curPage === 0;
-        nextBtn.disabled = curPage >= total - 1;
-        prevBtn.style.opacity = prevBtn.disabled ? '0.35' : '1';
-        nextBtn.style.opacity = nextBtn.disabled ? '0.35' : '1';
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+        pageLbl.style.display = 'none';
+        content.style.cssText = 'display:flex;flex:1;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;overflow:hidden;min-height:0;padding:0;';
+        if (curTab === 'guide') _renderGuide(content);
+        else if (curTab === 'organs') _renderOrgans(content);
+        else _renderEvo(content);
     }
 
     function closeCompendium() {
@@ -1473,8 +1690,8 @@ function showCompendium(startTab) {
         if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
     }
 
-    prevBtn.onclick = () => { if (curPage > 0) { curPage--; render(); } };
-    nextBtn.onclick = () => { const pages = getPages(); if (curPage < pages.length - 1) { curPage++; render(); } };
+    prevBtn.onclick = () => {};
+    nextBtn.onclick = () => {};
     closeBtn.onclick = closeCompendium;
     overlay.addEventListener('click', e => { if (e.target === overlay) closeCompendium(); });
 
@@ -1482,12 +1699,6 @@ function showCompendium(startTab) {
     _compKeyHandler = function(e) {
         if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
         if (e.key === 'Escape') { closeCompendium(); return; }
-        const pages = getPages();
-        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-            if (curPage < pages.length - 1) { curPage++; render(); }
-        } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-            if (curPage > 0) { curPage--; render(); }
-        }
     };
     document.addEventListener('keydown', _compKeyHandler);
 
