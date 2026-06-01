@@ -1,6 +1,15 @@
-## v0.0.66.3
+## v0.0.67.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.0.67.0 - 2026-06-02
+
+### 新增
+- **遊戲圖鑑系統**（`config/compendium_data.js`、`systems/ui.js`、`index.html`）：新增 `COMPENDIUM_DATA` 全域常數，定義四大分類（遊戲機制 9 條、Biome 3 條、Boss 3 條、生物百科 7 條），共 22 個條目，繁中／英文雙語，數值動態引用 config，不寫死
+- **圖鑑 Guide 分頁重設計**（`systems/ui.js`）：桌機版改為左側 160px 目錄欄 + 右側內容區雙欄版面；手機版改為橫向可滑動 Tab 列 + 下方內容區；各分類用 section color 標色；語言切換即時重繪
+- **圖鑑維護 SOP**（`.claude/instructions.md`）：新增「更新圖鑑」與「檢查圖鑑」兩個 AI 指令步驟說明
 
 ---
 

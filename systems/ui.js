@@ -187,6 +187,10 @@ function switchLanguage(lang) {
     if (treeOpen)     buildSkillTreeOverlay(treeCause, treeFromHome);
     if (guideOpen)    showGuide(guidePage);
     if (settingsOpen) showSettings(homeOpen);
+
+    // 圖鑑開啟中則即時重繪（compendium 不在上方 close/reopen 流程中）
+    const _co = document.getElementById('compendium-overlay');
+    if (_co && typeof _co._render === 'function') _co._render();
 }
 
 function saveSettings() {
@@ -1135,6 +1139,7 @@ function showCompendium(startTab) {
     const tabNames = { guide: t('compendiumTabGuide'), organs: t('compendiumTabOrgans'), evo: t('compendiumTabEvo') };
     let curTab = tabs.includes(startTab) ? startTab : 'guide';
     let curPage = 0;
+    let curGuideEntryId = null;
 
     const overlay = document.createElement('div');
     overlay.id = 'compendium-overlay';
@@ -1196,116 +1201,154 @@ function showCompendium(startTab) {
     function _p(t)  { return '<div style="margin-bottom:5px;">' + _esc(t) + '</div>'; }
 
     function getPages() {
-        if (curTab === 'guide') {
-            return buildGuidePages();
-        } else if (curTab === 'organs') {
+        if (curTab === 'organs') {
             return buildOrganPages();
         } else {
             return buildEvoPages();
         }
     }
 
-    // Boss 圖鑑頁：動態引用 EASY_MAP/NORMAL_MAP bosses 數值
-    function _buildBossPage() {
-        const easyBosses   = (typeof EASY_MAP   !== 'undefined') ? EASY_MAP.bosses   : [];
-        const normalBosses = (typeof NORMAL_MAP !== 'undefined') ? NORMAL_MAP.bosses : [];
+    // Guide 分頁：從 COMPENDIUM_DATA 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
+    function _renderGuide(container) {
+        if (typeof COMPENDIUM_DATA === 'undefined') {
+            container.innerHTML = '<div style="padding:20px;color:#888;">圖鑑資料未載入</div>';
+            return;
+        }
+        const lang = (gameState.settings && gameState.settings.language) || 'zh-TW';
+        container.innerHTML = '';
 
-        // 技能說明文字：因技能邏輯未 config 化，直接手寫
-        const bossSkills = {
-            'forest': '狂暴化（HP<40%）：速度×1.5、傷害×1.3。森林內 50% 暴擊 1.5倍；離開森林 25% 暴擊 1.25倍',
-            'ocean':  '衝鋒撕咬（每8秒或HP<40%）：命中 1.5倍傷害並暈眩玩家 0.3秒。海洋內速度+30%、每5秒回2%HP',
-            'desert': '毒霧（每10秒或HP<40%）：200px範圍每秒5傷持續3秒。沙漠內觸發沙塵暴：玩家300px外視野遮蔽'
-        };
-
-        let html = _h2('👾 Boss 圖鑑');
-
-        normalBosses.forEach(bossN => {
-            const bossE = easyBosses.find(b => b.biome === bossN.biome) || {};
-            html += '<div style="margin-bottom:14px;border-left:3px solid #CC4400;padding-left:10px;">';
-            html += '<div style="font-weight:bold;font-size:14px;color:#FFD700;margin-bottom:3px;">' + _esc(bossN.name) + '</div>';
-            const appearsIn = [];
-            if (bossE.hp) appearsIn.push('🌿 簡單');
-            appearsIn.push('⚔️ 普通');
-            html += '<div style="font-size:11px;color:#888;margin-bottom:4px;">出現難度：' + _esc(appearsIn.join(' / ')) + '</div>';
-            if (bossE.hp) {
-                html += '<div style="font-size:11px;color:#88cc88;margin-bottom:2px;">🌿 簡單：HP ' + _esc(String(bossE.hp)) + ' / 速度 ' + _esc(String(bossE.speed)) + ' / 傷害 ' + _esc(String(bossE.damage)) + '</div>';
-            }
-            html += '<div style="font-size:11px;color:#FF9988;margin-bottom:2px;">⚔️ 普通：HP ' + _esc(String(bossN.hp)) + ' / 速度 ' + _esc(String(bossN.speed)) + ' / 傷害 ' + _esc(String(bossN.damage)) + '</div>';
-            const skill = bossSkills[bossN.biome];
-            if (skill) {
-                html += '<div style="font-size:11px;color:#ccaaff;margin-bottom:2px;">技能（普通）：' + _esc(skill) + '</div>';
-            }
-            html += '<div style="font-size:11px;color:#aaaaff;">通用：每3秒回復2%最大HP</div>';
-            html += '</div>';
-        });
-
-        html += '<div style="font-size:11px;color:#aa8844;border-top:1px solid #333;padding-top:8px;margin-top:4px;">⚠️ 弱點提示：離開生態區後特殊技能效果減弱</div>';
-        return html;
-    }
-
-    // 難度介紹頁：動態引用 EASY_MAP / NORMAL_MAP config 數值
-    function _buildDifficultyPage() {
-        const easy   = typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null;
-        const normal = typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null;
-        const fKeys  = ['giantization', 'killer', 'eliteRegen', 'bossRegen'];
-        const fNames = { giantization: '巨人化', killer: '殺手化', eliteRegen: '精英回血', bossRegen: 'Boss 回血' };
-
-        let html = _h2('⚔️ 難度介紹');
-
-        if (easy) {
-            const ec    = easy.creatureStrength.hostile;
-            const feats = easy.features || {};
-            html += '<div style="margin-bottom:14px;">';
-            html += '<div style="font-size:13px;font-weight:bold;color:#88CC88;margin-bottom:4px;">🌿 簡單</div>';
-            html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-style:italic;">適合初次體驗的輕鬆模式。生物強度正常，Boss 相對溫和。探索世界、熟悉器官與進化系統的最佳起點。</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 生物強度：×' + _esc(String(ec.hpMultiplier)) + '（HP / 速度 / 傷害）</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 精英獎勵：第1夜 +1 / 第2夜 +1 / 第3夜 +2 技能點</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• Boss 擊殺獎勵：+3 技能點</div>';
-            html += '<div style="font-size:11px;color:#ccc;">• 特殊機制：' + _esc(fKeys.map(k => fNames[k] + (feats[k] ? ' ✅' : ' ➖')).join('、')) + '</div>';
-            html += '</div>';
+        // 若尚未選定條目，預設第一個
+        if (!curGuideEntryId) {
+            curGuideEntryId = COMPENDIUM_DATA.sections[0].entries[0].id;
         }
 
-        if (normal) {
-            const nc    = normal.creatureStrength.hostile;
-            const feats = normal.features || {};
-            html += '<div style="margin-bottom:8px;">';
-            html += '<div style="font-size:13px;font-weight:bold;color:#FF9944;margin-bottom:4px;">⚔️ 普通</div>';
-            html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-style:italic;">給有經驗的玩家設計的挑戰模式。生物更強、追擊更積極、Boss 擁有獨特技能。通關更困難，但獎勵與達成感也更豐富。</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 生物強度：×' + _esc(String(nc.hpMultiplier)) + '（HP / 速度 / 傷害）</div>';
-            if (normal.aggroRangeOverride) {
-                html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 追擊範圍：' + _esc(String(normal.aggroRangeOverride)) + 'px（比簡單模式更積極）</div>';
+        // 找出目前條目與分類
+        function _findEntry(id) {
+            for (var si = 0; si < COMPENDIUM_DATA.sections.length; si++) {
+                var sec = COMPENDIUM_DATA.sections[si];
+                for (var ei = 0; ei < sec.entries.length; ei++) {
+                    if (sec.entries[ei].id === id) return { entry: sec.entries[ei], section: sec };
+                }
             }
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 精英獎勵：第1夜 +1 / 第2夜 +1 / 第3夜 +2 技能點</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• Boss 擊殺獎勵：+3 技能點</div>';
-            html += '<div style="font-size:11px;color:#ccc;">• 特殊機制：' + _esc(fKeys.map(k => fNames[k] + (feats[k] ? ' ✅' : ' ➖')).join('、')) + '、Boss 獨特技能 ✅</div>';
-            html += '</div>';
+            return null;
         }
 
-        return html;
-    }
+        var found = _findEntry(curGuideEntryId);
+        if (!found) {
+            curGuideEntryId = COMPENDIUM_DATA.sections[0].entries[0].id;
+            found = _findEntry(curGuideEntryId);
+        }
 
-    function buildGuidePages() {
-        const pages = [];
-        // 操作說明（原 showGuide 的四頁內容精簡為文字版）
-        pages.push(
-            _h2(t('guideBasicTitle')) +
-            _p(t('guideMove')) + _p(t('guideAttack')) + _p(t('guideSettings')) +
-            _p(t('guideFruit')) + _p(t('guideGoal')) + _p(t('guideAutoAttack'))
-        );
-        pages.push(
-            _h2(t('guideOrganTitle')) +
-            _p(t('guideOrgan1')) + _p(t('guideOrgan2')) + _p(t('guideOrgan3')) +
-            _p(t('guideOrgan4')) + _p(t('guideOrgan5')) + _p(t('guideOrgan6')) + _p(t('guideOrgan7'))
-        );
-        pages.push(
-            _h2(t('guideEvoTitle')) +
-            _p(t('guideEvo1')) + _p(t('guideEvo2')) + _p(t('guideEvo3')) +
-            _p(t('guideEvo4')) + _p(t('guideEvo5'))
-        );
-        // v0.47.1 新增：Boss 圖鑑頁 + 難度介紹頁
-        pages.push(_buildBossPage());
-        pages.push(_buildDifficultyPage());
-        return pages;
+        if (gameState.isMobile) {
+            // ── 手機版：上方橫向 Tab 列 + 下方內容區
+            container.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+
+            var tabStrip = document.createElement('div');
+            tabStrip.style.cssText = 'display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid #333;scrollbar-width:none;-ms-overflow-style:none;padding:0 4px;';
+
+            var flatIdx = 0, selectedFlatIdx = 0;
+            COMPENDIUM_DATA.sections.forEach(function (section) {
+                section.entries.forEach(function (entry, ei) {
+                    var isSelected = entry.id === curGuideEntryId;
+                    if (isSelected) selectedFlatIdx = flatIdx;
+                    var isFirst = ei === 0;
+                    var sLabel = section.label[lang] || section.label['zh-TW'];
+                    var eLabel = entry.title[lang] || entry.title['zh-TW'];
+                    var label  = isFirst ? (sLabel + '｜' + eLabel) : eLabel;
+                    var tab = document.createElement('div');
+                    tab.style.cssText = 'padding:6px 10px;white-space:nowrap;cursor:pointer;font-size:11px;flex-shrink:0;' +
+                        'border-bottom:' + (isSelected ? '2px' : '1px') + ' solid ' + (isSelected ? section.color : 'transparent') + ';' +
+                        'color:' + (isSelected ? section.color : '#aaa') + ';' +
+                        'font-weight:' + (isSelected ? 'bold' : 'normal') + ';';
+                    tab.textContent = label;
+                    (function (eid) {
+                        tab.onclick = function () { curGuideEntryId = eid; _renderGuide(container); };
+                    })(entry.id);
+                    tabStrip.appendChild(tab);
+                    flatIdx++;
+                });
+            });
+            container.appendChild(tabStrip);
+
+            // 捲動選中 Tab 至可見範圍
+            setTimeout(function () {
+                var tabEl = tabStrip.children[selectedFlatIdx];
+                if (tabEl) tabEl.scrollIntoView({ block: 'nearest', inline: 'center' });
+            }, 0);
+
+            // 內容區
+            var contentArea = document.createElement('div');
+            contentArea.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
+            if (found) {
+                var badge = document.createElement('div');
+                badge.style.cssText = 'display:inline-block;font-size:10px;color:' + found.section.color + ';border:1px solid ' + found.section.color + ';border-radius:3px;padding:1px 6px;margin-bottom:5px;';
+                badge.textContent = found.section.label[lang] || found.section.label['zh-TW'];
+                contentArea.appendChild(badge);
+
+                var mTitle = document.createElement('div');
+                mTitle.style.cssText = 'font-size:14px;font-weight:bold;color:#FFD700;margin-bottom:6px;';
+                mTitle.textContent = found.entry.title[lang] || found.entry.title['zh-TW'];
+                contentArea.appendChild(mTitle);
+
+                var mBody = document.createElement('div');
+                mBody.style.cssText = 'font-size:12px;color:#ccc;line-height:1.8;white-space:pre-wrap;';
+                mBody.textContent = found.entry.content[lang] || found.entry.content['zh-TW'];
+                contentArea.appendChild(mBody);
+            }
+            container.appendChild(contentArea);
+
+        } else {
+            // ── 桌機版：左欄目錄（160px）+ 右欄內容
+            container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
+
+            var sidebar = document.createElement('div');
+            sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
+
+            COMPENDIUM_DATA.sections.forEach(function (section) {
+                var secH = document.createElement('div');
+                secH.style.cssText = 'font-size:10px;font-weight:bold;color:' + section.color + ';' +
+                    'padding:6px 8px 2px 8px;border-left:3px solid ' + section.color + ';' +
+                    'margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
+                secH.textContent = section.label[lang] || section.label['zh-TW'];
+                sidebar.appendChild(secH);
+
+                section.entries.forEach(function (entry) {
+                    var isSel = entry.id === curGuideEntryId;
+                    var item = document.createElement('div');
+                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
+                        'color:' + (isSel ? '#fff' : '#bbb') + ';' +
+                        'background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
+                        'border-left:2px solid ' + (isSel ? section.color : 'transparent') + ';';
+                    item.textContent = entry.title[lang] || entry.title['zh-TW'];
+                    (function (eid) {
+                        item.onclick = function () { curGuideEntryId = eid; _renderGuide(container); };
+                    })(entry.id);
+                    sidebar.appendChild(item);
+                });
+            });
+            container.appendChild(sidebar);
+
+            var rightPane = document.createElement('div');
+            rightPane.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
+
+            if (found) {
+                var dBadge = document.createElement('div');
+                dBadge.style.cssText = 'display:inline-block;font-size:10px;color:' + found.section.color + ';border:1px solid ' + found.section.color + ';border-radius:3px;padding:1px 6px;margin-bottom:8px;';
+                dBadge.textContent = found.section.label[lang] || found.section.label['zh-TW'];
+                rightPane.appendChild(dBadge);
+
+                var dTitle = document.createElement('div');
+                dTitle.style.cssText = 'font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:10px;';
+                dTitle.textContent = found.entry.title[lang] || found.entry.title['zh-TW'];
+                rightPane.appendChild(dTitle);
+
+                var dBody = document.createElement('div');
+                dBody.style.cssText = 'font-size:13px;color:#ccc;line-height:1.8;white-space:pre-wrap;';
+                dBody.textContent = found.entry.content[lang] || found.entry.content['zh-TW'];
+                rightPane.appendChild(dBody);
+            }
+            container.appendChild(rightPane);
+        }
     }
 
     function buildOrganPages() {
@@ -1387,6 +1430,23 @@ function showCompendium(startTab) {
             tabBtns[tab].style.borderColor = tab === curTab ? '#4a8a4a' : '#555';
             tabBtns[tab].style.color = 'white';
         });
+
+        if (curTab === 'guide') {
+            // Guide 分頁：雙欄/Tab 版面，不需要翻頁按鈕
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            pageLbl.style.display = 'none';
+            content.style.cssText = 'display:flex;flex:1;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;overflow:hidden;min-height:0;padding:0;';
+            _renderGuide(content);
+            return;
+        }
+
+        // Organs / Evo 分頁：恢復翻頁按鈕與原本版面
+        prevBtn.style.display = '';
+        nextBtn.style.display = '';
+        pageLbl.style.display = '';
+        content.style.cssText = 'font-size:13px;line-height:1.7;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:14px 16px;flex:1;overflow-y:auto;min-height:0;';
+
         const pages = getPages();
         const total = pages.length;
         curPage = Math.max(0, Math.min(curPage, total - 1));
@@ -1431,6 +1491,7 @@ function showCompendium(startTab) {
     };
     document.addEventListener('keydown', _compKeyHandler);
 
+    overlay._render = render;
     overlay.appendChild(panel);
     document.getElementById('game-container').appendChild(overlay);
     render();

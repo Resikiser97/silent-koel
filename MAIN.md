@@ -1,4 +1,4 @@
-## v0.0.66.3
+## v0.0.67.0
 
 # The Silent Koel — 模組架構說明
 
@@ -10,6 +10,7 @@ config/organs.js          ORGANS, HIDDEN_ORGANS, COMBOS
 config/creatures.js       CREATURE_CONFIG, ELITE_CONFIG, BOSS_CONFIG
 config/evolution.js       EVOLUTION_PATHS, SKILLS
 config/patchnotes.js      PATCH_NOTES
+config/compendium_data.js COMPENDIUM_DATA（四大圖鑑分類，需在 map/normalmap.js 之後載入）
 config/characters.js      CHARACTERS（角色定義常數，v0.56.0）
 
 lang.js                   LANG_LIST, LANG={}, _langPack(), applyLanguage(), t()
@@ -118,7 +119,7 @@ systems/ui.js             showTooltip, hideTooltip, showMapSelect
                           showGuideStory, _getGuideStoryPages
                           showPatchNotes, checkPatchNotesPopup
                           buildEvoLevelDesc（全域，動態生成進化圖鑑描述）
-                          showCompendium → _buildBossPage, _buildDifficultyPage（圖鑑新增頁）
+                          showCompendium → _renderGuide（Guide 分頁，讀 COMPENDIUM_DATA，桌機雙欄/手機 Tab）
 
 main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
                           updateGameLogic, gameLoop, initializeGame, window.onload
