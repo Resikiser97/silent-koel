@@ -368,17 +368,20 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     if (effectiveMode === 'postGame' && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) overlay.appendChild(organSection);
 
     if (effectiveMode === 'postGame' && hiddenOrgans.length > 0) {
+        const hiddenOrganLimit = 1 + ((gameState.mutationSkills && gameState.mutationSkills.skills && gameState.mutationSkills.skills.recallOrgan && gameState.mutationSkills.skills.recallOrgan.level) || 0);
         const hiddenSection = document.createElement('div');
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const hiddenTitle = document.createElement('div');
         hiddenTitle.style.cssText = 'font-size:14px;color:#FFD700;margin-bottom:8px;';
-        hiddenTitle.textContent = t('keepHiddenOne');
+        hiddenTitle.textContent = hiddenOrganLimit > 1
+            ? '✨ 選擇保留最多 ' + hiddenOrganLimit + ' 個隱藏器官（可不選）'
+            : t('keepHiddenOne');
         hiddenSection.appendChild(hiddenTitle);
         const hiddenGrid = document.createElement('div');
         hiddenGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
-        let selectedHiddenOrgan = null;
+        const selectedHiddenOrgans = [];
         const hiddenCardMap = [];
-        hiddenOrgans.forEach((organ, idx) => {
+        hiddenOrgans.forEach((organ) => {
             const card = document.createElement('div');
             card.style.cssText = 'background:rgba(255,215,0,0.08);border:2px solid #887700;border-radius:6px;padding:8px 10px;width:150px;box-sizing:border-box;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;';
             card.onmouseenter = (e) => showTooltip({ name: organ.name, desc: (HIDDEN_ORGANS[organ.id] || {}).desc || organ.desc || '', isHidden: true }, e.clientX, e.clientY);
@@ -392,23 +395,30 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             descEl.textContent = (HIDDEN_ORGANS[organ.id] || {}).desc || organ.desc || '';
             card.appendChild(descEl);
             card.onclick = () => {
-                if (selectedHiddenOrgan && selectedHiddenOrgan.id === organ.id) {
-                    selectedHiddenOrgan = null;
+                const idx = selectedHiddenOrgans.findIndex(o => o.id === organ.id);
+                if (idx >= 0) {
+                    selectedHiddenOrgans.splice(idx, 1);
                     card.style.borderColor = '#887700';
                     card.style.background = 'rgba(255,215,0,0.08)';
-                    localStorage.removeItem('savedHiddenOrgans');
                 } else {
-                    if (selectedHiddenOrgan) {
-                        const prevIdx = hiddenOrgans.findIndex(o => o.id === selectedHiddenOrgan.id);
-                        if (prevIdx >= 0 && hiddenCardMap[prevIdx]) {
-                            hiddenCardMap[prevIdx].style.borderColor = '#887700';
-                            hiddenCardMap[prevIdx].style.background = 'rgba(255,215,0,0.08)';
+                    if (selectedHiddenOrgans.length >= hiddenOrganLimit) {
+                        const removed = selectedHiddenOrgans.shift();
+                        const ri = hiddenOrgans.findIndex(o => o.id === removed.id);
+                        if (ri >= 0 && hiddenCardMap[ri]) {
+                            hiddenCardMap[ri].style.borderColor = '#887700';
+                            hiddenCardMap[ri].style.background = 'rgba(255,215,0,0.08)';
                         }
                     }
-                    selectedHiddenOrgan = organ;
+                    selectedHiddenOrgans.push(organ);
                     card.style.borderColor = '#FFD700';
                     card.style.background = 'rgba(255,215,0,0.22)';
-                    localStorage.setItem('savedHiddenOrgans', JSON.stringify([{ id: organ.id, name: organ.name, type: organ.type, desc: organ.desc }]));
+                }
+                if (selectedHiddenOrgans.length > 0) {
+                    localStorage.setItem('savedHiddenOrgans', JSON.stringify(
+                        selectedHiddenOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, desc: o.desc }))
+                    ));
+                } else {
+                    localStorage.removeItem('savedHiddenOrgans');
                 }
             };
             hiddenCardMap.push(card);
@@ -642,6 +652,24 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         btnRow.appendChild(playAgainBtn);
     }
     overlay.appendChild(btnRow);
+
+    // ── 變異技能樹按鈕（右上角）
+    const mutSkillBtn = document.createElement('button');
+    mutSkillBtn.textContent = '⚗️ ' + t('mutationSkillTreeBtn');
+    mutSkillBtn.style.cssText = [
+        'position:absolute', 'top:12px', 'right:16px',
+        'background:rgba(130,60,180,0.25)',
+        'border:1px solid rgba(180,100,255,0.5)',
+        'color:#CC88FF', 'border-radius:6px',
+        'padding:5px 12px', 'font-size:13px',
+        'cursor:pointer', 'transition:all 0.15s ease',
+        'z-index:10', 'pointer-events:all'
+    ].join(';');
+    mutSkillBtn.onmouseenter = () => { mutSkillBtn.style.background = 'rgba(130,60,180,0.5)'; };
+    mutSkillBtn.onmouseleave = () => { mutSkillBtn.style.background = 'rgba(130,60,180,0.25)'; };
+    mutSkillBtn.onclick = () => _showMutationSkillPanel(overlay);
+    overlay.appendChild(mutSkillBtn);
+
     (effectiveMode === 'fromHome' || effectiveMode === 'forceStart' ? document.getElementById('game-container') : document.getElementById('ui-overlay')).appendChild(overlay);
 }
 
@@ -657,4 +685,106 @@ function upgradeSkill(id) {
     localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
+}
+
+// ── 變異技能樹面板（覆蓋在技能樹 overlay 上的子面板）
+function _showMutationSkillPanel(parentOverlay) {
+    const existing = document.getElementById('mut-skill-panel');
+    if (existing) { existing.remove(); return; }
+
+    const panel = document.createElement('div');
+    panel.id = 'mut-skill-panel';
+    panel.style.cssText = [
+        'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
+        'background:rgba(10,5,20,0.94)', 'display:flex', 'flex-direction:column',
+        'align-items:center', 'padding:24px 20px 20px', 'box-sizing:border-box',
+        'z-index:20', 'overflow-y:auto', 'pointer-events:all'
+    ].join(';');
+
+    function _refresh() {
+        panel.innerHTML = '';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✕';
+        closeBtn.style.cssText = 'position:absolute;top:12px;right:16px;background:rgba(0,0,0,0.5);border:none;font-size:16px;color:#aaa;cursor:pointer;padding:4px 8px;border-radius:4px;';
+        closeBtn.onclick = () => panel.remove();
+        panel.appendChild(closeBtn);
+
+        const hdr = document.createElement('div');
+        hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;margin-bottom:18px;';
+        const hTitle = document.createElement('div');
+        hTitle.style.cssText = 'font-size:20px;font-weight:bold;color:#CC88FF;';
+        hTitle.textContent = '⚗️ ' + t('mutationSkillTree');
+        const hPts = document.createElement('div');
+        hPts.style.cssText = 'font-size:14px;color:#aaa;';
+        hPts.textContent = t('mutationSkillPointsLabel', { n: gameState.mutationSkillPoints });
+        hdr.appendChild(hTitle);
+        hdr.appendChild(hPts);
+        panel.appendChild(hdr);
+
+        const skills = (gameState.mutationSkills && gameState.mutationSkills.skills) || {};
+        const defs = [
+            {
+                id: 'recallOrgan',
+                name: t('recallOrganSkillName'),
+                desc: t('recallOrganSkillDesc'),
+                extra: () => {
+                    const lv = (skills.recallOrgan && skills.recallOrgan.level) || 0;
+                    return '當前保留上限：' + (1 + lv) + ' 個';
+                }
+            }
+        ];
+
+        defs.forEach(def => {
+            const sk = skills[def.id] || { level: 0, maxLevel: 3 };
+            const lv = sk.level;
+            const maxLv = sk.maxLevel;
+            const cost = lv + 1;
+            const maxed = lv >= maxLv;
+            const canUp = !maxed && gameState.mutationSkillPoints >= cost;
+
+            const card = document.createElement('div');
+            card.style.cssText = 'background:rgba(130,60,180,0.12);border:1px solid rgba(180,100,255,0.3);border-radius:8px;padding:14px 18px;width:100%;max-width:480px;box-sizing:border-box;margin-bottom:12px;';
+
+            const cTitle = document.createElement('div');
+            cTitle.style.cssText = 'font-size:15px;font-weight:bold;color:#CC88FF;margin-bottom:4px;';
+            cTitle.textContent = def.name + '  Lv.' + lv + '/' + maxLv;
+            card.appendChild(cTitle);
+
+            const cDesc = document.createElement('div');
+            cDesc.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:4px;';
+            cDesc.textContent = def.desc;
+            card.appendChild(cDesc);
+
+            const cExtra = document.createElement('div');
+            cExtra.style.cssText = 'font-size:12px;color:#CC88FF;margin-bottom:10px;';
+            cExtra.textContent = def.extra();
+            card.appendChild(cExtra);
+
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding:5px 16px;font-size:12px;border-radius:4px;border:1px solid ' +
+                (maxed ? '#555' : (canUp ? 'rgba(180,100,255,0.6)' : '#555')) +
+                ';background:' + (canUp ? 'rgba(130,60,180,0.35)' : 'transparent') +
+                ';color:' + (maxed || !canUp ? '#555' : '#CC88FF') + ';cursor:' + (canUp ? 'pointer' : 'default') + ';';
+            btn.textContent = maxed ? t('mutationSkillMaxed') : t('mutationSkillUpgrade', { n: cost });
+            btn.disabled = !canUp;
+            btn.onclick = () => { _upgradeMutationSkill(def.id); _refresh(); };
+            card.appendChild(btn);
+            panel.appendChild(card);
+        });
+    }
+
+    _refresh();
+    parentOverlay.appendChild(panel);
+}
+
+function _upgradeMutationSkill(skillId) {
+    if (!gameState.mutationSkills || !gameState.mutationSkills.skills) return;
+    const skill = gameState.mutationSkills.skills[skillId];
+    if (!skill || skill.level >= skill.maxLevel) return;
+    const cost = skill.level + 1;
+    if (gameState.mutationSkillPoints < cost) return;
+    gameState.mutationSkillPoints -= cost;
+    skill.level++;
+    if (typeof _saveMutationSkills === 'function') _saveMutationSkills();
 }

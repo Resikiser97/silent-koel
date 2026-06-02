@@ -1746,7 +1746,7 @@ function showMapSelect() {
     const diffs = [
         { id: 'easy',   key: 'diffEasy',   map: typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null, locked: false },
         { id: 'normal', key: 'diffNormal', map: typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null, locked: false },
-        { id: 'hard',   key: 'diffHard',   map: null, locked: true },
+        { id: 'hard',   key: 'diffHard',   map: null, locked: false },
         { id: 'hell',   key: 'diffHell',   map: null, locked: true },
     ];
     const diffBtnEls = {};
@@ -2308,6 +2308,7 @@ function checkPatchNotesPopup() {
 function showGuideStory() {
     applyDeviceMode();
     if (document.getElementById('guide-story-overlay')) return;
+    const chapter2Unlocked = localStorage.getItem('chapter2Unlocked') === 'true';
 
     const overlay = document.createElement('div');
     overlay.id = 'guide-story-overlay';
@@ -2453,8 +2454,30 @@ function showGuideStory() {
     overlay.appendChild(book);
     document.getElementById('game-container').appendChild(overlay);
 
-    const PAGES = _getGuideStoryPages();
+    const ALL_PAGES = _getGuideStoryPages();
+    const PAGES = chapter2Unlocked ? ALL_PAGES : ALL_PAGES.slice(0, 4);
     let currentPage = 0;
+
+    // ── 章節導航列
+    const chapterNav = document.createElement('div');
+    chapterNav.style.cssText = 'display:flex;gap:8px;padding:8px 16px;border-bottom:1px solid rgba(130,80,20,0.18);flex-shrink:0;';
+    const ch1Tab = document.createElement('button');
+    ch1Tab.textContent = '第一章';
+    ch1Tab.style.cssText = 'padding:4px 12px;border-radius:12px;border:1px solid rgba(130,80,20,0.4);background:rgba(255,220,130,0.22);color:#4a2808;font-size:12px;cursor:pointer;font-family:Georgia,serif;';
+    ch1Tab.onclick = () => { currentPage = 0; renderPage(0); };
+    chapterNav.appendChild(ch1Tab);
+    const ch2Tab = document.createElement('button');
+    ch2Tab.style.cssText = 'padding:4px 12px;border-radius:12px;border:1px solid ' +
+        (chapter2Unlocked ? 'rgba(130,80,20,0.4)' : 'rgba(100,100,100,0.3)') +
+        ';background:' + (chapter2Unlocked ? 'rgba(255,220,130,0.22)' : 'rgba(80,80,80,0.15)') +
+        ';color:' + (chapter2Unlocked ? '#4a2808' : '#888') + ';font-size:12px;cursor:pointer;font-family:Georgia,serif;';
+    ch2Tab.textContent = chapter2Unlocked ? '第二章' : '第二章 🔒';
+    ch2Tab.onclick = () => {
+        if (!chapter2Unlocked) { alert('通關普通難度後解鎖'); return; }
+        currentPage = 4; renderPage(4);
+    };
+    chapterNav.appendChild(ch2Tab);
+    book.insertBefore(chapterNav, illustrationArea);
 
     function renderPage(idx) {
         const page = PAGES[idx];
@@ -2463,7 +2486,12 @@ function showGuideStory() {
         illustrationArea.style.transition = 'opacity 0.3s ease';
         illustrationArea.style.opacity = '0';
         setTimeout(() => {
-            illustrationArea.innerHTML = page.svgIllustration;
+            if (page.customRender) {
+                illustrationArea.innerHTML = '';
+                page.customRender(illustrationArea);
+            } else {
+                illustrationArea.innerHTML = page.svgIllustration;
+            }
             illustrationArea.style.opacity = '1';
         }, 300);
 
@@ -2481,9 +2509,11 @@ function showGuideStory() {
 
         textArea.scrollTop = 0;
 
-        // 進度點
+        // 進度點（只顯示當前章節的頁數）
         dots.innerHTML = '';
-        for (let i = 0; i < PAGES.length; i++) {
+        const chStart = idx < 4 ? 0 : 4;
+        const chEnd   = idx < 4 ? Math.min(4, PAGES.length) : PAGES.length;
+        for (let i = chStart; i < chEnd; i++) {
             const dot = document.createElement('div');
             dot.style.cssText = `
                 width:${i === idx ? '20px' : '8px'};
@@ -2856,6 +2886,154 @@ function _getGuideStoryPages() {
 現在，輪到你改寫這片森林。
 
 「用腦子去贏。」`
+        },
+
+        // ── 第二章（需通關普通難度解鎖）
+        {
+            icon: '🥾',
+            title: '第三章 — 獵人的足跡',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="200" fill="#060d06"/>
+<polygon points="0,200 80,200 0,120" fill="#0a1a0a"/>
+<polygon points="40,200 130,200 40,105" fill="#0c1e0c"/>
+<polygon points="100,200 200,200 100,110" fill="#091508"/>
+<polygon points="380,200 470,200 380,108" fill="#091508"/>
+<polygon points="440,200 520,200 520,130" fill="#0a1a0a"/>
+<g style="animation:_drift 12s ease-in-out infinite alternate" opacity="0.7">
+  <ellipse cx="260" cy="90" rx="90" ry="35" fill="#0d1f0d"/>
+  <ellipse cx="260" cy="82" rx="70" ry="25" fill="#122512"/>
+</g>
+<ellipse cx="260" cy="185" rx="22" ry="6" fill="#1a1a10"/>
+<path d="M244 185 Q252 168 256 175 Q258 178 260 178 Q262 178 264 175 Q268 168 276 185Z" fill="#2a2a18"/>
+<ellipse cx="244" cy="187" rx="10" ry="4" fill="#3a3020" opacity="0.9"/>
+<ellipse cx="276" cy="187" rx="10" ry="4" fill="#3a3020" opacity="0.9"/>
+<g opacity="0.35" style="animation:_emerge 4s ease-out forwards 1s">
+  <ellipse cx="180" cy="130" rx="18" ry="32" fill="#1a2a18"/>
+  <ellipse cx="180" cy="112" rx="10" ry="12" fill="#1a2a18"/>
+  <ellipse cx="173" cy="108" rx="5" ry="8" fill="#151f14"/>
+  <ellipse cx="187" cy="108" rx="5" ry="8" fill="#151f14"/>
+</g>
+<circle cx="350" cy="55" r="1" fill="#c8e0a0" opacity="0.4"/>
+<circle cx="400" cy="30" r="0.8" fill="#c8e0a0" opacity="0.3"/>
+<circle cx="460" cy="48" r="1.2" fill="#c8e0a0" opacity="0.5"/>
+<text x="260" y="196" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#4a6a38" opacity="0.7">不是野獸的腳印。是靴子。</text>
+</svg>`,
+            content: `三個王都倒下了。
+
+森林安靜了片刻——
+但那種安靜，不像是和平。
+更像是……有什麼東西在屏住呼吸。
+
+你的紅眼在黑暗中掃視四方。
+某個角落，留著一個腳印。
+不是野獸的。
+
+是靴子。`
+        },
+        {
+            icon: '🔫',
+            title: '第三章 — 獵人的足跡',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="200" fill="#080808"/>
+<g style="animation:_drift 15s ease-in-out infinite alternate" opacity="0.4">
+  <ellipse cx="400" cy="60" rx="100" ry="40" fill="#2a1a08"/>
+</g>
+<g style="animation:_bfloat 3s ease-in-out infinite">
+  <ellipse cx="180" cy="145" rx="12" ry="5" fill="#c8a040" opacity="0.9"/>
+  <rect x="130" y="138" width="100" height="14" rx="4" fill="#b89030" opacity="0.85"/>
+  <ellipse cx="130" cy="145" rx="12" ry="5" fill="#c8a040" opacity="0.9"/>
+</g>
+<g style="animation:_bfloat 3s ease-in-out infinite 1.1s">
+  <ellipse cx="310" cy="160" rx="10" ry="4" fill="#c0982a" opacity="0.8"/>
+  <rect x="264" y="154" width="92" height="12" rx="4" fill="#a88020" opacity="0.75"/>
+  <ellipse cx="264" cy="160" rx="10" ry="4" fill="#c0982a" opacity="0.8"/>
+</g>
+<g style="animation:_bfloat 3s ease-in-out infinite 0.6s">
+  <ellipse cx="390" cy="148" rx="9" ry="3.5" fill="#c8a040" opacity="0.7"/>
+  <rect x="347" y="143" width="86" height="11" rx="3.5" fill="#b08828" opacity="0.7"/>
+  <ellipse cx="347" cy="148" rx="9" ry="3.5" fill="#c8a040" opacity="0.7"/>
+</g>
+<ellipse cx="420" cy="55" rx="55" ry="18" fill="#1a1a10" opacity="0.6"/>
+<ellipse cx="430" cy="46" rx="40" ry="12" fill="#2a2a18" opacity="0.7"/>
+<ellipse cx="450" cy="38" rx="25" ry="8" fill="#3a3a20" opacity="0.5"/>
+<text x="260" y="196" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#886040" opacity="0.75">他們只是在等你——暴露自己的位置。</text>
+</svg>`,
+            content: `你想起養父說過的話：
+「三個獵人進木屋，只有兩個出來。
+裡面還藏著一個。」
+
+你以為消滅了王，就能掌控這片土地。
+但淨音軍從未停止計算。
+他們只是在等你——
+暴露自己的位置。`
+        },
+        {
+            icon: '🎯',
+            title: '第三章 — 獵人的足跡',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="200" fill="#030303"/>
+<path d="M195 10 Q260 0 325 10 L340 200 L180 200Z" fill="#080808"/>
+<path d="M210 15 Q260 6 310 15 L322 200 L198 200Z" fill="#0c0c0c"/>
+<ellipse style="animation:_rpulse 3s ease-in-out infinite" cx="247" cy="75" r="3.5" fill="#cc2222" opacity="0.9"/>
+<ellipse style="animation:_rpulse 3s ease-in-out infinite 0.4s" cx="273" cy="75" r="3.5" fill="#cc2222" opacity="0.9"/>
+<ellipse cx="247" cy="75" r="1.5" fill="#000"/>
+<ellipse cx="273" cy="75" r="1.5" fill="#000"/>
+<text x="260" y="196" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#662222" opacity="0.8">你的名字，已經在他們的名單上了。</text>
+</svg>`,
+            content: `靜音獵隊。
+
+他們不像普通獵人那樣大聲喧嘩。
+沒有叫喊，沒有腳步聲。
+只有一顆子彈，和它飛行的聲音。
+
+你的名字，已經在他們的名單上了。`
+        },
+        {
+            icon: '⏳',
+            title: '靜音獵隊正在逼近……',
+            svgIllustration: null,
+            customRender: (illustrationArea) => {
+                illustrationArea.style.background = '#0a0a0a';
+                illustrationArea.style.display = 'flex';
+                illustrationArea.style.flexDirection = 'column';
+                illustrationArea.style.alignItems = 'center';
+                illustrationArea.style.justifyContent = 'center';
+                illustrationArea.style.gap = '16px';
+
+                const comingSoonText = '靜音獵隊正在逼近……';
+                const textEl = document.createElement('div');
+                textEl.style.cssText = 'font-size:20px;color:#CC2222;font-family:Georgia,serif;letter-spacing:3px;opacity:0;transition:opacity 0.08s ease;';
+                illustrationArea.appendChild(textEl);
+
+                const cursor = document.createElement('span');
+                cursor.textContent = '|';
+                cursor.style.cssText = 'color:#CC2222;animation:_cursorBlink 0.8s infinite;';
+
+                if (!document.getElementById('_cursor-style')) {
+                    const style = document.createElement('style');
+                    style.id = '_cursor-style';
+                    style.textContent = '@keyframes _cursorBlink{0%,100%{opacity:1}50%{opacity:0}}';
+                    document.head.appendChild(style);
+                }
+
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < comingSoonText.length) {
+                        textEl.textContent = comingSoonText.slice(0, i + 1);
+                        textEl.appendChild(cursor);
+                        textEl.style.opacity = '1';
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 80);
+
+                const subText = document.createElement('div');
+                subText.style.cssText = 'font-size:13px;color:#666;letter-spacing:2px;margin-top:8px;font-family:Georgia,serif;';
+                subText.textContent = '— 下一章 即將到來 —';
+                setTimeout(() => { illustrationArea.appendChild(subText); }, comingSoonText.length * 80 + 400);
+            },
+            content: ''
         }
     ];
 }

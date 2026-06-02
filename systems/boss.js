@@ -876,6 +876,20 @@ function updateBoss() {
     console.log && false; // [v0.47.0] 六：Boss 機制改版完成
 }
 
+function _recordClearStats() {
+    const diff   = gameState.lastDifficulty || 'easy';
+    const charId = gameState.selectedCharacter || 'koel';
+    const diffKey = 'clearCount_' + diff;
+    localStorage.setItem(diffKey, (parseInt(localStorage.getItem(diffKey) || '0') + 1).toString());
+    const charKey = 'clearCount_char_' + charId;
+    localStorage.setItem(charKey, (parseInt(localStorage.getItem(charKey) || '0') + 1).toString());
+}
+
+function _recordBossKill(bossType) {
+    const key = 'killCount_' + bossType;
+    localStorage.setItem(key, (parseInt(localStorage.getItem(key) || '0') + 1).toString());
+}
+
 function showVictory() {
     if (gameState.gameOver) return;
     pausePlayTimer();
@@ -886,6 +900,18 @@ function showVictory() {
     AudioManager.stopMusic();
     AudioManager.play('victory');
     addXP(500);
+    // F19：普通難度通關 → 解鎖第二章劇情
+    if (gameState.lastDifficulty === 'normal') {
+        localStorage.setItem('chapter2Unlocked', 'true');
+    }
+    // F20：記錄 Boss 擊殺次數
+    if (gameState.boss) {
+        const biomeTypeMap = { forest: 'bear', ocean: 'shark', desert: 'scorpion' };
+        const bossType = biomeTypeMap[gameState.boss.biome];
+        if (bossType) _recordBossKill(bossType);
+    }
+    // F20：記錄通關統計
+    _recordClearStats();
     saveLastRunOrgans();
     const timeBonus = Math.floor((600 - gameState.timeRemaining) / 180);
     const levelBonus = Math.floor(gameState.player.level / 6);

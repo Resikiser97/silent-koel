@@ -149,6 +149,13 @@ LANG['en'] = {
         mutationPanelTitle: '⚗️ Mutation Organs',
         mutationPointsLabel: 'Mutation Points: {n}',
         mutationUpgradeBtn: 'Upgrade ({n} pts)',
+        mutationSkillTree:      'Mutation Skill Tree',
+        mutationSkillTreeBtn:   'Mutate',
+        mutationSkillPointsLabel: 'Skill Points: {n}',
+        mutationSkillUpgrade:   'Upgrade ({n} pts)',
+        mutationSkillMaxed:     'Maxed',
+        recallOrganSkillName:   'Recall Organ',
+        recallOrganSkillDesc:   'Increases the carry limit for powerful organs (+1 per level)',
         lynxCritText: 'CRUNCH!',
         // ── Compendium
         compendiumTitle:      '📖 Compendium',

@@ -1,6 +1,17 @@
-## v0.0.68.0
+## v0.0.69.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.0.69.0 - 2026-06-03
+
+### 新增
+- **變異技能樹**（`systems/evolution.js`、`systems/mutation.js`、`systems/gameState.js`、`lang/`）：技能樹面板右上角新增「⚗️ 變異」按鈕；`_showMutationSkillPanel()` 子面板；「回憶器官」技能（0/3，每等 +1 隱藏器官保留）；`_upgradeMutationSkill()`；技能點每 50 變異總等級 +1；`DEFAULT_MUTATION_SKILLS`、`initMutationSkills()`、`_saveMutationSkills()`、`_syncMutationSkillPoints()`；隱藏器官選擇改為多選（上限依 recallOrgan 等級）
+- **困難難度解鎖**（`systems/ui.js`）：`showMapSelect()` 中 hard locked 改為 false
+- **第二章劇情**（`systems/ui.js`）：`showGuideStory()` 加入章節 Tab 導航；`_getGuideStoryPages()` 新增 4 頁（第三章獵人的足跡 × 3 + Coming Soon 動態頁）；`renderPage()` 支援 `customRender` 回呼；`chapter2Unlocked` localStorage 控制解鎖
+- **通關解鎖記錄**（`systems/boss.js`）：普通難度通關寫入 `chapter2Unlocked: 'true'`
+- **localStorage 通關統計**（`systems/boss.js`）：`_recordClearStats()`、`_recordBossKill()`；通關時記錄難度 / 角色 / Boss 擊殺次數
 
 ---
 

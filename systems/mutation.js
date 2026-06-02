@@ -4,6 +4,7 @@
 //               upgradeMutation / applyMutationEffects
 //               applyAllMutationBonuses / checkMutationCompensation
 //               showMutationPanel
+//               initMutationSkills / _saveMutationSkills / _syncMutationSkillPoints
 // =============================================================
 
 const DEFAULT_MUTATION_DATA = {
@@ -55,6 +56,7 @@ function initMutationData() {
     }
     applyMutationEffects();       // 設定初始倍率
     checkMutationCompensation();  // 執行補償（若需要）
+    initMutationSkills();         // 載入變異技能樹資料
 }
 
 function saveMutationData() {
@@ -132,6 +134,8 @@ function upgradeMutation(organId) {
         p.speed = p.speed * (p.mutationSpeedBonus / oldSpeedBonus);
     }
     // XP 倍率由 addXP() 動態讀取 mutationXpBonus，無需即時調整
+    _syncMutationSkillPoints();
+    _saveMutationSkills();
 }
 
 // =============================================================
@@ -392,4 +396,60 @@ function showMutationPanel() {
     overlay.appendChild(panel);
     document.getElementById('game-container').appendChild(overlay);
     console.log('[v0.47.0] 十一：變異商店兌換按鈕已加入');
+}
+
+// =============================================================
+// 變異技能樹 — 資料管理
+// =============================================================
+
+const DEFAULT_MUTATION_SKILLS = {
+    version: '1.0',
+    skills: {
+        recallOrgan: { level: 0, maxLevel: 3 }
+    }
+};
+
+function initMutationSkills() {
+    try {
+        const raw = localStorage.getItem('mutationSkills');
+        if (raw) {
+            const saved = JSON.parse(raw);
+            if (saved.version !== DEFAULT_MUTATION_SKILLS.version) {
+                gameState.mutationSkills = JSON.parse(JSON.stringify(DEFAULT_MUTATION_SKILLS));
+            } else {
+                gameState.mutationSkills = saved;
+                gameState.mutationSkills.skills = Object.assign(
+                    JSON.parse(JSON.stringify(DEFAULT_MUTATION_SKILLS.skills)),
+                    gameState.mutationSkills.skills || {}
+                );
+            }
+        } else {
+            gameState.mutationSkills = JSON.parse(JSON.stringify(DEFAULT_MUTATION_SKILLS));
+        }
+    } catch(e) {
+        gameState.mutationSkills = JSON.parse(JSON.stringify(DEFAULT_MUTATION_SKILLS));
+    }
+    _syncMutationSkillPoints();
+}
+
+function _saveMutationSkills() {
+    try {
+        const toSave = Object.assign({}, gameState.mutationSkills, { _points: gameState.mutationSkillPoints });
+        localStorage.setItem('mutationSkills', JSON.stringify(toSave));
+    } catch(e) {}
+}
+
+// 依當前變異器官總等計算可用技能點（每 50 總等 +1，扣除已花費）
+function _syncMutationSkillPoints() {
+    const data = gameState.mutationData;
+    if (!data || !gameState.mutationSkills) return;
+    const totalLevel = Object.values(data.levels).reduce((a, b) => a + (b || 0), 0);
+    const earned = Math.floor(totalLevel / 50);
+    const skills = gameState.mutationSkills.skills || {};
+    let spent = 0;
+    for (const sk of Object.values(skills)) {
+        const lv = sk.level || 0;
+        spent += lv * (lv + 1) / 2;  // cost = 1+2+...+lv
+    }
+    gameState.mutationSkillPoints = Math.max(0, earned - spent);
 }

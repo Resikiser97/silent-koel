@@ -1,4 +1,4 @@
-## v0.0.68.0
+## v0.0.69.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.0.68.0**
+- 版本：**v0.0.69.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -124,6 +124,11 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `tutorialCompleted` | 移動教學是否完成 |
 | `tutorialCombatDone` | 戰鬥教學是否完成 |
 | `hasPlayedBefore` | 是否曾遊玩過（控制初次進入流程） |
+| `mutationSkills` | 變異技能樹等級與技能點（跨局永久，v0.0.69.0） |
+| `chapter2Unlocked` | 故事書第二章是否解鎖（普通難度通關後 = `'true'`） |
+| `clearCount_easy` / `clearCount_normal` / `clearCount_hard` | 各難度通關次數 |
+| `clearCount_char_*` | 各角色通關次數（v0.0.69.0） |
+| `killCount_bear` / `killCount_shark` / `killCount_scorpion` / `killCount_hunter` | Boss 擊殺次數 |
 
 ---
 

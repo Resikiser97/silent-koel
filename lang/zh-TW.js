@@ -153,6 +153,13 @@ LANG['zh-TW'] = {
         mutationPanelTitle: '⚗️ 變異器官',
         mutationPointsLabel: '可用變異點：{n}',
         mutationUpgradeBtn: '升級（費{n}點）',
+        mutationSkillTree:      '變異技能樹',
+        mutationSkillTreeBtn:   '變異',
+        mutationSkillPointsLabel: '變異技能點：{n}',
+        mutationSkillUpgrade:   '升級（費 {n} 點）',
+        mutationSkillMaxed:     '已滿級',
+        recallOrganSkillName:   '回憶器官',
+        recallOrganSkillDesc:   '增加強大器官的持有上限（每等 +1 個）',
         lynxCritText: '喵嗚咬死你！',
         // ── 圖鑑
         compendiumTitle:      '📖 圖鑑',
