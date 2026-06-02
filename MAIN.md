@@ -1,4 +1,4 @@
-## v0.0.67.1
+## v0.0.68.0
 
 # The Silent Koel — 模組架構說明
 
@@ -74,7 +74,8 @@ systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, apply
                             fromHome / forceStart → 讀 localStorage skillPoints/playerSkills + 讀 lastRunOrgans 顯示繼承器官
                             postGame → 讀記憶體 gameState.player.organs（遊戲剛結束，資料仍完整）
                           _grantPoisonSac（雜食性 Lv1 時自動授予毒囊器官）
-systems/creatures.js      _PACK_NAMES / _usedPackNames / resetPackNames()（隊伍名稱池，v0.0.66.2）
+systems/creatures.js      _PACK_NAMES / _usedPackNames / resetPackNames()（草食巨人隊伍名稱池，v0.0.66.2；v0.0.68.0 改仿製詞）
+                          _HYENA_PACK_NAMES / _usedHyenaPackNames / _hyenaPackNameMap（鬣狗三國武將名稱池，v0.0.68.0）
                           drawCreatureShape（物種形狀主分派，含旋轉/翻轉邏輯）
                           updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯）
                           drawNeutralCreatures
@@ -103,7 +104,8 @@ systems/chat.js           _sha256, loadChatSettings, saveChatSettings
                           _saveChatPosition, _loadChatPosition, _makeDraggable
                           _handlePinCommand, _handleUnpinCommand（GM 置頂/取消置頂）
                           _lvColor（等級數字 → 顏色 CSS 字串，v0.0.66.0）
-                          _parseColorTags（[c=color]文字[/c] 彩色字解析，v0.0.66.0）
+                          _COLOR_MAP（顏色代碼→CSS 色碼對照，v0.0.68.0）
+                          _parseColorTags（[c=color]文字[/c] 彩色字解析；v0.0.66.0；v0.0.68.0 加入 crim）
                           isVipPlayer（先驅者判斷 TODO 索引，v0.0.66.0，目前回傳 false）
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos

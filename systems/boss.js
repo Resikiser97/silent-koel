@@ -35,7 +35,7 @@ const BOSS_COLORS = {
 function drawBossShape(ctx, boss, sx, sy) {
     ctx.save();
     ctx.translate(sx, sy);
-    const r = boss.radius;
+    const r = boss.radius * (gameState.cameraZoom || 1);
     const t = Date.now();
     if      (boss.biome === 'forest') _drawBear(ctx, r, t, boss);
     else if (boss.biome === 'ocean')  _drawShark(ctx, r, t, boss);
@@ -548,7 +548,7 @@ function drawBoss() {
     const s = worldToScreen(boss.x, boss.y);
     if (s.x < -100 || s.x > VIEW_W + 100 || s.y < -100 || s.y > VIEW_H + 100) return;
 
-    const r       = boss.radius;
+    const r       = boss.radius * (gameState.cameraZoom || 1);
     const flicker = Math.sin(Date.now() * 0.006) * 0.4 + 0.7;
 
     // 光暈環（保留原本的閃爍感）

@@ -1873,36 +1873,61 @@ function showStartScreen() {
     subtitleEl.textContent = GAME_INFO.subtitle;
     overlay.appendChild(subtitleEl);
 
-    const menuBtnStyle = 'font-size:18px;padding:10px 0;cursor:pointer;pointer-events:all;border-radius:4px;color:white;width:220px;margin-bottom:12px;';
+    const menuBtnStyle = 'font-size:18px;padding:10px 0;cursor:pointer;pointer-events:all;border-radius:4px;color:white;width:220px;margin-bottom:12px;transition:all 0.18s ease;';
+
+    function _addMenuHover(btn, normalBg, hoverBg, normalBorder, hoverBorder, shadowRgb) {
+        if (gameState.isMobile) {
+            btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.97)'; });
+            btn.addEventListener('touchend',   () => { btn.style.transform = 'scale(1)'; });
+        } else {
+            btn.onmouseenter = () => {
+                btn.style.transform = 'scale(1.06)';
+                btn.style.background = hoverBg;
+                btn.style.boxShadow = '0 4px 18px rgba(' + shadowRgb + ', 0.45)';
+                btn.style.borderColor = hoverBorder;
+            };
+            btn.onmouseleave = () => {
+                btn.style.transform = 'scale(1)';
+                btn.style.background = normalBg;
+                btn.style.boxShadow = '';
+                btn.style.borderColor = normalBorder;
+            };
+        }
+    }
 
     const startBtn = document.createElement('button');
     startBtn.style.cssText = menuBtnStyle + 'background:#2a5a2a;border:1px solid #4a8a4a;';
     startBtn.textContent = t('startGame');
     startBtn.onclick = () => { hideChat(); showMapSelect(); };
+    _addMenuHover(startBtn, '#2a5a2a', '#3a7a3a', '#4a8a4a', '#6aaa6a', '74,170,74');
     overlay.appendChild(startBtn);
 
     const skillBtn = document.createElement('button');
     skillBtn.style.cssText = menuBtnStyle + 'background:rgba(60,100,60,0.3);border:1px solid #4a7a4a;';
     skillBtn.textContent = t('skillTree');
     skillBtn.onclick = () => { hideChat(); buildSkillTreeOverlay(null, true); };
+    _addMenuHover(skillBtn, 'rgba(60,100,60,0.3)', 'rgba(60,100,60,0.6)', '#4a7a4a', '#7aaa7a', '74,170,74');
     overlay.appendChild(skillBtn);
 
     const guideBtn = document.createElement('button');
     guideBtn.style.cssText = menuBtnStyle + 'background:rgba(90,80,40,0.3);border:1px solid #8a7a4a;';
     guideBtn.textContent = t('compendium');
     guideBtn.onclick = () => { hideChat(); showCompendium('guide'); };
+    _addMenuHover(guideBtn, 'rgba(90,80,40,0.3)', 'rgba(130,110,50,0.6)', '#8a7a4a', '#baaa6a', '186,170,74');
     overlay.appendChild(guideBtn);
 
     const lbMenuBtn = document.createElement('button');
     lbMenuBtn.style.cssText = menuBtnStyle + 'background:rgba(80,60,10,0.3);border:1px solid #8a7a2a;';
     lbMenuBtn.textContent = t('leaderboard');
     lbMenuBtn.onclick = () => { hideChat(); showLeaderboard(); };
+    _addMenuHover(lbMenuBtn, 'rgba(80,60,10,0.3)', 'rgba(120,90,15,0.6)', '#8a7a2a', '#baaa4a', '186,170,42');
     overlay.appendChild(lbMenuBtn);
 
     const settingsBtn = document.createElement('button');
     settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
     settingsBtn.textContent = t('settings');
     settingsBtn.onclick = () => { hideChat(); showSettings(true); };
+    _addMenuHover(settingsBtn, 'rgba(50,50,90,0.3)', 'rgba(70,70,140,0.6)', '#4a4a8a', '#7a7aaa', '100,100,200');
     overlay.appendChild(settingsBtn);
 
     const footerEl = document.createElement('div');

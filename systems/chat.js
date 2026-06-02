@@ -1165,7 +1165,8 @@ function buildChatUI() {
     const _colorDefs = [
         { label: '紅字', tag: 'red',   bg: '#993333' },
         { label: '藍字', tag: 'blue',  bg: '#336699' },
-        { label: '綠字', tag: 'green', bg: '#337744' }
+        { label: '綠字', tag: 'green', bg: '#337744' },
+        { label: '深紅字', tag: 'crim', bg: '#7a1a1a' },
     ];
     _colorDefs.forEach(({ label, tag, bg }) => {
         const cb = document.createElement('button');
@@ -1424,10 +1425,17 @@ function _esc(s) {
 // 支援顏色：red, green, blue（一般玩家）
 // 先驅者玩家未來可支援任意 CSS 顏色（TODO）
 // 傳入的 content 已經過 _esc() 處理，為 HTML 安全字串
+const _COLOR_MAP = {
+    red:   '#FF4444',
+    green: '#44FF44',
+    blue:  '#4488FF',
+    crim:  '#C62828',
+};
+
 function _parseColorTags(escapedContent, isVIP) {
     const allowedColors = isVIP
         ? null  // null = 允許任意顏色（VIP 未來實作）
-        : ['red', 'green', 'blue'];
+        : ['red', 'green', 'blue', 'crim'];
 
     return escapedContent.replace(
         /\[c=([^\]]+)\](.*?)\[\/c\]/gi,
@@ -1435,8 +1443,10 @@ function _parseColorTags(escapedContent, isVIP) {
             if (allowedColors && !allowedColors.includes(color.toLowerCase())) {
                 return text;
             }
-            const safeColor = /^[a-zA-Z]+$/.test(color) || /^#[0-9a-fA-F]{3,6}$/.test(color)
-                ? color : 'white';
+            const resolved = _COLOR_MAP[color.toLowerCase()];
+            const safeColor = resolved
+                ? resolved
+                : (/^[a-zA-Z]+$/.test(color) || /^#[0-9a-fA-F]{3,6}$/.test(color) ? color : 'white');
             return '<span style="color:' + safeColor + ';">' + text + '</span>';
         }
     );

@@ -1,6 +1,24 @@
-## v0.0.67.1
+## v0.0.68.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.0.68.0 - 2026-06-03
+
+### 修復
+- **生物體型隨視野縮放修復**（`systems/creatures.js`、`systems/boss.js`、`systems/hud.js`）：`drawCreatureShape`、`_drawCreatureGlow`、`drawNeutralCreatures`、`drawHostileCreatures`、`drawBoss`、`drawBossShape` 及玩家繪製均改為 `radius * cameraZoom`；血條 Y 偏移、名字/隊伍標籤 Y 偏移同步修正；攻擊範圍圈縮放正常（v0.0.66.0 已修，本次未重複套用）
+- **排行榜舊版本號壓制新版修復**（`systems/leaderboard.js`）：三碼舊格式（如 v0.65.0）`version_order` 強制回傳 0，不再覆蓋四碼新版排名
+
+### 新增
+- **首頁按鈕 Hover 效果**（`systems/ui.js`）：開始遊戲、技能樹、圖鑑、排行榜、設定五個按鈕加入 scale/顏色/陰影 hover 動畫；手機版改為 touch 縮放回饋；新增 `_addMenuHover()` helper
+- **聊天室 `[c=crim]` 深紅色**（`systems/chat.js`）：新增 `crim`（`#C62828`）至一般玩家可用色；顏色面板加入「深紅字」按鈕；加入 `_COLOR_MAP` 統一管理色碼
+- **巨人跨物種組隊**（`systems/creatures.js`）：招募條件改為「雙方 diet === 'herbivore'」，不再限同物種同生態；上限/Alpha 觸發機制不變
+- **鬣狗隊名標籤**（`systems/creatures.js`、`main.js`）：新增三國武將名稱池（20名）`_HYENA_PACK_NAMES`；每個 packGroup 首次組隊時分配隊名；名字下方顯示 `曹操(2/3)` 格式標籤；遊戲重置時清空已用名稱
+
+### 調整
+- **巨人隊名改為仿製詞**（`systems/creatures.js`）：`_PACK_NAMES` 全部改為仿製詞（如 SKT→SK-Tea、T1→T-One），避免侵權
+- **巨人擊殺獎勵上調**（`systems/combat.js`）：普通巨人 XP 60→100；Alpha XP 200→300；Alpha 變異點保底 +1→+2；額外掉落機率 10%→20%、數量 1~3→2~6
 
 ---
 

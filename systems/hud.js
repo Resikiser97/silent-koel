@@ -914,7 +914,7 @@ function drawGame() {
     }
 
     // 9. 繪製玩家角色（根據 selectedCharacter 分派不同外觀）
-    const drawRadius = Math.max(1, p.radius);
+    const drawRadius = Math.max(1, p.radius * (gameState.cameraZoom || 1));
     if (p.isRanged) {
         _drawArcherfish(ctx, ps.x, ps.y, drawRadius, p);
     } else {

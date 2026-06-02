@@ -418,7 +418,8 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             version: GAME_INFO.version,
             version_order: (function() {
                 const parts = GAME_INFO.version.replace('v', '').split('.');
-                return parseInt(parts[1]) || 0;
+                if (parts.length <= 3) return 0;  // 三碼舊格式（v0.65.0），視為賽季 0
+                return parseInt(parts[1]) || 0;   // 四碼新格式，正常取第二段 x
             })(),
             difficulty: gameState.lastDifficulty || 'easy',
             character: gameState.selectedCharacter || 'koel',

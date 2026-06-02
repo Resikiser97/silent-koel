@@ -62,8 +62,8 @@ function addMutationPoints(amount) {
 
 function handleGiantKill(c) {
     const p = gameState.player;
-    // XP：巨人化 60，Alpha 200（+獵人本能加成）
-    const baseXP = c.isAlpha ? 200 : 60;
+    // XP：巨人化 100，Alpha 300（+獵人本能加成）
+    const baseXP = c.isAlpha ? 300 : 100;
     const xp = baseXP + (gameState.playerSkills.hunter || 0) * 10;
     const actualXP = addXP(xp);
     showXPPopup(p.x, p.y, actualXP);
@@ -79,14 +79,12 @@ function handleGiantKill(c) {
            { type: 'bone',   data: {} }];
     spawnLootCircle(c.x, c.y, items);
 
-    // 變異點掉落（100%掉1個；Alpha 20%/巨人化 10%機率額外掉）
-    addMutationPoints(1);
-    const extraChance = c.isAlpha ? 0.2 : 0.1;
-    if (Math.random() < extraChance) {
-        const extra = c.isAlpha
-            ? (1 + Math.floor(Math.random() * 6))
-            : (1 + Math.floor(Math.random() * 3));
-        addMutationPoints(extra);
+    // 變異點掉落
+    // 普通巨人：100% +1
+    // Alpha：100% +2；20% 機率額外 +2~6
+    addMutationPoints(c.isAlpha ? 2 : 1);
+    if (c.isAlpha && Math.random() < 0.2) {
+        addMutationPoints(2 + Math.floor(Math.random() * 5));
     }
 
     // 記錄巨人化擊殺數

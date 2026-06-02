@@ -233,6 +233,8 @@ function initializeGame() {
     if (typeof _initXpPool === 'function') _initXpPool();
     gameState.spawnProtectUntil    = 0;
     if (typeof resetPackNames === 'function') resetPackNames();
+    _usedHyenaPackNames = [];
+    _hyenaPackNameMap   = {};
     gameState.mutationPanelOpen    = false;
     gameState.tutorialOpen         = false;
     gameState.tutorialOrganPhase   = false;
