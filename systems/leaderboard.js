@@ -206,7 +206,9 @@ function showLeaderboard() {
     // 先取得有資料的難度陣列，確保 _lbDifficulty 有效後再載入
     fetchAvailableDifficulties().then(function(diffs) {
         if (diffs && diffs.length > 0) {
-            _availDiffs = diffs;
+            const _diffOrder = ['easy', 'normal', 'hard'];
+            _availDiffs = _diffOrder.filter(d => diffs.includes(d));
+            diffs.forEach(d => { if (!_availDiffs.includes(d)) _availDiffs.push(d); });
         } else {
             _availDiffs = ['easy'];
         }
