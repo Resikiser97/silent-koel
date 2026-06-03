@@ -86,19 +86,23 @@ function _makeCarnCreature(x, y, biome, spec, strength, mapConfig) {
     const removeCap = !!(mapConfig && mapConfig.removeHostileCap);
     const aggroRange = (mapConfig && mapConfig.aggroRangeOverride) ? mapConfig.aggroRangeOverride : 150;
     const now = Date.now();
-    let speed  = 3.6 * str.speedMultiplier;
-    let damage = Math.round(5 * str.damageMultiplier);
+    const nightNum  = Math.floor((gameState.currentPhaseIndex + 1) / 2);
+    const hpDmgMult = Math.pow(1.2, nightNum);
+    const speedMult = Math.pow(1.1, nightNum);
+    let speed  = 3.6 * str.speedMultiplier * speedMult;
+    let damage = Math.round(5 * str.damageMultiplier * hpDmgMult);
     if (!removeCap) {
         speed  = Math.min(7.5, speed);
-        damage = Math.min(20, damage);
+        damage = Math.min(20,  damage);
     }
+    const hp = Math.round(50 * str.hpMultiplier * hpDmgMult);
     return {
         x, y, biome,
         speciesId: spec.id,
         name: spec.name,
         radius: 10,
-        hp:    Math.round(50 * str.hpMultiplier),
-        maxHp: Math.round(50 * str.hpMultiplier),
+        hp,
+        maxHp: hp,
         baseHp: 50,
         speed,
         baseSpeed: 3.6,

@@ -49,9 +49,12 @@ function _spawnHunterElite(nightNum, eliteType) {
     const isHardMap = !!(map.features && map.features.hardElites);
 
     // 困難地圖：固定數值；Easy/Normal 地圖：依地圖 elites 倍率動態計算
-    const hp     = isHardMap
+    const strengthMult = (!isHardMap && gameState.currentMap && gameState.currentMap.creatureStrength)
+        ? (gameState.currentMap.creatureStrength.hostile.hpMultiplier || 1)
+        : 1;
+    const hp = isHardMap
         ? cfg.hp
-        : Math.round(ELITE_CONFIG.base.hp * tier.hpMultiplier);
+        : Math.round(ELITE_CONFIG.base.hp * tier.hpMultiplier * strengthMult);
     const damage = isHardMap
         ? cfg.damage
         : Math.round(ELITE_CONFIG.base.damage * tier.damageMultiplier);

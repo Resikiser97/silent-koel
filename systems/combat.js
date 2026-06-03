@@ -140,7 +140,7 @@ function handleKill(c, isHostile) {
     const p = gameState.player;
     const now = Date.now();
     gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
-    const baseXP = isHostile ? Math.min(80, 30 + Math.round(((c.maxHp || 50) / 50) * 50)) : 20;
+    const baseXP = isHostile ? Math.min(80, 30 + Math.round((c.maxHp || 50) / 50 * 10)) : 20;
     const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * 10;
     const actualXP = addXP(rawXP);
     showXPPopup(p.x, p.y, actualXP);

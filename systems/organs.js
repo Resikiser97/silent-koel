@@ -486,6 +486,13 @@ function handleEliteKill(elite) {
     // Hunter 精英怪：特殊獎勵（由 elite.js 的 _handleHunterEliteKill 處理）
     if (elite && elite.isHunterElite) {
         _handleHunterEliteKill(elite);
+        if (!gameState.gameOver) {
+            const ownedIds = (gameState.player.hiddenOrgans || []).map(h => h.id);
+            const drops = Object.values(HIDDEN_ORGANS).filter(
+                h => !ownedIds.includes(h.id) && Math.random() < 0.5
+            );
+            if (drops.length > 0) showHiddenOrganSelection(drops);
+        }
         gameState.eliteCreature   = null;
         gameState.eliteJustKilled = true;
         const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
