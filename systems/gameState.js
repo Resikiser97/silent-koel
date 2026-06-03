@@ -105,6 +105,7 @@ const gameState = {
     sessionSkillPoints: { elite: 0, boss: 0 },
     eliteCreature: null,
     eliteJustKilled: false,
+    eliteOrder: [],
     alphaCreature: null,
     topBarTarget: null,
     topBarFadeTimer: 0,

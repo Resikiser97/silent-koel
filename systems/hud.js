@@ -700,6 +700,10 @@ function drawTopBarUI() {
     ctx.font = getGameFont(13, true);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+    ctx.strokeText(displayName, x + barW / 2, topBarY + 5);
     ctx.fillText(displayName, x + barW / 2, topBarY + 5);
 
     // 血條底色
@@ -842,6 +846,10 @@ function drawGame() {
             ctx.fillStyle   = '#FFFFFF';
             ctx.font        = getGameFont(12, false);
             ctx.textAlign   = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(st.name, ss.x, ss.y - st.radius - 10);
             ctx.fillText(st.name, ss.x, ss.y - st.radius - 10);
             ctx.restore();
             // 血條

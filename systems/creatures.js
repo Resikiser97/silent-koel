@@ -1200,6 +1200,10 @@ function drawNeutralCreatures() {
             ctx.fillStyle = creature.isAlpha ? '#FFD700' : '#FFFFFF';
             ctx.font = creature.isGiantized ? getGameFont(13, true) : getGameFont(12, false);
             ctx.textAlign = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
             ctx.fillText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
             ctx.restore();
         }
@@ -1214,6 +1218,10 @@ function drawNeutralCreatures() {
             ctx.font = getGameFont(10, false);
             ctx.fillStyle = 'rgba(255,230,150,0.85)';
             ctx.textAlign = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
             ctx.fillText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
             ctx.restore();
         }
@@ -1657,6 +1665,10 @@ function drawHostileCreatures() {
             ctx.fillStyle   = creature.isKiller ? '#FF8800' : '#FFFFFF';
             ctx.font        = creature.isKiller  ? getGameFont(12, true) : getGameFont(12, false);
             ctx.textAlign   = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
             ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
             ctx.restore();
         }
@@ -1670,6 +1682,14 @@ function drawHostileCreatures() {
             ctx.font = getGameFont(10, false);
             ctx.fillStyle = 'rgba(255, 200, 100, 0.85)';
             ctx.textAlign = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(
+                creature.packName + '(' + packCount + '/3)',
+                s.x,
+                s.y - creature.radius * (gameState.cameraZoom || 1) - 22
+            );
             ctx.fillText(
                 creature.packName + '(' + packCount + '/3)',
                 s.x,

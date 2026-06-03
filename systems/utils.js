@@ -75,6 +75,11 @@ function drawNameTag(sx, sy, name, color, font) {
     ctx.fillStyle = color;
     ctx.font = font;
     ctx.textAlign = 'center';
+    ctx.lineJoin = 'round';
+    const _ntDark = color && (color.includes('#0') || color.includes('#1') || color.includes('#2') || color.includes('#3') || color === 'black');
+    ctx.strokeStyle = _ntDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+    ctx.strokeText(name, sx, sy);
     ctx.fillText(name, sx, sy);
     ctx.restore();
 }

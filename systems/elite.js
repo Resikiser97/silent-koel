@@ -25,19 +25,31 @@ const _HUNTER_ELITE_REWARDS = {
     3: { xp: 500, skillPts: 4, mutPts: 3 },
 };
 
-function _getHunterEliteType(nightNum, useHard) {
-    if (useHard) {
-        // hardElites = true：隼族或犬族隨機
-        const isFalcon = Math.random() < 0.5;
-        return [
-            isFalcon ? 'specterFalcon' : 'specterDog',
-            isFalcon ? 'shadowFalcon'  : 'shadowDog',
-            isFalcon ? 'venomFalcon'   : 'venomDog',
-        ][nightNum - 1];
+function initEliteOrder() {
+    const map = gameState.currentMap;
+    if (!map) return;
+    const useHard = !!(map.features && map.features.hardElites);
+    if (!useHard) {
+        const pool = ['specterDog', 'shadowDog', 'venomDog'];
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        gameState.eliteOrder = pool;
     } else {
-        // dogElites = true：只有犬族
-        return ['specterDog', 'shadowDog', 'venomDog'][nightNum - 1];
+        const tiers = ['specter', 'shadow', 'venom'];
+        for (let i = tiers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [tiers[i], tiers[j]] = [tiers[j], tiers[i]];
+        }
+        gameState.eliteOrder = tiers.map(tier =>
+            tier + (Math.random() < 0.5 ? 'Falcon' : 'Dog')
+        );
     }
+}
+
+function _getHunterEliteType(nightNum) {
+    return gameState.eliteOrder[nightNum - 1] || 'specterDog';
 }
 
 function _spawnHunterElite(nightNum, eliteType) {
@@ -113,12 +125,12 @@ function spawnEliteCreature(nightNum) {
 
     // 困難地圖：靜音獵隊（隼+犬）
     if (features && features.hardElites) {
-        _spawnHunterElite(nightNum, _getHunterEliteType(nightNum, true));
+        _spawnHunterElite(nightNum, _getHunterEliteType(nightNum));
         return;
     }
     // 普通/簡單地圖：三犬
     if (features && features.dogElites) {
-        _spawnHunterElite(nightNum, _getHunterEliteType(nightNum, false));
+        _spawnHunterElite(nightNum, _getHunterEliteType(nightNum));
         return;
     }
 
@@ -149,10 +161,9 @@ function spawnEliteCreature(nightNum) {
     gameState.dayNightMessage.timer = Date.now();
 }
 
-// ── Hunter 精英怪死亡獎勵
+// ── Hunter 精英怪死亡獎勵（不含 addXP，xp 由呼叫端決定時機）
 function _handleHunterEliteKill(elite) {
     const rewards = _HUNTER_ELITE_REWARDS[elite.starTier] || _HUNTER_ELITE_REWARDS[1];
-    addXP(rewards.xp);
     gameState.skillPoints += rewards.skillPts;
     localStorage.setItem('skillPoints', String(gameState.skillPoints));
     gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + rewards.mutPts;
@@ -166,6 +177,7 @@ function _handleHunterEliteKill(elite) {
     AudioManager.play(elite.eliteType.includes('Dog') ? 'dogDeath' :
         elite.eliteType === 'specterFalcon' ? 'specterFalconDeath' :
         elite.eliteType === 'shadowFalcon'  ? 'shadowFalconDeath'  : 'venomFalconDeath');
+    return rewards.xp;
 }
 
 // ── 射程精英怪發射子彈（幽靈隼 / 暗影隼）

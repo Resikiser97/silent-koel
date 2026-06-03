@@ -543,6 +543,9 @@ function showXPPopup(wx, wy, amount) {
     el.textContent = '+' + amount + ' XP';
     el.style.left      = (s.x - 15) + 'px';
     el.style.top       = (s.y - 20) + 'px';
+    el.style.textShadow = (gameState.settings && gameState.settings.fontBoldLarge)
+        ? '-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000,0 3px 6px rgba(0,0,0,0.9)'
+        : '-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 2px 3px rgba(0,0,0,0.7)';
     el.style.opacity   = '1';
     el.style.transform = 'translateY(0)';
     el.style.display   = 'block';

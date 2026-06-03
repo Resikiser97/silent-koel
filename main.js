@@ -235,6 +235,7 @@ function initializeGame() {
             : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         console.log('[v0.47.0 B1] currentMap restored:', gameState.currentMap ? gameState.currentMap.name : 'null');
     }
+    if (typeof initEliteOrder === 'function') initEliteOrder();
 
     if (typeof _initXpPool === 'function') _initXpPool();
     gameState.spawnProtectUntil    = 0;

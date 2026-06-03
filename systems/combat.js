@@ -11,7 +11,10 @@ function showFloatingText(wx, wy, text, color, fontSize) {
     if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
     const el = document.createElement('div');
     const fz = fontSize || 16;
-    el.style.cssText = 'position:absolute;pointer-events:none;font-size:' + fz + 'px;font-weight:bold;animation:fadeOutUp 0.8s forwards;text-shadow:1px 1px 2px black;';
+    const shadow = (gameState.settings && gameState.settings.fontBoldLarge)
+        ? '-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000,0 3px 6px rgba(0,0,0,0.9)'
+        : '-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 2px 3px rgba(0,0,0,0.7)';
+    el.style.cssText = 'position:absolute;pointer-events:none;font-size:' + fz + 'px;font-weight:bold;animation:fadeOutUp 0.8s forwards;text-shadow:' + shadow + ';';
     el.style.left = (s.x - 20) + 'px';
     el.style.top  = (s.y - 10) + 'px';
     el.style.color = color || 'white';
