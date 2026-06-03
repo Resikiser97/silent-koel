@@ -670,9 +670,30 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
 
     // ── 組合 overlay = header + skillContent / mutContent（切換）
     overlay.appendChild(skillContent);
-    const mutContent = _buildMutationSkillContent();
-    mutContent.style.display = 'none';
+    const mutContent = _buildMutationSkillContent(); // 內部已設 display:none
     overlay.appendChild(mutContent);
+
+    // 變異面板專屬關閉按鈕列（與 mutContent 同步顯示/隱藏）
+    const mutCloseRow = document.createElement('div');
+    mutCloseRow.id = 'mut-close-row';
+    mutCloseRow.style.cssText = 'display:none;width:90%;max-width:660px;padding:8px 0 12px 0;justify-content:center;';
+    const mutCloseBtn = document.createElement('button');
+    mutCloseBtn.textContent = '關閉';
+    mutCloseBtn.style.cssText = [
+        'font-size:14px', 'padding:8px 40px', 'border-radius:6px',
+        'cursor:pointer', 'border:1px solid #555',
+        'background:rgba(255,255,255,0.08)', 'color:white',
+        'transition:background 0.15s ease',
+    ].join(';');
+    mutCloseBtn.onmouseenter = () => { mutCloseBtn.style.background = 'rgba(255,255,255,0.16)'; };
+    mutCloseBtn.onmouseleave = () => { mutCloseBtn.style.background = 'rgba(255,255,255,0.08)'; };
+    mutCloseBtn.onclick = () => {
+        const ov = document.getElementById('skill-tree-overlay');
+        if (ov) ov.remove();
+        gameState.skillTreeOpen = false;
+    };
+    mutCloseRow.appendChild(mutCloseBtn);
+    overlay.appendChild(mutCloseRow);
 
     let _showingMut = false;
     switchBtn.onclick = () => {
@@ -680,14 +701,16 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         if (_showingMut) {
             skillContent.style.display = 'none';
             mutContent.style.display = 'flex';
-            // 重新渲染右欄（技能點可能變動）
+            mutCloseRow.style.display = 'flex';
             _syncMutationSkillPoints();
+            _refreshMutContentLeft(mutContent);
             _refreshMutContentRight(mutContent);
             titleEl.textContent = '⚗️ ' + t('mutationSkillTree');
             switchBtn.textContent = t('skillTreeTitle');
         } else {
             skillContent.style.display = 'flex';
             mutContent.style.display = 'none';
+            mutCloseRow.style.display = 'none';
             titleEl.textContent = t('skillTreeTitle');
             switchBtn.textContent = '⚗️ ' + t('mutationSkillTreeBtn');
         }
@@ -710,22 +733,14 @@ function upgradeSkill(id) {
     buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
 }
 
-// ── 建立變異面板（左欄：4 變異器官 / 右欄：技能點 + 技能卡）
-function _buildMutationSkillContent() {
-    const wrap = document.createElement('div');
-    wrap.id = 'mut-skill-panel';
-    wrap.style.cssText = 'display:flex;width:90%;max-width:660px;flex:1;min-height:0;overflow:hidden;';
-
-    // 左欄：4 個變異器官
-    const leftCol = document.createElement('div');
-    leftCol.style.cssText = 'flex:1;overflow-y:auto;padding:12px;';
-
+// ── 左欄內容建立（可重複呼叫刷新）
+function _buildMutLeftColContent(leftCol) {
+    leftCol.innerHTML = '';
     const mutData = gameState.mutationData;
+    const mutPts  = mutData ? (mutData.points || 0) : 0;
 
     const ptsHeader = document.createElement('div');
-    ptsHeader.id = 'mut-left-pts-label';
     ptsHeader.style.cssText = 'font-size:13px;color:#FFD700;text-align:center;margin-bottom:10px;font-weight:bold;';
-    const mutPts = gameState.mutationData ? (gameState.mutationData.points || 0) : 0;
     ptsHeader.textContent = '可用變異點：' + mutPts;
     leftCol.appendChild(ptsHeader);
 
@@ -737,9 +752,8 @@ function _buildMutationSkillContent() {
     ];
     ORGAN_DEFS.forEach(def => {
         const lv    = mutData ? (mutData.levels[def.id] || 0) : 0;
-        const pts   = mutData ? (mutData.points || 0) : 0;
         const cost  = getMutationUpgradeCost ? getMutationUpgradeCost(lv) : (lv + 1);
-        const canUp = pts >= cost;
+        const canUp = mutPts >= cost;
         const card  = document.createElement('div');
         card.style.cssText = 'background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.25);border-radius:8px;padding:10px 12px;margin-bottom:10px;';
         const ct = document.createElement('div');
@@ -756,25 +770,21 @@ function _buildMutationSkillContent() {
         cb.disabled = !canUp;
         cb.onclick = () => {
             if (typeof upgradeMutation === 'function') upgradeMutation(def.id);
-            const wrap = document.getElementById('mut-skill-panel');
-            if (wrap) {
-                const parent = wrap.parentNode;
-                const newContent = _buildMutationSkillContent();
-                parent.replaceChild(newContent, wrap);
-            }
+            _refreshMutContentLeft(document.getElementById('mut-skill-panel'));
+            _refreshMutContentRight(document.getElementById('mut-skill-panel'));
         };
         card.appendChild(cb);
         leftCol.appendChild(card);
     });
 
+    const curSkillPts = gameState.skillPoints || 0;
     const exchangeHint = document.createElement('div');
     exchangeHint.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-top:12px;';
-    const curSkillPts = gameState.skillPoints || 0;
     exchangeHint.textContent = '目前技能點：' + curSkillPts;
     leftCol.appendChild(exchangeHint);
 
-    const exchangeBtn = document.createElement('button');
     const canExchange = curSkillPts >= 100;
+    const exchangeBtn = document.createElement('button');
     exchangeBtn.style.cssText = [
         'display:block', 'width:100%', 'margin-top:6px',
         'font-size:13px', 'padding:7px', 'border-radius:6px',
@@ -792,20 +802,36 @@ function _buildMutationSkillContent() {
             gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + 10;
             localStorage.setItem('skillPoints', String(gameState.skillPoints));
             saveMutationData();
-            const wrap = document.getElementById('mut-skill-panel');
-            if (wrap) {
-                const parent = wrap.parentNode;
-                const newContent = _buildMutationSkillContent();
-                parent.replaceChild(newContent, wrap);
-            }
+            _refreshMutContentLeft(document.getElementById('mut-skill-panel'));
+            _refreshMutContentRight(document.getElementById('mut-skill-panel'));
         };
     }
     leftCol.appendChild(exchangeBtn);
+}
+
+function _refreshMutContentLeft(wrap) {
+    if (!wrap) return;
+    const leftCol = wrap.querySelector('#mut-left-col');
+    if (!leftCol) return;
+    _buildMutLeftColContent(leftCol);
+}
+
+// ── 建立變異面板（左欄：4 變異器官 / 右欄：技能點 + 技能卡）
+function _buildMutationSkillContent() {
+    const wrap = document.createElement('div');
+    wrap.id = 'mut-skill-panel';
+    wrap.style.cssText = 'display:none;width:90%;max-width:660px;flex:1;min-height:0;overflow:hidden;';
+
+    // 左欄
+    const leftCol = document.createElement('div');
+    leftCol.id = 'mut-left-col';
+    leftCol.style.cssText = 'flex:1;overflow-y:auto;padding:12px;';
+    _buildMutLeftColContent(leftCol);
 
     const divider = document.createElement('div');
     divider.style.cssText = 'width:1px;background:rgba(180,100,255,0.2);align-self:stretch;margin:0 8px;';
 
-    // 右欄：技能點 + recallOrgan 卡
+    // 右欄
     const rightCol = document.createElement('div');
     rightCol.id = 'mut-right-col';
     rightCol.style.cssText = 'flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;align-items:center;';
