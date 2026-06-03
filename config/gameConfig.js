@@ -6,7 +6,7 @@ const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
-    version:      'v0.1.0.0',
+    version:      'v0.1.0.1',
     SAVE_VERSION: '1.1'
 };
 
@@ -41,7 +41,8 @@ const AUDIO_FILES = {
     levelUp:      'Sound MP3/Levelup.mp3',
     morningTheme: 'Sound MP3/Morning Theme.mp3',
     bossTheme:     'Sound MP3/Boss Theme.mp3',
-    superBossTheme:'Sound MP3/Super boss.mp3',
+    superBossTheme: 'Sound MP3/Super boss.mp3',
+    introTheme:     'Sound MP3/Intro Theme.mp3',
     victory:      'Sound MP3/Victory.mp3',
     eatFruit:     'Sound MP3/apple_bite.mp3',
     bossBell:     'Sound MP3/Boss_bell1.mp3',

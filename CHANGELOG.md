@@ -1,6 +1,25 @@
-## v0.1.0.0
+## v0.1.0.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.0.1 - 2026-06-03
+
+### 新增
+- **GOBLIN NEST Splash 畫面**（`systems/ui.js`、`main.js`）：啟動時顯示開發者品牌頁，點擊後播放 Intro Theme 並進入首頁
+- **首頁背景音樂**（`config/gameConfig.js`、`systems/audio.js`）：`playIntroTheme()` / `stopIntroTheme()`；進入遊戲時自動停止
+- **首頁公告標籤**（`systems/ui.js`）：標題右上側旋轉印章，交替顯示「巨人覺醒！」「獵人入侵！」
+
+### 調整
+- 變異技能樹按鈕移至技能樹 Header 右側；面板改為左右兩欄（左：變異器官、右：技能點/技能）
+- Splash 標題改為立體陰影樣式
+
+### 修復
+- TOP10 難度切換順序固定為 簡單→普通→困難，不再依賴 DB 查詢
+- 技能樹 Header 重複 🌿 emoji 修復
+- 變異技能點升級費用 NaN 修復（`sk.level` 空值防呆）
+- 切換變異面板後返回技能樹佈局還原修復（`display:flex` 明確設定）
 
 ---
 

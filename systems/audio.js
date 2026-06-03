@@ -1,6 +1,24 @@
 // =============================================================
 // 音效系統 - AudioManager / initAudio
+//           playIntroTheme / stopIntroTheme（首頁背景音樂）
 // =============================================================
+
+let _introThemeAudio = null;
+
+function playIntroTheme() {
+    if (_introThemeAudio) return;
+    _introThemeAudio = new Audio(AUDIO_FILES.introTheme);
+    _introThemeAudio.loop   = true;
+    _introThemeAudio.volume = 0.4 * ((gameState.settings && gameState.settings.volume ? (gameState.settings.volume.masterOn ? (gameState.settings.volume.master / 100) * (gameState.settings.volume.musicOn ? gameState.settings.volume.music / 100 : 0) : 0) : 1));
+    _introThemeAudio.play().catch(() => {});
+}
+
+function stopIntroTheme() {
+    if (!_introThemeAudio) return;
+    _introThemeAudio.pause();
+    _introThemeAudio.currentTime = 0;
+    _introThemeAudio = null;
+}
 
 const AudioManager = {
     _sounds: {},
@@ -92,6 +110,7 @@ const AudioManager = {
 
     refreshMusicVolume() {
         if (this._music) { try { this._music.volume = this._musicVol(); } catch(e) {} }
+        if (_introThemeAudio) { try { _introThemeAudio.volume = 0.4 * this._musicVol(); } catch(e) {} }
     }
 };
 

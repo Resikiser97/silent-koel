@@ -1,4 +1,4 @@
-## v0.1.0.0
+## v0.1.0.1
 
 # The Silent Koel — 模組架構說明
 
@@ -29,6 +29,7 @@ systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
                           getGameFont（canvas 字型輔助，依 fontLarge/fontBold 設定動態生成，v0.0.66.1）
                           spawnLootCircle
 systems/audio.js          AudioManager, initAudio
+                          playIntroTheme, stopIntroTheme（首頁背景音樂，v0.1.0.1）
 systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera
                           _updateCameraZoom（視野縮放，重構自 _updateMobileCameraZoom，v0.58.0）
                           updateCamera：alwaysCenter 設定為 true 時 edgeThreshold=0.5，角色永遠居中（v0.57.5）
@@ -125,6 +126,7 @@ systems/hud.js            drawGame, updateUI, drawTopBarUI
                           drawProjectiles（子彈繪製）, updateMinimapFog（小地圖霧效更新）
                           _drawArcherfish（夜晚三角光圈 + F技紅色三角框，v0.57.4）
 systems/ui.js             showTooltip, hideTooltip, showMapSelect
+                          showSplashScreen（開發者 Splash 畫面，v0.1.0.1）
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式
                           showGuide, hideGuide, showStartScreen

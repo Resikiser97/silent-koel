@@ -1863,10 +1863,13 @@ function showStartScreen() {
     overlay.id = 'start-screen';
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:#0d1a0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;pointer-events:all;color:white;font-family:Arial,sans-serif;';
 
+    const titleContainer = document.createElement('div');
+    titleContainer.style.cssText = 'position:relative;display:inline-block;margin-bottom:10px;';
     const titleEl = document.createElement('div');
-    titleEl.style.cssText = 'font-size:40px;font-weight:bold;margin-bottom:10px;letter-spacing:2px;';
+    titleEl.style.cssText = 'font-size:40px;font-weight:bold;letter-spacing:2px;';
     titleEl.textContent = GAME_INFO.title;
-    overlay.appendChild(titleEl);
+    titleContainer.appendChild(titleEl);
+    overlay.appendChild(titleContainer);
 
     const subtitleEl = document.createElement('div');
     subtitleEl.style.cssText = 'font-size:16px;color:#aaa;letter-spacing:5px;margin-bottom:40px;';
@@ -1995,14 +1998,12 @@ function showStartScreen() {
 
     // 難度切換：取得有資料的難度後循環，與全屏排行榜同步
     top10DiffBtn.onclick = () => {
-        fetchAvailableDifficulties().then(function(diffs) {
-            const availDiffs = (diffs && diffs.length > 0) ? diffs : ['easy'];
-            const idx = availDiffs.indexOf(_top10Difficulty);
-            _top10Difficulty = availDiffs[(idx + 1) % availDiffs.length];
-            _lbDifficulty = _top10Difficulty;
-            top10DiffBtn.textContent = t(_diffKey(_top10Difficulty));
-            loadTop10();
-        }).catch(() => { loadTop10(); });
+        const availDiffs = ['easy', 'normal', 'hard'];
+        const idx = availDiffs.indexOf(_top10Difficulty);
+        _top10Difficulty = availDiffs[(idx + 1) % availDiffs.length];
+        _lbDifficulty = _top10Difficulty;
+        top10DiffBtn.textContent = t(_diffKey(_top10Difficulty));
+        loadTop10();
     };
 
     loadTop10();
@@ -2087,6 +2088,31 @@ function showStartScreen() {
     overlay.appendChild(bookBtn);
     overlay.appendChild(patchBtn);
 
+    // ── 首頁公告標籤（右上角旋轉印章）
+    if (!document.getElementById('_badge-style')) {
+        const s = document.createElement('style');
+        s.id = '_badge-style';
+        s.textContent = '@keyframes _badgePulse{0%,100%{transform:scale(1) rotate(8deg)}50%{transform:scale(1.12) rotate(8deg)}}#announce-badge{animation:_badgePulse 1.8s ease-in-out infinite}';
+        document.head.appendChild(s);
+    }
+    const announceBadge = document.createElement('div');
+    announceBadge.id = 'announce-badge';
+    announceBadge.style.cssText = 'position:absolute;top:-18px;right:-120px;width:100px;height:64px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(180,20,20,0.15);border:2px solid rgba(220,40,40,0.7);border-radius:6px;pointer-events:none;z-index:210;';
+    const badgeLines = ['巨人覺醒！', '獵人入侵！'];
+    let _badgeLine = 0;
+    const badgeText = document.createElement('div');
+    badgeText.style.cssText = 'font-size:15px;font-weight:bold;color:#FF3333;text-align:center;line-height:1.4;text-shadow:0 0 8px rgba(255,50,50,0.6);letter-spacing:1px;transition:opacity 0.3s ease;';
+    badgeText.textContent = badgeLines[0];
+    announceBadge.appendChild(badgeText);
+    const _badgeInterval = setInterval(() => {
+        const badge = document.getElementById('announce-badge');
+        if (!badge) { clearInterval(_badgeInterval); return; }
+        _badgeLine = (_badgeLine + 1) % badgeLines.length;
+        badgeText.style.opacity = '0';
+        setTimeout(() => { badgeText.textContent = badgeLines[_badgeLine]; badgeText.style.opacity = '1'; }, 300);
+    }, 2500);
+    titleContainer.appendChild(announceBadge);
+
     document.getElementById('game-container').appendChild(overlay);
     checkPatchNotesPopup();
 
@@ -2094,6 +2120,57 @@ function showStartScreen() {
     if (typeof buildChatUI === 'function') buildChatUI();
     if (typeof showChat === 'function') showChat();
     if (typeof initChat === 'function') initChat();
+
+    // 首頁背景音樂
+    if (typeof playIntroTheme === 'function') playIntroTheme();
+}
+
+// =============================================================
+// Splash 畫面（開發者品牌）
+// =============================================================
+
+function showSplashScreen() {
+    const splash = document.createElement('div');
+    splash.id = 'splash-screen';
+    splash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:9999;cursor:pointer;transition:opacity 0.8s ease;user-select:none;';
+
+    const title = document.createElement('div');
+    title.textContent = 'GOBLIN NEST';
+    title.style.cssText = "font-family:Georgia,'Times New Roman',serif;font-size:clamp(28px,6vw,52px);font-weight:bold;letter-spacing:8px;color:#D4A017;text-shadow:2px 2px 0px #7a5500,4px 4px 0px #5a3e00,6px 6px 8px rgba(0,0,0,0.9);opacity:0;transform:translateY(6px);transition:opacity 1.2s ease,transform 1.2s ease;";
+
+    const sub = document.createElement('div');
+    sub.textContent = 'PRESENTS';
+    sub.style.cssText = "font-family:Georgia,serif;font-size:clamp(10px,2vw,14px);letter-spacing:6px;color:rgba(212,160,23,0.6);opacity:0;transition:opacity 1.4s ease 0.3s;";
+
+    const hint = document.createElement('div');
+    hint.textContent = '點擊任意處繼續';
+    hint.style.cssText = 'position:absolute;bottom:36px;font-size:12px;color:rgba(255,255,255,0.25);letter-spacing:2px;animation:_splashHint 2s ease-in-out infinite;';
+
+    if (!document.getElementById('_splash-style')) {
+        const s = document.createElement('style');
+        s.id = '_splash-style';
+        s.textContent = '@keyframes _splashHint{0%,100%{opacity:.25}50%{opacity:.6}}';
+        document.head.appendChild(s);
+    }
+
+    splash.appendChild(title);
+    splash.appendChild(sub);
+    splash.appendChild(hint);
+    document.body.appendChild(splash);
+
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            title.style.opacity = '1';
+            title.style.transform = 'translateY(0)';
+            sub.style.opacity = '1';
+        }, 100);
+    });
+
+    splash.addEventListener('click', () => {
+        if (typeof playIntroTheme === 'function') playIntroTheme();
+        splash.style.opacity = '0';
+        setTimeout(() => { splash.remove(); showStartScreen(); }, 800);
+    }, { once: true });
 }
 
 // =============================================================

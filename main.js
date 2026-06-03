@@ -147,6 +147,12 @@ function _applyCharacterStats() {
 function initializeGame() {
     localStorage.setItem('hasPlayedBefore', 'true');
 
+    // 清除首頁公告標籤
+    const _badge = document.getElementById('announce-badge');
+    if (_badge) _badge.remove();
+    // 停止首頁背景音樂
+    if (typeof stopIntroTheme === 'function') stopIntroTheme();
+
     // 離開首頁時斷開聊天室並隱藏面板
     if (typeof disconnectChat === 'function') disconnectChat();
     if (typeof hideChat === 'function') hideChat();
@@ -431,9 +437,9 @@ window.onload = () => {
         return;
     }
     if (!localStorage.getItem('hasPlayedBefore')) {
-        showStartScreen();
+        showSplashScreen();
         setTimeout(() => showGuideStory(), 300);
     } else {
-        showStartScreen();
+        showSplashScreen();
     }
 };
