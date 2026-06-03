@@ -1856,6 +1856,11 @@ function showStartScreen() {
     applyDeviceMode();
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
+        // 恢復上一場難度與地圖
+        const lastDiff = localStorage.getItem('lastDifficulty') || 'easy';
+        const _diffMapTable = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
+        gameState.currentMap     = _diffMapTable[lastDiff] || EASY_MAP;
+        gameState.lastDifficulty = lastDiff;
         initializeGame();
         return;
     }
