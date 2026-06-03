@@ -1,6 +1,24 @@
-## v0.1.0.2
+## v0.1.0.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.0.3 - 2026-06-03
+
+### 修復
+
+#### 平衡性修復
+
+- **擊殺 XP 公式修正**（`systems/combat.js`）：`handleKill()` 的 hostile 擊殺 XP 公式從 `Math.min(80, 30 + Math.round((maxHp/50) * 50))` 改為 `Math.min(80, 30 + Math.round((maxHp/50) * 10))`，移除舊公式導致幾乎所有難度肉食怪都觸發 cap 80 的問題，XP 現在隨 HP 動態變化（簡單約 40、普通約 45、困難約 55）
+
+- **肉食性怪物夜晚增強**（`systems/spawning.js`）：`_makeCarnCreature()` 新增夜晚倍率計算，補充生成的肉食怪依當前夜晚數套用 HP/攻擊 `×1.2^夜`、速度 `×1.1^夜`，第1夜約 +20%/+10%、第3夜約 +73%/+33%；草食性生物不受影響
+
+- **簡單難度 Boss 速度修正**（`map/easymap.js`）：三隻 Boss 速度從地圖設定的過低值（1.0/1.3/1.2）修正為與 `BOSS_CONFIG` 一致的正確值（黑熊 3.0、大白鯊 3.9、蠍王 3.6）
+
+- **精英怪 HP 套用地圖難度倍率**（`systems/elite.js`）：Easy/Normal 地圖的三犬/三隼精英怪 HP 計算新增乘上 `creatureStrength.hostile.hpMultiplier`，修正普通難度精英 HP 與簡單難度相同的問題（普通第1夜 250 → 375、第3夜 500 → 1500）；困難地圖維持固定數值不變
+
+- **隱藏器官掉落 Bug 修復**（`systems/organs.js`）：`handleEliteKill()` 的 Hunter 精英怪分支（`isHunterElite`）在呼叫 `_handleHunterEliteKill()` 後補上隱藏器官掉落判斷，修復 v0.1.0.2 起三犬/三隼擊殺後完全不掉落隱藏器官的問題
 
 ---
 
