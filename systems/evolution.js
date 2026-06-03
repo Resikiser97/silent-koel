@@ -283,6 +283,10 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             if (ss) gameState.playerSkills = JSON.parse(ss);
             const sp = localStorage.getItem('skillPoints');
             if (sp) gameState.skillPoints = Math.max(0, parseInt(sp, 10) || 0);
+            const rawMd = localStorage.getItem('mutationData');
+            if (rawMd && gameState.mutationData) Object.assign(gameState.mutationData, JSON.parse(rawMd));
+            const rawMs = localStorage.getItem('mutationSkills');
+            if (rawMs && gameState.mutationSkills) Object.assign(gameState.mutationSkills, JSON.parse(rawMs));
         } catch(e) {}
     }
     const existing = document.getElementById('skill-tree-overlay');
@@ -734,7 +738,7 @@ function _buildMutationSkillContent() {
     ORGAN_DEFS.forEach(def => {
         const lv    = mutData ? (mutData.levels[def.id] || 0) : 0;
         const pts   = mutData ? (mutData.points || 0) : 0;
-        const cost  = getMutationUpgradeCost ? getMutationUpgradeCost(def.id) : (lv + 1);
+        const cost  = getMutationUpgradeCost ? getMutationUpgradeCost(lv) : (lv + 1);
         const canUp = pts >= cost;
         const card  = document.createElement('div');
         card.style.cssText = 'background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.25);border-radius:8px;padding:10px 12px;margin-bottom:10px;';

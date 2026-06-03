@@ -11,6 +11,7 @@
 
 ### 修復
 - **變異技能點 NaN 完整修復**（`systems/mutation.js`、`systems/evolution.js`）：`_syncMutationSkillPoints()` 在 `mutationData` 尚未初始化時補設預設值 0；`buildSkillTreeOverlay()` 開頭強制呼叫 `_syncMutationSkillPoints()`；技能點數顯示加入防呆（`?? 0`）；器官升級按鈕改為 replaceChild 方式重建面板確保點數即時刷新
+- **首頁路徑變異點顯示修復**（`systems/evolution.js`）：`buildSkillTreeOverlay(fromHome)` 的 localStorage 同步區塊補讀 `mutationData` 和 `mutationSkills`，確保首頁進入與 postGame 路徑讀取相同資料；`getMutationUpgradeCost` 參數由錯誤的 `def.id`（字串）改為 `lv`（等級數字），消除升級費用 NaN 顯示
 - **返回技能樹按鈕重複 🌿 修復**（`systems/evolution.js`）：切換至變異技能樹時，按鈕文字從 `🌿 🌿 技能樹` 改為 `🌿 技能`
 - **Easy/Normal 三犬精英怪血量修復**（`systems/elite.js`）：`_spawnHunterElite()` 改依地圖 `elites` 倍率動態計算 HP/傷害/速度（Easy 第一夜 HP 從固定 480 → 正確的 250）
 - **黑色獵人 Boss 數值補入**（`map/hardmap.js`）：`hp: 800`、`speed: 4.0`、`damage: 45`（原為 null）
