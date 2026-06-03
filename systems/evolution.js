@@ -271,6 +271,7 @@ function showSkillTree(cause) {
 function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     // B8 防呆：玩家或技能資料尚未初始化時直接返回
     if (!gameState.player || !gameState.playerSkills) return;
+    if (typeof _syncMutationSkillPoints === 'function') _syncMutationSkillPoints();
     const effectiveMode = (mode != null && mode !== '') ? mode
         : (fromHome ? 'fromHome' : (startAfter ? 'forceStart' : _skillTreeMode));
     _skillTreeMode = effectiveMode;
@@ -716,6 +717,14 @@ function _buildMutationSkillContent() {
     leftCol.style.cssText = 'flex:1;overflow-y:auto;padding:12px;';
 
     const mutData = gameState.mutationData;
+
+    const ptsHeader = document.createElement('div');
+    ptsHeader.id = 'mut-left-pts-label';
+    ptsHeader.style.cssText = 'font-size:13px;color:#FFD700;text-align:center;margin-bottom:10px;font-weight:bold;';
+    const mutPts = gameState.mutationData ? (gameState.mutationData.points || 0) : 0;
+    ptsHeader.textContent = '可用變異點：' + mutPts;
+    leftCol.appendChild(ptsHeader);
+
     const ORGAN_DEFS = [
         { id: 'fang', icon: '🦷', name: '變異-憤怒的獠牙', desc: '每級 +1% 攻擊力' },
         { id: 'tail', icon: '🐾', name: '變異-懦弱的尾巴', desc: '每級 +1% HP上限'  },
@@ -741,10 +750,53 @@ function _buildMutationSkillContent() {
         cb.style.cssText = 'padding:3px 12px;font-size:11px;border-radius:4px;border:1px solid ' + (canUp ? '#FFD700' : '#555') + ';background:' + (canUp ? 'rgba(255,215,0,0.15)' : 'transparent') + ';color:' + (canUp ? '#FFD700' : '#555') + ';cursor:' + (canUp ? 'pointer' : 'default') + ';';
         cb.textContent = '升級（費 ' + cost + ' 點）';
         cb.disabled = !canUp;
-        cb.onclick = () => { if (typeof upgradeMutation === 'function') upgradeMutation(def.id); buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode); };
+        cb.onclick = () => {
+            if (typeof upgradeMutation === 'function') upgradeMutation(def.id);
+            const wrap = document.getElementById('mut-skill-panel');
+            if (wrap) {
+                const parent = wrap.parentNode;
+                const newContent = _buildMutationSkillContent();
+                parent.replaceChild(newContent, wrap);
+            }
+        };
         card.appendChild(cb);
         leftCol.appendChild(card);
     });
+
+    const exchangeHint = document.createElement('div');
+    exchangeHint.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-top:12px;';
+    const curSkillPts = gameState.skillPoints || 0;
+    exchangeHint.textContent = '目前技能點：' + curSkillPts;
+    leftCol.appendChild(exchangeHint);
+
+    const exchangeBtn = document.createElement('button');
+    const canExchange = curSkillPts >= 100;
+    exchangeBtn.style.cssText = [
+        'display:block', 'width:100%', 'margin-top:6px',
+        'font-size:13px', 'padding:7px', 'border-radius:6px',
+        'border:1px solid #8a6a2a', 'background:rgba(180,120,20,0.2)',
+        'color:#FFD700', 'cursor:' + (canExchange ? 'pointer' : 'default'),
+        'opacity:' + (canExchange ? '1' : '0.5'),
+    ].join(';');
+    exchangeBtn.disabled = !canExchange;
+    exchangeBtn.textContent = '100 技能點 → 10 變異點';
+    if (canExchange) {
+        exchangeBtn.onclick = () => {
+            if ((gameState.skillPoints || 0) < 100) return;
+            gameState.skillPoints -= 100;
+            gameState.mutationData.points += 10;
+            gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + 10;
+            localStorage.setItem('skillPoints', String(gameState.skillPoints));
+            saveMutationData();
+            const wrap = document.getElementById('mut-skill-panel');
+            if (wrap) {
+                const parent = wrap.parentNode;
+                const newContent = _buildMutationSkillContent();
+                parent.replaceChild(newContent, wrap);
+            }
+        };
+    }
+    leftCol.appendChild(exchangeBtn);
 
     const divider = document.createElement('div');
     divider.style.cssText = 'width:1px;background:rgba(180,100,255,0.2);align-self:stretch;margin:0 8px;';
