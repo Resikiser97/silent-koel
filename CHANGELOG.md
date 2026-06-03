@@ -1,6 +1,17 @@
-## v0.1.0.1
+## v0.1.0.2
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.0.2 - 2026-06-03
+
+### 修復
+- **變異技能點 NaN 修復**（`systems/mutation.js`、`systems/evolution.js`）：`_syncMutationSkillPoints()` 在 `mutationData` 尚未初始化時補設預設值 0；面板開啟時強制先重新計算點數；技能點數與升級費用顯示加入防呆（`?? 0`）
+- **返回技能樹按鈕重複 🌿 修復**（`systems/evolution.js`）：切換至變異技能樹時，按鈕文字從 `🌿 🌿 技能樹` 改為 `🌿 技能`
+- **Easy/Normal 三犬精英怪血量修復**（`systems/elite.js`）：`_spawnHunterElite()` 改依地圖 `elites` 倍率動態計算 HP/傷害/速度（Easy 第一夜 HP 從固定 480 → 正確的 250）
+- **黑色獵人 Boss 數值補入**（`map/hardmap.js`）：`hp: 800`、`speed: 4.0`、`damage: 45`（原為 null）
+- **困難地圖草食性生物傷害倍率修復**（`systems/spawning.js`）：`_makeHerbCreature()` 的 damage 補乘 `str.damageMultiplier`，與 HP/速度計算一致
 
 ---
 

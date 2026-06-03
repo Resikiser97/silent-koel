@@ -33,7 +33,7 @@ const HARD_MAP = {
         { biome: 'forest', name: '🌿 黑熊',     hp: 3750, speed: 11.7, damage:  75, radius: 33, attackRange: 40 },
         { biome: 'ocean',  name: '🌊 大白鯊',   hp: 4500, speed: 15.2, damage:  90, radius: 40, attackRange: 47 },
         { biome: 'desert', name: '🏜️ 沙漠蠍王', hp: 4125, speed: 14.0, damage: 100, radius: 37, attackRange: 43 },
-        { biome: 'hunter', name: '🎯 黑色獵人', hp: null,  speed: null,  damage: null, radius: 22, attackRange: 1500 },
+        { biome: 'hunter', name: '🎯 黑色獵人', hp: 800, speed: 4.0, damage: 45, radius: 22, attackRange: 1500 },
     ],
 
     features: {

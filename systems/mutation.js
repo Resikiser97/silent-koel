@@ -442,7 +442,10 @@ function _saveMutationSkills() {
 // 依當前變異器官總等計算可用技能點（每 50 總等 +1，扣除已花費）
 function _syncMutationSkillPoints() {
     const data = gameState.mutationData;
-    if (!data || !gameState.mutationSkills) return;
+    if (!data || !data.levels || !gameState.mutationSkills) {
+        gameState.mutationSkillPoints = 0;
+        return;
+    }
     const totalLevel = Object.values(data.levels).reduce((a, b) => a + (b || 0), 0);
     const earned = Math.floor(totalLevel / 50);
     const skills = gameState.mutationSkills.skills || {};

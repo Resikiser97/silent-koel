@@ -60,7 +60,7 @@ function _makeHerbCreature(x, y, biome, spec, strength) {
         baseHp: 30,
         speed:     2.4 * str.speedMultiplier,
         baseSpeed: 2.4,
-        damage:     canFight ? 3 : 0,
+        damage:     canFight ? Math.round(3 * str.damageMultiplier) : 0,
         baseDamage: canFight ? 3 : 0,
         diet: 'herbivore',
         canFight,

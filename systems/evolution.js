@@ -676,9 +676,10 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             skillContent.style.display = 'none';
             mutContent.style.display = 'flex';
             // 重新渲染右欄（技能點可能變動）
+            _syncMutationSkillPoints();
             _refreshMutContentRight(mutContent);
             titleEl.textContent = '⚗️ ' + t('mutationSkillTree');
-            switchBtn.textContent = '🌿 ' + t('skillTreeTitle');
+            switchBtn.textContent = t('skillTreeTitle');
         } else {
             skillContent.style.display = 'flex';
             mutContent.style.display = 'none';
@@ -770,7 +771,7 @@ function _buildMutationSkillContent() {
 function _buildMutRightCol(rightCol) {
     rightCol.innerHTML = '';
     const skills = (gameState.mutationSkills && gameState.mutationSkills.skills) || {};
-    const pts    = gameState.mutationSkillPoints || 0;
+    const pts    = gameState.mutationSkillPoints ?? 0;
 
     const ptsLabel = document.createElement('div');
     ptsLabel.style.cssText = 'font-size:13px;color:#CC88FF;text-align:center;margin-bottom:12px;font-weight:bold;';
@@ -778,9 +779,10 @@ function _buildMutRightCol(rightCol) {
     rightCol.appendChild(ptsLabel);
 
     const sk    = skills.recallOrgan || { level: 0, maxLevel: 3 };
-    const lv    = (sk.level != null ? sk.level : 0);
+    const currentLevel = gameState.mutationSkills?.skills?.recallOrgan?.level ?? 0;
+    const lv    = currentLevel;
     const maxLv = sk.maxLevel || 3;
-    const cost  = lv + 1;
+    const cost  = currentLevel + 1;
     const maxed = lv >= maxLv;
     const canUp = !maxed && pts >= cost;
 

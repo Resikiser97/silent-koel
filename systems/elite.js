@@ -42,9 +42,23 @@ function _getHunterEliteType(nightNum, useHard) {
 
 function _spawnHunterElite(nightNum, eliteType) {
     const cfg  = HARD_ELITE_CONFIG[eliteType];
-    const tier = ELITE_CONFIG.nights[nightNum - 1];
+    const map  = gameState.currentMap;
+    const tier = map.elites[nightNum - 1];
     const meta = _HUNTER_ELITE_META[eliteType];
     const star = _HUNTER_ELITE_STAR[eliteType];
+    const isHardMap = !!(map.features && map.features.hardElites);
+
+    // 困難地圖：固定數值；Easy/Normal 地圖：依地圖 elites 倍率動態計算
+    const hp     = isHardMap
+        ? cfg.hp
+        : Math.round(ELITE_CONFIG.base.hp * tier.hpMultiplier);
+    const damage = isHardMap
+        ? cfg.damage
+        : Math.round(ELITE_CONFIG.base.damage * tier.damageMultiplier);
+    const speed  = isHardMap
+        ? (tier.speed || 3.9)
+        : (ELITE_CONFIG.base.speed + tier.speedBonus);
+
     const r = cfg.radius;
     const edge = Math.floor(Math.random() * 4);
     let x, y;
@@ -55,9 +69,9 @@ function _spawnHunterElite(nightNum, eliteType) {
 
     gameState.eliteCreature = {
         x, y, radius: cfg.radius,
-        hp: cfg.hp, maxHp: cfg.hp,
-        speed: tier.speed,
-        damage: cfg.damage,
+        hp, maxHp: hp,
+        speed,
+        damage,
         aggroRange: 1000,
         attackRange: cfg.type === 'ranged' ? (cfg.range || 900) : 28,
         attackCooldown: 0,

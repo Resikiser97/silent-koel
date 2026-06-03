@@ -7,6 +7,17 @@
 
 const PATCH_NOTES = [
     {
+        version: 'v0.1.0.2',
+        date: '2026-06-03',
+        fixed: [
+            '變異技能點顯示 NaN 修復（mutationSkillPoints 初始化 null guard）',
+            '變異技能樹面板「返回技能樹」按鈕重複 🌿 emoji 修復',
+            'Easy/Normal 三犬精英怪血量錯誤修復（改用地圖 elites 倍率計算）',
+            '黑色獵人 Boss 數值補入（hp/speed/damage 從 null 改為正確值）',
+            '困難地圖草食性生物傷害倍率未套用修復',
+        ],
+    },
+    {
         version: 'v0.1.0.1',
         date: '2026-06-03',
         added: [
