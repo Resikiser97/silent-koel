@@ -335,6 +335,13 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             myValue:  gameState.player ? (gameState.player.level || 1) : 1,
             ascending: false,
         },
+        {
+            label:    '🎯 獵人終結者',
+            fetchFn:  () => fetchFunHunterKill(difficulty),
+            colName:  'boss_kill_time',
+            myValue:  (isVictory && bossKillTime != null && difficulty === 'hard') ? Math.floor(bossKillTime) : null,
+            ascending: true,
+        },
     ];
 
     // 計算本局成績在一般榜的排名

@@ -63,5 +63,34 @@ const BOSS_CONFIG = {
         color: '#8B7355', colorChasing: '#5C4A2A', glowColor: '#8B6914',
         spawnX: 2000, spawnY: 2000,
         poisonResist: 0.5
+    },
+    hunter: {
+        name: '🎯 黑色獵人', label: '🎯 黑色獵人',
+        radius: 22,
+        aggroRange: 8000,
+        attackRange: 1500,
+        color: '#212121', colorChasing: '#212121', glowColor: '#1565C0',
+        spawnX: null, spawnY: null,
+        poisonResist: 0.5,
+        // 5 管血條制
+        maxHpPerBar: 800,
+        totalBars: 5,
+        // 各形態速度
+        phase1Speed: 4.0,
+        phase2Speed: 7.0,
+        phase3Speed: 9.0,
+        // 攻擊數值
+        sniperDamage: 45,
+        shotgunDamage: 15,
+        // 攻擊間隔
+        phase1AttackInterval: 3500,
+        phase2AttackInterval: 2000,
+        phase3AttackInterval: 2000,
+        // 開槍後停頓
+        postShotPause: 300,
+        // 蓄力時間
+        phase1AimDuration: 300,
+        phase2PumpDuration: 400,
+        phase3AimDuration: 500,
     }
 };

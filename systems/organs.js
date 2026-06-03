@@ -482,6 +482,21 @@ let _compendiumBtnRegion = null;
 
 function handleEliteKill(elite) {
     pausePlayTimer();
+
+    // Hunter 精英怪：特殊獎勵（由 elite.js 的 _handleHunterEliteKill 處理）
+    if (elite && elite.isHunterElite) {
+        _handleHunterEliteKill(elite);
+        gameState.eliteCreature   = null;
+        gameState.eliteJustKilled = true;
+        const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
+        gameState.timeRemaining   = nextDayTime;
+        updateDayNightCycle();
+        gameState.dayNightMessage.text  = t('morningEliteKilled');
+        gameState.dayNightMessage.timer = Date.now();
+        resumePlayTimer();
+        return;
+    }
+
     const xp = elite.xp;
 
     // 精英怪死亡掉落：1個1倍屍體 + 4具白骨（圓形散落）
@@ -493,7 +508,7 @@ function handleEliteKill(elite) {
         { type: 'bone', data: {} },
     ]);
 
-    gameState.eliteCreature = null;
+    gameState.eliteCreature   = null;
     gameState.eliteJustKilled = true;
     if (!gameState.gameOver) {
         const ownedIds = (gameState.player.hiddenOrgans || []).map(h => h.id);
@@ -511,7 +526,7 @@ function handleEliteKill(elite) {
     const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
     gameState.timeRemaining = nextDayTime;
     updateDayNightCycle();
-    gameState.dayNightMessage.text = t('morningEliteKilled');
+    gameState.dayNightMessage.text  = t('morningEliteKilled');
     gameState.dayNightMessage.timer = Date.now();
     resumePlayTimer();
 }

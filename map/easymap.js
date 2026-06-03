@@ -36,6 +36,17 @@ const EASY_MAP = {
         { biome: 'desert', name: '🏜️ 沙漠蠍王', hp: 550, speed: 1.2, damage: 20, radius: 28, attackRange: 32 },
     ],
 
+    features: {
+        giantization:   false,
+        killer:         false,
+        eliteRegen:     false,
+        bossRegen:      false,
+        hostileEatMeat: false,
+        hardElites:     false,
+        dogElites:      true,
+        hunterBoss:     false,
+    },
+
     // 生物技能（預留，之後填入）
     creatureAbilities: {
         neutral: [],

@@ -34,7 +34,7 @@ function applyDamageToPlayer(rawDamage, attacker) {
         attacker.hp -= thornTotal;
         if (attacker.hp <= 0) {
             if (attacker === gameState.boss) {
-                showVictory();
+                handleBossKill(attacker);
             } else if (attacker === gameState.eliteCreature) {
                 handleEliteKill(attacker);
             } else {
@@ -295,7 +295,7 @@ function playerAttack() {
     }
 
     if (anyHit) AudioManager.play(anyCrit ? 'attackCrit' : 'attackNormal');
-    if (bossDied) showVictory();
+    if (bossDied) handleBossKill(gameState.boss);
 }
 
 function updateStatusEffects() {
@@ -315,7 +315,7 @@ function updateStatusEffects() {
             c.lastBleedTick = now;
             showFloatingText(c.x, c.y - 18, t('bleedFloat', { n: bleedAmt }), '#880000', 11);
             if (hpBefore > 0 && c.hp <= 0) {
-                if (isBoss) showVictory();
+                if (isBoss) handleBossKill(c);
                 else if (isElite) handleEliteKill(c);
                 else if (c.isGiantized) handleGiantKill(c);
                 else handleKill(c, isHostile);
@@ -331,7 +331,7 @@ function updateStatusEffects() {
             c.lastPoisonTick += 1000;
             showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: actualPoison }), '#8800CC', 11);
             if (hpBefore > 0 && c.hp <= 0) {
-                if (isBoss) showVictory();
+                if (isBoss) handleBossKill(c);
                 else if (isElite) handleEliteKill(c);
                 else if (c.isGiantized) handleGiantKill(c);
                 else handleKill(c, isHostile);

@@ -1746,7 +1746,7 @@ function showMapSelect() {
     const diffs = [
         { id: 'easy',   key: 'diffEasy',   map: typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null, locked: false },
         { id: 'normal', key: 'diffNormal', map: typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null, locked: false },
-        { id: 'hard',   key: 'diffHard',   map: null, locked: false },
+        { id: 'hard',   key: 'diffHard',   map: typeof HARD_MAP !== 'undefined' ? HARD_MAP : null, locked: false },
         { id: 'hell',   key: 'diffHell',   map: null, locked: true },
     ];
     const diffBtnEls = {};

@@ -1,4 +1,4 @@
-## v0.0.69.0
+## v0.1.0.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.0.69.0**
+- 版本：**v0.1.0.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -104,8 +104,9 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | 檔案 | 職責 |
 |------|------|
 | `map.md` | 地形設計文件 |
-| `easymap.js` | EASY_MAP（簡單難度地形參數、生物倍率、精英怪配置） |
-| `normalmap.js` | NORMAL_MAP（普通難度：生物×1.5、aggroRange 400、巨人化/殺手化/Boss回血開啟） |
+| `easymap.js` | EASY_MAP（簡單難度；dogElites 三犬精英怪開啟） |
+| `normalmap.js` | NORMAL_MAP（普通難度：生物×1.5、aggroRange 400、巨人化/殺手化/Boss回血/dogElites 開啟） |
+| `hardmap.js` | HARD_MAP（困難難度：生物×2.5、aggroRange 600、三隼精英怪/黑色獵人 Boss 開啟） |
 
 ---
 
@@ -129,6 +130,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `clearCount_easy` / `clearCount_normal` / `clearCount_hard` | 各難度通關次數 |
 | `clearCount_char_*` | 各角色通關次數（v0.0.69.0） |
 | `killCount_bear` / `killCount_shark` / `killCount_scorpion` / `killCount_hunter` | Boss 擊殺次數 |
+| `hunterSlayerUnlocked` | 是否曾擊殺黑色獵人（`'true'`，v0.1.0.0） |
 
 ---
 

@@ -15,6 +15,7 @@
 //   fetchFunKillerMaxLevel(difficulty) — 趣味榜：殺手克星（killer_max_level 最高）
 //   fetchFunBossKillSpeed(difficulty) — 趣味榜：最快擊殺 Boss
 //   fetchFunMaxLevel(difficulty) — 趣味榜：最高等級 TOP10
+//   fetchFunHunterKill(difficulty) — 趣味榜：最快擊殺黑色獵人（困難地圖）
 //   fetchAvailableDifficulties() — 取得排行榜中有資料的難度陣列
 //
 // 【依賴的跨檔案函式】（修改時注意這些來自外部）
@@ -142,6 +143,14 @@ async function fetchFunMaxLevel(difficulty) {
         'leaderboard', 'GET', null,
         '?select=name,level,version,created_at,character' + diffFilter +
         '&level=not.is.null&order=level.desc&limit=10'
+    );
+}
+
+// 最快擊殺黑色獵人（困難地圖，boss_kill_time 最短）
+async function fetchFunHunterKill(difficulty) {
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,boss_kill_time,version,created_at,character&difficulty=eq.hard&boss_kill_time=not.is.null&order=boss_kill_time.asc&limit=10'
     );
 }
 

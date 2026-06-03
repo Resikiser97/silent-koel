@@ -145,34 +145,55 @@ function _drawArcherfish(ctx, sx, sy, r, p) {
 // 阿奇爾 HUD：子彈渲染 + 充能格顯示
 // =============================================================
 
-/** 渲染所有飛行中的子彈（水泡造型） */
+/** 渲染所有飛行中的子彈（水泡造型 / 獵人子彈） */
 function drawProjectiles() {
     if (!gameState.projectiles || gameState.projectiles.length === 0) return;
     for (const b of gameState.projectiles) {
         const s = worldToScreen(b.x, b.y);
         if (s.x < -20 || s.x > VIEW_W + 20 || s.y < -20 || s.y > VIEW_H + 20) continue;
         ctx.save();
-        // 外圈光暈
-        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, b.radius * 2);
-        grad.addColorStop(0, 'rgba(79,195,247,0.35)');
-        grad.addColorStop(1, 'rgba(79,195,247,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, b.radius * 2, 0, Math.PI * 2);
-        ctx.fill();
-        // 主體水泡
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, b.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(79,195,247,0.65)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(200,240,255,0.9)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        // 高光小點
-        ctx.beginPath();
-        ctx.arc(s.x - b.radius * 0.3, s.y - b.radius * 0.3, b.radius * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fill();
+        if (b.owner === 'hunter') {
+            // 狙擊子彈：長條金屬感
+            if (b.type === 'sniper') {
+                const ang = Math.atan2(b.vy, b.vx);
+                ctx.translate(s.x, s.y);
+                ctx.rotate(ang);
+                ctx.fillStyle = '#FFD700';
+                ctx.shadowColor = '#FF8800';
+                ctx.shadowBlur = 6;
+                ctx.fillRect(-10, -2, 20, 4);
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(-10, -1, 4, 2);
+            } else {
+                // 散彈：小圓橘紅
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, b.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,120,30,0.85)';
+                ctx.shadowColor = '#FF4400';
+                ctx.shadowBlur = 4;
+                ctx.fill();
+            }
+        } else {
+            // 阿奇爾水泡
+            const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, b.radius * 2);
+            grad.addColorStop(0, 'rgba(79,195,247,0.35)');
+            grad.addColorStop(1, 'rgba(79,195,247,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, b.radius * 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, b.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(79,195,247,0.65)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(200,240,255,0.9)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(s.x - b.radius * 0.3, s.y - b.radius * 0.3, b.radius * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fill();
+        }
         ctx.restore();
     }
 }
@@ -947,6 +968,14 @@ function drawGame() {
 
     // 9e. 沙暴螢幕外圈遮罩（蠍王血量<40%觸發，所有世界物件後、UI前）
     _drawSandStormOverlay();
+
+    // 9f. 黑色獵人 Phase 3 切換紅色閃光（1幀）
+    if (gameState._hunterPhase3Flash && Date.now() - gameState._hunterPhase3Flash < 80) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,0,0,0.2)';
+        ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+        ctx.restore();
+    }
 
     // 9b. 大腦衝能條（玩家正下方）
     if (p.brainActive) {

@@ -14,6 +14,7 @@
 
 function updateProjectiles() {
     const projs = gameState.projectiles;
+    const p = gameState.player;
     for (let i = projs.length - 1; i >= 0; i--) {
         const b = projs[i];
         b.x += b.vx;
@@ -22,6 +23,7 @@ function updateProjectiles() {
 
         // 超出射程消失
         if (b.distTraveled >= b.maxRange) {
+            if (b.owner === 'hunter') AudioManager.play('hunterBulletHit');
             projs.splice(i, 1);
             continue;
         }
@@ -30,7 +32,17 @@ function updateProjectiles() {
         b.x = ((b.x % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
         b.y = ((b.y % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
 
-        // 命中偵測
+        // 黑色獵人子彈：打玩家
+        if (b.owner === 'hunter') {
+            if (p && wrappedDistance(b.x, b.y, p.x, p.y) < b.radius + (p.radius || 0)) {
+                applyDamageToPlayer(b.damage, gameState.boss);
+                AudioManager.play('hunterBulletHit');
+                projs.splice(i, 1);
+            }
+            continue;
+        }
+
+        // 命中偵測（阿奇爾子彈打敵人）
         if (_checkProjectileHit(b, i)) continue;
     }
 }
@@ -84,7 +96,7 @@ function _checkProjectileHit(b, idx) {
         // 目標死亡路由
         if (c.hp <= 0) {
             if (c === gameState.boss) {
-                showVictory();
+                handleBossKill(c);
             } else if (c === gameState.eliteCreature) {
                 handleEliteKill(c);
             } else if (c.isGiantized) {
