@@ -422,6 +422,10 @@ function initMutationSkills() {
                     JSON.parse(JSON.stringify(DEFAULT_MUTATION_SKILLS.skills)),
                     gameState.mutationSkills.skills || {}
                 );
+                // 還原已存的點數快照，避免重算導致點數異常
+                if (typeof saved._points === 'number' && saved._points >= 0) {
+                    gameState.mutationSkillPoints = saved._points;
+                }
             }
         } else {
             gameState.mutationSkills = JSON.parse(JSON.stringify(DEFAULT_MUTATION_SKILLS));
@@ -430,6 +434,7 @@ function initMutationSkills() {
         gameState.mutationSkills = JSON.parse(JSON.stringify(DEFAULT_MUTATION_SKILLS));
     }
     _syncMutationSkillPoints();
+    _checkAndRepairMutationSkills();
 }
 
 function _saveMutationSkills() {
@@ -454,5 +459,51 @@ function _syncMutationSkillPoints() {
         const lv = sk.level || 0;
         spent += lv * (lv + 1) / 2;  // cost = 1+2+...+lv
     }
-    gameState.mutationSkillPoints = Math.max(0, earned - spent);
+    const calculated = earned - spent;
+    if (calculated < 0) {
+        // 資料異常：不覆蓋現有值，由 _checkAndRepairMutationSkills 處理
+        return;
+    }
+    gameState.mutationSkillPoints = calculated;
 }
+
+// 驗算變異技能點是否合理，發現異常時自動修復並提示玩家
+function _checkAndRepairMutationSkills() {
+    const data = gameState.mutationData;
+    if (!data || !data.levels || !gameState.mutationSkills) return;
+
+    const totalLevel = Object.values(data.levels).reduce((a, b) => a + (b || 0), 0);
+    const earned = Math.floor(totalLevel / 50);
+    const skills = gameState.mutationSkills.skills || {};
+    let spent = 0;
+    for (const sk of Object.values(skills)) {
+        const lv = sk.level || 0;
+        spent += lv * (lv + 1) / 2;
+    }
+
+    const expectedPoints = earned - spent;
+    const actualPoints   = gameState.mutationSkillPoints || 0;
+    const isAnomaly = (spent > earned) || (expectedPoints >= 0 && Math.abs(actualPoints - expectedPoints) > 1);
+
+    if (!isAnomaly) return;
+
+    // 退還所有技能點，重置所有技能等級
+    for (const sk of Object.values(gameState.mutationSkills.skills)) {
+        sk.level = 0;
+    }
+    gameState.mutationSkillPoints = Math.max(0, earned);
+    _saveMutationSkills();
+
+    console.log('[MutationRepair] 異常修復：earned=' + earned + ', spent=' + spent + ', 已重置為 points=' + gameState.mutationSkillPoints);
+
+    setTimeout(() => {
+        if (typeof showFloatingText === 'function' && gameState.player) {
+            showFloatingText(gameState.player.x, gameState.player.y - 60, '⚠️ 變異技能點已修復', '#FFD700', 16);
+        }
+        const overlay = document.getElementById('skill-tree-overlay');
+        if (overlay && typeof buildSkillTreeOverlay === 'function') {
+            buildSkillTreeOverlay(null, false, false, 'postGame');
+        }
+    }, 1000);
+}
+window._checkAndRepairMutationSkills = _checkAndRepairMutationSkills;

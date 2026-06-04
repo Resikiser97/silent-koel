@@ -1,6 +1,22 @@
-## v0.1.3.0
+## v0.1.3.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.3.1 - 2026-06-04
+
+### 修復
+- **變異技能點異常**：升級回憶器官後技能點歸零且等級未保存（出了點數拿不到效果）
+  - `_syncMutationSkillPoints()` 防止 `earned - spent` 為負時強制覆蓋現有點數
+  - `initMutationSkills()` 正確還原 localStorage 的 `_points` 快照，避免每次重算
+  - 新增 `_checkAndRepairMutationSkills()`：啟動時及開啟變異面板時自動驗算，發現異常自動退還所有技能點並顯示 ⚠️ 提示
+
+### 新增（合併自 v0.1.3.0）
+- 趣味排行榜：🍎 最佳果王（單局吃果子數最多）
+- 趣味排行榜：🏹 最強獵戶（單局普通生物擊殺數最多，不含精英/Boss/巨人/殺手）
+- `sessionStats` 新增 `fruitsEaten` 和 `normalKills` 計數（每局重置）
+- Supabase leaderboard 表新增 `fruits_eaten` / `normal_kills` 欄位對應
 
 ---
 

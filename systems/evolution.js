@@ -712,6 +712,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             mutContent.style.display = 'flex';
             mutCloseRow.style.display = 'flex';
             _syncMutationSkillPoints();
+            if (typeof _checkAndRepairMutationSkills === 'function') _checkAndRepairMutationSkills();
             _refreshMutContentLeft(mutContent);
             _refreshMutContentRight(mutContent);
             titleEl.textContent = '⚗️ ' + t('mutationSkillTree');

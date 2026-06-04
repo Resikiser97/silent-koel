@@ -1,4 +1,4 @@
-## v0.1.3.0
+## v0.1.3.1
 
 # The Silent Koel — 模組架構說明
 
@@ -65,6 +65,7 @@ systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, check
                           （showOrganSelection() 偵測 tutorialOrganPhase，鎖定第一張攻擊器官；v0.45.0）
 systems/mutation.js       initMutationData, saveMutationData, addMutationPoints
                           DEFAULT_MUTATION_SKILLS, initMutationSkills, _saveMutationSkills, _syncMutationSkillPoints（變異技能樹，v0.0.69.0）
+                          _checkAndRepairMutationSkills（啟動/開啟面板時驗算並修復異常，v0.1.3.1）
                           getMutationUpgradeCost, upgradeMutation
                           applyMutationEffects, applyAllMutationBonuses
                           checkMutationCompensation, showMutationPanel
