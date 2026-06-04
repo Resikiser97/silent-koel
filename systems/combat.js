@@ -17,6 +17,7 @@ import { t } from '../lang.js';
 import { addXP, showXPPopup } from './player.js';
 import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
 import { handleBossKill } from './boss.js';
+import { showSkillTree } from './evolution.js';
 import { _archerAttack } from './player.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 
