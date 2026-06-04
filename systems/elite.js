@@ -106,6 +106,7 @@ function _spawnHunterElite(nightNum, eliteType) {
         _aimUntil: 0,
         _ringAngle: 0,
         _venomPuddleCount: 0,
+        _venomFireAt: 0,
         _venomLandAt: 0,
         _venomLandPos: null,
         diet: 'carnivore',
@@ -192,7 +193,7 @@ function _fireEliteFalconProjectile(elite, p, pellets, maxRange, speed) {
             vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
             speed, damage: elite.damage,
             maxRange: maxRange || 1000, distTraveled: 0,
-            radius: 5, owner: 'hunter', type: 'shotgun_pellet',
+            radius: 5, owner: 'hunter', type: pellets > 1 ? 'shotgun_pellet' : 'sniper',
         });
     }
     elite.attackCooldown  = Date.now();
@@ -206,6 +207,7 @@ function _fireVenomFalconShot(elite, p) {
     elite.attackCooldown = Date.now();
     elite._postShotTimer = Date.now() + 500;
     AudioManager.play('venomFalconLaunch');
+    elite._venomFireAt  = Date.now();
     // 0.8 秒後落地
     elite._venomLandAt  = Date.now() + 800;
     elite._venomLandPos = { x: targetX, y: targetY };

@@ -141,6 +141,47 @@ function _drawArcherfish(ctx, sx, sy, r, p) {
     ctx.restore();
 }
 
+// ── 毒霧隼飛行毒球 + 地面腐蝕液體（地形之上、生物之下）
+function _drawVenomFalconEffects() {
+    // A. 飛行中毒球（從 elite 到落點的插值圓形）
+    const elite = gameState.eliteCreature;
+    if (elite && elite._venomFireAt > 0 && elite._venomLandPos && elite._venomLandAt > Date.now()) {
+        const progress = (Date.now() - elite._venomFireAt) / (elite._venomLandAt - elite._venomFireAt);
+        const cx = elite.x + (elite._venomLandPos.x - elite.x) * progress;
+        const cy = elite.y + (elite._venomLandPos.y - elite.y) * progress;
+        const s = worldToScreen(cx, cy);
+        if (s.x >= -20 && s.x <= VIEW_W + 20 && s.y >= -20 && s.y <= VIEW_H + 20) {
+            ctx.save();
+            ctx.shadowColor = '#33FF66';
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#1B5E20';
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+    // B. 落地腐蝕液體（venomFalcon 專屬，scorpion 已由 boss.js 繪製）
+    if (!gameState.venomPuddles) return;
+    for (const puddle of gameState.venomPuddles) {
+        if (puddle.owner !== 'venomFalcon') continue;
+        const elapsed = Date.now() - puddle.startTime;
+        if (elapsed >= puddle.duration) continue;
+        const s = worldToScreen(puddle.x, puddle.y);
+        if (s.x < -puddle.radius - 10 || s.x > VIEW_W + puddle.radius + 10 ||
+            s.y < -puddle.radius - 10 || s.y > VIEW_H + puddle.radius + 10) continue;
+        ctx.save();
+        ctx.fillStyle = 'rgba(50, 180, 50, 0.35)';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, puddle.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(80, 220, 80, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
 // =============================================================
 // 阿奇爾 HUD：子彈渲染 + 充能格顯示
 // =============================================================
@@ -813,6 +854,9 @@ function drawGame() {
 
     // 5b. 繪製白骨
     drawBones();
+
+    // 5c. 毒霧隼飛行毒球 + 地面腐蝕液體（地形之上、生物之下）
+    _drawVenomFalconEffects();
 
     // 5. 繪製中立生物
     drawNeutralCreatures();

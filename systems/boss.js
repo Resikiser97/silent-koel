@@ -495,23 +495,36 @@ function _drawHunter(ctx, r, t, boss) {
     ctx.fill();
     ctx.restore();
 
-    // 瞄準時顯示準心（攻擊蓄力中）
-    if (boss._aimTarget && boss.state === 'aiming') {
-        const tx = worldToScreen(boss._aimTarget.x, boss._aimTarget.y);
-        const bx = worldToScreen(boss.x, boss.y);
-        const dx = tx.x - bx.x, dy = tx.y - bx.y;
-        const len = Math.sqrt(dx * dx + dy * dy) || 1;
-        const pulse = Math.sin(t / 80) > 0;
+    // 雷射瞄準線（aiming 狀態，從 Boss 中心指向目標）
+    if (boss.state === 'aiming' && boss._aimTarget) {
+        const bossScreen = worldToScreen(boss.x, boss.y);
+        const ts = worldToScreen(boss._aimTarget.x, boss._aimTarget.y);
         ctx.save();
-        ctx.strokeStyle = pulse ? 'rgba(255,50,50,0.8)' : 'rgba(255,100,100,0.5)';
-        ctx.lineWidth   = 1.5;
+        ctx.strokeStyle = 'rgba(255, 50, 50, 0.75)';
+        ctx.lineWidth = 2;
         ctx.setLineDash([8, 4]);
+        ctx.shadowColor = '#FF0000';
+        ctx.shadowBlur = 6;
         ctx.beginPath();
-        ctx.moveTo(gunSign * r * 1.7 * Math.cos(0.3), r * 0.05 + r * 1.7 * Math.sin(0.3));
-        ctx.lineTo(dx / len * 600, dy / len * 600);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(ts.x - bossScreen.x, ts.y - bossScreen.y);
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.restore();
+        // 第三形態融合技：額外 5 條橘色隨機方向散射預警線
+        if (boss._phase === 3) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,150,0,0.5)';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 5; i++) {
+                const scatterAngle = Math.random() * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(scatterAngle) * 200, Math.sin(scatterAngle) * 200);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
     }
 }
 
@@ -715,7 +728,7 @@ function drawBoss() {
             ctx.textAlign = 'left';
             ctx.shadowColor = '#000';
             ctx.shadowBlur  = 3;
-            ctx.fillText('x' + (bars - 1), bBarX - 22, bBarY + 6);
+            ctx.fillText('x' + bars, bBarX - 22, bBarY + 6);
             ctx.restore();
         }
     } else {
