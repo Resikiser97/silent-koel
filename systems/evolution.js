@@ -589,11 +589,18 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             if (_lrHidden.length > 0) {
                 const hTitle = document.createElement('div');
                 hTitle.style.cssText = 'font-size:14px;color:#FFD700;margin-bottom:8px;margin-top:6px;';
-                hTitle.textContent = t('inheritHiddenHome');
+                // 讀取回憶器官等級決定繼承上限（與 postGame 路徑一致）
+                const homeHiddenLimit = 1 + ((gameState.mutationSkills &&
+                    gameState.mutationSkills.skills &&
+                    gameState.mutationSkills.skills.recallOrgan &&
+                    gameState.mutationSkills.skills.recallOrgan.level) || 0);
+                hTitle.textContent = homeHiddenLimit > 1
+                    ? '✨ 選擇繼承最多 ' + homeHiddenLimit + ' 個隱藏器官（可不選）'
+                    : t('inheritHiddenHome');
                 inheritSec.appendChild(hTitle);
                 const homeHidGrid = document.createElement('div');
                 homeHidGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
-                let homeSelHidden = null;
+                const homeSelHiddenArr = [];
                 const homeHidCardMap = [];
                 _lrHidden.forEach((organ) => {
                     const card = document.createElement('div');
@@ -609,20 +616,32 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                     dEl.textContent = organ.desc || '';
                     card.appendChild(dEl);
                     card.onclick = () => {
-                        if (homeSelHidden && homeSelHidden.id === organ.id) {
-                            homeSelHidden = null;
+                        const idx = homeSelHiddenArr.findIndex(o => o.id === organ.id);
+                        if (idx >= 0) {
+                            // 已選 → 取消選擇
+                            homeSelHiddenArr.splice(idx, 1);
                             card.style.borderColor = '#887700';
                             card.style.background = 'rgba(255,215,0,0.08)';
-                            localStorage.removeItem('savedHiddenOrgans');
                         } else {
-                            if (homeSelHidden) {
-                                const pi = _lrHidden.findIndex(o => o.id === homeSelHidden.id);
-                                if (pi >= 0 && homeHidCardMap[pi]) { homeHidCardMap[pi].style.borderColor = '#887700'; homeHidCardMap[pi].style.background = 'rgba(255,215,0,0.08)'; }
+                            // 未選 → 加入，超過上限時踢掉最舊的
+                            if (homeSelHiddenArr.length >= homeHiddenLimit) {
+                                const removed = homeSelHiddenArr.shift();
+                                const ri = _lrHidden.findIndex(o => o.id === removed.id);
+                                if (ri >= 0 && homeHidCardMap[ri]) {
+                                    homeHidCardMap[ri].style.borderColor = '#887700';
+                                    homeHidCardMap[ri].style.background = 'rgba(255,215,0,0.08)';
+                                }
                             }
-                            homeSelHidden = organ;
+                            homeSelHiddenArr.push(organ);
                             card.style.borderColor = '#FFD700';
                             card.style.background = 'rgba(255,215,0,0.22)';
-                            localStorage.setItem('savedHiddenOrgans', JSON.stringify([{ id: organ.id, name: organ.name, type: organ.type, desc: organ.desc }]));
+                        }
+                        if (homeSelHiddenArr.length > 0) {
+                            localStorage.setItem('savedHiddenOrgans', JSON.stringify(
+                                homeSelHiddenArr.map(o => ({ id: o.id, name: o.name, type: o.type, desc: o.desc }))
+                            ));
+                        } else {
+                            localStorage.removeItem('savedHiddenOrgans');
                         }
                     };
                     homeHidCardMap.push(card);
