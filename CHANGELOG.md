@@ -1,6 +1,20 @@
-## v0.1.3.1
+## v0.1.3.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.3.3 - 2026-06-04
+
+### 修復
+- 回憶器官升級後 postGame 技能樹強大器官選擇上限未更新
+  - `buildSkillTreeOverlay` postGame 模式加入 localStorage 強制重載 `mutationSkills`
+  - 移除 `_checkAndRepairMutationSkills` 在每次開啟變異面板時的誤呼叫（保留 `initMutationSkills` 載入時的驗算）
+  - 移除 v0.1.2.0 遺留的 `[Debug]` console.log
+- 音量設定刷新後歸回預設值
+  - `window.onload` 補上 `loadSettings()`，確保頁面載入時立即讀取已存設定
+  - `loadSettings()` volume 改為深度合併（`Object.assign` 防禦性寫法）
+  - `playIntroTheme()` 改為即時讀取 `gameState.settings.volume`，不再使用一次性快照
 
 ---
 

@@ -429,6 +429,9 @@ window.onload = () => {
         history.pushState(null, '', window.location.href);
     });
 
+    // 頁面載入時立即讀取已存設定（確保首頁音量/語言與 localStorage 一致）
+    if (typeof loadSettings === 'function') loadSettings();
+
     // 先載入變異資料（獨立於遊戲存檔版本）
     initMutationData();
 

@@ -8,8 +8,15 @@ let _introThemeAudio = null;
 function playIntroTheme() {
     if (_introThemeAudio) return;
     _introThemeAudio = new Audio(AUDIO_FILES.introTheme);
-    _introThemeAudio.loop   = true;
-    _introThemeAudio.volume = 0.4 * ((gameState.settings && gameState.settings.volume ? (gameState.settings.volume.masterOn ? (gameState.settings.volume.master / 100) * (gameState.settings.volume.musicOn ? gameState.settings.volume.music / 100 : 0) : 0) : 1));
+    _introThemeAudio.loop = true;
+    _introThemeAudio.currentTime = 0;
+    const v = gameState.settings && gameState.settings.volume
+        ? gameState.settings.volume
+        : DEFAULT_SETTINGS.volume;
+    const masterOn = v.masterOn !== false;
+    const musicOn  = v.musicOn  !== false;
+    const vol = masterOn && musicOn ? (v.master / 100) * (v.music / 100) * 0.4 : 0;
+    _introThemeAudio.volume = Math.max(0, Math.min(1, vol));
     _introThemeAudio.play().catch(() => {});
 }
 

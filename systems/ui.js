@@ -97,7 +97,10 @@ function loadSettings() {
         const saved = localStorage.getItem('gameSettings');
         if (saved) {
             const parsed = JSON.parse(saved);
-            if (parsed.volume) Object.assign(gameState.settings.volume, parsed.volume);
+            // volume 深度合併，確保子欄位不被 DEFAULT_SETTINGS 整個覆蓋
+            if (parsed.volume && typeof parsed.volume === 'object') {
+                gameState.settings.volume = Object.assign({}, DEFAULT_SETTINGS.volume, parsed.volume);
+            }
             if (parsed.keys)   Object.assign(gameState.settings.keys,   parsed.keys);
             if (parsed.language && LANG[parsed.language]) {
                 gameState.settings.language = parsed.language;

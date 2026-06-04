@@ -297,6 +297,24 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             if (rawMs && gameState.mutationSkills) Object.assign(gameState.mutationSkills, JSON.parse(rawMs));
         } catch(e) {}
     }
+    if (effectiveMode === 'postGame') {
+        // postGame：確保 mutationSkills 從 localStorage 最新資料載入
+        // （避免遊戲期間記憶體狀態與 localStorage 不同步）
+        const _rawMS = localStorage.getItem('mutationSkills');
+        if (_rawMS) {
+            try {
+                const _parsedMS = JSON.parse(_rawMS);
+                if (_parsedMS && _parsedMS.skills) {
+                    gameState.mutationSkills = Object.assign(
+                        {},
+                        gameState.mutationSkills || {},
+                        _parsedMS,
+                        { skills: Object.assign({}, (gameState.mutationSkills && gameState.mutationSkills.skills) || {}, _parsedMS.skills) }
+                    );
+                }
+            } catch(e) {}
+        }
+    }
     const existing = document.getElementById('skill-tree-overlay');
     if (existing) existing.remove();
     const overlay = document.createElement('div');
@@ -391,7 +409,6 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     if (effectiveMode === 'postGame' && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) skillContent.appendChild(organSection);
 
     if (effectiveMode === 'postGame' && hiddenOrgans.length > 0) {
-        console.log('[Debug] recallOrgan level:', gameState.mutationSkills?.skills?.recallOrgan?.level, '| hiddenOrganLimit will be:', 1 + (gameState.mutationSkills?.skills?.recallOrgan?.level || 0));
         const hiddenOrganLimit = 1 + ((gameState.mutationSkills && gameState.mutationSkills.skills && gameState.mutationSkills.skills.recallOrgan && gameState.mutationSkills.skills.recallOrgan.level) || 0);
         const hiddenSection = document.createElement('div');
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
@@ -712,7 +729,6 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             mutContent.style.display = 'flex';
             mutCloseRow.style.display = 'flex';
             _syncMutationSkillPoints();
-            if (typeof _checkAndRepairMutationSkills === 'function') _checkAndRepairMutationSkills();
             _refreshMutContentLeft(mutContent);
             _refreshMutContentRight(mutContent);
             titleEl.textContent = '⚗️ ' + t('mutationSkillTree');
