@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 1 — Codex 依賴審計（Stage 0 已完成）
-目前批次     : 尚未開始
+所在 Stage   : Stage 2B — ESM 遷移 批次2（systems/ 基礎層）
+目前批次     : S2B-1 完成，等待 Codex 靜態檢查
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-04
-最後操作者   : Claude Code（Stage 0 完成）
+最後操作者   : Claude Code（批次2遷移完成）
 ```
 
 ---
@@ -41,7 +41,7 @@
 - [ ] S2A-4：commit 批次1
 
 ### Stage 2B — ESM 遷移 批次2（systems/ 基礎層）
-- [ ] S2B-1：Claude Code 執行批次2遷移
+- [x] S2B-1：Claude Code 執行批次2遷移
 - [ ] S2B-2：Codex 靜態語法檢查
 - [ ] S2B-3：你開瀏覽器人工測試
 - [ ] S2B-4：commit 批次2
@@ -70,6 +70,20 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-04（Stage 2B S2B-1 完成）
+- 狀態：批次2遷移完成，等待 Codex 靜態檢查
+- 操作者：Claude Code
+- 完成項目：7 個 systems/ 基礎層檔案加入 export/import
+  - gameState.js：export DEFAULT_SETTINGS, gameState, canvas, ctx
+  - utils.js：import gameState/ctx/wrappedDelta；export 7 個函式
+  - audio.js：import AUDIO_FILES/DEFAULT_SETTINGS/gameState；export 4 個
+  - camera.js：import gameState/MAP_WIDTH/MAP_HEIGHT/VIEW_W/VIEW_H；export 5 個
+  - map.js：import gameState/ctx；export 9 個常數 + 8 個函式
+  - mobile.js：import gameState；export 8 個
+  - chat.js：import SUPABASE_URL/SUPABASE_KEY/supabaseQuery/GAME_INFO/gameState；export 10 個
+- 發現問題：VIEW_W/VIEW_H 為 mutable let，mobile.js 的 _setViewSize 直接賦值（已知問題，Stage 3 修正）
+- 下一步：S2B-2 Codex 靜態語法檢查，S2B-3 瀏覽器人工測試
 
 ### 2026-06-04（Stage 2A S2A-1 完成）
 - 狀態：批次1遷移完成，等待 Codex 靜態檢查

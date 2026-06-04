@@ -28,6 +28,10 @@
 //   ⚠️ _chatExpanded 狀態由 systems/input.js 的 ESC 鍵處理讀取，不可隨意重命名
 // =============================================================
 
+import { SUPABASE_URL, SUPABASE_KEY, supabaseQuery } from '../config/supabase.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { gameState } from './gameState.js';
+
 // ─────────────────────────────────────────────
 // SHA-256 工具（帳號密碼雜湊用）
 // ─────────────────────────────────────────────
@@ -95,7 +99,7 @@ function _loadChatPosition() {
 // localStorage 聊天室帳號設定
 // ─────────────────────────────────────────────
 
-function loadChatSettings() {
+export function loadChatSettings() {
     try {
         const raw = localStorage.getItem('chatSettings');
         const d   = raw ? JSON.parse(raw) : {};
@@ -110,7 +114,7 @@ function loadChatSettings() {
     }
 }
 
-function saveChatSettings(obj) {
+export function saveChatSettings(obj) {
     localStorage.setItem('chatSettings', JSON.stringify(obj));
 }
 
@@ -231,7 +235,7 @@ async function chatLogin(username, password) {
     return { ok: true, msg: syncMsg, isGM: user.is_gm };
 }
 
-async function chatSaveProgress() {
+export async function chatSaveProgress() {
     const settings = loadChatSettings();
     if (!settings.loggedIn || !settings.playerName) return { ok: false, msg: '請先登入' };
     const localData = _collectLocalData();
@@ -295,7 +299,7 @@ async function chatSyncData() {
     return { ok: true, msg: '✅ 資料已是最新' };
 }
 
-function chatLogout() {
+export function chatLogout() {
     const keys = [
         'playerSkills', 'skillPoints', 'savedOrgans',
         'savedHiddenOrgans', 'lastRunOrgans', 'gameSettings',
@@ -309,7 +313,7 @@ function chatLogout() {
 // Supabase 聊天室核心函式
 // ─────────────────────────────────────────────
 
-async function initChat() {
+export async function initChat() {
     // 先確保斷線（重入時重新建立乾淨連線）
     disconnectChat();
 
@@ -406,7 +410,7 @@ async function _pollNewMessages() {
     } catch(e) {}
 }
 
-function disconnectChat() {
+export function disconnectChat() {
     if (_chatChannel && _sbClient) {
         try { _sbClient.removeChannel(_chatChannel); } catch(e) {}
         _chatChannel = null;
@@ -570,14 +574,14 @@ async function verifyGM(code) {
 // 階段 3：聊天室 UI
 // ─────────────────────────────────────────────
 
-function showChat() {
+export function showChat() {
     const collapsed = document.getElementById('chat-collapsed-panel');
     const fakeInput = document.getElementById('chat-fake-input');
     if (collapsed) collapsed.style.display = '';
     if (fakeInput)  fakeInput.style.display  = '';
 }
 
-function hideChat() {
+export function hideChat() {
     ['chat-collapsed-panel', 'chat-fake-input',
      'chat-expanded-panel', 'chat-overlay-backdrop',
      'chat-settings-panel'].forEach(id => {
@@ -878,7 +882,7 @@ function _renderChatSettingsPanel(panel) {
     }
 }
 
-function buildChatUI() {
+export function buildChatUI() {
     // 清除所有舊元素
     ['chat-collapsed-panel', 'chat-fake-input', 'chat-expanded-panel',
      'chat-overlay-backdrop', 'chat-settings-panel',
@@ -1316,7 +1320,7 @@ function _buildMsgText(msg) {
     return name + '：' + (msg.content || '');
 }
 
-function renderChat() {
+export function renderChat() {
     // 檢查 pin 是否過期
     if (_pinnedMessage && _pinnedMessage.pinUntil) {
         if (new Date(_pinnedMessage.pinUntil).getTime() < Date.now()) {
@@ -1455,7 +1459,7 @@ function _parseColorTags(escapedContent, isVIP) {
 // TODO: 先驅者判斷函式 — 交接點
 // 實作時在此填入判斷邏輯（例如查 chat_users.is_pioneer 欄位或 titleStr === '先驅者'）
 // 目前暫時回傳 false（所有玩家使用一般顏色限制）
-function isVipPlayer(msg) {
+export function isVipPlayer(msg) {
     // TODO: 先驅者系統實作點
     return false;
 }

@@ -2,6 +2,8 @@
 // 共用繪圖工具 - drawArrow / drawHealthBar / drawNameTag / drawGlowEffect
 // 韌性計算      - applyTenacity
 // =============================================================
+import { gameState, ctx } from './gameState.js';
+import { wrappedDelta } from './camera.js';
 
 /**
  * 韌性計算：用目標自身的韌性縮短控制效果持續時間。
@@ -17,7 +19,7 @@
 let _fontCacheOn  = null; // null = 未初始化，強制第一次建構
 let _fontCacheMap = new Map();
 
-function getGameFont(baseSize, baseBold) {
+export function getGameFont(baseSize, baseBold) {
     const on = !!gameState.settings.fontBoldLarge;
     if (on !== _fontCacheOn) {
         _fontCacheOn  = on;
@@ -33,14 +35,14 @@ function getGameFont(baseSize, baseBold) {
     return cached;
 }
 
-function applyTenacity(durationMs, target) {
+export function applyTenacity(durationMs, target) {
     const t = (target && target.tenacity) || 0;
     return Math.max(0, Math.round(durationMs * (1 - t)));
 }
 
 // 在玩家螢幕座標 (px, py) 周圍，朝世界座標 (targetWorldX, targetWorldY) 畫一個指向箭頭
 // 距離 = playerRadius + 20px；透明度每 0.5 秒在 0.6↔1.0 之間閃爍
-function drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius) {
+export function drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius) {
     const { dx, dy } = wrappedDelta(gameState.player.x, gameState.player.y, targetWorldX, targetWorldY);
     const angle = Math.atan2(dy, dx);
     const dist = playerRadius + 20;
@@ -61,7 +63,7 @@ function drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius) {
 }
 
 // 在 (sx, sy) 為血條頂端左角畫一條血條；sx 為水平中心點
-function drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height) {
+export function drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height) {
     const bX = sx - width / 2;
     ctx.fillStyle = bgColor;
     ctx.fillRect(bX, sy, width, height);
@@ -70,7 +72,7 @@ function drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height) {
 }
 
 // 在 (sx, sy) 畫名字標籤，sy 為文字基線位置
-function drawNameTag(sx, sy, name, color, font) {
+export function drawNameTag(sx, sy, name, color, font) {
     ctx.save();
     ctx.fillStyle = color;
     ctx.font = font;
@@ -85,7 +87,7 @@ function drawNameTag(sx, sy, name, color, font) {
 }
 
 // 在 (sx, sy) 畫一個帶光暈的填色圓形
-function drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur) {
+export function drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur) {
     ctx.save();
     ctx.shadowColor = glowColor;
     ctx.shadowBlur = glowBlur;
@@ -105,7 +107,7 @@ function drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur) {
 //     type 'bone'  : data = {}，直接呼叫 _spawnBone
 //     （未來 Phase 可新增 mutation 等 type）
 // =============================================================
-function spawnLootCircle(cx, cy, items) {
+export function spawnLootCircle(cx, cy, items) {
     if (!items || items.length === 0) return;
     const count = items.length;
     const now = Date.now();

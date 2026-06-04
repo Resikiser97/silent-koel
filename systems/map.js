@@ -3,16 +3,17 @@
 //            labelBiomeRegions / mergeSmallRegions / ensureRequiredBiomes
 //            generateTerrain / buildTerrainCanvas / drawTerrain / generateTrees
 // =============================================================
+import { gameState, ctx } from './gameState.js';
 
-const MAP_WIDTH  = 8000;
-const MAP_HEIGHT = 8000;
-let VIEW_W     = 1600;
-let VIEW_H     = 900;
+export const MAP_WIDTH  = 8000;
+export const MAP_HEIGHT = 8000;
+export let VIEW_W     = 1600;
+export let VIEW_H     = 900;
 
-const TILE_SIZE   = 20;    // 地形格子大小，改這個數字可以調整解析度
-const NOISE_SCALE = 0.003; // Noise 縮放比例，影響地形大小
+export const TILE_SIZE   = 20;    // 地形格子大小，改這個數字可以調整解析度
+export const NOISE_SCALE = 0.003; // Noise 縮放比例，影響地形大小
 
-const MAP_RULES = {
+export const MAP_RULES = {
     MIN_BIOME_TILES: 250,
 };
 
@@ -145,12 +146,12 @@ const _SimplexNoise = (function() {
     return { buildPerm, noise2d, noise4d, tileableNoise };
 })();
 
-const BIOME_COLOR = { forest: '#549954', ocean: '#1a4a6b', desert: '#c4a35a' };
+export const BIOME_COLOR = { forest: '#549954', ocean: '#1a4a6b', desert: '#c4a35a' };
 
 let _terrainCanvas = null;
 
 // terrainMap 未就緒前 fallback 到舊公式，確保載入順序安全
-function getBiome(x, y) {
+export function getBiome(x, y) {
     if (!gameState.terrainMap) {
         const dist = Math.sqrt((x - 4000) * (x - 4000) + (y - 4000) * (y - 4000));
         if (dist < 2000) return 'forest';
@@ -164,7 +165,7 @@ function getBiome(x, y) {
     return gameState.terrainMap[gy][gx];
 }
 
-function getBgColor() {
+export function getBgColor() {
     const p = gameState.player;
     const night = gameState.isNight;
     const C = {
@@ -177,7 +178,7 @@ function getBgColor() {
 }
 
 // flood fill：回傳每格所屬 regionId 和 regions 陣列
-function labelBiomeRegions(terrainMap, gridW, gridH) {
+export function labelBiomeRegions(terrainMap, gridW, gridH) {
     const regionId = Array.from({length: gridH}, () => new Int32Array(gridW).fill(-1));
     const regions  = [];
     const DIRS     = [[-1,0],[1,0],[0,-1],[0,1]];
@@ -211,7 +212,7 @@ function labelBiomeRegions(terrainMap, gridW, gridH) {
 }
 
 // 同化所有 size < minTiles 的孤島
-function mergeSmallRegions(terrainMap, gridW, gridH, minTiles) {
+export function mergeSmallRegions(terrainMap, gridW, gridH, minTiles) {
     const {regionId, regions} = labelBiomeRegions(terrainMap, gridW, gridH);
 
     // 建立區塊鄰接圖（環形：四方向皆考慮邊界環繞）
@@ -290,7 +291,7 @@ function mergeSmallRegions(terrainMap, gridW, gridH, minTiles) {
 }
 
 // 確認所有 requiredBiomes 都存在於 terrainMap，回傳 true/false
-function ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes) {
+export function ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes) {
     if (requiredBiomes.length === 0) return true;
     const existing = new Set();
     for (let r = 0; r < gridH; r++) {
@@ -301,7 +302,7 @@ function ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes) {
     return requiredBiomes.every(b => existing.has(b));
 }
 
-function generateTerrain() {
+export function generateTerrain() {
     const cfg          = (gameState.currentMap && gameState.currentMap.terrain) || {};
     const centerRadius = cfg.forestCenterRadius  || 400;
     const forestThr    = cfg.forestThreshold     || 0.2;
@@ -357,7 +358,7 @@ function generateTerrain() {
 }
 
 // 將整張 terrainMap 預渲染到離屏 Canvas（8000x8000）
-function buildTerrainCanvas() {
+export function buildTerrainCanvas() {
     const tc = document.createElement('canvas');
     tc.width  = MAP_WIDTH;
     tc.height = MAP_HEIGHT;
@@ -396,7 +397,7 @@ function buildTerrainCanvas() {
 // 把離屏 Canvas 對應視窗的區域貼到主 Canvas，支援地圖環繞 + 手機視野縮放
 // 手機 cameraZoom < 1.0 時（玩家體型變大），需採樣更大的地形區域（VIEW_W/zoom × VIEW_H/zoom）
 // 並縮放貼到螢幕，確保地形與 worldToScreen() 的樹木/生物座標完全對齊
-function drawTerrain() {
+export function drawTerrain() {
     if (!_terrainCanvas) {
         ctx.fillStyle = getBgColor();
         ctx.fillRect(0, 0, VIEW_W, VIEW_H);
@@ -458,7 +459,7 @@ function drawTerrain() {
     }
 }
 
-function generateTrees(count) {
+export function generateTrees(count) {
     const trees = [];
     for (let i = 0; i < count; i++) {
         const x = Math.floor(Math.random() * (MAP_WIDTH  - 100)) + 50;

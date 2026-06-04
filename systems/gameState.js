@@ -2,7 +2,7 @@
 // 遊戲狀態 - DEFAULT_SETTINGS / gameState / Canvas / MAP 常數
 // =============================================================
 
-const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS = {
     language: 'zh-TW',
     volume: { master: 80, music: 70, sfx: 80, masterOn: true, musicOn: true, sfxOn: true },
     keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ', dash: 'f' },
@@ -17,7 +17,7 @@ const DEFAULT_SETTINGS = {
     cameraZoomLevel: 10,     // 視野縮放刻度（1~10，決定 baseZoom）
 };
 
-const gameState = {
+export const gameState = {
     canvasWidth: 1600,
     canvasHeight: 900,
 
@@ -146,5 +146,5 @@ const gameState = {
 // =============================================================
 // 畫布
 // =============================================================
-const canvas = document.getElementById('gameCanvas');
-const ctx    = canvas.getContext('2d');
+export const canvas = document.getElementById('gameCanvas');
+export const ctx    = canvas.getContext('2d');

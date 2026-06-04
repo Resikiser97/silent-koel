@@ -2,10 +2,12 @@
 // 音效系統 - AudioManager / initAudio
 //           playIntroTheme / stopIntroTheme（首頁背景音樂）
 // =============================================================
+import { AUDIO_FILES } from '../config/gameConfig.js';
+import { DEFAULT_SETTINGS, gameState } from './gameState.js';
 
 let _introThemeAudio = null;
 
-function playIntroTheme() {
+export function playIntroTheme() {
     if (_introThemeAudio) return;
     _introThemeAudio = new Audio(AUDIO_FILES.introTheme);
     _introThemeAudio.loop = true;
@@ -20,14 +22,14 @@ function playIntroTheme() {
     _introThemeAudio.play().catch(() => {});
 }
 
-function stopIntroTheme() {
+export function stopIntroTheme() {
     if (!_introThemeAudio) return;
     _introThemeAudio.pause();
     _introThemeAudio.currentTime = 0;
     _introThemeAudio = null;
 }
 
-const AudioManager = {
+export const AudioManager = {
     _sounds: {},
     _music:  null,
     _currentMusicKey: null,
@@ -121,7 +123,7 @@ const AudioManager = {
     }
 };
 
-function initAudio() {
+export function initAudio() {
     AudioManager.init();
     AudioManager.playMusic('morningTheme');
 }
