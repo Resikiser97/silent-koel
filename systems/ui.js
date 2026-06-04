@@ -1868,6 +1868,7 @@ export function showMapSelect() {
         localStorage.setItem('lastDifficulty', selectedDiff); // B1: 儲存難度供重整頁面後恢復
         // 儲存角色選擇
         gameState.selectedCharacter = selectedChar;
+        localStorage.setItem('lastCharacter', selectedChar);
         overlay.remove();
         let hasOrgans = false;
         try {
@@ -1893,8 +1894,9 @@ export function showStartScreen() {
         // 恢復上一場難度與地圖
         const lastDiff = localStorage.getItem('lastDifficulty') || 'easy';
         const _diffMapTable = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
-        gameState.currentMap     = _diffMapTable[lastDiff] || EASY_MAP;
-        gameState.lastDifficulty = lastDiff;
+        gameState.currentMap        = _diffMapTable[lastDiff] || EASY_MAP;
+        gameState.lastDifficulty    = lastDiff;
+        gameState.selectedCharacter = localStorage.getItem('lastCharacter') || 'koel';
         initializeGame();
         return;
     }
