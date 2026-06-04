@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 0 — 準備工作
+所在 Stage   : Stage 1 — Codex 依賴審計（Stage 0 已完成）
 目前批次     : 尚未開始
-分支狀態     : master（esm-refactor 分支尚未建立）
+分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-04
-最後操作者   : Claude Chat（文件初始化）
+最後操作者   : Claude Code（Stage 0 完成）
 ```
 
 ---
@@ -23,10 +23,10 @@
 ## 各 Stage 完成狀態
 
 ### Stage 0 — 準備工作
-- [ ] S0-1：確認 5 個版本號檔案全部一致
-- [ ] S0-2：建立 `esm-refactor` 分支
-- [ ] S0-3：確認所有 ESM 文件套件存在
-- [ ] S0-4：初始 commit 完成
+- [x] S0-1：確認 5 個版本號檔案全部一致
+- [x] S0-2：建立 `esm-refactor` 分支
+- [x] S0-3：確認所有 ESM 文件套件存在
+- [x] S0-4：初始 commit 完成
 
 ### Stage 1 — Codex 依賴審計
 - [ ] S1-1：Codex 執行依賴審計
@@ -70,6 +70,13 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-04（Stage 0 完成）
+- 狀態：Stage 0 完成
+- 操作者：Claude Code
+- 完成項目：建立 esm-refactor 分支、加入 ESM 文件套件
+- 發現問題：無
+- 下一步：執行 Stage 1 Codex 依賴審計
 
 ### 2026-06-04
 - 狀態：ESM 遷移計劃完成，準備進入 Stage 0
