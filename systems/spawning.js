@@ -5,8 +5,11 @@
 //            _randomPointInBiome / _makeHerbCreature / _makeCarnCreature
 // （generateTrees 已移至 systems/map.js）
 // =============================================================
+import { gameState } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, getBiome } from './map.js';
+import { BIOME_CREATURES } from '../config/creatures.js';
 
-function spawnFruitFromTree(tree) {
+export function spawnFruitFromTree(tree) {
     for (let attempts = 0; attempts < 20; attempts++) {
         const angle = Math.random() * Math.PI * 2;
         const dist = tree.radius + 5 + Math.random() * 20;
@@ -28,7 +31,7 @@ function spawnFruitFromTree(tree) {
     return null;
 }
 
-function spawnFruit() {
+export function spawnFruit() {
     if (gameState.trees.length === 0) return null;
     const tree = gameState.trees[Math.floor(Math.random() * gameState.trees.length)];
     return spawnFruitFromTree(tree);
@@ -133,7 +136,7 @@ function _makeCarnCreature(x, y, biome, spec, strength, mapConfig) {
 }
 
 // ── 初始生成：按生態區各生成草系10隻、肉系8隻
-function spawnBiomeCreatures() {
+export function spawnBiomeCreatures() {
     gameState.neutralCreatures = [];
     gameState.hostileCreatures = [];
     gameState.spawnProtectUntil = Date.now() + 3000; // 出生後 3 秒內中心附近不生肉食怪
@@ -158,12 +161,12 @@ function spawnBiomeCreatures() {
     console.log('--- 生態生物生成完成：草系' + gameState.neutralCreatures.length + '隻、肉系' + gameState.hostileCreatures.length + '隻 ---');
 }
 
-function moveCreature(entity, newX, newY) {
+export function moveCreature(entity, newX, newY) {
     entity.x = ((newX % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
     entity.y = ((newY % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
 }
 
-function spawnTreasure() {
+export function spawnTreasure() {
     gameState.treasures.push({
         x: Math.random() * (MAP_WIDTH  - 60) + 30,
         y: Math.random() * (MAP_HEIGHT - 60) + 30,
@@ -172,7 +175,7 @@ function spawnTreasure() {
 }
 
 // ── 補充生成：在指定生態區生成一隻草系或肉系生物
-function spawnCreatureAtEdgeBiome(biome, type) {
+export function spawnCreatureAtEdgeBiome(biome, type) {
     const map      = gameState.currentMap;
     const strength = map ? map.creatureStrength : null;
     const { x, y } = _randomPointInBiome(biome);
@@ -185,7 +188,7 @@ function spawnCreatureAtEdgeBiome(biome, type) {
     }
 }
 
-function updateCreatureSpawning() {
+export function updateCreatureSpawning() {
     const now     = Date.now();
     const elapsed = 600 - gameState.timeRemaining;
     gameState.creatureStrengthMultiplier = Math.floor(elapsed / 150);

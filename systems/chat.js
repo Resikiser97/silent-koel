@@ -78,7 +78,7 @@ const CHAT_POLL_MS = 8000;            // polling 間隔（ms）
 // 拖拽狀態（供 _makeDraggable 與 gearBtn.onclick 共用）
 const _chatDragState = { wasDragging: false };
 
-let _chatExpanded = false;  // 收合/展開狀態
+export let _chatExpanded = false;  // 收合/展開狀態
 
 // ─────────────────────────────────────────────
 // 聊天室位置 localStorage 讀寫
@@ -692,7 +692,7 @@ function _expandChat() {
     if (inp) setTimeout(() => inp.focus(), 80);
 }
 
-function _collapseChat() {
+export function _collapseChat() {
     _chatExpanded = false;
     const collapsed = document.getElementById('chat-collapsed-panel');
     const fakeInput = document.getElementById('chat-fake-input');
@@ -1418,7 +1418,7 @@ function _parseName(msg) {
     return { lvTag, lvTagHtml, lvNum, name, titleStr, gmLabel, titleHtml, nameHtml, isGm: msg.is_gm };
 }
 
-function _esc(s) {
+export function _esc(s) {
     return String(s || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')

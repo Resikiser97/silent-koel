@@ -16,7 +16,38 @@
 // drawGame() / updateUI() / drawTopBarUI() / drawMinimap() / drawTreasures() 已移至 systems/hud.js
 
 // ── Tooltip 全域變數
+import { gameState, DEFAULT_SETTINGS } from './gameState.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { CHARACTERS, CHARACTERS_COMING_SOON } from '../config/characters.js';
+import { ORGANS, HIDDEN_ORGANS, COMBOS } from '../config/organs.js';
+import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { PATCH_NOTES } from '../config/patchnotes.js';
+import { EASY_MAP } from '../map/easymap.js';
+import { NORMAL_MAP } from '../map/normalmap.js';
+import { HARD_MAP } from '../map/hardmap.js';
+import { COMPENDIUM_DATA } from '../config/compendium_data.js';
+import { LANG, LANG_LIST, t, applyLanguage } from '../lang.js';
+import { AudioManager, playIntroTheme } from './audio.js';
+import { applyDeviceMode, _effectiveMobile } from './mobile.js';
+import { addXP } from './player.js';
+import { spawnFruit } from './spawning.js';
+import { getDayNightPhaseIndex } from './daynight.js';
+import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans, _skillTreeFromHome } from './evolution.js';
+import { buildChatUI, initChat, showChat, hideChat, _esc } from './chat.js';
+import { showLeaderboard, _diffKey } from './leaderboard.js';
+import { fetchTop10 } from '../config/supabase.js';
+import { initializeGame } from '../main.js';
+import { getRankIcon } from './utils.js';
+import { MAP_WIDTH, MAP_HEIGHT } from './map.js';
+import { _updateCameraZoom } from './camera.js';
+
 let _organHitRegions = [];
+let _settingsKeyHandler = null;
+let _settingsMouseHandler = null;
+let _rebindBlink = null;
+let _rebindTimeout = null;
+let _lbDifficulty = 'easy';
+let _top10Difficulty = 'easy';
 // ── 小地圖大小：記住上次非零值（用於 ON/OFF 切換）
 let _lastMinimapSize = 10;
 const _ttEl = document.getElementById('game-tooltip');
@@ -24,7 +55,7 @@ document.addEventListener('mousemove', function(e) {
     if (_ttEl && _ttEl.style.display !== 'none') _moveTooltip(e.clientX, e.clientY);
 });
 
-function showTooltip(data, cx, cy) {
+export function showTooltip(data, cx, cy) {
     if (!_ttEl) return;
     let html = '<div class="tt-name">' + _escH(data.name || '');
     if (data.level != null) {
@@ -39,7 +70,7 @@ function showTooltip(data, cx, cy) {
     _moveTooltip(cx, cy);
 }
 
-function hideTooltip() {
+export function hideTooltip() {
     if (_ttEl) _ttEl.style.display = 'none';
 }
 
@@ -68,7 +99,7 @@ function _escH(s) {
 // 繪製系統
 // =============================================================
 
-function showAlphaAnnouncement(name) {
+export function showAlphaAnnouncement(name) {
     const el = document.createElement('div');
     el.style.cssText = [
         'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
@@ -92,7 +123,7 @@ function showAlphaAnnouncement(name) {
 // 音效與設定系統
 // =============================================================
 
-function loadSettings() {
+export function loadSettings() {
     try {
         const saved = localStorage.getItem('gameSettings');
         if (saved) {
@@ -163,7 +194,7 @@ function loadSettings() {
 }
 
 // 切換語言：寫入 settings、重新套用 LANG 資料表、即時刷新開啟中的介面
-function switchLanguage(lang) {
+export function switchLanguage(lang) {
     if (!LANG[lang]) return;
     if (gameState.language === lang) return;
     gameState.language = lang;
@@ -196,7 +227,7 @@ function switchLanguage(lang) {
     if (_co && typeof _co._render === 'function') _co._render();
 }
 
-function saveSettings() {
+export function saveSettings() {
     localStorage.setItem('gameSettings', JSON.stringify(gameState.settings));
 }
 
@@ -216,7 +247,7 @@ function _buildSettingsSection(title) {
     return sec;
 }
 
-function showSettings(fromHome) {
+export function showSettings(fromHome) {
     applyDeviceMode();
     if (document.getElementById('settings-overlay')) return;
     gameState.settingsOpen = true;
@@ -751,7 +782,7 @@ function showSettings(fromHome) {
     document.getElementById('game-container').appendChild(overlay);
 }
 
-function hideSettings() {
+export function hideSettings() {
     if (_settingsKeyHandler)   { document.removeEventListener('keydown',   _settingsKeyHandler,   true); _settingsKeyHandler   = null; }
     if (_settingsMouseHandler) { document.removeEventListener('mousedown', _settingsMouseHandler, true); _settingsMouseHandler = null; }
     if (_rebindBlink)   { clearInterval(_rebindBlink);  _rebindBlink   = null; }
@@ -769,7 +800,7 @@ function hideSettings() {
 // 計時器
 // =============================================================
 
-function updateTimer() {
+export function updateTimer() {
     const now = Date.now();
     if (gameState.lastTimeTick === 0) { gameState.lastTimeTick = now; return; }
     const elapsed = (now - gameState.lastTimeTick) / 1000;
@@ -790,30 +821,30 @@ function updateTimer() {
 // 開發者模式 (Developer Mode)
 // =============================================================
 
-function toggleDevMode() {
+export function toggleDevMode() {
     gameState.devMode = !gameState.devMode;
     if (gameState.devMode) gameState.devModeUsed = true;
     document.getElementById('dev-panel').style.display    = gameState.devMode ? 'block' : 'none';
     document.getElementById('dev-indicator').style.display = gameState.devMode ? 'block' : 'none';
 }
 
-function devAddXP() {
+export function devAddXP() {
     addXP(50);
 }
 
-function devAddHP() {
+export function devAddHP() {
     gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 20);
 }
 
-function devFullHP() {
+export function devFullHP() {
     gameState.stats.hpCurrent = gameState.stats.hpMax;
 }
 
-function devSpawnFruits() {
+export function devSpawnFruits() {
     for (let i = 0; i < 5; i++) spawnFruit();
 }
 
-function devKillHostiles() {
+export function devKillHostiles() {
     const now = Date.now();
     for (const c of gameState.hostileCreatures) {
         if (c.hp > 0) {
@@ -823,7 +854,7 @@ function devKillHostiles() {
     }
 }
 
-function devSpawnNeutral() {
+export function devSpawnNeutral() {
     const p = gameState.player;
     const angle = Math.random() * Math.PI * 2;
     const dist = 60 + Math.random() * 40;
@@ -840,7 +871,7 @@ function devSpawnNeutral() {
     });
 }
 
-function devSpawnHostile() {
+export function devSpawnHostile() {
     const p = gameState.player;
     const angle = Math.random() * Math.PI * 2;
     const dist = 100 + Math.random() * 50;
@@ -859,17 +890,17 @@ function devSpawnHostile() {
     });
 }
 
-function devFastForward() {
+export function devFastForward() {
     gameState.timeRemaining = Math.max(0, gameState.timeRemaining - 300);
     gameState.lastTimeTick = Date.now();
 }
 
-function devRewind() {
+export function devRewind() {
     gameState.timeRemaining = Math.min(600, gameState.timeRemaining + 300);
     gameState.lastTimeTick = Date.now();
 }
 
-function devToggleDayNight() {
+export function devToggleDayNight() {
     // 將 timeRemaining 跳到下一個時段起點，讓 updateDayNightCycle 自動觸發切換
     const nextIdx = (getDayNightPhaseIndex() + 1) % 8;
     gameState.timeRemaining = Math.max(0, 600 - nextIdx * 75 - 1);
@@ -882,7 +913,7 @@ function devToggleDayNight() {
 
 let _guideKeyHandler = null;
 
-function showGuide(startPage) {
+export function showGuide(startPage) {
     applyDeviceMode();
     if (document.getElementById('guide-overlay')) return;
     const TOTAL = 4;
@@ -1044,7 +1075,7 @@ function showGuide(startPage) {
     render();
 }
 
-function hideGuide() {
+export function hideGuide() {
     const el = document.getElementById('guide-overlay');
     if (el) el.remove();
     if (_guideKeyHandler) {
@@ -1059,7 +1090,7 @@ function hideGuide() {
 
 let _compendiumPaused = false;
 
-function getOrganDisplayName(id) {
+export function getOrganDisplayName(id) {
     if (ORGANS[id]) return ORGANS[id].name;
     if (HIDDEN_ORGANS[id]) return HIDDEN_ORGANS[id].name;
     return id;
@@ -1067,7 +1098,7 @@ function getOrganDisplayName(id) {
 
 // 進化圖鑑：從 EVOLUTION_PATHS 的 effects 動態生成累計描述
 // 草食/雜食速度為累計值；肉食攻擊、雜食白骨素為固定值（當級顯示當級）
-function buildEvoLevelDesc(pathId, upToLevel) {
+export function buildEvoLevelDesc(pathId, upToLevel) {
     const path = EVOLUTION_PATHS[pathId];
     if (!path) return '';
     const levels = path.levels.slice(0, upToLevel);
@@ -1126,7 +1157,7 @@ function buildEvoLevelDesc(pathId, upToLevel) {
     return parts.join('，');
 }
 
-function showCompendium(startTab) {
+export function showCompendium(startTab) {
     applyDeviceMode();
     if (document.getElementById('compendium-overlay')) return;
 
@@ -1715,7 +1746,7 @@ function showCompendium(startTab) {
 // 開始畫面
 // =============================================================
 
-function showMapSelect() {
+export function showMapSelect() {
     applyDeviceMode();
     const prev = document.getElementById('start-screen');
     if (prev) prev.remove();
@@ -1855,7 +1886,7 @@ function showMapSelect() {
     document.getElementById('game-container').appendChild(overlay);
 }
 
-function showStartScreen() {
+export function showStartScreen() {
     applyDeviceMode();
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
@@ -2137,7 +2168,7 @@ function showStartScreen() {
 // Splash 畫面（開發者品牌）
 // =============================================================
 
-function showSplashScreen() {
+export function showSplashScreen() {
     const splash = document.createElement('div');
     splash.id = 'splash-screen';
     splash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:9999;cursor:pointer;transition:opacity 0.8s ease;user-select:none;';
@@ -2185,7 +2216,7 @@ function showSplashScreen() {
 // 版本更新公告系統
 // =============================================================
 
-function showPatchNotes() {
+export function showPatchNotes() {
     applyDeviceMode();
     if (document.getElementById('patch-notes-overlay')) return;
 
@@ -2380,7 +2411,7 @@ function showPatchNotes() {
     }
 }
 
-function checkPatchNotesPopup() {
+export function checkPatchNotesPopup() {
     // 新玩家不彈出
     if (!localStorage.getItem('hasPlayedBefore')) return;
     if (typeof PATCH_NOTES === 'undefined' || PATCH_NOTES.length === 0) return;
@@ -2390,7 +2421,7 @@ function checkPatchNotesPopup() {
     setTimeout(() => showPatchNotes(), 400);
 }
 
-function showGuideStory() {
+export function showGuideStory() {
     applyDeviceMode();
     if (document.getElementById('guide-story-overlay')) return;
     const chapter2Unlocked = localStorage.getItem('chapter2Unlocked') === 'true';

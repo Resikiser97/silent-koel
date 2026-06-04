@@ -9,6 +9,7 @@ export const MAP_WIDTH  = 8000;
 export const MAP_HEIGHT = 8000;
 export let VIEW_W     = 1600;
 export let VIEW_H     = 900;
+export function setViewSize(w, h) { VIEW_W = w; VIEW_H = h; }
 
 export const TILE_SIZE   = 20;    // 地形格子大小，改這個數字可以調整解析度
 export const NOISE_SCALE = 0.003; // Noise 縮放比例，影響地形大小

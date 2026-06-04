@@ -5,8 +5,22 @@
 //            updateCorpseEating / updateBoneEating
 //            drawCorpseEatingBars / drawBones
 // =============================================================
+import { gameState, ctx } from './gameState.js';
+import { VIEW_W, VIEW_H } from './map.js';
+import { worldToScreen, wrappedDistance } from './camera.js';
+import { CORPSE_EAT_HP, CORPSE_BONE_EAT_TICK, CORPSE_EXPIRE_MS, BONE_EXPIRE_MS } from '../config/gameConfig.js';
+import { EVOLUTION_PATHS } from '../config/evolution.js';
+import { ORGANS } from '../config/organs.js';
+import { AudioManager } from './audio.js';
+import { getGameFont, spawnLootCircle, applyTenacity } from './utils.js';
+import { t } from '../lang.js';
+import { addXP, showXPPopup } from './player.js';
+import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
+import { handleBossKill } from './boss.js';
+import { _archerAttack } from './player.js';
+import { handleTutorialStumpKill } from './tutorial.js';
 
-function showFloatingText(wx, wy, text, color, fontSize) {
+export function showFloatingText(wx, wy, text, color, fontSize) {
     const s = worldToScreen(wx, wy);
     if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
     const el = document.createElement('div');
@@ -23,7 +37,7 @@ function showFloatingText(wx, wy, text, color, fontSize) {
     setTimeout(() => el.remove(), 800);
 }
 
-function applyDamageToPlayer(rawDamage, attacker) {
+export function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
     // 閃現無敵期間豁免所有外部傷害（毒傷tick/刺甲反傷不走此函式，不受影響）
     if (p.dashInvincible) return;
@@ -63,12 +77,14 @@ function applyDamageToPlayer(rawDamage, attacker) {
     }
 }
 
+// DUPLICATE - 待 Stage 3 清理
+// ESM note: duplicated with systems/mutation.js by design; do not merge during Stage 2.
 function addMutationPoints(amount) {
     // TODO: Phase 5 實作
     console.log('[Mutation] +' + amount + ' points (pending Phase 5)');
 }
 
-function handleGiantKill(c) {
+export function handleGiantKill(c) {
     const p = gameState.player;
     // XP：巨人化 100，Alpha 300（+獵人本能加成）
     const baseXP = c.isAlpha ? 300 : 100;
@@ -143,7 +159,7 @@ function handleKillerKill(creature) {
     gameState.corpses.push({ x: creature.x, y: creature.y, radius: creature.radius, spawnTime: Date.now() });
 }
 
-function handleKill(c, isHostile) {
+export function handleKill(c, isHostile) {
     if (c.isKiller) { handleKillerKill(c); return; }
     const p = gameState.player;
     const now = Date.now();
@@ -157,7 +173,7 @@ function handleKill(c, isHostile) {
     }
 }
 
-function playerAttack() {
+export function playerAttack() {
     const p = gameState.player;
     const now = Date.now();
 
@@ -309,7 +325,7 @@ function playerAttack() {
     if (bossDied) handleBossKill(gameState.boss);
 }
 
-function updateStatusEffects() {
+export function updateStatusEffects() {
     const now = Date.now();
     const eliteArr = (gameState.eliteCreature && gameState.eliteCreature.hp > 0) ? [gameState.eliteCreature] : [];
     const bossArr  = (gameState.boss && gameState.boss.hp > 0) ? [gameState.boss] : [];
@@ -377,11 +393,11 @@ function _getTotalCorpseXP() {
     return total;
 }
 
-function _spawnBone(x, y, radius) {
+export function _spawnBone(x, y, radius) {
     gameState.bones.push({ x, y, radius: Math.max(4, (radius || 8) * 0.6), spawnTime: Date.now(), eatProgress: 0, lastEatTick: null });
 }
 
-function updateCorpseEating() {
+export function updateCorpseEating() {
     const p = gameState.player;
     const ev = p.evolution;
     if (ev.carnivore === 0) return;
@@ -442,7 +458,7 @@ function updateCorpseEating() {
     }
 }
 
-function updateBoneEating() {
+export function updateBoneEating() {
     const p = gameState.player;
     const ev = p.evolution;
     if (ev.omnivore <= 0) return;
@@ -518,7 +534,7 @@ function _checkPoisonSacUpgrade(p) {
     }
 }
 
-function drawCorpseEatingBars() {
+export function drawCorpseEatingBars() {
     for (const corpse of gameState.corpses) {
         if (corpse.eatProgress == null || corpse.eatProgress <= 0) continue;
         const s = worldToScreen(corpse.x, corpse.y);
@@ -536,7 +552,7 @@ function drawCorpseEatingBars() {
     }
 }
 
-function drawBones() {
+export function drawBones() {
     const now = Date.now();
     for (const bone of gameState.bones) {
         const s = worldToScreen(bone.x, bone.y);

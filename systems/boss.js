@@ -4,6 +4,23 @@
 // =============================================================
 
 // ── Boss 顏色常數 ─────────────────────────────────────────────
+import { gameState, ctx } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
+import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { BOSS_CONFIG } from '../config/creatures.js';
+import { AudioManager } from './audio.js';
+import { moveCreature } from './spawning.js';
+import { applyDamageToPlayer, showFloatingText } from './combat.js';
+import { _effSpeed } from './creatures.js';
+import { addXP } from './player.js';
+import { buildSkillTreeOverlay, saveLastRunOrgans } from './evolution.js';
+import { saveSettings } from './ui.js';
+import { showScoreSubmitPopup } from './leaderboard.js';
+import { loadChatSettings, chatSaveProgress } from './chat.js';
+import { drawArrow } from './utils.js';
+import { t } from '../lang.js';
+
 const BOSS_COLORS = {
     bear: {
         body:  '#2a1808',
@@ -44,7 +61,7 @@ const BOSS_COLORS = {
 };
 
 // ── Boss 主繪製分派 ───────────────────────────────────────────
-function drawBossShape(ctx, boss, sx, sy) {
+export function drawBossShape(ctx, boss, sx, sy) {
     ctx.save();
     ctx.translate(sx, sy);
     const r = boss.radius * (gameState.cameraZoom || 1);
@@ -596,7 +613,7 @@ function _drawVenomEffects(boss) {
 // ── 蠍王沙暴螢幕外圈遮罩 ─────────────────────────────────────────
 // radialGradient：中央透明，外圈沙色 alpha=0.3，淡入淡出各500ms
 // 由 hud.js drawGame() 在所有世界物件後、UI前呼叫
-function _drawSandStormOverlay() {
+export function _drawSandStormOverlay() {
     const boss = gameState.boss;
     if (!boss || !boss._sandStormVisual) return;
 
@@ -680,7 +697,7 @@ function _drawHunterAimingWarning(boss) {
 }
 
 // ── drawBoss（每幀由 hud.js 呼叫）──────────────────────────────
-function drawBoss() {
+export function drawBoss() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
 
@@ -817,7 +834,7 @@ function _drawBossDebuffIcons(boss, barX, barY, barW) {
     ctx.restore();
 }
 
-function spawnBoss() {
+export function spawnBoss() {
     // 困難地圖：直接生成黑色獵人
     const features = gameState.currentMap && gameState.currentMap.features;
     if (features && features.hunterBoss) {
@@ -964,7 +981,7 @@ function _triggerHunterPhaseCheck(boss) {
     }
 }
 
-function handleBossKill(boss) {
+export function handleBossKill(boss) {
     if (!boss) { showVictory(); return; }
     if (boss.biome === 'hunter') {
         boss.barsRemaining--;
@@ -1169,7 +1186,7 @@ function _fireHunterShotgun(boss, p, pelletCount) {
     AudioManager.play('hunterPelletFly');
 }
 
-function updateBoss() {
+export function updateBoss() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
     const now = Date.now();
@@ -1376,7 +1393,7 @@ function _recordBossKill(bossType) {
     localStorage.setItem(key, (parseInt(localStorage.getItem(key) || '0') + 1).toString());
 }
 
-function showVictory() {
+export function showVictory() {
     if (gameState.gameOver) return;
     saveSettings();
     pausePlayTimer();
@@ -1505,7 +1522,7 @@ function showVictory() {
     }
 }
 
-function drawBossArrow() {
+export function drawBossArrow() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
     const bs = worldToScreen(boss.x, boss.y);

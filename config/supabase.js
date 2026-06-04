@@ -28,6 +28,8 @@
 //   ⚠️ submitScore 的趣味統計欄位若未傳入會自動從 gameState.sessionStats 補填
 // =============================================================
 
+import { gameState } from '../systems/gameState.js';
+
 export const SUPABASE_URL = 'https://wrcblrcihzsuwivowxbw.supabase.co';
 export const SUPABASE_KEY = 'sb_publishable_OXb03F0LNFzkJnMfgmd-uw_c2T3t4Rk';
 

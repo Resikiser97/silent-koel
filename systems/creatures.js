@@ -5,14 +5,24 @@
 // =============================================================
 
 // ── 隊伍名稱池 ──────────────────────────────────────────────
+import { gameState, ctx } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
+import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
+import { FIXED_DELTA } from '../config/gameConfig.js';
+import { moveCreature } from './spawning.js';
+import { applyDamageToPlayer, handleKill, showFloatingText } from './combat.js';
+import { applyTenacity, getGameFont } from './utils.js';
+import { showAlphaAnnouncement } from './ui.js';
+import { t } from '../lang.js';
+
 const _PACK_NAMES = [
     'SK-Tea','T-One','Fanatic','CloudNein','NaBee','Phase','Gee2','100Teas','TXM','Senn',
     'Noisy','D-Rex','Zen.G','BurgerLG','WeeboG','NuJeans','AE-Spa','THRICE','Ivy',
     'LES SERAPH','MamaMooMoo','DarkPink','Itz-G','Stacy','I-Lit','HypeUp'
 ];
-let _usedPackNames = [];
+export let _usedPackNames = [];
 
-function resetPackNames() { _usedPackNames = []; }
+export function resetPackNames() { _usedPackNames = []; }
 
 // ── 鬣狗隊伍名稱池（三國武將）──────────────────────────────
 const _HYENA_PACK_NAMES = [
@@ -20,8 +30,13 @@ const _HYENA_PACK_NAMES = [
     '呂布','黃忠','馬超','司馬懿','夏侯惇','典韋','魏延','姜維',
     '陸遜','甘寧','太史慈','張遼'
 ];
-let _usedHyenaPackNames = [];
-let _hyenaPackNameMap = {};
+export let _usedHyenaPackNames = [];
+export let _hyenaPackNameMap = {};
+
+export function resetHyenaPackNames() {
+    _usedHyenaPackNames = [];
+    _hyenaPackNameMap = {};
+}
 
 // ── 物種固定顏色常數 ──────────────────────────────────────────
 const CREATURE_COLORS = {
@@ -43,7 +58,7 @@ function _getCreatureColor(creature) {
 }
 
 // ── 嘴器減速：取生物有效速度（被減速中則乘以 _slowMult）────────
-function _effSpeed(c) {
+export function _effSpeed(c) {
     const now = Date.now();
     return (c._slowUntil && now < c._slowUntil) ? c.speed * (c._slowMult || 1.0) : c.speed;
 }
@@ -299,7 +314,7 @@ function _drawHyena(ctx, r) {
 // moose / beetle / croc：完整旋轉（跟 _moveAngle）
 // camel / lynx：只左右翻轉（cos 正朝右，cos 負朝左）
 // hyena：完全不旋轉（永遠朝上）
-function drawCreatureShape(ctx, creature, sx, sy) {
+export function drawCreatureShape(ctx, creature, sx, sy) {
     const r     = creature.radius * (gameState.cameraZoom || 1);
     const angle = creature._moveAngle || 0;
 
@@ -614,7 +629,7 @@ function _updateGiantFlee(creature) {
 }
 
 // ── 取得生物顯示名稱（含殺手等級）──
-function _getCreatureDisplayName(creature) {
+export function _getCreatureDisplayName(creature) {
     if (!creature) return '';
     const baseName = creature.name || creature.speciesId || '未知';
     if (creature.isKiller) {
@@ -744,7 +759,7 @@ function _alertHyenaPack(hyena, target) {
     }
 }
 
-function updateNeutralCreatures() {
+export function updateNeutralCreatures() {
     const now = Date.now();
     const p   = gameState.player;
     const herbLv        = p.evolution.herbivore || 0;
@@ -1149,7 +1164,7 @@ function updateNeutralCreatures() {
     }
 }
 
-function drawNeutralCreatures() {
+export function drawNeutralCreatures() {
     for (const creature of gameState.neutralCreatures) {
         if (creature.hp <= 0) continue;
         const s = worldToScreen(creature.x, creature.y);
@@ -1228,7 +1243,7 @@ function drawNeutralCreatures() {
     }
 }
 
-function updateHostileCreatures() {
+export function updateHostileCreatures() {
     const now = Date.now();
     const p = gameState.player;
 
@@ -1617,7 +1632,7 @@ function updateHostileCreatures() {
     }
 }
 
-function drawCorpses() {
+export function drawCorpses() {
     for (const corpse of gameState.corpses) {
         const s = worldToScreen(corpse.x, corpse.y);
         if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
@@ -1628,7 +1643,7 @@ function drawCorpses() {
     }
 }
 
-function drawHostileCreatures() {
+export function drawHostileCreatures() {
     for (const creature of gameState.hostileCreatures) {
         if (creature.hp <= 0) continue;
         const s = worldToScreen(creature.x, creature.y);

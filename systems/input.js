@@ -1,16 +1,20 @@
 // =============================================================
 // 輸入系統 - 全域 handler refs / handleKeyDown / handleKeyUp
 // =============================================================
+import { gameState } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT } from './map.js';
+import { AudioManager } from './audio.js';
+import { playerAttack } from './combat.js';
+import { playerDash, _getArcherShootDir } from './player.js';
+import { saveSettings, toggleDevMode, showSettings, hideSettings } from './ui.js';
+import { _chatExpanded, _collapseChat } from './chat.js';
 
-// 設定介面全域 handler 引用（供 hideSettings 清理用）
-let _settingsKeyHandler   = null;
-let _settingsMouseHandler = null;
-let _rebindBlink          = null;
-let _rebindTimeout        = null;
-let _skillTreeFromHome    = false;
-let _skillTreeMode        = '';
+export let _settingsKeyHandler = null;
+export let _settingsMouseHandler = null;
+export let _rebindBlink = null;
+export let _rebindTimeout = null;
 
-function handleKeyDown(e) {
+export function handleKeyDown(e) {
     if (e.key === 'Escape') {
         if (typeof _chatExpanded !== 'undefined' && _chatExpanded) {
             if (typeof _collapseChat === 'function') _collapseChat();
@@ -63,7 +67,7 @@ function handleKeyDown(e) {
     if (gameState.devInput === '77777778') toggleDevMode();
 }
 
-function handleKeyUp(e) {
+export function handleKeyUp(e) {
     const key = e.key.toLowerCase();
     const sk = gameState.settings.keys;
     const moveKeys = [sk.up, sk.down, sk.left, sk.right, 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
@@ -106,7 +110,7 @@ function handleKeyUp(e) {
 }
 
 // ── 阿奇爾滑鼠世界座標追蹤（在 initializeGame 內的 mousemove listener 呼叫此函式）
-function _updateMouseWorld(clientX, clientY) {
+export function _updateMouseWorld(clientX, clientY) {
     const canvasEl = document.getElementById('gameCanvas');
     if (!canvasEl) return;
     const rect   = canvasEl.getBoundingClientRect();

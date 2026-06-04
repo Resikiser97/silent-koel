@@ -7,7 +7,12 @@
 //               initMutationSkills / _saveMutationSkills / _syncMutationSkillPoints
 // =============================================================
 
-const DEFAULT_MUTATION_DATA = {
+import { gameState } from './gameState.js';
+import { showFloatingText } from './combat.js';
+import { t } from '../lang.js';
+import { buildSkillTreeOverlay } from './evolution.js';
+
+export const DEFAULT_MUTATION_DATA = {
     levels: { fang: 0, tail: 0, wing: 0, eye: 0 },
     points: 0,                  // 當前可用變異點
     totalPointsEarned: 0,       // 歷史總獲得（用於補償計算）
@@ -17,9 +22,9 @@ const DEFAULT_MUTATION_DATA = {
 };
 
 // ── 補償版本控制（改為 '1' 觸發第一次補償，以此類推）
-const MUTATION_COMPENSATION_VERSION = '0';
+export const MUTATION_COMPENSATION_VERSION = '0';
 
-const MUTATION_COMPENSATION_CONFIG = {
+export const MUTATION_COMPENSATION_CONFIG = {
     '1': {
         description: '封測平衡調整補償',
         mutationPointsRate: 0.10,   // 返還 totalPointsEarned 的 10%
@@ -32,7 +37,7 @@ const MUTATION_COMPENSATION_CONFIG = {
 // 初始化與儲存
 // =============================================================
 
-function initMutationData() {
+export function initMutationData() {
     try {
         const raw = localStorage.getItem('mutationData');
         if (raw) {
@@ -59,7 +64,7 @@ function initMutationData() {
     initMutationSkills();         // 載入變異技能樹資料
 }
 
-function saveMutationData() {
+export function saveMutationData() {
     try {
         localStorage.setItem('mutationData', JSON.stringify(gameState.mutationData));
     } catch(e) {
@@ -71,7 +76,8 @@ function saveMutationData() {
 // 變異點獲得
 // =============================================================
 
-function addMutationPoints(amount) {
+// ESM note: duplicated with systems/combat.js by design; do not merge during Stage 2.
+export function addMutationPoints(amount) {
     if (!gameState.mutationData) return;
     gameState.mutationData.points += amount;
     gameState.mutationData.totalPointsEarned += amount;
@@ -88,7 +94,7 @@ function addMutationPoints(amount) {
 // 升級費用計算
 // =============================================================
 
-function getMutationUpgradeCost(currentLevel) {
+export function getMutationUpgradeCost(currentLevel) {
     // 每5級+1費，起始1費
     // Lv0→1: 1點, Lv5→6: 2點, Lv10→11: 3點
     return Math.floor(currentLevel / 5) + 1;
@@ -98,7 +104,7 @@ function getMutationUpgradeCost(currentLevel) {
 // 升級變異器官
 // =============================================================
 
-function upgradeMutation(organId) {
+export function upgradeMutation(organId) {
     const data = gameState.mutationData;
     const p    = gameState.player;
     if (!data || !p) return;
@@ -142,7 +148,7 @@ function upgradeMutation(organId) {
 // 倍率計算（只寫入 player，不直接改 stats）
 // =============================================================
 
-function applyMutationEffects() {
+export function applyMutationEffects() {
     const p    = gameState.player;
     const data = gameState.mutationData;
     if (!data || !p) return;
@@ -156,7 +162,7 @@ function applyMutationEffects() {
 // 遊戲初始化時一次性套用（在所有器官效果之後呼叫一次）
 // =============================================================
 
-function applyAllMutationBonuses() {
+export function applyAllMutationBonuses() {
     const p    = gameState.player;
     const data = gameState.mutationData;
     if (!data || !p) return;
@@ -177,7 +183,7 @@ function applyAllMutationBonuses() {
 // 補償機制
 // =============================================================
 
-function checkMutationCompensation() {
+export function checkMutationCompensation() {
     const data = gameState.mutationData;
     if (!data) return;
     if (data.compensationVersion === MUTATION_COMPENSATION_VERSION) return;
@@ -217,7 +223,7 @@ function checkMutationCompensation() {
 // 升級面板 UI
 // =============================================================
 
-function showMutationPanel() {
+export function showMutationPanel() {
     if (document.getElementById('mutation-panel')) return;
     const data = gameState.mutationData;
     if (!data) return;
@@ -402,14 +408,14 @@ function showMutationPanel() {
 // 變異技能樹 — 資料管理
 // =============================================================
 
-const DEFAULT_MUTATION_SKILLS = {
+export const DEFAULT_MUTATION_SKILLS = {
     version: '1.0',
     skills: {
         recallOrgan: { level: 0, maxLevel: 3 }
     }
 };
 
-function initMutationSkills() {
+export function initMutationSkills() {
     try {
         const raw = localStorage.getItem('mutationSkills');
         if (raw) {
@@ -437,7 +443,7 @@ function initMutationSkills() {
     _checkAndRepairMutationSkills();
 }
 
-function _saveMutationSkills() {
+export function _saveMutationSkills() {
     try {
         const toSave = Object.assign({}, gameState.mutationSkills, { _points: gameState.mutationSkillPoints });
         localStorage.setItem('mutationSkills', JSON.stringify(toSave));
@@ -445,7 +451,7 @@ function _saveMutationSkills() {
 }
 
 // 依當前變異器官總等計算可用技能點（每 50 總等 +1，扣除已花費）
-function _syncMutationSkillPoints() {
+export function _syncMutationSkillPoints() {
     const data = gameState.mutationData;
     if (!data || !data.levels || !gameState.mutationSkills) {
         gameState.mutationSkillPoints = 0;
@@ -468,7 +474,7 @@ function _syncMutationSkillPoints() {
 }
 
 // 驗算變異技能點是否合理，發現異常時自動修復並提示玩家
-function _checkAndRepairMutationSkills() {
+export function _checkAndRepairMutationSkills() {
     const data = gameState.mutationData;
     if (!data || !data.levels || !gameState.mutationSkills) return;
 

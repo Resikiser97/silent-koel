@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 2B — ESM 遷移 批次2（systems/ 基礎層）
-目前批次     : S2B-1 完成，等待 Codex 靜態檢查
+所在 Stage   : Stage 2C — ESM 遷移 批次3（systems/ 核心層 + main.js）
+目前批次     : S2C-1 完成，等待瀏覽器完整人工測試
 分支狀態     : esm-refactor（已建立）
-最後更新     : 2026-06-04
-最後操作者   : Claude Code（批次2遷移完成）
+最後更新     : 2026-06-05
+最後操作者   : Claude Code + Codex（批次3遷移完成 + Playwright smoke test 通過）
 ```
 
 ---
@@ -47,8 +47,8 @@
 - [ ] S2B-4：commit 批次2
 
 ### Stage 2C — ESM 遷移 批次3（systems/ 核心層 + main.js）
-- [ ] S2C-1：Claude Code 執行批次3遷移
-- [ ] S2C-2：Codex 靜態語法檢查
+- [x] S2C-1：Claude Code 執行批次3遷移
+- [x] S2C-2：Codex Playwright smoke test（無 ESM runtime error）
 - [ ] S2C-3：你開瀏覽器人工測試（完整測試：完成一局遊戲）
 - [ ] S2C-4：commit 批次3
 
@@ -70,6 +70,45 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 2C S2C-1/S2C-2 完成）
+- 狀態：批次3遷移完成，Playwright smoke test 通過，等待人工完整測試
+- 操作者：Claude Code + Codex
+- 完成項目：
+  - config/gameConfig.js：export FIXED_FPS / FIXED_DELTA
+  - systems/map.js：新增 export setViewSize(w, h)（VIEW_W/VIEW_H live binding 修正）
+  - systems/mobile.js：import setViewSize，_setViewSize 改呼叫 setter；export _joyPaused
+  - systems/input.js：加 imports + export handleKeyDown/handleKeyUp/_updateMouseWorld
+  - systems/spawning.js：加 imports + export 7 個函式
+  - systems/tutorial.js：IIFE → module scope，export 3 個公開函式
+  - systems/hud.js：加 imports + export drawGame/updateUI/updateMinimapFog
+  - systems/player.js：加 imports + export 11 個函式（含 _archerAttack/_getArcherShootDir）
+  - systems/combat.js：DUPLICATE 備註加在 addMutationPoints stub；加 imports + export 9 個函式
+  - systems/organs.js：移動 _organHitRegions/_compendiumBtnRegion 宣告至此並 export；加 imports + export 7 個函式
+  - systems/evolution.js：新增 let _skillTreeMode/_skillTreeFromHome 模組級；移除 window.loadSavedOrgans；加 imports + export 眾多函式
+  - systems/mutation.js：addMutationPoints 為正確版本（export function）
+  - systems/creatures.js：加 imports（FIXED_DELTA 改從 gameConfig）+ export 函式
+  - systems/elite.js / boss.js / daynight.js / leaderboard.js / ui.js：同樣加 imports + exports
+  - main.js：加齊所有系統 imports；export pausePlayTimer/resumePlayTimer 供循環依賴模組使用
+  - index.html：所有 <script> 改為單一 <script type="module" src="./main.js">
+  - Codex Playwright smoke test：console/page errors = 0，ESM runtime 無報錯，通過到教學畫面
+- 發現問題：main.js 仍有本地 const FIXED_FPS/FIXED_DELTA（未影響運作，Stage 3 再清理）
+- 下一步：S2C-3 人工完整測試（完成一局遊戲：移動、吃果子、戰鬥、死亡/通關）
+
+### 2026-06-04（Stage 2B/2C Codex 接續收尾）
+- 狀態：Stage 2B/2C ESM import/export 收尾完成，等待瀏覽器驗證
+- 操作者：Codex
+- 完成項目：
+  - 確認 `config/gameConfig.js` 已 export `FIXED_FPS` / `FIXED_DELTA`
+  - 確認 `systems/map.js` 已 export `setViewSize(w, h)`
+  - 確認 `systems/mobile.js` 已 import `setViewSize`，且 `_setViewSize()` 改為呼叫 setter
+  - 移除 `window.loadSavedOrgans = loadSavedOrgans`，改由 `main.js` named import
+  - 補齊 Stage 2B/2C 目標檔案的 import/export wiring
+  - `index.html` 改為單一 `<script type="module" src="./main.js"></script>` 入口
+- 發現問題：
+  - 核心系統仍存在多組循環依賴，需要瀏覽器實測確認是否有 TDZ/runtime error
+  - Live Server 尚未在 `127.0.0.1:5500` / `5501` 監聽，瀏覽器驗證待補
+- 下一步：啟動 Live Server 後進行瀏覽器 console 驗證，通過後再進入人工測試/commit
 
 ### 2026-06-04（Stage 2B S2B-1 完成）
 - 狀態：批次2遷移完成，等待 Codex 靜態檢查

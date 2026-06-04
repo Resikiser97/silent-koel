@@ -100,3 +100,6 @@ export const AUDIO_FILES = {
     archerHurt:          ['Sound MP3/New sound/archer_hurt_1.mp3', 'Sound MP3/New sound/archer_hurt_2.mp3'],
     archerDeath:         'Sound MP3/New sound/archer_death.mp3',
 };
+
+export const FIXED_FPS   = 60;
+export const FIXED_DELTA = 1000 / FIXED_FPS;

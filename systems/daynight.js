@@ -3,12 +3,21 @@
 //               applyDayTransition / updateDayNightCycle / showGameOver
 // =============================================================
 
-function getDayNightPhaseIndex() {
+import { gameState } from './gameState.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { AudioManager } from './audio.js';
+import { spawnEliteCreature } from './elite.js';
+import { spawnBoss } from './boss.js';
+import { showScoreSubmitPopup } from './leaderboard.js';
+import { loadChatSettings, chatSaveProgress } from './chat.js';
+import { t } from '../lang.js';
+
+export function getDayNightPhaseIndex() {
     // 每 75 秒一個時段，共 8 段；偶數=白天，奇數=夜晚
     return Math.min(7, Math.floor(Math.max(0, 600 - gameState.timeRemaining) / 75));
 }
 
-function applyNightTransition() {
+export function applyNightTransition() {
     gameState.stats.dayCycle = t('phaseNight');
     gameState.isNight = true;
     gameState.dayNightMessage.text = t('nightCome');
@@ -25,7 +34,7 @@ function applyNightTransition() {
     }
 }
 
-function applyDayTransition() {
+export function applyDayTransition() {
     gameState.stats.dayCycle = t('phaseDay');
     gameState.isNight = false;
     if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) {
@@ -41,7 +50,7 @@ function applyDayTransition() {
     AudioManager.playMusic('morningTheme');
 }
 
-function updateDayNightCycle() {
+export function updateDayNightCycle() {
     const phaseIndex = getDayNightPhaseIndex();
     if (phaseIndex === gameState.currentPhaseIndex) return;
     gameState.currentPhaseIndex = phaseIndex;
@@ -53,7 +62,7 @@ function updateDayNightCycle() {
     if (phaseIndex === 7 && !gameState.bossSpawned) spawnBoss();
 }
 
-function showGameOver() {
+export function showGameOver() {
     gameState.gameOver = true;
     const devWarning = gameState.devModeUsed
         ? '<div style="font-size:12px;color:#f80;margin-top:12px;">⚠️ 本局使用了開發者模式，分數不計入排行榜</div>'

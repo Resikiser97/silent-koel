@@ -4,8 +4,29 @@
 //                 saveLastRunOrgans / showSkillTree
 //                 buildSkillTreeOverlay / upgradeSkill
 // =============================================================
+import { gameState } from './gameState.js';
+import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { ORGANS, HIDDEN_ORGANS } from '../config/organs.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { t } from '../lang.js';
+import { addXP } from './player.js';
+import { applyOrganEffects, applyHiddenOrganEffects, showOrganSelection, showHiddenOrganSelection, getOrganSlotsUsed } from './organs.js';
+import { showFloatingText } from './combat.js';
+import { applyMutationEffects, saveMutationData, getMutationUpgradeCost, upgradeMutation, initMutationSkills, _syncMutationSkillPoints } from './mutation.js';
+import { showTooltip, hideTooltip } from './ui.js';
+import { pausePlayTimer, resumePlayTimer } from '../main.js';
+import { showScoreSubmitPopup } from './leaderboard.js';
+import { AudioManager } from './audio.js';
+import { saveSettings } from './ui.js';
+import { applyDeviceMode } from './mobile.js';
+import { initializeGame } from '../main.js';
+import { showChat } from './chat.js';
 
-function checkEvolutionUnlock() {
+// 技能樹模式狀態（供 buildSkillTreeOverlay 跨呼叫保存）
+export let _skillTreeFromHome = false;
+export let _skillTreeMode     = '';
+
+export function checkEvolutionUnlock() {
     const ev = gameState.player.evolution;
     const opts = [];
     if (ev.herbivore < EVOLUTION_PATHS.herbivore.maxLevel) {
@@ -21,7 +42,7 @@ function checkEvolutionUnlock() {
     return opts;
 }
 
-function applyEvolutionLevelEffect(type, newLevel) {
+export function applyEvolutionLevelEffect(type, newLevel) {
     const p = gameState.player;
     const lvData = EVOLUTION_PATHS[type].levels[newLevel - 1];
     if (type === 'herbivore') {
@@ -69,7 +90,7 @@ function _grantPoisonSac(p) {
     p.organs.push({ id: 'poisonSac', name: ORGANS.poisonSac.name, type: 'special', level: 0, desc: '沒什麼囊用' });
 }
 
-function applyEvolutionEffects() {
+export function applyEvolutionEffects() {
     const ev = gameState.player.evolution;
     const p = gameState.player;
     for (let i = 0; i < ev.herbivore; i++) {
@@ -126,7 +147,7 @@ function _setFangLevel(targetLv) {
 // 供 initializeGame() 與 buildSkillTreeOverlay(fromHome) 共用
 // initializeGame() 在 applySkillBonuses() 之前呼叫，確保器官不因跳過技能樹而丟失
 // buildSkillTreeOverlay(fromHome) 路徑只讀取 skillPoints，不再重複呼叫此函式
-function loadSavedOrgans() {
+export function loadSavedOrgans() {
     const p = gameState.player;
     try {
         const so = localStorage.getItem('savedOrgans');
@@ -153,9 +174,8 @@ function loadSavedOrgans() {
         }
     } catch(e) {}
 }
-window.loadSavedOrgans = loadSavedOrgans;
 
-function applySkillBonuses() {
+export function applySkillBonuses() {
     const sk = gameState.playerSkills;
     const p = gameState.player;
     const hpBonus = (sk.vitality || 0) * 20;
@@ -175,7 +195,7 @@ function applySkillBonuses() {
     // 注意：器官載入已移至獨立函式 loadSavedOrgans()，由 initializeGame() 在此函式之前呼叫
 }
 
-function saveLastRunOrgans() {
+export function saveLastRunOrgans() {
     const p = gameState.player;
     const data = {
         organs: (p.organs || []).map(o => ({ id: o.id, name: o.name, type: o.type, level: o.level || 1, desc: o.desc })),
@@ -184,7 +204,7 @@ function saveLastRunOrgans() {
     localStorage.setItem('lastRunOrgans', JSON.stringify(data));
 }
 
-function showSkillTree(cause) {
+export function showSkillTree(cause) {
     if (gameState.gameOver) return;
     saveSettings();
     if (!gameState.mutationSkills) initMutationSkills();
@@ -276,7 +296,7 @@ function showSkillTree(cause) {
     }
 }
 
-function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
+export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     // B8 防呆：玩家或技能資料尚未初始化時直接返回
     if (!gameState.player || !gameState.playerSkills) return;
     if (typeof _syncMutationSkillPoints === 'function') _syncMutationSkillPoints();
@@ -764,7 +784,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     (effectiveMode === 'fromHome' || effectiveMode === 'forceStart' ? document.getElementById('game-container') : document.getElementById('ui-overlay')).appendChild(overlay);
 }
 
-function upgradeSkill(id) {
+export function upgradeSkill(id) {
     const skill = SKILLS[id];
     if (!skill) return;
     const current = gameState.playerSkills[id] || 0;

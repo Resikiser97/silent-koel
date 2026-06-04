@@ -6,7 +6,7 @@
 //              EASY_MAP / NORMAL_MAP（需先載入）
 // =============================================================
 
-const COMPENDIUM_DATA = (function () {
+export const COMPENDIUM_DATA = (function () {
 
     // ── 安全取得 config 全域常數
     const _boss = (typeof BOSS_CONFIG !== 'undefined') ? BOSS_CONFIG : {};

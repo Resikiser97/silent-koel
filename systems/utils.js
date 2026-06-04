@@ -4,6 +4,7 @@
 // =============================================================
 import { gameState, ctx } from './gameState.js';
 import { wrappedDelta } from './camera.js';
+import { _spawnBone } from './combat.js';
 
 /**
  * 韌性計算：用目標自身的韌性縮短控制效果持續時間。
@@ -129,4 +130,25 @@ export function spawnLootCircle(cx, cy, items) {
             _spawnBone(x, y, 8);
         }
     });
+}
+
+export function buildCrown(type) {
+    return `<span class="crown-${type}">` +
+        `<div class="crown-top">` +
+        `<span class="crown-star">✦</span>` +
+        `<div class="crown-spike"></div>` +
+        `<div class="crown-spike"></div>` +
+        `<div class="crown-spike"></div>` +
+        `<span class="crown-star">✦</span>` +
+        `</div>` +
+        `<div class="crown-base"></div>` +
+        `</span>`;
+}
+
+export function getRankIcon(rank) {
+    if (rank === 1) return buildCrown('gold');
+    if (rank === 2) return buildCrown('silver');
+    if (rank === 3) return buildCrown('bronze');
+    if (rank <= 10) return '🎖️';
+    return String(rank);
 }

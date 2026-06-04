@@ -3,13 +3,70 @@
 //             updateGameLogic / gameLoop / initializeGame
 // =============================================================
 
+import { GAME_INFO } from './config/gameConfig.js';
+import './lang/zh-TW.js';
+import './lang/en.js';
+import { CHARACTERS } from './config/characters.js';
+import { ORGANS } from './config/organs.js';
+import { EASY_MAP } from './map/easymap.js';
+import { NORMAL_MAP } from './map/normalmap.js';
+import { gameState, canvas } from './systems/gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, generateTerrain, generateTrees } from './systems/map.js';
+import { updateCamera, _updateCameraZoom } from './systems/camera.js';
+import { handleKeyDown, handleKeyUp, _updateMouseWorld } from './systems/input.js';
+import { initAudio, stopIntroTheme, AudioManager } from './systems/audio.js';
+import { _joyPaused } from './systems/mobile.js';
+import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from './systems/spawning.js';
+import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir, _initXpPool } from './systems/player.js';
+import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack } from './systems/combat.js';
+import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion } from './systems/organs.js';
+import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans } from './systems/evolution.js';
+import { initMutationData, applyAllMutationBonuses } from './systems/mutation.js';
+import { resetPackNames, resetHyenaPackNames, updateNeutralCreatures, updateHostileCreatures } from './systems/creatures.js';
+import { initEliteOrder, updateEliteCreature } from './systems/elite.js';
+import { updateBoss } from './systems/boss.js';
+import { updateDayNightCycle } from './systems/daynight.js';
+import { updateMinimapFog, drawGame, updateUI } from './systems/hud.js';
+import {
+    loadSettings,
+    updateTimer,
+    showCompendium,
+    showSplashScreen,
+    showGuideStory,
+    showTooltip,
+    hideTooltip,
+    devAddXP,
+    devAddHP,
+    devFullHP,
+    devSpawnFruits,
+    devKillHostiles,
+    devSpawnNeutral,
+    devSpawnHostile,
+    devFastForward,
+    devRewind,
+    devToggleDayNight
+} from './systems/ui.js';
+import { showTutorial } from './systems/tutorial.js';
+import { disconnectChat, hideChat } from './systems/chat.js';
+
 const FIXED_FPS = 60;
 const FIXED_DELTA = 1000 / FIXED_FPS;
 let accumulator = 0;
 let lastTimestamp = 0;
 let _wasPaused = false;
 
-function pausePlayTimer() {
+window.devAddXP = devAddXP;
+window.devAddHP = devAddHP;
+window.devFullHP = devFullHP;
+window.devSpawnFruits = devSpawnFruits;
+window.devKillHostiles = devKillHostiles;
+window.devSpawnNeutral = devSpawnNeutral;
+window.devSpawnHostile = devSpawnHostile;
+window.devFastForward = devFastForward;
+window.devRewind = devRewind;
+window.devToggleDayNight = devToggleDayNight;
+
+export function pausePlayTimer() {
     if (gameState._playTimerStart !== null) {
         gameState.realPlayTime += Date.now() - gameState._playTimerStart;
         gameState._playTimerStart = null;
@@ -17,18 +74,18 @@ function pausePlayTimer() {
     gameState._playTimerPaused = true;
 }
 
-function resumePlayTimer() {
+export function resumePlayTimer() {
     gameState._playTimerStart = Date.now();
     gameState._playTimerPaused = false;
 }
 
-function isGamePaused() {
+export function isGamePaused() {
     return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen ||
            gameState.gameOver || gameState.victory || gameState.mutationPanelOpen ||
            gameState.tutorialOpen;
 }
 
-function updateGameLogic() {
+export function updateGameLogic() {
     updateTimer();
     updateDayNightCycle();
     updateCreatureSpawning();
@@ -59,7 +116,7 @@ function updateGameLogic() {
     }
 }
 
-function gameLoop(timestamp) {
+export function gameLoop(timestamp) {
     if (!lastTimestamp) lastTimestamp = timestamp;
     const elapsed = Math.min(timestamp - lastTimestamp, 100); // 最大100ms防止跳幀
     lastTimestamp = timestamp;
@@ -144,7 +201,7 @@ function _applyCharacterStats() {
     console.log('[角色系統] 套用角色：' + char.name + '（' + charId + '），HP=' + s.hpMax + '，Speed=' + p.speed);
 }
 
-function initializeGame() {
+export function initializeGame() {
     localStorage.setItem('hasPlayedBefore', 'true');
 
     // 清除首頁公告標籤
@@ -240,8 +297,7 @@ function initializeGame() {
     if (typeof _initXpPool === 'function') _initXpPool();
     gameState.spawnProtectUntil    = 0;
     if (typeof resetPackNames === 'function') resetPackNames();
-    _usedHyenaPackNames = [];
-    _hyenaPackNameMap   = {};
+    resetHyenaPackNames();
     gameState.mutationPanelOpen    = false;
     gameState.tutorialOpen         = false;
     gameState.tutorialOrganPhase   = false;

@@ -20,6 +20,13 @@
 // =============================================================
 
 import { gameState } from './gameState.js';
+import { VIEW_W, VIEW_H, setViewSize } from './map.js';
+import { _organHitRegions } from './organs.js';
+import { playerDash } from './player.js';
+import { playerAttack } from './combat.js';
+import { showTooltip, hideTooltip } from './ui.js';
+import { AudioManager } from './audio.js';
+import { t } from '../lang.js';
 
 // =============================================================
 // 裝置偵測與方向控制
@@ -35,7 +42,7 @@ export function getOrientation() {
     return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
 }
 
-function _effectiveMobile() {
+export function _effectiveMobile() {
     if (gameState.forceMode === 'mobile')  return true;
     if (gameState.forceMode === 'desktop') return false;
     return detectMobile();
@@ -43,7 +50,7 @@ function _effectiveMobile() {
 
 function _setViewSize(w, h) {
     if (VIEW_W === w && VIEW_H === h) return;
-    VIEW_W = w; VIEW_H = h;
+    setViewSize(w, h);
     const gc = document.getElementById('gameCanvas');
     const co = document.getElementById('game-container');
     if (gc) { gc.width = w; gc.height = h; }
@@ -346,7 +353,7 @@ export function _renderMobileOverlay() {
 
 let _joyDocListeners = null;
 
-function _joyPaused() {
+export function _joyPaused() {
     return !gameState.gameStarted ||
            gameState.organSelectionActive || gameState.settingsOpen ||
            gameState.skillTreeOpen || gameState.gameOver || gameState.victory ||

@@ -5,19 +5,39 @@
 //            showOrganSelection / drawOrganUI
 //            handleEliteKill / showHiddenOrganSelection
 // =============================================================
+import { gameState, ctx } from './gameState.js';
+import { VIEW_H } from './map.js';
+import { ORGANS, HIDDEN_ORGANS, COMBOS } from '../config/organs.js';
+import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { t } from '../lang.js';
+import { addXP, showXPPopup } from './player.js';
+import { showFloatingText } from './combat.js';
+import { spawnLootCircle } from './utils.js';
+import { applyEvolutionLevelEffect, checkEvolutionUnlock } from './evolution.js';
+import { applyMutationEffects } from './mutation.js';
+import { spawnTutorialStump } from './tutorial.js';
+import { updateDayNightCycle } from './daynight.js';
+import { resumePlayTimer, pausePlayTimer } from '../main.js';
+import { _handleHunterEliteKill } from './elite.js';
+import { getGameFont } from './utils.js';
+import { showTooltip, hideTooltip } from './ui.js';
 
-function getOrganLevel(id) {
+// 器官點擊區域（由 drawOrganUI 寫入，由 ui.js 讀取）
+export let _organHitRegions = [];
+export let _compendiumBtnRegion = null;
+
+export function getOrganLevel(id) {
     const o = gameState.player.organs.find(o => o.id === id);
     return o ? o.level : 0;
 }
 
-function getOrganCumulative(id, effectKey) {
+export function getOrganCumulative(id, effectKey) {
     const lv = getOrganLevel(id);
     if (!lv || !ORGANS[id]) return 0;
     return ORGANS[id].levels.slice(0, lv).reduce((sum, l) => sum + (l.effects[effectKey] || 0), 0);
 }
 
-function getComboHint(organId) {
+export function getComboHint(organId) {
     for (const combo of COMBOS) {
         if (!combo.ids.includes(organId)) continue;
         const partners = combo.ids.filter(id => id !== organId);
@@ -26,7 +46,7 @@ function getComboHint(organId) {
     return null;
 }
 
-function checkComboEffects() {
+export function checkComboEffects() {
     const p = gameState.player;
     const hasLv3 = id => {
         const o = p.organs.find(o => o.id === id);
@@ -44,13 +64,13 @@ function checkComboEffects() {
     }
 }
 
-function getOrganSlotsUsed() {
+export function getOrganSlotsUsed() {
     return gameState.player.organs
         .filter(o => !ORGANS[o.id] || !ORGANS[o.id].noSelection)
         .reduce((sum, o) => sum + (o.level || 1), 0);
 }
 
-function applyHiddenOrganEffects(organ) {
+export function applyHiddenOrganEffects(organ) {
     const p = gameState.player;
     const fx = organ.effects || (HIDDEN_ORGANS[organ.id] || {}).effects || {};
     if (fx.speedAdd)       p.speed = Math.max(0.3, p.speed + fx.speedAdd);
@@ -70,7 +90,7 @@ function applyHiddenOrganEffects(organ) {
     if (fx.critMultiplierAdd)  p.critMultiplier += fx.critMultiplierAdd;
 }
 
-function applyOrganEffects(organ) {
+export function applyOrganEffects(organ) {
     const p = gameState.player;
     const def = ORGANS[organ.id];
     if (!def) return;
@@ -127,7 +147,7 @@ function checkOrganUpgrade() {
     }
 }
 
-function showOrganSelection() {
+export function showOrganSelection() {
     if (gameState.organSelectionActive) {
         gameState.pendingOrganSelections++;
         return;
@@ -320,7 +340,7 @@ function showOrganSelection() {
     document.getElementById('game-container').appendChild(overlay);
 }
 
-function drawOrganUI() {
+export function drawOrganUI() {
     const organs = gameState.player.organs;
     const hiddenOrgans = gameState.player.hiddenOrgans || [];
     const ev = gameState.player.evolution;
@@ -478,9 +498,7 @@ function _drawCompendiumBtn(bx, by) {
     _compendiumBtnRegion = { x: bx, y: by, w: btnW, h: btnH };
 }
 
-let _compendiumBtnRegion = null;
-
-function handleEliteKill(elite) {
+export function handleEliteKill(elite) {
     pausePlayTimer();
 
     // Hunter 精英怪：特殊獎勵（由 elite.js 的 _handleHunterEliteKill 處理）
@@ -539,7 +557,7 @@ function handleEliteKill(elite) {
     resumePlayTimer();
 }
 
-function showHiddenOrganSelection(drops) {
+export function showHiddenOrganSelection(drops) {
     if (gameState.gameOver || drops.length === 0) return;
     gameState.organSelectionActive = true;
 

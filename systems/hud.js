@@ -1,5 +1,19 @@
 ﻿// =============================================================
 // HUD 系統 - 遊戲畫面渲染 / HUD 更新 / 小地圖 / 上方血條
+import { gameState, ctx, canvas } from './gameState.js';
+import { VIEW_W, VIEW_H, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, BIOME_COLOR, getBiome, drawTerrain } from './map.js';
+import { worldToScreen, wrappedDistance } from './camera.js';
+import { FIXED_DELTA, GAME_INFO } from '../config/gameConfig.js';
+import { getGameFont, drawArrow } from './utils.js';
+import { t } from '../lang.js';
+import { drawCorpses, drawNeutralCreatures, drawHostileCreatures, _getCreatureDisplayName } from './creatures.js';
+import { drawCorpseEatingBars, drawBones, showFloatingText } from './combat.js';
+import { drawOrganUI } from './organs.js';
+import { _renderMobileOverlay } from './mobile.js';
+import { drawEliteCreature, drawEliteArrow } from './elite.js';
+import { drawBoss, drawBossArrow, _drawSandStormOverlay } from './boss.js';
+import { _findArcherAutoTarget, findBestPerceptionPath } from './player.js';
+import { showSettings } from './ui.js';
 //
 // 模組職責：
 //   - drawGame()：每幀主渲染函式，依序繪製地形/生物/玩家/特效/HUD
@@ -368,7 +382,7 @@ function _drawArcherLockOn() {
     ctx.restore();
 }
 
-function updateMinimapFog() {
+export function updateMinimapFog() {
     if (!gameState.fogMap) return;
     const COLS = MAP_WIDTH  / TILE_SIZE; // 400
     const ROWS = MAP_HEIGHT / TILE_SIZE; // 400
@@ -824,7 +838,7 @@ function drawTopBarUI() {
     ctx.restore();
 }
 
-function drawGame() {
+export function drawGame() {
     // 1. 貼上地形預渲染底圖（離屏 Canvas），夜晚遮罩在 drawTerrain 內疊加
     drawTerrain();
 
@@ -1405,7 +1419,7 @@ function _initTopLeftUI() {
     tl.appendChild(wrap);
 }
 
-function updateUI() {
+export function updateUI() {
     _initTopLeftUI();
 
     const p           = gameState.player;

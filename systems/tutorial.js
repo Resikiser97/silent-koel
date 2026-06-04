@@ -4,8 +4,10 @@
 //               handleTutorialStumpKill / showTutorialCombatComplete
 // 觸發時機：initializeGame() 結束後，若 localStorage 無 tutorialCompleted
 // =============================================================
-
-(function () {
+import { gameState, canvas } from './gameState.js';
+import { VIEW_W } from './map.js';
+import { worldToScreen, wrappedDistance } from './camera.js';
+import { pausePlayTimer, resumePlayTimer } from '../main.js';
 
     // ── 教學內部狀態
     let _step         = 0;       // 0=未啟動 1=步驟一(凍結) 2=步驟二(解凍) 3=步驟三(凍結)
@@ -632,9 +634,4 @@
         _gc().appendChild(el);
     }
 
-    // ── 掛到全域
-    window.showTutorial            = showTutorial;
-    window.spawnTutorialStump      = spawnTutorialStump;
-    window.handleTutorialStumpKill = handleTutorialStumpKill;
-
-}());
+export { showTutorial, spawnTutorialStump, handleTutorialStumpKill };
