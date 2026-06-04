@@ -495,37 +495,7 @@ function _drawHunter(ctx, r, t, boss) {
     ctx.fill();
     ctx.restore();
 
-    // 雷射瞄準線（aiming 狀態，從 Boss 中心指向目標）
-    if (boss.state === 'aiming' && boss._aimTarget) {
-        const bossScreen = worldToScreen(boss.x, boss.y);
-        const ts = worldToScreen(boss._aimTarget.x, boss._aimTarget.y);
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 50, 50, 0.75)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([8, 4]);
-        ctx.shadowColor = '#FF0000';
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(ts.x - bossScreen.x, ts.y - bossScreen.y);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
-        // 第三形態融合技：額外 5 條橘色隨機方向散射預警線
-        if (boss._phase === 3) {
-            ctx.save();
-            ctx.strokeStyle = 'rgba(255,150,0,0.5)';
-            ctx.lineWidth = 1.5;
-            for (let i = 0; i < 5; i++) {
-                const scatterAngle = Math.random() * Math.PI * 2;
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(Math.cos(scatterAngle) * 200, Math.sin(scatterAngle) * 200);
-                ctx.stroke();
-            }
-            ctx.restore();
-        }
-    }
+    // 瞄準線已由 _drawHunterAimingWarning 在 cull 前統一處理
 }
 
 // ── 大白鯊衝刺警告箭頭 ───────────────────────────────────────────
@@ -660,10 +630,64 @@ function _drawSandStormOverlay() {
     ctx.restore();
 }
 
+// ── 黑色獵人瞄準警告（cull 前呼叫，Boss 在螢幕外時玩家也能看到鎖定提示）
+function _drawHunterAimingWarning(boss) {
+    if (!boss._aimTarget) return;
+    const bs = worldToScreen(boss.x, boss.y);
+    const ts = worldToScreen(boss._aimTarget.x, boss._aimTarget.y);
+    // 紅色虛線：Boss → 目標（Boss off-screen 時線從螢幕邊緣射向玩家）
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 50, 50, 0.75)';
+    ctx.lineWidth   = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.shadowColor = '#FF0000';
+    ctx.shadowBlur  = 8;
+    ctx.beginPath();
+    ctx.moveTo(bs.x, bs.y);
+    ctx.lineTo(ts.x, ts.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    // 玩家頭上脈動準心（鎖定指示）
+    const pulse = Math.abs(Math.sin(Date.now() / 80));
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 30, 30, ${(pulse * 0.7 + 0.3).toFixed(2)})`;
+    ctx.lineWidth   = 2.5;
+    ctx.shadowColor = '#FF0000';
+    ctx.shadowBlur  = 14;
+    ctx.beginPath();
+    ctx.arc(ts.x, ts.y, 22, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ts.x - 14, ts.y);  ctx.lineTo(ts.x + 14, ts.y);
+    ctx.moveTo(ts.x, ts.y - 14);  ctx.lineTo(ts.x, ts.y + 14);
+    ctx.stroke();
+    ctx.restore();
+    // 第三形態：5 條橘色散射預警線（從 Boss 方向射出）
+    if (boss._phase === 3) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,150,0,0.55)';
+        ctx.lineWidth   = 1.5;
+        for (let i = 0; i < 5; i++) {
+            const a = Math.random() * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(bs.x, bs.y);
+            ctx.lineTo(bs.x + Math.cos(a) * 220, bs.y + Math.sin(a) * 220);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+
 // ── drawBoss（每幀由 hud.js 呼叫）──────────────────────────────
 function drawBoss() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
+
+    // 黑色獵人瞄準線在 cull 前繪製（Boss off-screen 時也要給玩家視覺警告）
+    if (boss.biome === 'hunter' && boss.state === 'aiming' && boss._aimTarget) {
+        _drawHunterAimingWarning(boss);
+    }
 
     const s = worldToScreen(boss.x, boss.y);
     if (s.x < -100 || s.x > VIEW_W + 100 || s.y < -100 || s.y > VIEW_H + 100) return;
@@ -1008,7 +1032,8 @@ function _updateHunterBoss(boss, p, now) {
     // 形態 1：Sniper — 維持 1200~1500px，繞圈移動
     if (boss._phase === 1) {
         const triggerRange = 1500;
-        if (dist < boss.aggroRange) boss.state = 'chasing';
+        // 不覆蓋戰鬥中間狀態（aiming 蓄力中）
+        if (boss.state !== 'aiming' && dist < boss.aggroRange) boss.state = 'chasing';
         if (boss.state === 'chasing' || boss.state === 'strafing') {
             // 蓄力瞄準
             if (dist < triggerRange && now - boss.attackCooldown > cfg.phase1AttackInterval) {
@@ -1044,7 +1069,8 @@ function _updateHunterBoss(boss, p, now) {
 
     // 形態 2：Shotgun — 衝近 600px，快速往返
     if (boss._phase === 2) {
-        if (dist < boss.aggroRange) boss.state = 'chasing';
+        // 不覆蓋戰鬥中間狀態（pumping 泵管中）
+        if (boss.state !== 'pumping' && dist < boss.aggroRange) boss.state = 'chasing';
         if (boss.state === 'chasing') {
             if (dist < 800 && now - boss.attackCooldown > cfg.phase2AttackInterval) {
                 boss._pumpUntil = now + cfg.phase2PumpDuration;
@@ -1071,7 +1097,8 @@ function _updateHunterBoss(boss, p, now) {
 
     // 形態 3：融合 — 先退到 1200px 發狙擊+散彈，再衝近 400px
     if (boss._phase === 3) {
-        if (dist < boss.aggroRange) boss.state = 'chasing';
+        // 不覆蓋戰鬥中間狀態（aiming 蓄力中）
+        if (boss.state !== 'aiming' && dist < boss.aggroRange) boss.state = 'chasing';
         if (boss.state === 'chasing' || boss.state === 'strafing') {
             if (dist < 1500 && now - boss.attackCooldown > cfg.phase3AttackInterval) {
                 if (!boss._aimTarget) {

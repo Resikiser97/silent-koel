@@ -370,6 +370,8 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
             }
         }
     }
+    // 幽靈隼蓄力中靜止不動（設計：0.3 秒站立蓄力，不打斷瞄準）
+    if (elite.eliteType === 'specterFalcon' && elite._aimTarget) return;
     // 保持射程內，後退保持距離
     const angle = Math.atan2(dy, dx);
     if (dist < elite.attackRange * 0.6) {
@@ -449,15 +451,30 @@ function _drawHunterElite(s, r, t2, elite) {
     }
     ctx.restore();
 
-    // 幽靈隼：準心
+    // 幽靈隼：瞄準線 + 目標準心（與 Boss 雷射同等視覺強度）
     if (elite.eliteType === 'specterFalcon' && elite._aimTarget) {
+        const ts    = worldToScreen(elite._aimTarget.x, elite._aimTarget.y);
+        const pulse = Math.abs(Math.sin(Date.now() / 90));
         ctx.save();
-        ctx.strokeStyle = 'rgba(255,50,50,0.7)';
-        ctx.lineWidth   = 1.5;
-        const ts = worldToScreen(elite._aimTarget.x, elite._aimTarget.y);
+        ctx.strokeStyle = `rgba(255, 80, 80, ${(pulse * 0.45 + 0.45).toFixed(2)})`;
+        ctx.lineWidth   = 2;
+        ctx.setLineDash([6, 3]);
+        ctx.shadowColor = '#FF3333';
+        ctx.shadowBlur  = 10;
         ctx.beginPath();
         ctx.moveTo(s.x, s.y);
         ctx.lineTo(ts.x, ts.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // 目標準心圓 + 十字
+        ctx.strokeStyle = `rgba(255, 60, 60, ${(pulse * 0.55 + 0.35).toFixed(2)})`;
+        ctx.lineWidth   = 2;
+        ctx.beginPath();
+        ctx.arc(ts.x, ts.y, 16, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ts.x - 10, ts.y); ctx.lineTo(ts.x + 10, ts.y);
+        ctx.moveTo(ts.x, ts.y - 10); ctx.lineTo(ts.x, ts.y + 10);
         ctx.stroke();
         ctx.restore();
     }
@@ -467,11 +484,9 @@ function drawEliteArrow() {
     const elite = gameState.eliteCreature;
     if (!elite || elite.hp <= 0) return;
     const es = worldToScreen(elite.x, elite.y);
+    // 精英怪在螢幕內：不需箭頭
     if (es.x >= -20 && es.x <= VIEW_W + 20 && es.y >= -20 && es.y <= VIEW_H + 20) return;
-    if (gameState.boss && gameState.boss.hp > 0) {
-        const bs = worldToScreen(gameState.boss.x, gameState.boss.y);
-        if (bs.x < -20 || bs.x > VIEW_W + 20 || bs.y < -20 || bs.y > VIEW_H + 20) return;
-    }
+    // 精英怪螢幕外：無條件顯示箭頭（移除 Boss off-screen 抑制，玩家需要同時找到兩者）
     const p  = gameState.player;
     const ps = worldToScreen(p.x, p.y);
     const arrowColor = elite.isHunterElite ? (elite.glowColor || '#FFD700') :

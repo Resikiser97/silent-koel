@@ -1,6 +1,43 @@
-## v0.1.1.1
+## v0.1.1.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.1.3 - 2026-06-04
+
+### 修復
+- **黑色獵人三形態攻擊完全失效（aggroRange 覆蓋 Bug）**
+  - Phase 1/3 的 `'aiming'` 和 Phase 2 的 `'pumping'` 每幀被 `if (dist < aggroRange)` 覆蓋為 `'chasing'` → Boss 永遠不開槍、Phase 2 音效每幀播放
+  - 修正：各 Phase 加入 `state !== 'aiming'` / `state !== 'pumping'` 保護
+- **黑色獵人 Phase 1/3 瞄準線在螢幕外不可見**
+  - Boss 在 1350px 繞圈超出螢幕，drawBoss cull 把雷射線一起過濾掉
+  - 修正：新增 `_drawHunterAimingWarning()` 在 cull 前呼叫，玩家頭上加準心鎖定環
+- **幽靈隼蓄力時繼續 kiting 可能跑出攻擊範圍**
+  - 設計應為「0.3 秒站立蓄力」，現實是邊蓄力邊後退
+  - 修正：蓄力中（`_aimTarget` 存在）提前 return，凍結移動
+- **幽靈隼瞄準線太細幾乎不可見**
+  - `lineWidth 1.5` 無 shadow → 難以察覺
+  - 修正：強化為紅色虛線 + glow + 目標準心，與 Boss 雷射同等視覺強度
+- **精英怪箭頭在 Boss 螢幕外時被抑制**
+  - `drawEliteArrow` 當 Boss off-screen 時也不畫精英箭頭，Phase 1 期間玩家找不到隼
+  - 修正：移除 Boss off-screen 抑制，精英箭頭獨立顯示
+
+### 新增
+- `docs/BOSS_RANGED_DESIGN_TRAPS.md`：記錄 6 種 Boss / 遠程怪設計陷阱及解法，含設計 Checklist
+
+---
+
+## v0.1.1.2 - 2026-06-04
+
+### 修復
+- **黑色獵人三形態攻擊完全失效**（根本原因：`aggroRange` 覆蓋 Bug）
+  - 每幀 `if (dist < aggroRange) boss.state = 'chasing'` 無條件覆蓋戰鬥中間狀態，導致 `aiming`（Phase 1/3）被打斷每幀重置、`pumping`（Phase 2）`_pumpUntil` 每幀重設永遠不觸發開槍
+  - 修正：各 Phase aggroRange 判斷加入 `boss.state !== 'aiming'` / `boss.state !== 'pumping'` 防護
+- **黑色獵人 Phase 1/3 雷射瞄準線螢幕外不可見**
+  - Boss 以 idealDist 1350px 繞圈，超出螢幕可視範圍，`drawBoss` cull 後雷射線不被繪製
+  - 修正：新增 `_drawHunterAimingWarning()` 在 cull 前呼叫，含：紅色虛線從 Boss 指向玩家（螢幕外也畫）＋玩家頭上脈動準心鎖定環
+  - 移除重複的 `_drawHunter` 內舊版雷射線代碼
 
 ---
 
