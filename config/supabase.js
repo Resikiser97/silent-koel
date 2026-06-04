@@ -16,6 +16,8 @@
 //   fetchFunBossKillSpeed(difficulty) — 趣味榜：最快擊殺 Boss
 //   fetchFunMaxLevel(difficulty) — 趣味榜：最高等級 TOP10
 //   fetchFunHunterKill(difficulty) — 趣味榜：最快擊殺黑色獵人（困難地圖）
+//   fetchFunFruitsEaten(difficulty) — 趣味榜：最佳果王（fruits_eaten 最多）
+//   fetchFunNormalKills(difficulty) — 趣味榜：最強獵戶（normal_kills 最多）
 //   fetchAvailableDifficulties() — 取得排行榜中有資料的難度陣列
 //
 // 【依賴的跨檔案函式】（修改時注意這些來自外部）
@@ -58,6 +60,8 @@ async function submitScore(data) {
     if (data.giant_kills === undefined) data.giant_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.giantKills || 0) : 0;
     if (data.killer_kills === undefined) data.killer_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.killerKills || 0) : 0;
     if (data.killer_max_level === undefined) data.killer_max_level = (gameState && gameState.sessionStats) ? (gameState.sessionStats.killerMaxLevel || 0) : 0;
+    if (data.fruits_eaten === undefined) data.fruits_eaten = (gameState && gameState.sessionStats) ? (gameState.sessionStats.fruitsEaten || 0) : 0;
+    if (data.normal_kills === undefined) data.normal_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.normalKills || 0) : 0;
     return supabaseQuery('leaderboard', 'POST', data);
 }
 
@@ -151,6 +155,24 @@ async function fetchFunHunterKill(difficulty) {
     return supabaseQuery(
         'leaderboard', 'GET', null,
         '?select=name,boss_kill_time,version,created_at,character&difficulty=eq.hard&boss_kill_time=not.is.null&order=boss_kill_time.asc&limit=10'
+    );
+}
+// 最佳果王（fruits_eaten 最多）
+async function fetchFunFruitsEaten(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,fruits_eaten,version,created_at,character' + diffFilter +
+        '&fruits_eaten=gt.0&order=fruits_eaten.desc&limit=10'
+    );
+}
+// 最強獵戶（normal_kills 最多）
+async function fetchFunNormalKills(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,normal_kills,version,created_at,character' + diffFilter +
+        '&normal_kills=gt.0&order=normal_kills.desc&limit=10'
     );
 }
 

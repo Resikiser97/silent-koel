@@ -101,7 +101,7 @@ const gameState = {
     boss: null,
     bossSpawned: false,
     bossBellPlayed: false,
-    sessionStats: { giantKills: 0, killerKills: 0, killerMaxLevel: 0 },
+    sessionStats: { giantKills: 0, killerKills: 0, killerMaxLevel: 0, fruitsEaten: 0, normalKills: 0 },
     sessionSkillPoints: { elite: 0, boss: 0 },
     eliteCreature: null,
     eliteJustKilled: false,

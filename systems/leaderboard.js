@@ -344,6 +344,20 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             myValue:  (isVictory && bossKillTime != null && difficulty === 'hard') ? Math.floor(bossKillTime) : null,
             ascending: true,
         },
+        {
+            label:    '🍎 最佳果王',
+            fetchFn:  () => fetchFunFruitsEaten(difficulty),
+            colName:  'fruits_eaten',
+            myValue:  gameState.sessionStats ? (gameState.sessionStats.fruitsEaten || 0) : 0,
+            ascending: false,
+        },
+        {
+            label:    '🏹 最強獵戶',
+            fetchFn:  () => fetchFunNormalKills(difficulty),
+            colName:  'normal_kills',
+            myValue:  gameState.sessionStats ? (gameState.sessionStats.normalKills || 0) : 0,
+            ascending: false,
+        },
     ];
 
     // 計算本局成績在一般榜的排名
@@ -527,6 +541,10 @@ function showFunLeaderboard(difficulty) {
         { key: 'bosskill', label: '⚔️ 最快擊殺Boss', fetchFn: () => fetchFunBossKillSpeed(difficulty), colName: 'boss_kill_time', colLabel: 'Boss擊殺(秒)', format: v => String(v) + 's' },
         { key: 'maxlevel', label: '👑 最高等級', fetchFn: () => fetchFunMaxLevel(difficulty),
           colName: 'level', colLabel: '等級', format: v => 'Lv.' + String(v) },
+        { key: 'fruits',  label: '🍎 最佳果王',  fetchFn: () => fetchFunFruitsEaten(difficulty),
+          colName: 'fruits_eaten', colLabel: '果子數', format: v => String(v) },
+        { key: 'normkill', label: '🏹 最強獵戶', fetchFn: () => fetchFunNormalKills(difficulty),
+          colName: 'normal_kills', colLabel: '擊殺數', format: v => String(v) },
     ];
     let currentCat = categories[0];
 

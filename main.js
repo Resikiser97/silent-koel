@@ -221,7 +221,7 @@ function initializeGame() {
     });
     gameState.cameraZoom = 1.0;
     gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };
-    gameState.sessionStats = { giantKills: 0, killerKills: 0, killerMaxLevel: 0 };
+    gameState.sessionStats = { giantKills: 0, killerKills: 0, killerMaxLevel: 0, fruitsEaten: 0, normalKills: 0 };
 
     // ── 套用角色初始屬性（覆蓋上方 Object.assign / stats 預設值，在技能/進化加成前設定基礎值）
     _applyCharacterStats();

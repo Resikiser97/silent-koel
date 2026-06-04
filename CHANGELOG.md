@@ -1,6 +1,16 @@
-## v0.1.2.0
+## v0.1.3.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.3.0 - 2026-06-04
+
+### 新增
+- 趣味排行榜：🍎 最佳果王（單局吃果子數最多）
+- 趣味排行榜：🏹 最強獵戶（單局普通生物擊殺數最多，不含精英/Boss/巨人/殺手）
+- `sessionStats` 新增 `fruitsEaten` 和 `normalKills` 計數（每局重置）
+- `submitScore` 自動補填 `fruits_eaten` / `normal_kills` 至 Supabase leaderboard 資料表
 
 ---
 

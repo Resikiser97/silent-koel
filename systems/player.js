@@ -288,6 +288,9 @@ function _collectFruit(p, fruit) {
     const actualFruitXP = addXP(fruitXP);
     AudioManager.play('eatFruit');
     showXPPopup(p.x, p.y, actualFruitXP);
+    if (gameState.sessionStats) {
+        gameState.sessionStats.fruitsEaten = (gameState.sessionStats.fruitsEaten || 0) + 1;
+    }
 }
 
 function playerDash() {

@@ -1,4 +1,4 @@
-## v0.1.2.0
+## v0.1.3.0
 
 # The Silent Koel — 模組架構說明
 
@@ -851,6 +851,31 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 | `colName` | Supabase 欄位名稱 |
 | `myValue` | 本局對應的數值（不適用時填 `null`） |
 | `ascending` | `true` = 越小越好（時間類）；`false` = 越大越好（數量類） |
+
+### 趣味榜 Supabase fetch 函式一覽（config/supabase.js）
+
+| 函式 | 說明 |
+|------|------|
+| `fetchFunSpeedVictory(difficulty)` | 最速通關 |
+| `fetchFunSpeedDeath(difficulty)` | 最速死亡 |
+| `fetchFunGiantKills(difficulty)` | 巨人獵人（giant_kills 最多） |
+| `fetchFunKillerKills(difficulty)` | 殺手獵人（killer_kills 最多） |
+| `fetchFunKillerMaxLevel(difficulty)` | 殺手克星（killer_max_level 最高） |
+| `fetchFunBossKillSpeed(difficulty)` | 最快擊殺 Boss |
+| `fetchFunMaxLevel(difficulty)` | 最高等級 TOP10 |
+| `fetchFunHunterKill(difficulty)` | 最快擊殺黑色獵人（困難地圖） |
+| `fetchFunFruitsEaten(difficulty)` | 最佳果王（fruits_eaten 最多，v0.1.3.0） |
+| `fetchFunNormalKills(difficulty)` | 最強獵戶（normal_kills 最多，v0.1.3.0） |
+
+### sessionStats 欄位（gameState.sessionStats）
+
+| 欄位 | 說明 |
+|------|------|
+| `giantKills` | 單局巨人化擊殺數 |
+| `killerKills` | 單局殺手化擊殺數 |
+| `killerMaxLevel` | 單局擊殺最高殺手等級 |
+| `fruitsEaten` | 單局吃果子總數（v0.1.3.0） |
+| `normalKills` | 單局普通生物擊殺數（草食+肉食，不含精英/Boss/巨人/殺手，v0.1.3.0） |
 
 ### Submit 前名次預覽（v0.54.1）
 

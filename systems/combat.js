@@ -152,6 +152,9 @@ function handleKill(c, isHostile) {
     const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * 10;
     const actualXP = addXP(rawXP);
     showXPPopup(p.x, p.y, actualXP);
+    if (gameState.sessionStats) {
+        gameState.sessionStats.normalKills = (gameState.sessionStats.normalKills || 0) + 1;
+    }
 }
 
 function playerAttack() {
