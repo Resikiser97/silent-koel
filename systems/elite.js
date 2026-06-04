@@ -107,6 +107,7 @@ function _spawnHunterElite(nightNum, eliteType) {
         _ringAngle: 0,
         _venomPuddleCount: 0,
         _venomFireAt: 0,
+        _venomFirePos: null,
         _venomLandAt: 0,
         _venomLandPos: null,
         diet: 'carnivore',
@@ -202,14 +203,21 @@ function _fireEliteFalconProjectile(elite, p, pellets, maxRange, speed) {
 
 // ── 毒霧隼發射毒霧彈
 function _fireVenomFalconShot(elite, p) {
-    if (elite._venomPuddleCount >= 3) return;
+    if (elite._venomPuddleCount >= 3) {
+        // 已達上限：重置 cooldown 防止每幀觸發、保留 postShot 停頓避免無休止後退
+        elite.attackCooldown = Date.now();
+        elite._postShotTimer = Date.now() + 500;
+        return;
+    }
     const targetX = p.x, targetY = p.y;
-    elite.attackCooldown = Date.now();
-    elite._postShotTimer = Date.now() + 500;
+    const now = Date.now();
+    elite.attackCooldown  = now;
+    elite._postShotTimer  = now + 500;
     AudioManager.play('venomFalconLaunch');
-    elite._venomFireAt  = Date.now();
+    elite._venomFireAt  = now;
+    elite._venomFirePos = { x: elite.x, y: elite.y };
     // 0.8 秒後落地
-    elite._venomLandAt  = Date.now() + 800;
+    elite._venomLandAt  = now + 800;
     elite._venomLandPos = { x: targetX, y: targetY };
 }
 
@@ -233,6 +241,8 @@ function _updateEliteVenomPuddle(elite) {
         AudioManager.play('venomFalconLand');
         AudioManager.play('venomFalconSpread');
     }
+    elite._venomFireAt  = 0;
+    elite._venomFirePos = null;
     elite._venomLandAt  = 0;
     elite._venomLandPos = null;
 }

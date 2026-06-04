@@ -143,20 +143,29 @@ function _drawArcherfish(ctx, sx, sy, r, p) {
 
 // ── 毒霧隼飛行毒球 + 地面腐蝕液體（地形之上、生物之下）
 function _drawVenomFalconEffects() {
-    // A. 飛行中毒球（從 elite 到落點的插值圓形）
+    const now = Date.now();
+    // A. 飛行中毒球（從發射位置到落點的固定插值圓形）
     const elite = gameState.eliteCreature;
-    if (elite && elite._venomFireAt > 0 && elite._venomLandPos && elite._venomLandAt > Date.now()) {
-        const progress = (Date.now() - elite._venomFireAt) / (elite._venomLandAt - elite._venomFireAt);
-        const cx = elite.x + (elite._venomLandPos.x - elite.x) * progress;
-        const cy = elite.y + (elite._venomLandPos.y - elite.y) * progress;
+    if (elite && elite._venomFireAt > 0 && elite._venomLandPos && elite._venomLandAt > now) {
+        const progress = (now - elite._venomFireAt) / (elite._venomLandAt - elite._venomFireAt);
+        const fp = elite._venomFirePos || elite;
+        const cx = fp.x + (elite._venomLandPos.x - fp.x) * progress;
+        const cy = fp.y + (elite._venomLandPos.y - fp.y) * progress;
         const s = worldToScreen(cx, cy);
         if (s.x >= -20 && s.x <= VIEW_W + 20 && s.y >= -20 && s.y <= VIEW_H + 20) {
             ctx.save();
-            ctx.shadowColor = '#33FF66';
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = '#1B5E20';
+            // 外層綠色光暈
+            ctx.shadowColor = '#00FF66';
+            ctx.shadowBlur  = 18;
+            ctx.fillStyle   = 'rgba(30, 160, 80, 0.6)';
             ctx.beginPath();
-            ctx.arc(s.x, s.y, 8, 0, Math.PI * 2);
+            ctx.arc(s.x, s.y, 14, 0, Math.PI * 2);
+            ctx.fill();
+            // 內核亮綠
+            ctx.shadowBlur = 8;
+            ctx.fillStyle  = '#66FF88';
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, 7, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         }
@@ -165,18 +174,24 @@ function _drawVenomFalconEffects() {
     if (!gameState.venomPuddles) return;
     for (const puddle of gameState.venomPuddles) {
         if (puddle.owner !== 'venomFalcon') continue;
-        const elapsed = Date.now() - puddle.startTime;
+        const elapsed = now - puddle.startTime;
         if (elapsed >= puddle.duration) continue;
+        let alpha;
+        if      (elapsed < 300)                        alpha = (elapsed / 300) * 0.55;
+        else if (elapsed > puddle.duration - 500)      alpha = ((puddle.duration - elapsed) / 500) * 0.55;
+        else                                           alpha = 0.55;
         const s = worldToScreen(puddle.x, puddle.y);
         if (s.x < -puddle.radius - 10 || s.x > VIEW_W + puddle.radius + 10 ||
             s.y < -puddle.radius - 10 || s.y > VIEW_H + puddle.radius + 10) continue;
         ctx.save();
-        ctx.fillStyle = 'rgba(50, 180, 50, 0.35)';
+        ctx.shadowColor = '#44FF88';
+        ctx.shadowBlur  = 14;
+        ctx.fillStyle   = `rgba(40, 180, 60, ${alpha.toFixed(3)})`;
         ctx.beginPath();
         ctx.arc(s.x, s.y, puddle.radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(80, 220, 80, 0.5)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(80, 240, 100, ${Math.min(1, alpha * 1.6).toFixed(3)})`;
+        ctx.lineWidth   = 3;
         ctx.stroke();
         ctx.restore();
     }
