@@ -2,7 +2,7 @@
 // 遊戲基本設定 - GAME_INFO / GAME_TIMING / AUDIO_FILES
 // =============================================================
 
-const GAME_INFO = {
+export const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
@@ -10,21 +10,21 @@ const GAME_INFO = {
     SAVE_VERSION: '1.1'
 };
 
-const GAME_TIMING = {
+export const GAME_TIMING = {
     totalTime:   600,
     phaseCount:  8,
     phaseLength: 75,
     phaseBoundaries: [600, 525, 450, 375, 300, 225, 150, 75, 0]
 };
 
-const CORPSE_EAT_HP        = 3.0;    // 吃屍體回血總量
-const CORPSE_BONE_EAT_TICK = 500;    // 屍體/白骨 tick 間隔 (ms)
-const CORPSE_EXPIRE_MS     = 60000;  // 屍體消失時間 (ms)
-const BONE_EXPIRE_MS       = 180000; // 白骨消失時間 (ms)
-const ARCHER_BULLET_SPEED  = 9;      // 阿奇爾子彈速度
+export const CORPSE_EAT_HP        = 3.0;    // 吃屍體回血總量
+export const CORPSE_BONE_EAT_TICK = 500;    // 屍體/白骨 tick 間隔 (ms)
+export const CORPSE_EXPIRE_MS     = 60000;  // 屍體消失時間 (ms)
+export const BONE_EXPIRE_MS       = 180000; // 白骨消失時間 (ms)
+export const ARCHER_BULLET_SPEED  = 9;      // 阿奇爾子彈速度
 
 // 靜音獵隊精英怪數值（困難地圖）
-const HARD_ELITE_CONFIG = {
+export const HARD_ELITE_CONFIG = {
     specterDog:   { hp: 480,  damage: 20, attackCooldown: 1200, radius: 14, type: 'melee' },
     shadowDog:    { hp: 900,  damage: 30, attackCooldown:  900, radius: 14, type: 'melee' },
     venomDog:     { hp: 1500, damage: 45, attackCooldown: 1500, radius: 14, type: 'melee', poisonDps: 8, poisonDuration: 3000 },
@@ -33,7 +33,7 @@ const HARD_ELITE_CONFIG = {
     venomFalcon:   { hp: 1050, damage: 58, attackCooldown: 4000, radius: 16, type: 'ranged', range:  700, poisonDps: 8, puddleRadius: 80, puddleDuration: 6000, maxPuddles: 3 },
 };
 
-const AUDIO_FILES = {
+export const AUDIO_FILES = {
     attackNormal: ['Sound MP3/Koel_Normal1.mp3', 'Sound MP3/Koel_Normal2.mp3'],
     attackCrit:   'Sound MP3/Koel_Crit1.mp3',
     hurt:         'Sound MP3/Koel_Hurt1.mp3',

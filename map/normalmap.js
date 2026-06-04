@@ -2,7 +2,7 @@
 // 普通難度地圖配置
 // =============================================================
 
-const NORMAL_MAP = {
+export const NORMAL_MAP = {
     name:   '普通',
     nameEn: 'Normal',
 

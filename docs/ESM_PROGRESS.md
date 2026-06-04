@@ -29,13 +29,13 @@
 - [x] S0-4：初始 commit 完成
 
 ### Stage 1 — Codex 依賴審計
-- [ ] S1-1：Codex 執行依賴審計
-- [ ] S1-2：`docs/dependency_map.md` 產出
+- [x] S1-1：Codex 執行依賴審計
+- [x] S1-2：`docs/dependency_map.md` 產出
 - [ ] S1-3：你 + Claude Chat 人工確認內容
 - [ ] S1-4：確認批次分工清單正確（更新 ESM_MIGRATION_PLAN.md 附錄）
 
 ### Stage 2A — ESM 遷移 批次1（config/ + lang/ + map/）
-- [ ] S2A-1：Claude Code 執行批次1遷移
+- [x] S2A-1：Claude Code 執行批次1遷移
 - [ ] S2A-2：Codex 靜態語法檢查
 - [ ] S2A-3：你開瀏覽器人工測試
 - [ ] S2A-4：commit 批次1
@@ -70,6 +70,20 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-04（Stage 2A S2A-1 完成）
+- 狀態：批次1遷移完成，等待 Codex 靜態檢查
+- 操作者：Claude Code
+- 完成項目：13 個檔案加入 export/import（config/ + lang/ + map/）
+- 發現問題：無
+- 下一步：S2A-2 Codex 靜態語法檢查，S2A-3 瀏覽器人工測試
+
+### 2026-06-04（Stage 1 依賴審計）
+- 狀態：Stage 1 S1-1 / S1-2 完成
+- 操作者：Codex
+- 完成項目：分析 37 個本地 JS 檔案，產出 `docs/dependency_map.md`
+- 發現問題：實際 JS 清單包含 `config/compendium_data.js`、`systems/mobile.js`、`systems/hud.js`、`systems/chat.js`；另發現多組循環/複雜互依與 `addMutationPoints` 重複定義
+- 下一步：S1-3 由你 + Claude Chat 人工確認依賴圖內容
 
 ### 2026-06-04（Stage 0 完成）
 - 狀態：Stage 0 完成

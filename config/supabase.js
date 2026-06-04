@@ -28,10 +28,10 @@
 //   ⚠️ submitScore 的趣味統計欄位若未傳入會自動從 gameState.sessionStats 補填
 // =============================================================
 
-const SUPABASE_URL = 'https://wrcblrcihzsuwivowxbw.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_OXb03F0LNFzkJnMfgmd-uw_c2T3t4Rk';
+export const SUPABASE_URL = 'https://wrcblrcihzsuwivowxbw.supabase.co';
+export const SUPABASE_KEY = 'sb_publishable_OXb03F0LNFzkJnMfgmd-uw_c2T3t4Rk';
 
-async function supabaseQuery(table, method, body = null, params = '') {
+export async function supabaseQuery(table, method, body = null, params = '') {
     const url = `${SUPABASE_URL}/rest/v1/${table}${params}`;
     const headers = {
         'apikey': SUPABASE_KEY,
@@ -55,7 +55,7 @@ async function supabaseQuery(table, method, body = null, params = '') {
     }
 }
 
-async function submitScore(data) {
+export async function submitScore(data) {
     // 確保趣味統計欄位存在（九）
     if (data.giant_kills === undefined) data.giant_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.giantKills || 0) : 0;
     if (data.killer_kills === undefined) data.killer_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.killerKills || 0) : 0;
@@ -65,7 +65,7 @@ async function submitScore(data) {
     return supabaseQuery('leaderboard', 'POST', data);
 }
 
-async function fetchVictoryRecords(difficulty) {
+export async function fetchVictoryRecords(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -73,7 +73,7 @@ async function fetchVictoryRecords(difficulty) {
     );
 }
 
-async function fetchDefeatRecords(limit, difficulty) {
+export async function fetchDefeatRecords(limit, difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -81,7 +81,7 @@ async function fetchDefeatRecords(limit, difficulty) {
     );
 }
 
-async function fetchTop10(difficulty) {
+export async function fetchTop10(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -91,7 +91,7 @@ async function fetchTop10(difficulty) {
 
 // ── 趣味排行榜（九）：各類特殊統計
 // 最速通關（勝利，play_time 最短）
-async function fetchFunSpeedVictory(difficulty) {
+export async function fetchFunSpeedVictory(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -99,7 +99,7 @@ async function fetchFunSpeedVictory(difficulty) {
     );
 }
 // 最速死亡（失敗，play_time 最短）
-async function fetchFunSpeedDeath(difficulty) {
+export async function fetchFunSpeedDeath(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -107,7 +107,7 @@ async function fetchFunSpeedDeath(difficulty) {
     );
 }
 // 巨人獵人（giant_kills 最多）
-async function fetchFunGiantKills(difficulty) {
+export async function fetchFunGiantKills(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -115,7 +115,7 @@ async function fetchFunGiantKills(difficulty) {
     );
 }
 // 殺手獵人（killer_kills 最多）
-async function fetchFunKillerKills(difficulty) {
+export async function fetchFunKillerKills(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -123,7 +123,7 @@ async function fetchFunKillerKills(difficulty) {
     );
 }
 // 殺手克星（killer_max_level 最高）
-async function fetchFunKillerMaxLevel(difficulty) {
+export async function fetchFunKillerMaxLevel(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -131,7 +131,7 @@ async function fetchFunKillerMaxLevel(difficulty) {
     );
 }
 // 最快擊殺 Boss（boss_kill_time 最短，只有勝利記錄才有此欄位）
-async function fetchFunBossKillSpeed(difficulty) {
+export async function fetchFunBossKillSpeed(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -141,7 +141,7 @@ async function fetchFunBossKillSpeed(difficulty) {
 }
 
 // 最高等級 TOP10
-async function fetchFunMaxLevel(difficulty) {
+export async function fetchFunMaxLevel(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -151,14 +151,14 @@ async function fetchFunMaxLevel(difficulty) {
 }
 
 // 最快擊殺黑色獵人（困難地圖，boss_kill_time 最短）
-async function fetchFunHunterKill(difficulty) {
+export async function fetchFunHunterKill(difficulty) {
     return supabaseQuery(
         'leaderboard', 'GET', null,
         '?select=name,boss_kill_time,version,created_at,character&difficulty=eq.hard&boss_kill_time=not.is.null&order=boss_kill_time.asc&limit=10'
     );
 }
 // 最佳果王（fruits_eaten 最多）
-async function fetchFunFruitsEaten(difficulty) {
+export async function fetchFunFruitsEaten(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -167,7 +167,7 @@ async function fetchFunFruitsEaten(difficulty) {
     );
 }
 // 最強獵戶（normal_kills 最多）
-async function fetchFunNormalKills(difficulty) {
+export async function fetchFunNormalKills(difficulty) {
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
@@ -177,7 +177,7 @@ async function fetchFunNormalKills(difficulty) {
 }
 
 // 取得排行榜中有資料的難度陣列（去重後排序）
-async function fetchAvailableDifficulties() {
+export async function fetchAvailableDifficulties() {
     const rows = await supabaseQuery('leaderboard', 'GET', null, '?select=difficulty&order=difficulty.asc&limit=1000');
     if (!rows || rows.length === 0) return [];
     const seen = new Set();
