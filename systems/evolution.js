@@ -33,6 +33,9 @@ function applyEvolutionLevelEffect(type, newLevel) {
             p.radius = Math.max(5, p.radius + add);
             p.attackRange = Math.max(10, p.attackRange + rangeIncrease);
         }
+        if (lvData.giantDamageReduction !== undefined) {
+            p.giantDamageReduction = lvData.giantDamageReduction;
+        }
     } else if (type === 'carnivore') {
         // 固定值覆蓋：先扣掉上一級的值，再加新的值
         const prevLv = newLevel - 1;
@@ -77,6 +80,9 @@ function applyEvolutionEffects() {
             const rangeIncrease = Math.round(add / Math.max(p.radius, 1) * p.attackRange);
             p.radius = Math.max(5, p.radius + add);
             p.attackRange = Math.max(10, p.attackRange + rangeIncrease);
+        }
+        if (lv.giantDamageReduction !== undefined) {
+            p.giantDamageReduction = lv.giantDamageReduction;
         }
     }
     // 肉食性為固定值：只套用最高等級的數值（非累加）
@@ -180,6 +186,8 @@ function saveLastRunOrgans() {
 
 function showSkillTree(cause) {
     if (gameState.gameOver) return;
+    saveSettings();
+    if (!gameState.mutationSkills) initMutationSkills();
     pausePlayTimer();
     gameState.gameOver = true;
     gameState.skillTreeOpen = true;
@@ -383,6 +391,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     if (effectiveMode === 'postGame' && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) skillContent.appendChild(organSection);
 
     if (effectiveMode === 'postGame' && hiddenOrgans.length > 0) {
+        console.log('[Debug] recallOrgan level:', gameState.mutationSkills?.skills?.recallOrgan?.level, '| hiddenOrganLimit will be:', 1 + (gameState.mutationSkills?.skills?.recallOrgan?.level || 0));
         const hiddenOrganLimit = 1 + ((gameState.mutationSkills && gameState.mutationSkills.skills && gameState.mutationSkills.skills.recallOrgan && gameState.mutationSkills.skills.recallOrgan.level) || 0);
         const hiddenSection = document.createElement('div');
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';

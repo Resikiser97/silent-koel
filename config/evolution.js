@@ -10,8 +10,8 @@ const EVOLUTION_PATHS = {
             { level: 1, hpMaxAdd: 30, fruitXPBonus: 0, desc: '可吃果子，HP上限+30' },
             { level: 2, hpMaxAdd: 10, fruitXPBonus: 1, desc: 'HP+10，果子XP+1，撞到不逃跑' },
             { level: 3, hpMaxAdd: 15, fruitXPBonus: 2, desc: 'HP+15，果子XP+2，被攻擊也不逃跑' },
-            { level: 4, hpMaxAdd: 20, fruitXPBonus: 3, radiusPercent: 0.10, friendly: true, desc: 'HP+20，果子XP+3，體型+10%，中立生物完全友善' },
-            { level: 5, hpMaxAdd: 25, fruitXPBonus: 4, radiusPercent: 0.20, friendly: true, desc: 'HP+25，果子XP+4，體型+20%，中立生物完全友善' }
+            { level: 4, hpMaxAdd: 20, fruitXPBonus: 3, radiusPercent: 0.10, friendly: true, giantDamageReduction: 0.15, desc: 'HP+20，果子XP+3，體型+10%，中立生物完全友善，巨人化傷害-15%' },
+            { level: 5, hpMaxAdd: 25, fruitXPBonus: 4, radiusPercent: 0.20, friendly: true, giantDamageReduction: 0.30, desc: 'HP+25，果子XP+4，體型+20%，中立生物完全友善，巨人化傷害-30%' }
         ]
     },
     carnivore: {

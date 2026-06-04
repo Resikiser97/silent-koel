@@ -1,8 +1,25 @@
-## v0.1.1.3
+## v0.1.2.0
 
 # CHANGELOG — 只吃不叫的噪鵑
 
 ---
+
+## v0.1.2.0 - 2026-06-04
+
+### 修復
+- **精英怪 UI 名字標籤**：確認 `drawEliteCreature()` 已正確讀取 `elite.label`（Hunter Elite 顯示「★ 幽靈犬」等正確名稱），無需修改
+- **玩家毒傷 tick 未處理**：`updateStatusEffects()` 末尾新增玩家毒傷 tick，毒霧犬咬中後毒效果現可正常生效
+- **輔助功能設定在遊戲結束時未儲存**：`showSkillTree()` 與 `showVictory()` 開頭加入 `saveSettings()`，確保死亡/勝利前所有設定存入 localStorage
+- **回憶器官等級在 postGame 未正確讀取**：`showSkillTree()` 加入 `initMutationSkills` 保障，`buildSkillTreeOverlay` 加入 `[Debug]` log 供確認
+
+### 調整
+- **肉食性生物進食時 Aggro 範圍從 ×1.5 改為 ×0.5**：讓生物能順利進食觸發殺手化
+- **草食性進化 Lv4**：巨人化生物（含 Alpha）對玩家傷害 -15%
+- **草食性進化 Lv5**：巨人化生物（含 Alpha）對玩家傷害 -30%
+
+---
+
+## v0.1.1.3 - 2026-06-04
 
 ## v0.1.1.3 - 2026-06-04
 

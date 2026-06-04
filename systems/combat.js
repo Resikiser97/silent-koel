@@ -27,6 +27,11 @@ function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
     // 閃現無敵期間豁免所有外部傷害（毒傷tick/刺甲反傷不走此函式，不受影響）
     if (p.dashInvincible) return;
+    // 巨人/Alpha 傷害減免（草食性 Lv4/Lv5 效果）
+    if (attacker && (attacker.isGiantized || attacker.isAlpha)) {
+        const reduction = p.giantDamageReduction || 0;
+        if (reduction > 0) rawDamage = Math.round(rawDamage * (1 - reduction));
+    }
     const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
     gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
     AudioManager.play('hurt');
@@ -340,6 +345,22 @@ function updateStatusEffects() {
                 else handleKill(c, isHostile);
             }
         }
+    }
+
+    // ── 玩家毒傷 tick（毒霧犬咬中後）
+    const player = gameState.player;
+    if (player.poisonEndTime && now < player.poisonEndTime &&
+        now - (player.lastPoisonTick || 0) >= 1000) {
+        const dmg = Math.round((player.poisonDmg || 0) * (1 - (player.poisonResist || 0)));
+        if (dmg > 0) {
+            player.lastPoisonTick += 1000;
+            applyDamageToPlayer(dmg, null);
+            showFloatingText(player.x, player.y - 18, t('poisonFloat', { n: dmg }), '#8800CC', 11);
+        }
+    }
+    if (player.poisonEndTime && now >= player.poisonEndTime) {
+        player.poisonEndTime = 0;
+        player.poisonDmg = 0;
     }
 }
 

@@ -401,8 +401,8 @@ LANG['en'] = {
             'Can eat fruit, Max HP +30',
             'HP +10, Fruit XP +1, neutrals stop fleeing on bump',
             'HP +15, Fruit XP +2, neutrals don\'t flee even when attacked',
-            'HP +20, Fruit XP +3, Size +10%, neutrals fully friendly',
-            'HP +25, Fruit XP +4, Size +20%, neutrals fully friendly'
+            'HP +20, Fruit XP +3, Size +10%, neutrals fully friendly, Giant creatures deal 15% less damage to you',
+            'HP +25, Fruit XP +4, Size +20%, neutrals fully friendly, Giant creatures deal 30% less damage to you'
         ]},
         carnivore: { name: 'Carnivore', levels: [
             'Can eat corpses (5 XP, 3s), Atk +2',

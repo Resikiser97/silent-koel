@@ -1378,6 +1378,7 @@ function _recordBossKill(bossType) {
 
 function showVictory() {
     if (gameState.gameOver) return;
+    saveSettings();
     pausePlayTimer();
     gameState.topBarTarget = null;
     gameState.topBarFadeTimer = 0;

@@ -1262,8 +1262,8 @@ function updateHostileCreatures() {
                                   gameState.currentMap.features.hostileEatMeat);
         if (featureEatMeat && creature.diet === 'carnivore') {
             if (creature.state === 'eating') {
-                // 吃屍體期間 aggroRange×1.5，有生物進入則中斷
-                const tempAggro = (creature.eatBaseAggroRange || creature.aggroRange) * 1.5;
+                // 吃屍體期間 aggroRange×0.5，讓生物能順利進食觸發殺手化
+                const tempAggro = (creature.eatBaseAggroRange || creature.aggroRange) * 0.5;
                 let interrupted = false;
                 if (wrappedDistance(creature.x, creature.y, gameState.player.x, gameState.player.y) < tempAggro) interrupted = true;
                 if (!interrupted) {
