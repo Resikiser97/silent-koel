@@ -535,6 +535,7 @@ export function checkFruitCollision() {
 export function updateTreeFruitProduction(deltaTime) {
     _treeProductionTimer += FIXED_DELTA;
     if (_treeProductionTimer < 500) return;
+    const elapsed = _treeProductionTimer;
     _treeProductionTimer = 0;
     for (const tree of gameState.trees) {
         const range     = tree.isLarge ? 80 : 60;
@@ -546,7 +547,7 @@ export function updateTreeFruitProduction(deltaTime) {
         }
         tree.fruitCount = nearby;
         if (nearby >= maxNearby) continue;
-        tree.fruitTimer += deltaTime;
+        tree.fruitTimer += elapsed;
         const interval = nearby === 0 ? 9000 : (nearby === 1 ? 19500 : 30000);
         if (tree.fruitTimer >= interval) {
             tree.fruitTimer = 0;
