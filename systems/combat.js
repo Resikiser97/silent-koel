@@ -21,72 +21,44 @@ import { showSkillTree } from './evolution.js';
 import { _archerAttack } from './player.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 
-// floating text DOM 物件池 — 預建固定數量元素重複使用，避免每次 createElement + remove
-const _FLOAT_POOL_SIZE = 20;
-let _floatPool = [];
-let _floatPoolReady = false;
-
-function _initFloatPool() {
-    if (_floatPoolReady) return;
-    const overlay = document.getElementById('ui-overlay');
-    if (!overlay) return;
-    for (let i = 0; i < _FLOAT_POOL_SIZE; i++) {
-        const el = document.createElement('div');
-        el.style.cssText = 'position:absolute;pointer-events:none;display:none;font-weight:bold;';
-        overlay.appendChild(el);
-        _floatPool.push({ el, inUse: false, timer: null });
-    }
-    _floatPoolReady = true;
-}
-
 export function showFloatingText(wx, wy, text, color, fontSize) {
-    if (!_floatPoolReady) _initFloatPool();
-    if (!_floatPoolReady) return;
-
     const s = worldToScreen(wx, wy);
     if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
 
-    const slot = _floatPool.find(sl => !sl.inUse);
-    if (!slot) return;
+    // 手機模式上限 12，桌機上限 20
+    const maxTexts = gameState.isMobile ? 12 : 20;
+    if (gameState.floatTexts.length >= maxTexts) return;
 
-    if (slot.timer) { clearTimeout(slot.timer); slot.timer = null; }
-
-    slot.inUse = true;
-    const el = slot.el;
-    const fz = fontSize || 16;
-    const shadow = (gameState.settings && gameState.settings.fontBoldLarge)
-        ? '-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000,0 3px 6px rgba(0,0,0,0.9)'
-        : '-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 2px 3px rgba(0,0,0,0.7)';
-
-    el.style.fontSize   = fz + 'px';
-    el.style.textShadow = shadow;
-    el.style.left       = (s.x - 20) + 'px';
-    el.style.top        = (s.y - 10) + 'px';
-    el.style.color      = color || 'white';
-    el.classList.remove('float-text-animate');
-    el.innerText        = text;
-    el.style.display    = 'block';
-
-    requestAnimationFrame(() => {
-        el.classList.add('float-text-animate');
-    });
-
-    slot.timer = setTimeout(() => {
-        el.style.display = 'none';
-        el.classList.remove('float-text-animate');
-        slot.inUse = false;
-        slot.timer = null;
-    }, 800);
-}
-
-function resetFloatPool() {
-    for (const slot of _floatPool) {
-        if (slot.timer) { clearTimeout(slot.timer); slot.timer = null; }
-        slot.el.style.display = 'none';
-        slot.el.classList.remove('float-text-animate');
-        slot.inUse = false;
+    // 同幀同位置同類型合併（50px 範圍內、100ms 內、同顏色）
+    const now = Date.now();
+    const existing = gameState.floatTexts.find(ft =>
+        ft.color === color &&
+        Math.abs(ft.wx - wx) < 50 &&
+        Math.abs(ft.wy - wy) < 50 &&
+        now - ft.startTime < 100
+    );
+    if (existing) {
+        // 嘗試數字合併（如果兩個都是純數字或帶+/-符號的數字）
+        const existingNum = parseFloat(existing.text);
+        const newNum = parseFloat(text);
+        if (!isNaN(existingNum) && !isNaN(newNum)) {
+            const combined = existingNum + newNum;
+            existing.text = (combined > 0 ? '+' : '') + Math.round(combined);
+        }
+        // 非數字就跳過（不顯示重複）
+        return;
     }
-    // 不重置 _floatPoolReady，pool DOM 元素保留重用
+
+    gameState.floatTexts.push({
+        wx, wy,
+        screenX: s.x,
+        screenY: s.y,
+        text: String(text),
+        color: color || 'white',
+        fontSize: fontSize || 16,
+        startTime: now,
+        duration: 700,    // 比原本 800ms 短一點，手機感覺更快
+    });
 }
 
 export function applyDamageToPlayer(rawDamage, attacker) {
