@@ -13,7 +13,7 @@ import { addXP } from './player.js';
 import { applyOrganEffects, applyHiddenOrganEffects, showOrganSelection, showHiddenOrganSelection, getOrganSlotsUsed } from './organs.js';
 import { showFloatingText } from './combat.js';
 import { applyMutationEffects, saveMutationData, getMutationUpgradeCost, upgradeMutation, initMutationSkills, _syncMutationSkillPoints } from './mutation.js';
-import { showTooltip, hideTooltip } from './ui.js';
+import { showTooltip, hideTooltip, buildEndGameOverlay } from './ui.js';
 import { pausePlayTimer, resumePlayTimer } from '../main.js';
 import { showScoreSubmitPopup } from './leaderboard.js';
 import { AudioManager } from './audio.js';
@@ -229,70 +229,51 @@ export function showSkillTree(cause) {
     storageRemove(STORAGE_KEYS.SAVED_ORGANS);
     storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
     const showDeathSettlement = () => {
-        const overlay = document.createElement('div');
-        overlay.id = 'death-settlement-overlay';
-        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;font-family:Arial,sans-serif;';
-        const titleEl = document.createElement('div');
-        titleEl.style.cssText = 'font-size:52px;margin-bottom:16px;';
-        titleEl.textContent = cause === 'timeout' ? t('timeoutTitle') : t('youDied');
-        overlay.appendChild(titleEl);
-        const xpEl = document.createElement('div');
-        xpEl.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
-        xpEl.textContent = t('finalXP', { xp: gameState.stats.xpCurrent });
-        overlay.appendChild(xpEl);
-        if (timeBonus > 0 || levelBonus > 0 || eliteBonus > 0) {
-            const spSection = document.createElement('div');
-            spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:16px;text-align:center;line-height:1.8;';
-            const spLines = [];
-            if (eliteBonus > 0) spLines.push(t('skillPtElite', { n: eliteBonus }));
-            if (timeBonus > 0)  spLines.push(t('skillPtTime',  { n: timeBonus }));
-            if (levelBonus > 0) spLines.push(t('skillPtLevel', { n: levelBonus }));
-            spSection.innerHTML = spLines.join('<br>');
-            overlay.appendChild(spSection);
-        }
-        const goTreeBtn = document.createElement('button');
-        goTreeBtn.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
-        goTreeBtn.textContent = t('goSkillTree');
-        goTreeBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'postGame'); };
-        overlay.appendChild(goTreeBtn);
-        const vBtnRow = document.createElement('div');
-        vBtnRow.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;';
-        const warnEl = document.createElement('div');
-        warnEl.style.cssText = 'display:none;font-size:13px;color:#f80;text-align:center;';
-        vBtnRow.appendChild(warnEl);
-        const vRowInner = document.createElement('div');
-        vRowInner.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
-        const homeBtn = document.createElement('button');
-        homeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        homeBtn.textContent = t('backHome');
-        let homeWarned = false;
-        homeBtn.onclick = () => {
-            if (!homeWarned) {
-                homeWarned = true;
-                warnEl.textContent = t('warnNoOrganHome');
-                warnEl.style.display = 'block';
-                return;
-            }
-            location.reload();
-        };
-        vRowInner.appendChild(homeBtn);
-        const playAgainBtn = document.createElement('button');
-        playAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-        playAgainBtn.textContent = t('playAgain');
-        playAgainBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'forceStart'); };
-        vRowInner.appendChild(playAgainBtn);
-        vBtnRow.appendChild(vRowInner);
-        overlay.appendChild(vBtnRow);
-        const footer = document.createElement('div');
-        footer.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
-        footer.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
-        overlay.appendChild(footer);
-        if (gameState.devModeUsed) {
-            const devWarn = document.createElement('div');
-            devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
-            devWarn.textContent = t('devModeWarning');
-            overlay.appendChild(devWarn);
-        }
+        const spLines = [];
+        if (eliteBonus > 0) spLines.push(t('skillPtElite', { n: eliteBonus }));
+        if (timeBonus > 0)  spLines.push(t('skillPtTime',  { n: timeBonus }));
+        if (levelBonus > 0) spLines.push(t('skillPtLevel', { n: levelBonus }));
+        const overlay = buildEndGameOverlay({
+            id: 'death-settlement-overlay',
+            overlayStyle: 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;font-family:Arial,sans-serif;',
+            titleStyle: 'font-size:52px;margin-bottom:16px;',
+            titleText: cause === 'timeout' ? t('timeoutTitle') : t('youDied'),
+            content: [
+                {
+                    style: 'font-size:18px;margin-bottom:10px;color:#FFD700;',
+                    text: t('finalXP', { xp: gameState.stats.xpCurrent })
+                },
+                ...(spLines.length > 0 ? [{
+                    style: 'font-size:14px;color:#aaa;margin-bottom:16px;text-align:center;line-height:1.8;',
+                    html: spLines.join('<br>')
+                }] : [])
+            ],
+            primaryButton: {
+                style: 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;',
+                text: t('goSkillTree'),
+                onClick: () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'postGame'); }
+            },
+            buttonRowStyle: 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;',
+            warningStyle: 'display:none;font-size:13px;color:#f80;text-align:center;',
+            buttonInnerStyle: 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;',
+            secondaryButtons: [
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;',
+                    text: t('backHome'),
+                    warningText: t('warnNoOrganHome'),
+                    onClick: () => { location.reload(); }
+                },
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;',
+                    text: t('playAgain'),
+                    onClick: () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'forceStart'); }
+                }
+            ],
+            footerStyle: 'font-size:12px;color:#555;margin-top:20px;',
+            footerText: '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version,
+            devWarningStyle: 'font-size:12px;color:#f80;margin-top:12px;',
+            devWarningText: gameState.devModeUsed ? t('devModeWarning') : null
+        });
         document.getElementById('game-container').appendChild(overlay);
     };
     if (gameState.devModeUsed) {

@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 3 — 架構重構（Phase 2 進行中）
-目前批次     : TODO-03 變異技能面板統一完成
+所在 Stage   : Stage 3 — 架構重構（Phase 3 進行中）
+目前批次     : TODO-02 結算畫面統一完成
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-05
-最後操作者   : Codex（TODO-03 打破 mutation/evolution 循環依賴）
+最後操作者   : Codex（TODO-02 結算畫面統一）
 ```
 
 ---
@@ -58,7 +58,7 @@
 - [x] Phase 1：TODO-04 AudioManager 統一
 - [x] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
 - [x] Phase 2：TODO-03 變異技能面板統一
-- [ ] Phase 3：TODO-02 結算畫面統一
+- [x] Phase 3：TODO-02 結算畫面統一
 - [ ] Phase 3：TODO-05 設定面板 fromHome 移除
 - [ ] Phase 3：TODO-07 gameState 存取控制
 - [ ] Phase 4：TODO-08/09/10 收尾清理
@@ -71,6 +71,18 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 3 TODO-02 結算畫面統一完成）
+- 狀態：Stage 3 Phase 3 TODO-02 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/ui.js` 新增 `buildEndGameOverlay()` 共用死亡/勝利結算畫面外殼
+  - `systems/evolution.js` 的 `showDeathSettlement` 改用 `buildEndGameOverlay()`，保留原 overlay id、按鈕排列與回首頁二段警告
+  - `systems/boss.js` 的 `doShowVictory` 改用 `buildEndGameOverlay()`，保留原勝利資料、結算副作用與雲端保存流程
+  - `systems/daynight.js` 刪除無呼叫點的 `showGameOver()` dead code
+  - `MAIN.md` / `QUICKREF.md` 同步移除 `showGameOver` 索引並補上結算 builder 說明
+- 發現問題：附件範例 builder 的 `confirm()` 與現有二段警告行為不一致，已依確認採用保留原行為的方案 A
+- 下一步：Phase 3 TODO-05 設定面板 fromHome 移除
 
 ### 2026-06-05（Stage 3 TODO-03 打破 mutation/evolution 循環依賴完成）
 - 狀態：Stage 3 Phase 2 TODO-03 完成

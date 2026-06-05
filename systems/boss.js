@@ -15,7 +15,7 @@ import { applyDamageToPlayer, showFloatingText } from './combat.js';
 import { _effSpeed } from './creatures.js';
 import { addXP } from './player.js';
 import { buildSkillTreeOverlay, saveLastRunOrgans } from './evolution.js';
-import { saveSettings } from './ui.js';
+import { saveSettings, buildEndGameOverlay } from './ui.js';
 import { showScoreSubmitPopup } from './leaderboard.js';
 import { loadChatSettings, chatSaveProgress } from './chat.js';
 import { pausePlayTimer } from '../main.js';
@@ -1442,73 +1442,56 @@ export function showVictory() {
     storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
     const bossKillTime = gameState.bossSpawnTime ? Math.floor((Date.now() - gameState.bossSpawnTime) / 1000) : null;
     const doShowVictory = () => {
-        const overlay = document.createElement('div');
-        overlay.id = 'victory-overlay';
-        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
-        const title = document.createElement('div');
-        title.style.cssText = 'font-size:52px;margin-bottom:16px;';
-        title.textContent = t('victoryTitle');
-        overlay.appendChild(title);
-        const desc1 = document.createElement('div');
-        desc1.style.cssText = 'font-size:22px;margin-bottom:8px;';
         const bossName = gameState.boss && gameState.boss.name ? gameState.boss.name : (BOSS_CONFIG.forest.name);
-        desc1.textContent = t('victoryDesc', { boss: bossName });
-        overlay.appendChild(desc1);
-        const desc2 = document.createElement('div');
-        desc2.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
-        desc2.textContent = t('victoryReward');
-        overlay.appendChild(desc2);
-        const spSection = document.createElement('div');
-        spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;';
         const spLines = [t('skillPtBoss', { n: 3 })];
         if (eliteBonus > 0)  spLines.push(t('skillPtElite', { n: eliteBonus }));
         if (timeBonus > 0)   spLines.push(t('skillPtTime',  { n: timeBonus }));
         if (levelBonus > 0)  spLines.push(t('skillPtLevel', { n: levelBonus }));
-        spSection.innerHTML = spLines.join('<br>');
-        overlay.appendChild(spSection);
-        const btnTree = document.createElement('button');
-        btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
-        btnTree.textContent = t('goSkillTree');
-        btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'postGame'); };
-        overlay.appendChild(btnTree);
-        const vBtnRow = document.createElement('div');
-        vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;';
-        const vWarnEl = document.createElement('div');
-        vWarnEl.style.cssText = 'display:none;font-size:13px;color:#f80;text-align:center;';
-        vBtnRow.appendChild(vWarnEl);
-        const vRowInner = document.createElement('div');
-        vRowInner.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
-        const vHomeBtn = document.createElement('button');
-        vHomeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        vHomeBtn.textContent = t('backHome');
-        let vHomeWarned = false;
-        vHomeBtn.onclick = () => {
-            if (!vHomeWarned) {
-                vHomeWarned = true;
-                vWarnEl.textContent = t('warnNoOrganHome');
-                vWarnEl.style.display = 'block';
-                return;
-            }
-            location.reload();
-        };
-        vRowInner.appendChild(vHomeBtn);
-        const vPlayAgainBtn = document.createElement('button');
-        vPlayAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-        vPlayAgainBtn.textContent = t('playAgain');
-        vPlayAgainBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'forceStart'); };
-        vRowInner.appendChild(vPlayAgainBtn);
-        vBtnRow.appendChild(vRowInner);
-        overlay.appendChild(vBtnRow);
-        const vFooter = document.createElement('div');
-        vFooter.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
-        vFooter.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
-        overlay.appendChild(vFooter);
-        if (gameState.devModeUsed) {
-            const devWarn = document.createElement('div');
-            devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
-            devWarn.textContent = t('devModeWarning');
-            overlay.appendChild(devWarn);
-        }
+        const overlay = buildEndGameOverlay({
+            id: 'victory-overlay',
+            overlayStyle: 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;',
+            titleStyle: 'font-size:52px;margin-bottom:16px;',
+            titleText: t('victoryTitle'),
+            content: [
+                {
+                    style: 'font-size:22px;margin-bottom:8px;',
+                    text: t('victoryDesc', { boss: bossName })
+                },
+                {
+                    style: 'font-size:18px;margin-bottom:10px;color:#FFD700;',
+                    text: t('victoryReward')
+                },
+                {
+                    style: 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;',
+                    html: spLines.join('<br>')
+                }
+            ],
+            primaryButton: {
+                style: 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;',
+                text: t('goSkillTree'),
+                onClick: () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'postGame'); }
+            },
+            buttonRowStyle: 'display:flex;gap:12px;pointer-events:all;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;',
+            warningStyle: 'display:none;font-size:13px;color:#f80;text-align:center;',
+            buttonInnerStyle: 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;',
+            secondaryButtons: [
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;',
+                    text: t('backHome'),
+                    warningText: t('warnNoOrganHome'),
+                    onClick: () => { location.reload(); }
+                },
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;',
+                    text: t('playAgain'),
+                    onClick: () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'forceStart'); }
+                }
+            ],
+            footerStyle: 'font-size:12px;color:#555;margin-top:20px;',
+            footerText: '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version,
+            devWarningStyle: 'font-size:12px;color:#f80;margin-top:12px;',
+            devWarningText: gameState.devModeUsed ? t('devModeWarning') : null
+        });
         document.getElementById('game-container').appendChild(overlay);
     };
     // 自動雲端保存進度（已登入才執行）

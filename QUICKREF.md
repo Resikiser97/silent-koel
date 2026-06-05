@@ -93,12 +93,12 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `elite.js` | spawnEliteCreature / updateEliteCreature |
 | `boss.js` | spawnBoss / updateBoss / showVictory |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
-| `daynight.js` | getDayNightPhaseIndex / updateDayNightCycle / showGameOver |
+| `daynight.js` | getDayNightPhaseIndex / updateDayNightCycle |
 | `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息） |
 | `leaderboard.js` | 排行榜面板 / 分數提交 / 難度狀態管理 |
 | `mobile.js` | 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層 |
 | `hud.js` | drawGame 主渲染 / HUD 更新 / 小地圖 / 上方血條 |
-| `ui.js` | 面板系統（首頁/設定/地圖選擇/圖鑑/故事書/版本公告）/ Tooltip / 語言切換 |
+| `ui.js` | 面板系統（首頁/設定/地圖選擇/圖鑑/故事書/版本公告）/ Tooltip / 語言切換 / 結算畫面共用 builder |
 
 ### map/
 | 檔案 | 職責 |

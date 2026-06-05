@@ -3180,3 +3180,80 @@ function _getGuideStoryPages() {
 
 // showLeaderboard() 已移至 systems/leaderboard.js
 // showScoreSubmitPopup() 已移至 systems/leaderboard.js
+
+export function buildEndGameOverlay(options) {
+    const overlay = document.createElement('div');
+    overlay.id = options.id;
+    overlay.style.cssText = options.overlayStyle;
+
+    const title = document.createElement('div');
+    title.style.cssText = options.titleStyle;
+    title.textContent = options.titleText;
+    overlay.appendChild(title);
+
+    (options.content || []).forEach(section => {
+        const el = document.createElement('div');
+        el.style.cssText = section.style;
+        if (section.html !== undefined) {
+            el.innerHTML = section.html;
+        } else {
+            el.textContent = section.text || '';
+        }
+        overlay.appendChild(el);
+    });
+
+    if (options.primaryButton) {
+        const primary = document.createElement('button');
+        primary.style.cssText = options.primaryButton.style;
+        primary.textContent = options.primaryButton.text;
+        primary.onclick = options.primaryButton.onClick;
+        overlay.appendChild(primary);
+    }
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = options.buttonRowStyle;
+    const warnEl = document.createElement('div');
+    warnEl.style.cssText = options.warningStyle;
+    btnRow.appendChild(warnEl);
+
+    const rowInner = document.createElement('div');
+    rowInner.style.cssText = options.buttonInnerStyle;
+    (options.secondaryButtons || []).forEach(buttonDef => {
+        const btn = document.createElement('button');
+        btn.style.cssText = buttonDef.style;
+        btn.textContent = buttonDef.text;
+        if (buttonDef.warningText) {
+            let warned = false;
+            btn.onclick = () => {
+                if (!warned) {
+                    warned = true;
+                    warnEl.textContent = buttonDef.warningText;
+                    warnEl.style.display = 'block';
+                    return;
+                }
+                buttonDef.onClick();
+            };
+        } else {
+            btn.onclick = buttonDef.onClick;
+        }
+        rowInner.appendChild(btn);
+    });
+    btnRow.appendChild(rowInner);
+    overlay.appendChild(btnRow);
+
+    if (options.footerText) {
+        const footer = document.createElement('div');
+        footer.style.cssText = options.footerStyle;
+        footer.textContent = options.footerText;
+        overlay.appendChild(footer);
+    }
+
+    if (options.devWarningText) {
+        const devWarn = document.createElement('div');
+        devWarn.style.cssText = options.devWarningStyle;
+        devWarn.textContent = options.devWarningText;
+        overlay.appendChild(devWarn);
+    }
+
+    return overlay;
+}
