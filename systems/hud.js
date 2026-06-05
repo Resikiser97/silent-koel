@@ -371,10 +371,12 @@ function _drawArcherLockOn() {
     const best = (typeof _findArcherAutoTarget === 'function') ? _findArcherAutoTarget() : null;
     if (!best) return;
 
-    const psx = worldToScreen(p.x, p.y).x;
-    const psy = _screenPos.y;
-    const tsx = worldToScreen(best.x, best.y).x;
-    const tsy = _screenPos.y;
+    let _ws = worldToScreen(p.x, p.y);
+    const psx = _ws.x;
+    const psy = _ws.y;
+    _ws = worldToScreen(best.x, best.y);
+    const tsx = _ws.x;
+    const tsy = _ws.y;
     const now = Date.now();
 
     ctx.save();
@@ -989,10 +991,12 @@ export function drawGame() {
         if (t >= 1) {
             gameState.dashEffect = null;
         } else {
-            const sax = worldToScreen(ef.ax, ef.ay).x;
-            const say = _screenPos.y;
-            const sbx = worldToScreen(ef.bx, ef.by).x;
-            const sby = _screenPos.y;
+            let _ws = worldToScreen(ef.ax, ef.ay);
+            const sax = _ws.x;
+            const say = _ws.y;
+            _ws = worldToScreen(ef.bx, ef.by);
+            const sbx = _ws.x;
+            const sby = _ws.y;
             ctx.save();
 
             // 特效 1：出發點 A 金色煙霧（0~100ms）
