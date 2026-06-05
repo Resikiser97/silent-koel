@@ -1588,10 +1588,10 @@ export function updateUI() {
     }
 
     const hpCanvas = document.getElementById('hp-hearts-canvas');
-    if (hpCanvas && (gameState.player.hp !== _uiCache.hp || gameState.player.maxHp !== _uiCache.maxHp)) {
+    if (hpCanvas && (gameState.stats.hpCurrent !== _uiCache.hp || gameState.stats.hpMax !== _uiCache.maxHp)) {
         _drawHpHearts(hpCanvas);
-        _uiCache.hp = gameState.player.hp;
-        _uiCache.maxHp = gameState.player.maxHp;
+        _uiCache.hp = gameState.stats.hpCurrent;
+        _uiCache.maxHp = gameState.stats.hpMax;
     }
 
     const mmBiomeEl = document.getElementById('minimap-biome');
