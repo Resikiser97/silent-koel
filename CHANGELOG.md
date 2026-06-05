@@ -1,6 +1,22 @@
-## v0.1.3.7
+## v0.1.3.8
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.3.8 - 2026-06-05
+
+### 效能
+- `worldToScreen` 和 `wrappedDelta` 改為物件重用，大幅減少每幀 GC allocation，改善手機 spike lag
+  - `camera.js` 頂部新增 `_screenPos` 和 `_delta` 重用物件
+  - `worldToScreen` 直接寫入 `_screenPos` 並回傳同一物件，不再每次 `return { x, y }`
+  - `wrappedDelta` 直接寫入 `_delta` 並回傳同一物件，不再每次 `return { dx, dy }`
+  - 修正所有「連續呼叫後同時使用兩個結果」的呼叫點（共 5 處），立即萃取數值防止物件被覆蓋：
+    - `boss.js` `_drawSharkChargeArrow`：`fromSx/fromSy` + `toSx/toSy`
+    - `boss.js` `_drawHunterAimingWarning`：`bsx/bsy` + `tsx/tsy`
+    - `elite.js` `_drawHunterElite`：簽名改為傳入數值 `(sx, sy)`，內部瞄準線改用 `tsx/tsy`
+    - `hud.js` `_drawArcherLockOn`：`psx/psy` + `tsx/tsy`
+    - `hud.js` `drawGame` 中 `ps`：新增 `psx/psy` 快取，閃現特效改用 `sax/say/sbx/sby`
 
 ---
 

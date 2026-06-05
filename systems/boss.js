@@ -509,11 +509,13 @@ function _drawSharkChargeArrow(boss) {
     if (!isWarning && !isCharging) return;
 
     const { angle, dist, fromX, fromY } = boss._chargeArrow;
-    const from      = worldToScreen(fromX, fromY);
+    const fromSx = worldToScreen(fromX, fromY).x;
+    const fromSy = _screenPos.y;
     const toWorldX  = fromX + Math.cos(angle) * dist;
     const toWorldY  = fromY + Math.sin(angle) * dist;
-    const to        = worldToScreen(toWorldX, toWorldY);
-    const screenLen = Math.sqrt((to.x - from.x) ** 2 + (to.y - from.y) ** 2);
+    const toSx = worldToScreen(toWorldX, toWorldY).x;
+    const toSy = _screenPos.y;
+    const screenLen = Math.sqrt((toSx - fromSx) ** 2 + (toSy - fromSy) ** 2);
     if (screenLen < 1) return;
 
     const arrowW  = boss.radius * 2;
@@ -521,7 +523,7 @@ function _drawSharkChargeArrow(boss) {
     const color   = isWarning ? 'rgba(255, 220, 0, 0.75)' : 'rgba(255, 50, 50, 0.75)';
 
     ctx.save();
-    ctx.translate(from.x, from.y);
+    ctx.translate(fromSx, fromSy);
     ctx.rotate(angle);
 
     // 箭身長方形
@@ -633,8 +635,10 @@ function _drawSandStormOverlay() {
 // ── 黑色獵人瞄準警告（cull 前呼叫，Boss 在螢幕外時玩家也能看到鎖定提示）
 function _drawHunterAimingWarning(boss) {
     if (!boss._aimTarget) return;
-    const bs = worldToScreen(boss.x, boss.y);
-    const ts = worldToScreen(boss._aimTarget.x, boss._aimTarget.y);
+    const bsx = worldToScreen(boss.x, boss.y).x;
+    const bsy = _screenPos.y;
+    const tsx = worldToScreen(boss._aimTarget.x, boss._aimTarget.y).x;
+    const tsy = _screenPos.y;
     // 紅色虛線：Boss → 目標（Boss off-screen 時線從螢幕邊緣射向玩家）
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 50, 50, 0.75)';
@@ -643,8 +647,8 @@ function _drawHunterAimingWarning(boss) {
     ctx.shadowColor = '#FF0000';
     ctx.shadowBlur  = 8;
     ctx.beginPath();
-    ctx.moveTo(bs.x, bs.y);
-    ctx.lineTo(ts.x, ts.y);
+    ctx.moveTo(bsx, bsy);
+    ctx.lineTo(tsx, tsy);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
@@ -656,11 +660,11 @@ function _drawHunterAimingWarning(boss) {
     ctx.shadowColor = '#FF0000';
     ctx.shadowBlur  = 14;
     ctx.beginPath();
-    ctx.arc(ts.x, ts.y, 22, 0, Math.PI * 2);
+    ctx.arc(tsx, tsy, 22, 0, Math.PI * 2);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(ts.x - 14, ts.y);  ctx.lineTo(ts.x + 14, ts.y);
-    ctx.moveTo(ts.x, ts.y - 14);  ctx.lineTo(ts.x, ts.y + 14);
+    ctx.moveTo(tsx - 14, tsy);  ctx.lineTo(tsx + 14, tsy);
+    ctx.moveTo(tsx, tsy - 14);  ctx.lineTo(tsx, tsy + 14);
     ctx.stroke();
     ctx.restore();
     // 第三形態：5 條橘色散射預警線（從 Boss 方向射出）
@@ -671,8 +675,8 @@ function _drawHunterAimingWarning(boss) {
         for (let i = 0; i < 5; i++) {
             const a = Math.random() * Math.PI * 2;
             ctx.beginPath();
-            ctx.moveTo(bs.x, bs.y);
-            ctx.lineTo(bs.x + Math.cos(a) * 220, bs.y + Math.sin(a) * 220);
+            ctx.moveTo(bsx, bsy);
+            ctx.lineTo(bsx + Math.cos(a) * 220, bsy + Math.sin(a) * 220);
             ctx.stroke();
         }
         ctx.restore();

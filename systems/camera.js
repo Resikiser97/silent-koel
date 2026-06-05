@@ -2,6 +2,10 @@
 // 鏡頭系統 - wrappedDistance / wrappedDelta / worldToScreen / updateCamera
 // =============================================================
 
+// 重用物件，避免每幀大量短命物件造成 GC pressure
+const _screenPos = { x: 0, y: 0 };
+const _delta = { dx: 0, dy: 0 };
+
 function wrappedDistance(x1, y1, x2, y2) {
     let dx = Math.abs(x2 - x1);
     if (dx > MAP_WIDTH  / 2) dx = MAP_WIDTH  - dx;
@@ -17,7 +21,9 @@ function wrappedDelta(ax, ay, bx, by) {
     else if (dx < -MAP_WIDTH  / 2) dx += MAP_WIDTH;
     if (dy >  MAP_HEIGHT / 2) dy -= MAP_HEIGHT;
     else if (dy < -MAP_HEIGHT / 2) dy += MAP_HEIGHT;
-    return { dx, dy };
+    _delta.dx = dx;
+    _delta.dy = dy;
+    return _delta;
 }
 
 function worldToScreen(wx, wy) {
@@ -34,7 +40,9 @@ function worldToScreen(wx, wy) {
         sx = (sx - VIEW_W / 2) * zoom + VIEW_W / 2;
         sy = (sy - VIEW_H / 2) * zoom + VIEW_H / 2;
     }
-    return { x: sx, y: sy };
+    _screenPos.x = sx;
+    _screenPos.y = sy;
+    return _screenPos;
 }
 
 // 視野縮放：由 cameraZoomLevel 決定 baseZoom，智能模式隨體型縮小
