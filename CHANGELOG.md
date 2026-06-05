@@ -1,6 +1,22 @@
-## v0.1.3.8
+## v0.1.3.9
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.3.9 - 2026-06-05
+
+### 效能
+- AudioManager 音效改用物件池，避免 iOS Safari cloneNode 卡頓
+  - 新增 `_sfxPools`（每個音效 4 個實例）與 `_getPooledAudio(key)`
+  - `play()` 改為從池取閒置實例，不再每次 `cloneNode()`；音量為 0 時直接跳過
+  - `init()` 預熱 `eatFruit`、`levelUp`、`attacked` 三個常用音效池
+- `updateTreeFruitProduction` 改為每 500ms 執行一次（約每 30 幀）
+  - 新增模組頂部 `_treeProductionTimer` 計時器
+  - 新增 `resetTreeProductionTimer()`，在 `initializeGame()` 每局開始時重置
+- `updateMinimapFog` 改為每 3 幀更新一次
+  - 新增模組頂部 `_fogFrameCount` 計數器
+  - 新增 `resetFogFrameCount()`，在 `initializeGame()` 每局開始時重置
 
 ---
 

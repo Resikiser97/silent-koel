@@ -52,6 +52,7 @@ let _fogCloudCanvas         = null;
 let _minimapAlpha           = 1.0;
 let _minimapFadeTimer       = 0;
 let _minimapStopTimer       = 0;
+let _fogFrameCount          = 0;
 
 // ── 靈敏知覺快取（每局開始由 resetPerceptionCache() 重置）
 let _perceptionCache = {
@@ -394,6 +395,8 @@ function _drawArcherLockOn() {
 }
 
 function updateMinimapFog() {
+    _fogFrameCount++;
+    if (_fogFrameCount % 3 !== 0) return;
     if (!gameState.fogMap) return;
     const COLS = MAP_WIDTH  / TILE_SIZE; // 400
     const ROWS = MAP_HEIGHT / TILE_SIZE; // 400
@@ -1588,6 +1591,10 @@ function resetPerceptionCache() {
     _perceptionCache.nearestBone = null;
     _perceptionCache.boneLastCalc = 0;
     _perceptionCache.boneCount = 0;
+}
+
+function resetFogFrameCount() {
+    _fogFrameCount = 0;
 }
 
 function drawTreasures() {

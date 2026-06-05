@@ -31,6 +31,9 @@ const AudioManager = {
     _sounds: {},
     _music:  null,
     _currentMusicKey: null,
+    _ready: false,
+    _sfxPools: {},
+    _sfxPoolSize: 4,
 
     init() {
         Object.entries(AUDIO_FILES).forEach(([key, src]) => {
@@ -41,6 +44,11 @@ const AudioManager = {
                 this._sounds[key] = a;
             }
         });
+        // 預熱常用音效
+        ['eatFruit', 'levelUp', 'attacked'].forEach(key => {
+            this._getPooledAudio(key);
+        });
+        this._ready = true;
     },
 
     _sfxVol() {
@@ -55,17 +63,31 @@ const AudioManager = {
         return (v.master / 100) * (v.music / 100);
     },
 
-    play(key) {
-        const src = this._sounds[key];
-        if (!src) return;
-        const vol = this._sfxVol();
-        let audio;
-        if (Array.isArray(src)) {
-            audio = src[Math.floor(Math.random() * src.length)].cloneNode();
-        } else {
-            audio = src.cloneNode();
+    _getPooledAudio(key) {
+        const src = AUDIO_FILES[key];
+        if (!src) return null;
+        const srcUrl = Array.isArray(src) ? src[0] : src;
+        if (!this._sfxPools[key]) {
+            this._sfxPools[key] = Array.from({ length: this._sfxPoolSize }, () => {
+                const a = new Audio(srcUrl);
+                a.volume = this._sfxVol();
+                return a;
+            });
         }
+        const pool = this._sfxPools[key];
+        const available = pool.find(a => a.paused || a.ended);
+        if (!available) return null;
+        return available;
+    },
+
+    play(key) {
+        if (!this._ready) return;
+        const vol = this._sfxVol();
+        if (vol <= 0) return;
+        const audio = this._getPooledAudio(key);
+        if (!audio) return;
         audio.volume = vol;
+        audio.currentTime = 0;
         audio.play().catch(() => {});
     },
 
