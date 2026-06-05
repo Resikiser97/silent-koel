@@ -14,6 +14,7 @@ import { drawEliteCreature, drawEliteArrow } from './elite.js';
 import { drawBoss, drawBossArrow, _drawSandStormOverlay } from './boss.js';
 import { _findArcherAutoTarget, findBestPerceptionPath } from './player.js';
 import { showSettings } from './ui.js';
+import { showMutationPanel } from './mutation.js';
 //
 // 模組職責：
 //   - drawGame()：每幀主渲染函式，依序繪製地形/生物/玩家/特效/HUD
@@ -1527,7 +1528,7 @@ function _initTopLeftUI() {
         mutRow.style.background = '';
     });
     mutRow.addEventListener('click', () => {
-        if (typeof showMutationPanel === 'function') showMutationPanel();
+        showMutationPanel();
     });
 
     const mutIcon = document.createElement('span');
