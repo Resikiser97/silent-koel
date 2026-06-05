@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 3 — 架構重構（待開始）
-目前批次     : Stage 2 全部完成（三批次人工測試通過）
+所在 Stage   : Stage 3 — 架構重構（Phase 1 進行中）
+目前批次     : TODO-06 Step A 完成
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-05
-最後操作者   : 你（Stage 2 人工測試完成）
+最後操作者   : Codex（TODO-06 Step A）
 ```
 
 ---
@@ -53,7 +53,8 @@
 - [x] S2C-4：commit 批次3
 
 ### Stage 3 — 架構重構
-- [ ] Phase 1：TODO-06 localStorage 統一
+- [x] Phase 1：TODO-06 Step A localStorage key 定義與 helper 建立
+- [ ] Phase 1：TODO-06 Step B 逐檔替換直接 localStorage 呼叫
 - [ ] Phase 1：TODO-04 AudioManager 統一
 - [ ] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
 - [ ] Phase 2：TODO-03 變異技能面板統一
@@ -70,6 +71,15 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 3 TODO-06 Step A 完成）
+- 狀態：Stage 3 Phase 1 TODO-06 Step A 完成
+- 操作者：Codex
+- 完成項目：
+  - 建立 `storage/index.js`，定義所有 localStorage key 常數和統一讀寫函式
+  - 修正 saveVersion/SAVE_VERSION 命名不一致 bug
+- 發現問題：`hunterSlayerUnlocked` 目前已寫入但未讀取，保留於 `STORAGE_KEYS` 備用
+- 下一步：TODO-06 Step B，逐檔替換直接 localStorage 呼叫
 
 ### 2026-06-05（Stage 2 全部完成）
 - 狀態：Stage 2A / 2B / 2C 三批次遷移全部通過人工測試，Stage 2 正式收尾

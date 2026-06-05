@@ -138,7 +138,7 @@ function _collectLocalData() {
     const keys = [
         'playerSkills', 'skillPoints', 'savedOrgans',
         'savedHiddenOrgans', 'lastRunOrgans', 'gameSettings',
-        'mutationData', 'SAVE_VERSION'
+        'mutationData', 'saveVersion'
     ];
     const obj = {};
     keys.forEach(k => {
@@ -151,7 +151,7 @@ function _collectLocalData() {
 function _applyRemoteData(gameData) {
     if (!gameData) return;
     Object.entries(gameData).forEach(([k, v]) => {
-        if (k === 'SAVE_VERSION') return; // 不覆蓋本地版本號
+        if (k === 'saveVersion') return; // 不覆蓋本地版本號
         localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
     });
 }
@@ -303,7 +303,7 @@ export function chatLogout() {
     const keys = [
         'playerSkills', 'skillPoints', 'savedOrgans',
         'savedHiddenOrgans', 'lastRunOrgans', 'gameSettings',
-        'mutationData', 'chatSettings', 'SAVE_VERSION'
+        'mutationData', 'chatSettings', 'saveVersion'
     ];
     keys.forEach(k => localStorage.removeItem(k));
     saveChatSettings({ playerName: '', isGM: false, loggedIn: false });
