@@ -10,7 +10,7 @@
 只有用戶明確說「去做」「幫我改」「確認」之類的話才執行。
 
 ## 每次對話開始前必須依序讀取
-見 `.Codex/instructions.md`
+見 `.claude/instructions.md`
 
 ## 回覆語言偏好
 Please write your explanation and summary in Traditional Chinese (繁體中文), but keep code, file paths, and line numbers in English.
