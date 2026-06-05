@@ -1350,7 +1350,7 @@ function drawGame() {
         ctx.font = 'bold 14px Arial';
         ctx.fillStyle = drawGame._fpsDisplay >= 50 ? '#00FF00'
                       : drawGame._fpsDisplay >= 30 ? '#FFAA00' : '#FF4444';
-        ctx.fillText('FPS: ' + drawGame._fpsDisplay, 10, VIEW_H - 10);
+        ctx.fillText('FPS: ' + drawGame._fpsDisplay, VIEW_W / 2 - 30, VIEW_H - 10);
         ctx.restore();
     }
 }
@@ -1420,7 +1420,25 @@ function _initTopLeftUI() {
 
     const icon = document.createElement('span');
     icon.textContent = '🐦';
-    icon.style.cssText = 'font-size:28px;line-height:1;flex-shrink:0;';
+    icon.style.cssText = 'font-size:28px;line-height:1;flex-shrink:0;cursor:pointer;pointer-events:all;';
+    let _devTapCount = 0;
+    let _devTapTimer = null;
+    icon.addEventListener('click', () => {
+        _devTapCount++;
+        if (_devTapTimer) clearTimeout(_devTapTimer);
+        _devTapTimer = setTimeout(() => { _devTapCount = 0; }, 2000);
+        if (_devTapCount >= 8) {
+            _devTapCount = 0;
+            gameState.devMode = !gameState.devMode;
+            const msg = document.createElement('div');
+            msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+                'background:rgba(0,0,0,0.8);color:#FFD700;padding:12px 24px;' +
+                'border-radius:8px;font-size:16px;font-weight:bold;z-index:9999;pointer-events:none;';
+            msg.textContent = gameState.devMode ? '🛠 Dev Mode ON' : '🛠 Dev Mode OFF';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 1500);
+        }
+    });
 
     const xpWrap = document.createElement('div');
     xpWrap.style.cssText = 'flex:1;min-width:0;';
