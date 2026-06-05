@@ -68,6 +68,21 @@ let _minimapFadeTimer       = 0;
 let _minimapStopTimer       = 0;
 let _fogFrameCount          = 0;
 
+// ── 靈敏知覺快取（每局開始由 resetPerceptionCache() 重置）
+let _perceptionCache = {
+    path: null,
+    pathLastCalc: 0,
+    pathFruitCount: 0,
+    pathPlayerX: null,
+    pathPlayerY: null,
+    nearestCorpse: null,
+    corpseLastCalc: 0,
+    corpseCount: 0,
+    nearestBone: null,
+    boneLastCalc: 0,
+    boneCount: 0,
+};
+
 // ── UI dirty check 快取（每局開始由 resetUICache() 重置）
 let _uiCache = {
     xp: null, xpMax: null, xpBarW: null,
@@ -1109,9 +1124,27 @@ export function drawGame() {
 
     // 9d. 靈敏知覺路徑
     const sharpSenseLv = (p.organs.find(o => o.id === 'sharpSense') || {}).level || 0;
+    const _percNow = Date.now();
     // Lv1+：紅線（果子最佳路徑）
     if (p.perceptionRange > 0 && gameState.fruits.length > 0) {
-        const path = findBestPerceptionPath(p, gameState.fruits, p.perceptionRange);
+        const px = gameState.player.x;
+        const py = gameState.player.y;
+        const fruitCount = gameState.fruits.length;
+        const moved = _perceptionCache.pathPlayerX === null ||
+            Math.abs(px - _perceptionCache.pathPlayerX) > 50 ||
+            Math.abs(py - _perceptionCache.pathPlayerY) > 50;
+        const needsRecalc =
+            _percNow - _perceptionCache.pathLastCalc > 500 ||
+            fruitCount !== _perceptionCache.pathFruitCount ||
+            moved;
+        if (needsRecalc) {
+            _perceptionCache.path = findBestPerceptionPath(p, gameState.fruits, p.perceptionRange);
+            _perceptionCache.pathLastCalc = _percNow;
+            _perceptionCache.pathFruitCount = fruitCount;
+            _perceptionCache.pathPlayerX = px;
+            _perceptionCache.pathPlayerY = py;
+        }
+        const path = _perceptionCache.path;
         if (path) {
             const endS = worldToScreen(path.endpoint.x, path.endpoint.y);
             const clampedEnd = {
@@ -1143,11 +1176,19 @@ export function drawGame() {
     }
     // Lv2+：黃線（最近屍體）
     if (sharpSenseLv >= 2 && gameState.corpses && gameState.corpses.length > 0) {
-        let nearestCorpse = null, nearestDist = Infinity;
-        for (const c of gameState.corpses) {
-            const d = wrappedDistance(p.x, p.y, c.x, c.y);
-            if (d < nearestDist) { nearestDist = d; nearestCorpse = c; }
+        const corpseCount = gameState.corpses ? gameState.corpses.length : 0;
+        if (_percNow - _perceptionCache.corpseLastCalc > 300 ||
+            corpseCount !== _perceptionCache.corpseCount) {
+            let nearest = null, nearestDist = Infinity;
+            for (const c of gameState.corpses) {
+                const d = wrappedDistance(p.x, p.y, c.x, c.y);
+                if (d < nearestDist) { nearestDist = d; nearest = c; }
+            }
+            _perceptionCache.nearestCorpse = nearest;
+            _perceptionCache.corpseLastCalc = _percNow;
+            _perceptionCache.corpseCount = corpseCount;
         }
+        const nearestCorpse = _perceptionCache.nearestCorpse;
         if (nearestCorpse) {
             const endS = worldToScreen(nearestCorpse.x, nearestCorpse.y);
             const clampedEnd = {
@@ -1169,11 +1210,19 @@ export function drawGame() {
     }
     // Lv3+：白線（最近白骨）
     if (sharpSenseLv >= 3 && gameState.bones && gameState.bones.length > 0) {
-        let nearestBone = null, nearestDist2 = Infinity;
-        for (const b of gameState.bones) {
-            const d = wrappedDistance(p.x, p.y, b.x, b.y);
-            if (d < nearestDist2) { nearestDist2 = d; nearestBone = b; }
+        const boneCount = gameState.bones ? gameState.bones.length : 0;
+        if (_percNow - _perceptionCache.boneLastCalc > 300 ||
+            boneCount !== _perceptionCache.boneCount) {
+            let nearest = null, nearestDist2 = Infinity;
+            for (const b of gameState.bones) {
+                const d = wrappedDistance(p.x, p.y, b.x, b.y);
+                if (d < nearestDist2) { nearestDist2 = d; nearest = b; }
+            }
+            _perceptionCache.nearestBone = nearest;
+            _perceptionCache.boneLastCalc = _percNow;
+            _perceptionCache.boneCount = boneCount;
         }
+        const nearestBone = _perceptionCache.nearestBone;
         if (nearestBone) {
             const endS = worldToScreen(nearestBone.x, nearestBone.y);
             const clampedEnd = {
