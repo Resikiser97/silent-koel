@@ -40,6 +40,14 @@ import { initializeGame } from '../main.js';
 import { getRankIcon } from './utils.js';
 import { MAP_WIDTH, MAP_HEIGHT } from './map.js';
 import { _updateCameraZoom } from './camera.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
 let _organHitRegions = [];
 let _settingsKeyHandler = null;
@@ -125,9 +133,8 @@ export function showAlphaAnnouncement(name) {
 
 export function loadSettings() {
     try {
-        const saved = localStorage.getItem('gameSettings');
-        if (saved) {
-            const parsed = JSON.parse(saved);
+        const parsed = storageGetJSON(STORAGE_KEYS.GAME_SETTINGS);
+        if (parsed) {
             // volume 深度合併，確保子欄位不被 DEFAULT_SETTINGS 整個覆蓋
             if (parsed.volume && typeof parsed.volume === 'object') {
                 gameState.settings.volume = Object.assign({}, DEFAULT_SETTINGS.volume, parsed.volume);
@@ -177,17 +184,16 @@ export function loadSettings() {
     applyDeviceMode(); // 此後 gameState.isMobile 才正確
 
     // cameraZoomLevel 未存過時，依平台設預設值（需在 applyDeviceMode 之後判斷）
-    const _rawSaved = localStorage.getItem('gameSettings');
-    const _rawParsed = _rawSaved ? JSON.parse(_rawSaved) : {};
+    const _rawParsed = storageGetJSON(STORAGE_KEYS.GAME_SETTINGS) || {};
     if (_rawParsed.cameraZoomLevel === undefined) {
         gameState.settings.cameraZoomLevel = gameState.isMobile ? 10 : 6;
     }
 
     // 視野預設值強制更新（v0.0.66.3 一次性覆蓋，對齊新公式預設值）
     const _ZOOM_RESET_VERSION = 'v0.0.66.3';
-    if (localStorage.getItem('zoomResetVersion') !== _ZOOM_RESET_VERSION) {
+    if (storageGet(STORAGE_KEYS.ZOOM_RESET_VERSION) !== _ZOOM_RESET_VERSION) {
         gameState.settings.cameraZoomLevel = gameState.isMobile ? 10 : 6;
-        localStorage.setItem('zoomResetVersion', _ZOOM_RESET_VERSION);
+        storageSet(STORAGE_KEYS.ZOOM_RESET_VERSION, _ZOOM_RESET_VERSION);
     }
 
     saveSettings(); // 確保新版本新增的欄位預設值都寫入 localStorage
@@ -228,7 +234,7 @@ export function switchLanguage(lang) {
 }
 
 export function saveSettings() {
-    localStorage.setItem('gameSettings', JSON.stringify(gameState.settings));
+    storageSetJSON(STORAGE_KEYS.GAME_SETTINGS, gameState.settings);
 }
 
 function _keyDisplay(k) {
@@ -612,7 +618,7 @@ export function showSettings(fromHome) {
     tutRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
     const tutTog = document.createElement('button');
     tutTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
-    const _isTutorialOn = () => !localStorage.getItem('tutorialCompleted');
+    const _isTutorialOn = () => !storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED);
     const refreshTutTog = () => {
         const on = _isTutorialOn();
         tutTog.textContent  = on ? t('on') : t('off');
@@ -622,10 +628,10 @@ export function showSettings(fromHome) {
     tutTog.onclick = () => {
         if (_isTutorialOn()) {
             // 目前 ON → 關閉（標記已完成，下一場不再顯示）
-            localStorage.setItem('tutorialCompleted', 'true');
+            storageSet(STORAGE_KEYS.TUTORIAL_COMPLETED, 'true');
         } else {
             // 目前 OFF → 開啟（移除完成標記，下一場會出現教學）
-            localStorage.removeItem('tutorialCompleted');
+            storageRemove(STORAGE_KEYS.TUTORIAL_COMPLETED);
         }
         refreshTutTog();
     };
@@ -751,7 +757,7 @@ export function showSettings(fromHome) {
     restartBtn.onclick = () => {
         if (!confirm(t('confirmRestart'))) return;
         saveLastRunOrgans();
-        localStorage.setItem('skillPoints', String(gameState.skillPoints));
+        storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
         saveSettings(); // 重啟前確保設定已存入 localStorage
         window.location.reload();
     };
@@ -1865,10 +1871,10 @@ export function showMapSelect() {
         const selDiff = diffs.find(d => d.id === selectedDiff);
         gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         gameState.lastDifficulty = selectedDiff;
-        localStorage.setItem('lastDifficulty', selectedDiff); // B1: 儲存難度供重整頁面後恢復
+        storageSet(STORAGE_KEYS.LAST_DIFFICULTY, selectedDiff); // B1: 儲存難度供重整頁面後恢復
         // 儲存角色選擇
         gameState.selectedCharacter = selectedChar;
-        localStorage.setItem('lastCharacter', selectedChar);
+        storageSet(STORAGE_KEYS.LAST_CHARACTER, selectedChar);
         overlay.remove();
         let hasOrgans = false;
         try {
@@ -1892,11 +1898,11 @@ export function showStartScreen() {
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
         // 恢復上一場難度與地圖
-        const lastDiff = localStorage.getItem('lastDifficulty') || 'easy';
+        const lastDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
         const _diffMapTable = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
         gameState.currentMap        = _diffMapTable[lastDiff] || EASY_MAP;
         gameState.lastDifficulty    = lastDiff;
-        gameState.selectedCharacter = localStorage.getItem('lastCharacter') || 'koel';
+        gameState.selectedCharacter = storageGet(STORAGE_KEYS.LAST_CHARACTER) || 'koel';
         initializeGame();
         return;
     }
@@ -2106,7 +2112,7 @@ export function showStartScreen() {
     patchBtn.innerHTML = '<div style="font-size:28px;line-height:1;">📋</div><div style="font-size:11px;color:#FFF5DC;letter-spacing:1px;margin-top:3px;">更新</div>';
     // B12: 未讀版本時顯示紅點
     if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
-        const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+        const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
         if (lastSeen !== PATCH_NOTES[0].version) {
             const redDot = document.createElement('div');
             redDot.id = 'patch-red-dot';
@@ -2222,7 +2228,7 @@ export function showPatchNotes() {
     applyDeviceMode();
     if (document.getElementById('patch-notes-overlay')) return;
 
-    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
     // 不立即標記已讀，改為追蹤本次已讀的版本 Tab
     const readInSession = new Set();
 
@@ -2285,7 +2291,7 @@ export function showPatchNotes() {
         const allRead = _unreadNotes.every(n => readInSession.has(n.version));
         if (allRead) {
             if (notes.length > 0) {
-                localStorage.setItem('lastSeenPatchVersion', notes[0].version);
+                storageSet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION, notes[0].version);
             }
             const _rd = document.getElementById('patch-red-dot');
             if (_rd) _rd.remove();
@@ -2415,9 +2421,9 @@ export function showPatchNotes() {
 
 export function checkPatchNotesPopup() {
     // 新玩家不彈出
-    if (!localStorage.getItem('hasPlayedBefore')) return;
+    if (!storageGet(STORAGE_KEYS.HAS_PLAYED_BEFORE)) return;
     if (typeof PATCH_NOTES === 'undefined' || PATCH_NOTES.length === 0) return;
-    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
     if (lastSeen === PATCH_NOTES[0].version) return;
     // 有未讀版本，自動彈出
     setTimeout(() => showPatchNotes(), 400);
@@ -2426,7 +2432,7 @@ export function checkPatchNotesPopup() {
 export function showGuideStory() {
     applyDeviceMode();
     if (document.getElementById('guide-story-overlay')) return;
-    const chapter2Unlocked = localStorage.getItem('chapter2Unlocked') === 'true';
+    const chapter2Unlocked = storageGet(STORAGE_KEYS.CHAPTER2_UNLOCKED) === 'true';
 
     const overlay = document.createElement('div');
     overlay.id = 'guide-story-overlay';
@@ -2666,7 +2672,7 @@ export function showGuideStory() {
             renderPage(currentPage);
         } else {
             overlay.remove();
-            localStorage.setItem('hasPlayedBefore', 'true');
+            storageSet(STORAGE_KEYS.HAS_PLAYED_BEFORE, 'true');
             const startScreen = document.getElementById('start-screen');
             if (startScreen) startScreen.remove();
             initializeGame();

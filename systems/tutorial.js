@@ -8,6 +8,14 @@ import { gameState, canvas } from './gameState.js';
 import { VIEW_W } from './map.js';
 import { worldToScreen, wrappedDistance } from './camera.js';
 import { pausePlayTimer, resumePlayTimer } from '../main.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
     // ── 教學內部狀態
     let _step         = 0;       // 0=未啟動 1=步驟一(凍結) 2=步驟二(解凍) 3=步驟三(凍結)
@@ -402,7 +410,7 @@ import { pausePlayTimer, resumePlayTimer } from '../main.js';
         if (_hlCanvas)  { _hlCanvas.remove();   _hlCanvas  = null; _hlCtx = null; }
 
         // 標記完成
-        localStorage.setItem('tutorialCompleted', 'true');
+        storageSet(STORAGE_KEYS.TUTORIAL_COMPLETED, 'true');
         gameState.tutorialOpen = false;
         resumePlayTimer();
     }
@@ -601,7 +609,7 @@ import { pausePlayTimer, resumePlayTimer } from '../main.js';
             setTimeout(() => {
                 const el = document.getElementById('tutorial-combat-complete');
                 if (el) el.remove();
-                localStorage.setItem('tutorialCombatDone', 'true');
+                storageSet(STORAGE_KEYS.TUTORIAL_COMBAT_DONE, 'true');
                 gameState.tutorialOpen = false;
                 resumePlayTimer();
             }, 2000);
