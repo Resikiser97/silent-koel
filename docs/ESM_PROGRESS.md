@@ -12,10 +12,10 @@
 
 ```
 所在 Stage   : Stage 3 — 架構重構（Phase 1 進行中）
-目前批次     : TODO-06 Step B Batch 2 完成
+目前批次     : TODO-06 全部完成（Step A + Step B）
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-05
-最後操作者   : Codex（TODO-06 Step B Batch 2）
+最後操作者   : Codex（TODO-06 Step B Batch 3 / Final）
 ```
 
 ---
@@ -54,7 +54,7 @@
 
 ### Stage 3 — 架構重構
 - [x] Phase 1：TODO-06 Step A localStorage key 定義與 helper 建立
-- [ ] Phase 1：TODO-06 Step B 逐檔替換直接 localStorage 呼叫
+- [x] Phase 1：TODO-06 Step B 逐檔替換直接 localStorage 呼叫
 - [ ] Phase 1：TODO-04 AudioManager 統一
 - [ ] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
 - [ ] Phase 2：TODO-03 變異技能面板統一
@@ -71,6 +71,18 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 3 TODO-06 Step B Batch 3 / Final 完成）
+- 狀態：Stage 3 Phase 1 TODO-06 全部完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/evolution.js` 改用 `storage/index.js` helper 存取 localStorage
+  - `systems/boss.js` 改用 `storage/index.js` helper，並用 `storageKey` 產生通關與 Boss 擊殺統計 dynamic key
+  - `systems/chat.js` 改用 `storage/index.js` helper，`_applyRemoteData()` 保留 dynamic key 行為並跳過 `STORAGE_KEYS.SAVE_VERSION`
+  - 清除 `systems/ui.js` 先前批次保留的 `savedOrgans` direct localStorage 呼叫
+  - TODO-06 Step A + Step B 全批次完成，9 個目標檔案已無 direct localStorage 呼叫
+- 發現問題：Batch 1 保留的 `systems/ui.js` `savedOrgans` 呼叫需於 Final 一併清理，已完成
+- 下一步：Stage 3 Phase 1 TODO-04 AudioManager 統一
 
 ### 2026-06-05（Stage 3 TODO-06 Step B Batch 2 完成）
 - 狀態：Stage 3 Phase 1 TODO-06 Step B Batch 2 完成

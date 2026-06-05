@@ -21,6 +21,15 @@ import { loadChatSettings, chatSaveProgress } from './chat.js';
 import { pausePlayTimer } from '../main.js';
 import { t } from '../lang.js';
 import { drawArrow } from './utils.js';
+import {
+    STORAGE_KEYS,
+    storageKey,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
 const BOSS_COLORS = {
     bear: {
@@ -995,17 +1004,17 @@ export function handleBossKill(boss) {
             _recordBossKill('hunter');
             addXP(1000);
             gameState.skillPoints += 5;
-            localStorage.setItem('skillPoints', String(gameState.skillPoints));
+            storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
             gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + 5;
-            localStorage.setItem('hunterSlayerUnlocked', 'true');
+            storageSet(STORAGE_KEYS.HUNTER_SLAYER_UNLOCKED, 'true');
             _showHunterDialogue(HUNTER_DIALOGUE.death, 5000);
             AudioManager.play('hunterVoiceDeath');
             showFloatingText(boss.x, boss.y - 60, '🎯 獵人已倒！', '#FF4444', 22);
             // 困難地圖通關記錄
-            const diffKey = 'clearCount_hard';
-            localStorage.setItem(diffKey, (parseInt(localStorage.getItem(diffKey) || '0') + 1).toString());
-            const charKey = 'clearCount_char_' + (gameState.selectedCharacter || 'koel');
-            localStorage.setItem(charKey, (parseInt(localStorage.getItem(charKey) || '0') + 1).toString());
+            const diffKey = storageKey.clearCountDiff('hard');
+            storageSet(diffKey, (parseInt(storageGet(diffKey) || '0') + 1).toString());
+            const charKey = storageKey.clearCountChar(gameState.selectedCharacter || 'koel');
+            storageSet(charKey, (parseInt(storageGet(charKey) || '0') + 1).toString());
             setTimeout(() => showVictory(), 2000);
         } else {
             boss.hp    = boss.maxHpPerBar;
@@ -1387,15 +1396,15 @@ export function updateBoss() {
 function _recordClearStats() {
     const diff   = gameState.lastDifficulty || 'easy';
     const charId = gameState.selectedCharacter || 'koel';
-    const diffKey = 'clearCount_' + diff;
-    localStorage.setItem(diffKey, (parseInt(localStorage.getItem(diffKey) || '0') + 1).toString());
-    const charKey = 'clearCount_char_' + charId;
-    localStorage.setItem(charKey, (parseInt(localStorage.getItem(charKey) || '0') + 1).toString());
+    const diffKey = storageKey.clearCountDiff(diff);
+    storageSet(diffKey, (parseInt(storageGet(diffKey) || '0') + 1).toString());
+    const charKey = storageKey.clearCountChar(charId);
+    storageSet(charKey, (parseInt(storageGet(charKey) || '0') + 1).toString());
 }
 
 function _recordBossKill(bossType) {
-    const key = 'killCount_' + bossType;
-    localStorage.setItem(key, (parseInt(localStorage.getItem(key) || '0') + 1).toString());
+    const key = storageKey.killCountBoss(bossType);
+    storageSet(key, (parseInt(storageGet(key) || '0') + 1).toString());
 }
 
 export function showVictory() {
@@ -1411,7 +1420,7 @@ export function showVictory() {
     addXP(500);
     // F19：普通難度通關 → 解鎖第二章劇情
     if (gameState.lastDifficulty === 'normal') {
-        localStorage.setItem('chapter2Unlocked', 'true');
+        storageSet(STORAGE_KEYS.CHAPTER2_UNLOCKED, 'true');
     }
     // F20：記錄 Boss 擊殺次數
     if (gameState.boss) {
@@ -1427,10 +1436,10 @@ export function showVictory() {
     const eliteBonus = (gameState.sessionSkillPoints && gameState.sessionSkillPoints.elite) || 0;
     if (gameState.sessionSkillPoints) gameState.sessionSkillPoints.boss = 3;
     gameState.skillPoints += 3 + timeBonus + levelBonus;
-    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
-    localStorage.removeItem('savedOrgans');
-    localStorage.removeItem('savedHiddenOrgans');
+    storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+    storageRemove(STORAGE_KEYS.SAVED_ORGANS);
+    storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
     const bossKillTime = gameState.bossSpawnTime ? Math.floor((Date.now() - gameState.bossSpawnTime) / 1000) : null;
     const doShowVictory = () => {
         const overlay = document.createElement('div');

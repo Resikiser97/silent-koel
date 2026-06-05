@@ -21,6 +21,14 @@ import { saveSettings } from './ui.js';
 import { applyDeviceMode } from './mobile.js';
 import { initializeGame } from '../main.js';
 import { showChat } from './chat.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
 // 技能樹模式狀態（供 buildSkillTreeOverlay 跨呼叫保存）
 export let _skillTreeFromHome = false;
@@ -150,9 +158,8 @@ function _setFangLevel(targetLv) {
 export function loadSavedOrgans() {
     const p = gameState.player;
     try {
-        const so = localStorage.getItem('savedOrgans');
-        if (so) {
-            const organs = JSON.parse(so);
+        const organs = storageGetJSON(STORAGE_KEYS.SAVED_ORGANS);
+        if (organs) {
             p.organs = p.organs || [];
             organs.forEach(organ => {
                 if (p.organs.find(o => o.id === organ.id)) return;
@@ -162,9 +169,8 @@ export function loadSavedOrgans() {
         }
     } catch(e) {}
     try {
-        const sho = localStorage.getItem('savedHiddenOrgans');
-        if (sho) {
-            const hiddenOrgans = JSON.parse(sho);
+        const hiddenOrgans = storageGetJSON(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
+        if (hiddenOrgans) {
             p.hiddenOrgans = p.hiddenOrgans || [];
             hiddenOrgans.forEach(organ => {
                 if (p.hiddenOrgans.find(h => h.id === organ.id)) return;
@@ -201,7 +207,7 @@ export function saveLastRunOrgans() {
         organs: (p.organs || []).map(o => ({ id: o.id, name: o.name, type: o.type, level: o.level || 1, desc: o.desc })),
         hiddenOrgans: (p.hiddenOrgans || []).map(h => ({ id: h.id, name: h.name, desc: h.desc }))
     };
-    localStorage.setItem('lastRunOrgans', JSON.stringify(data));
+    storageSetJSON(STORAGE_KEYS.LAST_RUN_ORGANS, data);
 }
 
 export function showSkillTree(cause) {
@@ -218,10 +224,10 @@ export function showSkillTree(cause) {
     const levelBonus = Math.floor(gameState.player.level / 6);
     const eliteBonus = (gameState.sessionSkillPoints && gameState.sessionSkillPoints.elite) || 0;
     gameState.skillPoints += timeBonus + levelBonus;
-    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
-    localStorage.removeItem('savedOrgans');
-    localStorage.removeItem('savedHiddenOrgans');
+    storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+    storageRemove(STORAGE_KEYS.SAVED_ORGANS);
+    storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
     const showDeathSettlement = () => {
         const overlay = document.createElement('div');
         overlay.id = 'death-settlement-overlay';
@@ -307,23 +313,22 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     if (effectiveMode === 'fromHome' || effectiveMode === 'forceStart') applyDeviceMode();
     if (fromHome || effectiveMode === 'forceStart') {
         try {
-            const ss = localStorage.getItem('playerSkills');
-            if (ss) gameState.playerSkills = JSON.parse(ss);
-            const sp = localStorage.getItem('skillPoints');
+            const ss = storageGetJSON(STORAGE_KEYS.PLAYER_SKILLS);
+            if (ss) gameState.playerSkills = ss;
+            const sp = storageGet(STORAGE_KEYS.SKILL_POINTS);
             if (sp) gameState.skillPoints = Math.max(0, parseInt(sp, 10) || 0);
-            const rawMd = localStorage.getItem('mutationData');
-            if (rawMd && gameState.mutationData) Object.assign(gameState.mutationData, JSON.parse(rawMd));
-            const rawMs = localStorage.getItem('mutationSkills');
-            if (rawMs && gameState.mutationSkills) Object.assign(gameState.mutationSkills, JSON.parse(rawMs));
+            const rawMd = storageGetJSON(STORAGE_KEYS.MUTATION_DATA);
+            if (rawMd && gameState.mutationData) Object.assign(gameState.mutationData, rawMd);
+            const rawMs = storageGetJSON(STORAGE_KEYS.MUTATION_SKILLS);
+            if (rawMs && gameState.mutationSkills) Object.assign(gameState.mutationSkills, rawMs);
         } catch(e) {}
     }
     if (effectiveMode === 'postGame') {
         // postGame：確保 mutationSkills 從 localStorage 最新資料載入
         // （避免遊戲期間記憶體狀態與 localStorage 不同步）
-        const _rawMS = localStorage.getItem('mutationSkills');
-        if (_rawMS) {
+        const _parsedMS = storageGetJSON(STORAGE_KEYS.MUTATION_SKILLS);
+        if (_parsedMS) {
             try {
-                const _parsedMS = JSON.parse(_rawMS);
                 if (_parsedMS && _parsedMS.skills) {
                     gameState.mutationSkills = Object.assign(
                         {},
@@ -416,10 +421,11 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                     card.style.borderColor = '#FFD700';
                     card.style.background = 'rgba(255,215,0,0.15)';
                 }
-                localStorage.setItem('savedOrgans', JSON.stringify(
+                storageSetJSON(
+                    STORAGE_KEYS.SAVED_ORGANS,
                     selectedOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, level: 1,
                         desc: ORGANS[o.id] ? ORGANS[o.id].levels[0].desc : o.desc }))
-                ));
+                );
             };
             cardMap.push(card);
             organGrid.appendChild(card);
@@ -475,11 +481,12 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                     card.style.background = 'rgba(255,215,0,0.22)';
                 }
                 if (selectedHiddenOrgans.length > 0) {
-                    localStorage.setItem('savedHiddenOrgans', JSON.stringify(
+                    storageSetJSON(
+                        STORAGE_KEYS.SAVED_HIDDEN_ORGANS,
                         selectedHiddenOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, desc: o.desc }))
-                    ));
+                    );
                 } else {
-                    localStorage.removeItem('savedHiddenOrgans');
+                    storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
                 }
             };
             hiddenCardMap.push(card);
@@ -504,8 +511,8 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         for (const id in gameState.playerSkills) spent += gameState.playerSkills[id] || 0;
         for (const id in gameState.playerSkills) gameState.playerSkills[id] = 0;
         gameState.skillPoints += spent;
-        localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-        localStorage.setItem('skillPoints', String(gameState.skillPoints));
+        storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+        storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
         buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
     };
     ptsRow.appendChild(resetBtn);
@@ -540,9 +547,7 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     });
     skillContent.appendChild(grid);
 
-    const _lrRaw = localStorage.getItem('lastRunOrgans');
-    let _lrData = null;
-    try { if (_lrRaw) _lrData = JSON.parse(_lrRaw); } catch(e) {}
+    const _lrData = storageGetJSON(STORAGE_KEYS.LAST_RUN_ORGANS);
 
     if (effectiveMode === 'fromHome' || effectiveMode === 'forceStart') {
         const inheritSec = document.createElement('div');
@@ -596,9 +601,9 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                             card.style.background = 'rgba(255,215,0,0.15)';
                         }
                         if (homeSelOrgans.length > 0) {
-                            localStorage.setItem('savedOrgans', JSON.stringify(homeSelOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, level: 1, desc: ORGANS[o.id] ? ORGANS[o.id].levels[0].desc : o.desc }))));
+                            storageSetJSON(STORAGE_KEYS.SAVED_ORGANS, homeSelOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, level: 1, desc: ORGANS[o.id] ? ORGANS[o.id].levels[0].desc : o.desc })));
                         } else {
-                            localStorage.removeItem('savedOrgans');
+                            storageRemove(STORAGE_KEYS.SAVED_ORGANS);
                         }
                     };
                     homeCardMap.push(card);
@@ -657,11 +662,12 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                             card.style.background = 'rgba(255,215,0,0.22)';
                         }
                         if (homeSelHiddenArr.length > 0) {
-                            localStorage.setItem('savedHiddenOrgans', JSON.stringify(
+                            storageSetJSON(
+                                STORAGE_KEYS.SAVED_HIDDEN_ORGANS,
                                 homeSelHiddenArr.map(o => ({ id: o.id, name: o.name, type: o.type, desc: o.desc }))
-                            ));
+                            );
                         } else {
-                            localStorage.removeItem('savedHiddenOrgans');
+                            storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
                         }
                     };
                     homeHidCardMap.push(card);
@@ -793,8 +799,8 @@ export function upgradeSkill(id) {
     if (gameState.skillPoints < cost) return;
     gameState.playerSkills[id] = current + 1;
     gameState.skillPoints -= cost;
-    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
 }
 
@@ -865,7 +871,7 @@ function _buildMutLeftColContent(leftCol) {
             gameState.skillPoints -= 100;
             gameState.mutationData.points += 10;
             gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + 10;
-            localStorage.setItem('skillPoints', String(gameState.skillPoints));
+            storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
             saveMutationData();
             _refreshMutContentLeft(document.getElementById('mut-skill-panel'));
             _refreshMutContentRight(document.getElementById('mut-skill-panel'));

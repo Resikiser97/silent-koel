@@ -31,6 +31,14 @@
 import { SUPABASE_URL, SUPABASE_KEY, supabaseQuery } from '../config/supabase.js';
 import { GAME_INFO } from '../config/gameConfig.js';
 import { gameState } from './gameState.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
 // ─────────────────────────────────────────────
 // SHA-256 工具（帳號密碼雜湊用）
@@ -85,13 +93,12 @@ export let _chatExpanded = false;  // 收合/展開狀態
 // ─────────────────────────────────────────────
 
 function _saveChatPosition(pos) {
-    try { localStorage.setItem('chatPosition', JSON.stringify(pos)); } catch(e) {}
+    try { storageSetJSON(STORAGE_KEYS.CHAT_POSITION, pos); } catch(e) {}
 }
 
 function _loadChatPosition() {
     try {
-        const raw = localStorage.getItem('chatPosition');
-        return raw ? JSON.parse(raw) : null;
+        return storageGetJSON(STORAGE_KEYS.CHAT_POSITION);
     } catch(e) { return null; }
 }
 
@@ -101,8 +108,7 @@ function _loadChatPosition() {
 
 export function loadChatSettings() {
     try {
-        const raw = localStorage.getItem('chatSettings');
-        const d   = raw ? JSON.parse(raw) : {};
+        const d = storageGetJSON(STORAGE_KEYS.CHAT_SETTINGS) || {};
         return {
             playerName: d.playerName || '',
             isGM:       d.isGM       || false,
@@ -115,7 +121,7 @@ export function loadChatSettings() {
 }
 
 export function saveChatSettings(obj) {
-    localStorage.setItem('chatSettings', JSON.stringify(obj));
+    storageSetJSON(STORAGE_KEYS.CHAT_SETTINGS, obj);
 }
 
 // ─────────────────────────────────────────────
@@ -136,13 +142,18 @@ function _calcProgressScore(data) {
 
 function _collectLocalData() {
     const keys = [
-        'playerSkills', 'skillPoints', 'savedOrgans',
-        'savedHiddenOrgans', 'lastRunOrgans', 'gameSettings',
-        'mutationData', 'saveVersion'
+        STORAGE_KEYS.PLAYER_SKILLS,
+        STORAGE_KEYS.SKILL_POINTS,
+        STORAGE_KEYS.SAVED_ORGANS,
+        STORAGE_KEYS.SAVED_HIDDEN_ORGANS,
+        STORAGE_KEYS.LAST_RUN_ORGANS,
+        STORAGE_KEYS.GAME_SETTINGS,
+        STORAGE_KEYS.MUTATION_DATA,
+        STORAGE_KEYS.SAVE_VERSION
     ];
     const obj = {};
     keys.forEach(k => {
-        const v = localStorage.getItem(k);
+        const v = storageGet(k);
         if (v !== null) obj[k] = v;
     });
     return obj;
@@ -151,8 +162,8 @@ function _collectLocalData() {
 function _applyRemoteData(gameData) {
     if (!gameData) return;
     Object.entries(gameData).forEach(([k, v]) => {
-        if (k === 'saveVersion') return; // 不覆蓋本地版本號
-        localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+        if (k === STORAGE_KEYS.SAVE_VERSION) return; // 不覆蓋本地版本號
+        storageSet(k, v);
     });
 }
 
@@ -301,11 +312,17 @@ async function chatSyncData() {
 
 export function chatLogout() {
     const keys = [
-        'playerSkills', 'skillPoints', 'savedOrgans',
-        'savedHiddenOrgans', 'lastRunOrgans', 'gameSettings',
-        'mutationData', 'chatSettings', 'saveVersion'
+        STORAGE_KEYS.PLAYER_SKILLS,
+        STORAGE_KEYS.SKILL_POINTS,
+        STORAGE_KEYS.SAVED_ORGANS,
+        STORAGE_KEYS.SAVED_HIDDEN_ORGANS,
+        STORAGE_KEYS.LAST_RUN_ORGANS,
+        STORAGE_KEYS.GAME_SETTINGS,
+        STORAGE_KEYS.MUTATION_DATA,
+        STORAGE_KEYS.CHAT_SETTINGS,
+        STORAGE_KEYS.SAVE_VERSION
     ];
-    keys.forEach(k => localStorage.removeItem(k));
+    keys.forEach(k => storageRemove(k));
     saveChatSettings({ playerName: '', isGM: false, loggedIn: false });
 }
 
@@ -439,7 +456,7 @@ async function sendChatMessage(content) {
     // 計算變異等級
     let mutLevel = 0;
     try {
-        const md = JSON.parse(localStorage.getItem('mutationData') || '{}');
+        const md = storageGetJSON(STORAGE_KEYS.MUTATION_DATA) || {};
         const lv = md.levels || {};
         mutLevel = (lv.fang || 0) + (lv.tail || 0) + (lv.wing || 0) + (lv.eye || 0);
     } catch(e) {}

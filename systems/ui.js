@@ -1878,8 +1878,8 @@ export function showMapSelect() {
         overlay.remove();
         let hasOrgans = false;
         try {
-            const so = localStorage.getItem('savedOrgans');
-            hasOrgans = !!so && JSON.parse(so).length > 0;
+            const so = storageGetJSON(STORAGE_KEYS.SAVED_ORGANS);
+            hasOrgans = !!so && so.length > 0;
         } catch(e) {}
         if (hasOrgans) {
             initializeGame();
