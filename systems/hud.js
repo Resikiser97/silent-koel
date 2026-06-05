@@ -852,7 +852,7 @@ function drawTopBarUI() {
     ctx.restore();
 }
 
-function drawGame() {
+function _doDrawGame() {
     // 1. 貼上地形預渲染底圖（離屏 Canvas），夜晚遮罩在 drawTerrain 內疊加
     drawTerrain();
 
@@ -1401,6 +1401,509 @@ function drawGame() {
                       : drawGame._fpsDisplay >= 30 ? '#FFAA00' : '#FF4444';
         ctx.fillText('FPS: ' + drawGame._fpsDisplay, VIEW_W / 2 - 30, VIEW_H - 10);
         ctx.restore();
+    }
+}
+
+function drawGame() {
+    if (!gameState.devMode) {
+        _doDrawGame();
+        return;
+    }
+
+    const t0 = performance.now();
+    // --- terrain ---
+    drawTerrain();
+    const t1 = performance.now();
+
+    // --- trees ---
+    gameState.trees.forEach(tree => {
+        const s = worldToScreen(tree.x, tree.y);
+        if (s.x < -tree.radius - 50 || s.x > VIEW_W + tree.radius + 50 ||
+            s.y < -tree.radius - 50 || s.y > VIEW_H + tree.radius + 50) return;
+        ctx.fillStyle = tree.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, tree.radius, 0, Math.PI * 2);
+        ctx.fill();
+        if (gameState.devMode) {
+            const maxN = tree.isLarge ? 5 : 3;
+            ctx.save();
+            ctx.font = getGameFont(9, false);
+            ctx.fillStyle = '#FFD700';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(tree.fruitCount + '/' + maxN, s.x, s.y + tree.radius + 2);
+            ctx.restore();
+        }
+    });
+    const t2 = performance.now();
+
+    // --- fruits + treasures ---
+    gameState.fruits.forEach(fruit => {
+        const s = worldToScreen(fruit.x, fruit.y);
+        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) return;
+        ctx.fillStyle = fruit.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, fruit.radius, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    drawTreasures();
+    const t3 = performance.now();
+
+    // --- neutral: corpses + bones + neutral creatures ---
+    drawCorpses();
+    drawCorpseEatingBars();
+    drawBones();
+    _drawVenomFalconEffects();
+    drawNeutralCreatures();
+    const t4 = performance.now();
+
+    // --- hostile ---
+    drawHostileCreatures();
+    const t5 = performance.now();
+
+    // --- eliteBoss ---
+    drawBoss();
+    drawEliteCreature();
+    if (gameState.tutorialStump && gameState.tutorialStump.hp > 0) {
+        const st  = gameState.tutorialStump;
+        const ss  = worldToScreen(st.x, st.y);
+        if (ss.x >= -80 && ss.x <= VIEW_W + 80 && ss.y >= -80 && ss.y <= VIEW_H + 80) {
+            ctx.save();
+            ctx.shadowColor = 'rgba(139,69,19,0.9)';
+            ctx.shadowBlur  = 14;
+            ctx.fillStyle   = st.color;
+            ctx.beginPath();
+            ctx.arc(ss.x, ss.y, st.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            ctx.save();
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
+            ctx.fillStyle   = '#FFFFFF';
+            ctx.font        = getGameFont(12, false);
+            ctx.textAlign   = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(st.name, ss.x, ss.y - st.radius - 10);
+            ctx.fillText(st.name, ss.x, ss.y - st.radius - 10);
+            ctx.restore();
+            const _bW = 36, _bH = 5;
+            const _bX = ss.x - _bW / 2;
+            const _bY = ss.y - st.radius - 22;
+            ctx.fillStyle = '#3A1A00';
+            ctx.fillRect(_bX, _bY, _bW, _bH);
+            ctx.fillStyle = '#CC5500';
+            ctx.fillRect(_bX, _bY, _bW * (st.hp / st.maxHp), _bH);
+        }
+    }
+    const t6 = performance.now();
+
+    // --- player ---
+    const p = gameState.player;
+    const ps = worldToScreen(p.x, p.y);
+    const psx = ps.x, psy = ps.y;
+    if (!p.isRanged && p.attackVisual > 0 && Date.now() - p.attackVisual < 200) {
+        const atkAlpha = 1 - (Date.now() - p.attackVisual) / 200;
+        ctx.strokeStyle = 'rgba(255,255,255,' + atkAlpha.toFixed(2) + ')';
+        ctx.fillStyle   = 'rgba(255,255,255,' + (atkAlpha * 0.12).toFixed(2) + ')';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(psx, psy, p.attackRange * (gameState.cameraZoom || 1), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.lineWidth = 1;
+    }
+    if (gameState.dashEffect) {
+        const ef       = gameState.dashEffect;
+        const elapsed  = Date.now() - ef.startTime;
+        const t_dash   = Math.min(elapsed / ef.duration, 1);
+        if (t_dash >= 1) {
+            gameState.dashEffect = null;
+        } else {
+            const sax = worldToScreen(ef.ax, ef.ay).x;
+            const say = _screenPos.y;
+            const sbx = worldToScreen(ef.bx, ef.by).x;
+            const sby = _screenPos.y;
+            ctx.save();
+            if (elapsed < 100) {
+                const smokeAlpha = (1 - elapsed / 100) * 0.6;
+                const smokeR     = 20 + elapsed * 0.3;
+                const grad = ctx.createRadialGradient(sax, say, 0, sax, say, smokeR);
+                grad.addColorStop(0, 'rgba(255,200,50,' + smokeAlpha + ')');
+                grad.addColorStop(1, 'rgba(255,150,0,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(sax, say, smokeR, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (elapsed > 50) {
+                const ballProgress = (elapsed - 50) / (ef.duration - 50);
+                const ballAlpha    = (1 - ballProgress) * 0.8;
+                const ballR        = 15 + ballProgress * 10;
+                const gradB = ctx.createRadialGradient(sbx, sby, 0, sbx, sby, ballR);
+                gradB.addColorStop(0, 'rgba(255,255,255,' + ballAlpha + ')');
+                gradB.addColorStop(1, 'rgba(200,220,255,0)');
+                ctx.fillStyle = gradB;
+                ctx.beginPath();
+                ctx.arc(sbx, sby, ballR, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            const headT  = t_dash;
+            const tailT  = Math.max(0, t_dash - 0.35);
+            const headX  = sax + (sbx - sax) * headT;
+            const headY  = say + (sby - say) * headT;
+            const tailX  = sax + (sbx - sax) * tailT;
+            const tailY  = say + (sby - say) * tailT;
+            const lineLen = Math.sqrt((headX - tailX) * (headX - tailX) + (headY - tailY) * (headY - tailY));
+            if (lineLen > 1) {
+                const lineGrad = ctx.createLinearGradient(tailX, tailY, headX, headY);
+                lineGrad.addColorStop(0,   'rgba(255,255,255,0)');
+                lineGrad.addColorStop(0.5, 'rgba(200,240,255,0.5)');
+                lineGrad.addColorStop(1,   'rgba(255,255,255,0.9)');
+                ctx.strokeStyle = lineGrad;
+                ctx.lineWidth   = 3;
+                ctx.lineCap     = 'round';
+                ctx.beginPath();
+                ctx.moveTo(tailX, tailY);
+                ctx.lineTo(headX, headY);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+    const drawRadius = Math.max(1, p.radius * (gameState.cameraZoom || 1));
+    if (p.isRanged) {
+        _drawArcherfish(ctx, psx, psy, drawRadius, p);
+    } else {
+        if (gameState.isNight) {
+            ctx.fillStyle = 'rgba(0,255,136,0.9)';
+            ctx.beginPath();
+            ctx.arc(psx, psy, drawRadius + 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(psx, psy, drawRadius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    _drawArcherLockOn();
+    drawProjectiles();
+    if (p.isRanged) {
+        _drawArcherChargeVisual(ctx, psx, psy, p);
+    }
+    drawEliteArrow();
+    drawBossArrow();
+    _drawSandStormOverlay();
+    if (gameState._hunterPhase3Flash && Date.now() - gameState._hunterPhase3Flash < 80) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,0,0,0.2)';
+        ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+        ctx.restore();
+    }
+    if (p.brainActive) {
+        const bW2 = p.radius * 2;
+        const bH2 = 4;
+        const bX2 = psx - bW2 / 2;
+        const bY2 = psy + p.radius + 8;
+        const prog2 = Math.min(1, (Date.now() - p.brainTimer) / p.brainInterval);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(bX2, bY2, bW2, bH2);
+        ctx.fillStyle = '#4488FF';
+        ctx.fillRect(bX2, bY2, bW2 * prog2, bH2);
+    }
+    const now_sw = Date.now();
+    for (let i = gameState.brainShockwaves.length - 1; i >= 0; i--) {
+        const sw = gameState.brainShockwaves[i];
+        const swElapsed = now_sw - sw.startTime;
+        const swDuration = 600;
+        if (swElapsed >= swDuration) { gameState.brainShockwaves.splice(i, 1); continue; }
+        const swProgress = swElapsed / swDuration;
+        const swS = worldToScreen(sw.x, sw.y);
+        const swR = sw.range * swProgress;
+        const swAlpha = (1 - swProgress) * 0.6;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(68,136,255,' + swAlpha.toFixed(2) + ')';
+        ctx.lineWidth = 3 * (1 - swProgress) + 1;
+        ctx.beginPath();
+        ctx.arc(swS.x, swS.y, swR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+    const sharpSenseLv = (p.organs.find(o => o.id === 'sharpSense') || {}).level || 0;
+    const _percNow = Date.now();
+    if (p.perceptionRange > 0 && gameState.fruits.length > 0) {
+        const px = gameState.player.x;
+        const py = gameState.player.y;
+        const fruitCount = gameState.fruits.length;
+        const moved = _perceptionCache.pathPlayerX === null ||
+            Math.abs(px - _perceptionCache.pathPlayerX) > 50 ||
+            Math.abs(py - _perceptionCache.pathPlayerY) > 50;
+        const needsRecalc =
+            _percNow - _perceptionCache.pathLastCalc > 500 ||
+            fruitCount !== _perceptionCache.pathFruitCount ||
+            moved;
+        if (needsRecalc) {
+            _perceptionCache.path = findBestPerceptionPath(p, gameState.fruits, p.perceptionRange);
+            _perceptionCache.pathLastCalc = _percNow;
+            _perceptionCache.pathFruitCount = fruitCount;
+            _perceptionCache.pathPlayerX = px;
+            _perceptionCache.pathPlayerY = py;
+        }
+        const path = _perceptionCache.path;
+        if (path) {
+            const endS = worldToScreen(path.endpoint.x, path.endpoint.y);
+            const clampedEnd = {
+                x: Math.max(5, Math.min(VIEW_W - 5, endS.x)),
+                y: Math.max(5, Math.min(VIEW_H - 5, endS.y))
+            };
+            ctx.save();
+            ctx.globalAlpha = 0.55;
+            ctx.strokeStyle = '#FF4444';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(psx, psy);
+            ctx.lineTo(clampedEnd.x, clampedEnd.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            const blink = Math.sin(Date.now() * 0.002 * Math.PI * 2) > 0;
+            if (blink) {
+                ctx.fillStyle = '#FF4444';
+                path.fruits.forEach(f => {
+                    const fs = worldToScreen(f.x, f.y);
+                    ctx.beginPath();
+                    ctx.arc(fs.x, fs.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            ctx.restore();
+        }
+    }
+    if (sharpSenseLv >= 2 && gameState.corpses && gameState.corpses.length > 0) {
+        const corpseCount = gameState.corpses ? gameState.corpses.length : 0;
+        if (_percNow - _perceptionCache.corpseLastCalc > 300 ||
+            corpseCount !== _perceptionCache.corpseCount) {
+            let nearest = null, nearestDist = Infinity;
+            for (const c of gameState.corpses) {
+                const d = wrappedDistance(p.x, p.y, c.x, c.y);
+                if (d < nearestDist) { nearestDist = d; nearest = c; }
+            }
+            _perceptionCache.nearestCorpse = nearest;
+            _perceptionCache.corpseLastCalc = _percNow;
+            _perceptionCache.corpseCount = corpseCount;
+        }
+        const nearestCorpse = _perceptionCache.nearestCorpse;
+        if (nearestCorpse) {
+            const endS = worldToScreen(nearestCorpse.x, nearestCorpse.y);
+            const clampedEnd = {
+                x: Math.max(5, Math.min(VIEW_W - 5, endS.x)),
+                y: Math.max(5, Math.min(VIEW_H - 5, endS.y))
+            };
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            ctx.strokeStyle = '#FFDD44';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(psx, psy);
+            ctx.lineTo(clampedEnd.x, clampedEnd.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+    }
+    if (sharpSenseLv >= 3 && gameState.bones && gameState.bones.length > 0) {
+        const boneCount = gameState.bones ? gameState.bones.length : 0;
+        if (_percNow - _perceptionCache.boneLastCalc > 300 ||
+            boneCount !== _perceptionCache.boneCount) {
+            let nearest = null, nearestDist2 = Infinity;
+            for (const b of gameState.bones) {
+                const d = wrappedDistance(p.x, p.y, b.x, b.y);
+                if (d < nearestDist2) { nearestDist2 = d; nearest = b; }
+            }
+            _perceptionCache.nearestBone = nearest;
+            _perceptionCache.boneLastCalc = _percNow;
+            _perceptionCache.boneCount = boneCount;
+        }
+        const nearestBone = _perceptionCache.nearestBone;
+        if (nearestBone) {
+            const endS = worldToScreen(nearestBone.x, nearestBone.y);
+            const clampedEnd = {
+                x: Math.max(5, Math.min(VIEW_W - 5, endS.x)),
+                y: Math.max(5, Math.min(VIEW_H - 5, endS.y))
+            };
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(psx, psy);
+            ctx.lineTo(clampedEnd.x, clampedEnd.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+    }
+    const t7 = performance.now();
+
+    // --- hud ---
+    drawOrganUI();
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = 'white';
+    ctx.font = getGameFont(12, false);
+    ctx.textAlign = 'left';
+    ctx.fillText('© ' + GAME_INFO.author, 6, VIEW_H - 20);
+    ctx.fillText(GAME_INFO.version, 6, VIEW_H - 5);
+    ctx.restore();
+    const lvMsg = gameState.levelUpMessage;
+    if (lvMsg.text && Date.now() - lvMsg.timer < 2000) {
+        const lvAlpha = Math.max(0, 1 - (Date.now() - lvMsg.timer) / 2000);
+        ctx.save();
+        ctx.globalAlpha = lvAlpha;
+        ctx.fillStyle = '#FFD700';
+        ctx.font = getGameFont(40, true);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(lvMsg.text, VIEW_W / 2, VIEW_H / 2 - 60);
+        ctx.restore();
+    }
+    const dayMsg = gameState.dayNightMessage;
+    if (dayMsg.text && Date.now() - dayMsg.timer < 2000) {
+        const dayAlpha = Math.max(0, 1 - (Date.now() - dayMsg.timer) / 2000);
+        ctx.save();
+        ctx.globalAlpha = dayAlpha;
+        ctx.fillStyle = 'white';
+        ctx.font = getGameFont(36, true);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(dayMsg.text, VIEW_W / 2, VIEW_H / 2);
+        ctx.restore();
+    }
+    if (!gameState.isMobile && gameState.settings.autoAttack &&
+        gameState.gameStarted && !gameState.gameOver && !gameState.victory) {
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = 'white';
+        ctx.font = getGameFont(100, false);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(t('autoAttackIndicator'), VIEW_W / 2, VIEW_H / 2);
+        ctx.restore();
+    }
+    if (!gameState.isMobile && gameState.gameStarted && !gameState.gameOver && !gameState.victory) {
+        const dashCD = gameState.player.dashCooldown || 0;
+        const atkH = VIEW_H * 0.25;
+        const dashH = atkH * 0.5;
+        const dashW = dashH;
+        const dashCX = VIEW_W * 0.90;
+        const dashCY = VIEW_H * 0.65;
+        const dashL  = dashCX - dashW / 2;
+        const dashT_  = dashCY - dashH / 2;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'white';
+        const _dashKeyLabel = (gameState.settings.keys.dash || 'f').toUpperCase();
+        if (dashCD <= 0) {
+            ctx.globalAlpha = 0.15;
+            ctx.font = getGameFont(28, false);
+            ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
+        } else {
+            ctx.globalAlpha = 0.08;
+            ctx.font = getGameFont(28, false);
+            ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
+            const prog = dashCD / 15000;
+            ctx.globalAlpha = 0.55;
+            ctx.fillStyle = 'rgba(100,100,100,0.55)';
+            ctx.fillRect(dashL, dashT_, dashW, dashH * prog);
+            ctx.globalAlpha = 0.7;
+            ctx.fillStyle = 'white';
+            ctx.font = getGameFont(20, false);
+            ctx.fillText(Math.ceil(dashCD / 1000) + 's', dashCX, dashCY);
+        }
+        ctx.restore();
+    }
+    drawMinimap();
+    if (gameState.isMobile) _renderMobileOverlay();
+    drawTopBarUI();
+    const t8 = performance.now();
+
+    // --- float texts + FPS ---
+    if (gameState.floatTexts && gameState.floatTexts.length > 0) {
+        const now_ft = Date.now();
+        const boldLarge = gameState.settings && gameState.settings.fontBoldLarge;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (let i = gameState.floatTexts.length - 1; i >= 0; i--) {
+            const ft = gameState.floatTexts[i];
+            const age = now_ft - ft.startTime;
+            if (age >= ft.duration) {
+                gameState.floatTexts.splice(i, 1);
+                continue;
+            }
+            const t_ft   = age / ft.duration;
+            const ftAlpha = 1 - t_ft;
+            const offsetY = t_ft * 30;
+            const s = worldToScreen(ft.wx, ft.wy);
+            const drawX = (s.x) | 0;
+            const drawY = (s.y - offsetY) | 0;
+            const fz = boldLarge ? (ft.fontSize + 8) : ft.fontSize;
+            ctx.font = boldLarge
+                ? 'bold ' + fz + 'px Arial'
+                : fz + 'px Arial';
+            ctx.globalAlpha = ftAlpha;
+            if (boldLarge) {
+                ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+                ctx.lineWidth = 2;
+                ctx.lineJoin = 'round';
+                ctx.strokeText(ft.text, drawX, drawY);
+            }
+            ctx.fillStyle = ft.color;
+            ctx.fillText(ft.text, drawX, drawY);
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+    {
+        const now_fps = performance.now();
+        if (!drawGame._fpsLastTime) {
+            drawGame._fpsLastTime = now_fps;
+            drawGame._fpsCount = 0;
+            drawGame._fpsDisplay = 0;
+        }
+        drawGame._fpsCount++;
+        if (now_fps - drawGame._fpsLastTime >= 500) {
+            drawGame._fpsDisplay = Math.round(
+                drawGame._fpsCount / ((now_fps - drawGame._fpsLastTime) / 1000)
+            );
+            drawGame._fpsCount = 0;
+            drawGame._fpsLastTime = now_fps;
+        }
+        ctx.save();
+        ctx.font = 'bold 14px Arial';
+        ctx.fillStyle = drawGame._fpsDisplay >= 50 ? '#00FF00'
+                      : drawGame._fpsDisplay >= 30 ? '#FFAA00' : '#FF4444';
+        ctx.fillText('FPS: ' + drawGame._fpsDisplay, VIEW_W / 2 - 30, VIEW_H - 10);
+        ctx.restore();
+    }
+    const t9 = performance.now();
+
+    const total = t9 - t0;
+    if (total > 6) {
+        console.log('[DRAW] total=' + total.toFixed(1) + 'ms', {
+            terrain:  (t1-t0).toFixed(1),
+            trees:    (t2-t1).toFixed(1),
+            fruits:   (t3-t2).toFixed(1),
+            neutral:  (t4-t3).toFixed(1),
+            hostile:  (t5-t4).toFixed(1),
+            eliteBoss:(t6-t5).toFixed(1),
+            player:   (t7-t6).toFixed(1),
+            hud:      (t8-t7).toFixed(1),
+            float:    (t9-t8).toFixed(1),
+        });
     }
 }
 
