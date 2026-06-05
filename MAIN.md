@@ -1,4 +1,4 @@
-## v0.1.3.5
+## v0.1.3.6
 
 # The Silent Koel — 模組架構說明
 
@@ -49,6 +49,7 @@ systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeF
                           _archerAttack, _getArcherShootDir, _findArcherAutoTarget（阿奇爾攻擊，v0.56.0）
 systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTutorialStump，handleTutorialStumpKill
                           showTutorialCombatHint，showTutorialCombatComplete
+                          resetTutorial（強制重置教學狀態，供 initializeGame 每局呼叫，v0.1.3.6）
                           （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
 systems/combat.js         showFloatingText, applyDamageToPlayer, handleKill, playerAttack
                           handleGiantKill, handleKillerKill, addMutationPoints（stub）

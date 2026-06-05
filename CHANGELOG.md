@@ -1,6 +1,15 @@
-## v0.1.3.4
+## v0.1.3.6
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.3.6 - 2026-06-05
+
+### 修復
+- `tutorial.js` `_highlightDayNight` setTimeout 記憶體洩漏：改用可清除的 timer ID（`_dnFlashTimer`），停止條件時正確 clearTimeout，不再永久在背景跑
+- 新增 `_clearDnFlash()` 統一清除 timer 與 DOM 樣式，在 `_endTutorial()`、`showTutorial()` 頭部呼叫
+- 新增 `resetTutorial()`：`initializeGame()` 每局開始時強制重置教學狀態，防止跨局 timer 殘留導致手機越來越卡
 
 ---
 
