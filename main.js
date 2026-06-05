@@ -248,6 +248,7 @@ function initializeGame() {
     gameState.tutorialOrganPhase   = false;
     gameState.tutorialCombatActive = false;
     gameState.tutorialStump        = null;
+    if (typeof resetTutorial === 'function') resetTutorial();
     gameState.dashEffect           = null;
     // mutationData 不重置（跨局永久保存，由 window.onload 的 initMutationData 管理）
 
