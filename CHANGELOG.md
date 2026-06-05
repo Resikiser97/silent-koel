@@ -1,6 +1,17 @@
-## v0.1.3.9
+## v0.1.4.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.4.0 - 2026-06-05
+
+### 效能
+- `showFloatingText` 改用 DOM 物件池（pool size 20），避免每次 `createElement` + CSS animation + `remove`，大幅改善手機卡頓
+  - 新增模組頂部 `_FLOAT_POOL_SIZE`、`_floatPool`、`_floatPoolReady` 三個常數/變數
+  - 新增 `_initFloatPool()`：第一次呼叫 `showFloatingText` 時 lazy init，預建 20 個 `div` 並 append 至 `#ui-overlay`
+  - `showFloatingText` 改為從 pool 取閒置 slot，重置 animation 後重複使用，pool 滿時直接跳過不卡主執行緒
+  - 新增 `resetFloatPool()`，在 `initializeGame()` 每局開始時清除所有 timer 並重置 pool 狀態
 
 ---
 

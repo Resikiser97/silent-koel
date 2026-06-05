@@ -6,21 +6,72 @@
 //            drawCorpseEatingBars / drawBones
 // =============================================================
 
+// floating text DOM 物件池 — 預建固定數量元素重複使用，避免每次 createElement + remove
+const _FLOAT_POOL_SIZE = 20;
+let _floatPool = [];
+let _floatPoolReady = false;
+
+function _initFloatPool() {
+    if (_floatPoolReady) return;
+    const overlay = document.getElementById('ui-overlay');
+    if (!overlay) return;
+    for (let i = 0; i < _FLOAT_POOL_SIZE; i++) {
+        const el = document.createElement('div');
+        el.style.cssText = 'position:absolute;pointer-events:none;display:none;font-weight:bold;';
+        overlay.appendChild(el);
+        _floatPool.push({ el, inUse: false, timer: null });
+    }
+    _floatPoolReady = true;
+}
+
 function showFloatingText(wx, wy, text, color, fontSize) {
+    if (!_floatPoolReady) _initFloatPool();
+    if (!_floatPoolReady) return;
+
     const s = worldToScreen(wx, wy);
     if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
-    const el = document.createElement('div');
+
+    const slot = _floatPool.find(sl => !sl.inUse);
+    if (!slot) return;
+
+    if (slot.timer) { clearTimeout(slot.timer); slot.timer = null; }
+
+    slot.inUse = true;
+    const el = slot.el;
     const fz = fontSize || 16;
     const shadow = (gameState.settings && gameState.settings.fontBoldLarge)
         ? '-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000,0 3px 6px rgba(0,0,0,0.9)'
         : '-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 2px 3px rgba(0,0,0,0.7)';
-    el.style.cssText = 'position:absolute;pointer-events:none;font-size:' + fz + 'px;font-weight:bold;animation:fadeOutUp 0.8s forwards;text-shadow:' + shadow + ';';
-    el.style.left = (s.x - 20) + 'px';
-    el.style.top  = (s.y - 10) + 'px';
-    el.style.color = color || 'white';
-    el.innerText = text;
-    document.getElementById('ui-overlay').appendChild(el);
-    setTimeout(() => el.remove(), 800);
+
+    el.style.fontSize   = fz + 'px';
+    el.style.textShadow = shadow;
+    el.style.left       = (s.x - 20) + 'px';
+    el.style.top        = (s.y - 10) + 'px';
+    el.style.color      = color || 'white';
+    el.style.animation  = 'none';
+    el.innerText        = text;
+    el.style.display    = 'block';
+
+    // 強制 reflow 讓 animation 重新觸發
+    void el.offsetWidth;
+    el.style.animation  = 'fadeOutUp 0.8s forwards';
+
+    slot.timer = setTimeout(() => {
+        el.style.display = 'none';
+        el.style.animation = 'none';
+        slot.inUse = false;
+        slot.timer = null;
+    }, 800);
+}
+
+function resetFloatPool() {
+    for (const slot of _floatPool) {
+        if (slot.timer) { clearTimeout(slot.timer); slot.timer = null; }
+        slot.el.style.display = 'none';
+        slot.el.style.animation = 'none';
+        slot.inUse = false;
+    }
+    // 不重置 _floatPoolReady，pool DOM 元素保留重用
 }
 
 function applyDamageToPlayer(rawDamage, attacker) {

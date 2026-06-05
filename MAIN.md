@@ -1,4 +1,4 @@
-## v0.1.3.9
+## v0.1.4.0
 
 # The Silent Koel — 模組架構說明
 
@@ -56,8 +56,11 @@ systems/combat.js         showFloatingText, applyDamageToPlayer, handleKill, pla
                           updateStatusEffects, updateCorpseEating, drawCorpseEatingBars
                           updateBoneEating, _addBoneMaterial, _checkPoisonSacUpgrade
                           _spawnBone, drawBones
+                          _initFloatPool（lazy init 20 個 DOM 元素至 #ui-overlay，v0.1.4.0）
+                          resetFloatPool（每局開始重置 pool 狀態，供 initializeGame 呼叫，v0.1.4.0）
                           （playerAttack() 將 tutorialStump 加入攻擊目標；v0.45.0）
                           （playerAttack() 含嘴器減速/鯊魚嗅葉傷害加成/Debuff StartTime；v0.56.0）
+                          （showFloatingText 改用 DOM 物件池 pool size 20，v0.1.4.0）
 systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, checkComboEffects
                           getOrganSlotsUsed, applyHiddenOrganEffects, applyOrganEffects
                           checkOrganUpgrade, showOrganSelection, drawOrganUI
