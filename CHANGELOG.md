@@ -4,6 +4,16 @@
 
 ---
 
+## v0.1.3.5 - 2026-06-05
+
+### 修復
+- `updateUI` dirty check：每幀 DOM 操作從 6~9 次降為只在值改變時更新，減少手機卡頓
+  - 新增模組頂部 `_uiCache` 快取物件，記錄上次寫入的 xp 文字、xp 條寬、HP、生態圈、時間、遊玩時間、變異等級、紅點
+  - `_drawHpHearts` 只在 `player.hp` 或 `player.maxHp` 改變時重繪
+  - 新增 `resetUICache()`，在 `initializeGame()` 每局開始時重置快取
+
+---
+
 ## v0.1.3.4 - 2026-06-04
 
 ### 修復
