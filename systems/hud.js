@@ -346,8 +346,10 @@ function _drawArcherLockOn() {
     const best = (typeof _findArcherAutoTarget === 'function') ? _findArcherAutoTarget() : null;
     if (!best) return;
 
-    const ps  = worldToScreen(p.x, p.y);
-    const ts  = worldToScreen(best.x, best.y);
+    const psx = worldToScreen(p.x, p.y).x;
+    const psy = _screenPos.y;
+    const tsx = worldToScreen(best.x, best.y).x;
+    const tsy = _screenPos.y;
     const now = Date.now();
 
     ctx.save();
@@ -359,8 +361,8 @@ function _drawArcherLockOn() {
     ctx.setLineDash([5, 8]);
     ctx.lineDashOffset = -(now / 60) % 13;
     ctx.beginPath();
-    ctx.moveTo(ps.x, ps.y);
-    ctx.lineTo(ts.x, ts.y);
+    ctx.moveTo(psx, psy);
+    ctx.lineTo(tsx, tsy);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
@@ -375,7 +377,7 @@ function _drawArcherLockOn() {
         const startA = rotAngle + i * (Math.PI / 2);
         const endA   = startA + Math.PI / 2 * 0.6;
         ctx.beginPath();
-        ctx.arc(ts.x, ts.y, lockR, startA, endA);
+        ctx.arc(tsx, tsy, lockR, startA, endA);
         ctx.stroke();
     }
 
@@ -939,13 +941,14 @@ export function drawGame() {
     // 8. 攻擊範圍視覺圓圈（0.2 秒淡出，遠程角色不顯示）
     const p = gameState.player;
     const ps = worldToScreen(p.x, p.y);
+    const psx = ps.x, psy = ps.y;
     if (!p.isRanged && p.attackVisual > 0 && Date.now() - p.attackVisual < 200) {
         const alpha = 1 - (Date.now() - p.attackVisual) / 200;
         ctx.strokeStyle = 'rgba(255,255,255,' + alpha.toFixed(2) + ')';
         ctx.fillStyle   = 'rgba(255,255,255,' + (alpha * 0.12).toFixed(2) + ')';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(ps.x, ps.y, p.attackRange * (gameState.cameraZoom || 1), 0, Math.PI * 2);
+        ctx.arc(psx, psy, p.attackRange * (gameState.cameraZoom || 1), 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.lineWidth = 1;
@@ -959,20 +962,22 @@ export function drawGame() {
         if (t >= 1) {
             gameState.dashEffect = null;
         } else {
-            const sa = worldToScreen(ef.ax, ef.ay);
-            const sb = worldToScreen(ef.bx, ef.by);
+            const sax = worldToScreen(ef.ax, ef.ay).x;
+            const say = _screenPos.y;
+            const sbx = worldToScreen(ef.bx, ef.by).x;
+            const sby = _screenPos.y;
             ctx.save();
 
             // 特效 1：出發點 A 金色煙霧（0~100ms）
             if (elapsed < 100) {
                 const smokeAlpha = (1 - elapsed / 100) * 0.6;
                 const smokeR     = 20 + elapsed * 0.3;
-                const grad = ctx.createRadialGradient(sa.x, sa.y, 0, sa.x, sa.y, smokeR);
+                const grad = ctx.createRadialGradient(sax, say, 0, sax, say, smokeR);
                 grad.addColorStop(0, 'rgba(255,200,50,' + smokeAlpha + ')');
                 grad.addColorStop(1, 'rgba(255,150,0,0)');
                 ctx.fillStyle = grad;
                 ctx.beginPath();
-                ctx.arc(sa.x, sa.y, smokeR, 0, Math.PI * 2);
+                ctx.arc(sax, say, smokeR, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -981,22 +986,22 @@ export function drawGame() {
                 const ballProgress = (elapsed - 50) / (ef.duration - 50);
                 const ballAlpha    = (1 - ballProgress) * 0.8;
                 const ballR        = 15 + ballProgress * 10;
-                const gradB = ctx.createRadialGradient(sb.x, sb.y, 0, sb.x, sb.y, ballR);
+                const gradB = ctx.createRadialGradient(sbx, sby, 0, sbx, sby, ballR);
                 gradB.addColorStop(0, 'rgba(255,255,255,' + ballAlpha + ')');
                 gradB.addColorStop(1, 'rgba(200,220,255,0)');
                 ctx.fillStyle = gradB;
                 ctx.beginPath();
-                ctx.arc(sb.x, sb.y, ballR, 0, Math.PI * 2);
+                ctx.arc(sbx, sby, ballR, 0, Math.PI * 2);
                 ctx.fill();
             }
 
             // 特效 3：A→B 光線掃過（整個 duration）
             const headT = t;
             const tailT = Math.max(0, t - 0.35);
-            const headX = sa.x + (sb.x - sa.x) * headT;
-            const headY = sa.y + (sb.y - sa.y) * headT;
-            const tailX = sa.x + (sb.x - sa.x) * tailT;
-            const tailY = sa.y + (sb.y - sa.y) * tailT;
+            const headX = sax + (sbx - sax) * headT;
+            const headY = say + (sby - say) * headT;
+            const tailX = sax + (sbx - sax) * tailT;
+            const tailY = say + (sby - say) * tailT;
             const lineLen = Math.sqrt((headX - tailX) * (headX - tailX) + (headY - tailY) * (headY - tailY));
             if (lineLen > 1) {
                 const lineGrad = ctx.createLinearGradient(tailX, tailY, headX, headY);
@@ -1018,18 +1023,18 @@ export function drawGame() {
     // 9. 繪製玩家角色（根據 selectedCharacter 分派不同外觀）
     const drawRadius = Math.max(1, p.radius * (gameState.cameraZoom || 1));
     if (p.isRanged) {
-        _drawArcherfish(ctx, ps.x, ps.y, drawRadius, p);
+        _drawArcherfish(ctx, psx, psy, drawRadius, p);
     } else {
         // 噪鵑（預設）：夜晚發光圓 + 黑色圓形
         if (gameState.isNight) {
             ctx.fillStyle = 'rgba(0,255,136,0.9)';
             ctx.beginPath();
-            ctx.arc(ps.x, ps.y, drawRadius + 3, 0, Math.PI * 2);
+            ctx.arc(psx, psy, drawRadius + 3, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(ps.x, ps.y, drawRadius, 0, Math.PI * 2);
+        ctx.arc(psx, psy, drawRadius, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -1041,7 +1046,7 @@ export function drawGame() {
 
     // 9-charge. 阿奇爾充能格 + 蓄力氣泡
     if (p.isRanged) {
-        _drawArcherChargeVisual(ctx, ps.x, ps.y, p);
+        _drawArcherChargeVisual(ctx, psx, psy, p);
     }
 
     drawEliteArrow();
@@ -1062,8 +1067,8 @@ export function drawGame() {
     if (p.brainActive) {
         const barW = p.radius * 2;
         const barH = 4;
-        const barX = ps.x - barW / 2;
-        const barY = ps.y + p.radius + 8;
+        const barX = psx - barW / 2;
+        const barY = psy + p.radius + 8;
         const prog = Math.min(1, (Date.now() - p.brainTimer) / p.brainInterval);
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.fillRect(barX, barY, barW, barH);
@@ -1108,7 +1113,7 @@ export function drawGame() {
             ctx.lineWidth = 2;
             ctx.setLineDash([6, 4]);
             ctx.beginPath();
-            ctx.moveTo(ps.x, ps.y);
+            ctx.moveTo(psx, psy);
             ctx.lineTo(clampedEnd.x, clampedEnd.y);
             ctx.stroke();
             ctx.setLineDash([]);
@@ -1144,7 +1149,7 @@ export function drawGame() {
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
-            ctx.moveTo(ps.x, ps.y);
+            ctx.moveTo(psx, psy);
             ctx.lineTo(clampedEnd.x, clampedEnd.y);
             ctx.stroke();
             ctx.setLineDash([]);
@@ -1170,7 +1175,7 @@ export function drawGame() {
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
-            ctx.moveTo(ps.x, ps.y);
+            ctx.moveTo(psx, psy);
             ctx.lineTo(clampedEnd.x, clampedEnd.y);
             ctx.stroke();
             ctx.setLineDash([]);

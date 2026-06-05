@@ -397,26 +397,27 @@ export function drawEliteCreature() {
     const elite = gameState.eliteCreature;
     if (!elite || elite.hp <= 0) return;
     const s = worldToScreen(elite.x, elite.y);
-    if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) return;
+    const selx = s.x, sely = s.y;
+    if (selx < -50 || selx > VIEW_W + 50 || sely < -50 || sely > VIEW_H + 50) return;
 
     const r  = elite.radius;
     const t2 = Date.now();
 
     if (elite.isHunterElite) {
-        _drawHunterElite(s, r, t2, elite);
+        _drawHunterElite(selx, sely, r, t2, elite);
     } else {
         // 標準精英怪
-        drawGlowEffect(s.x, s.y, r, elite.color, '#FFD700', 14);
+        drawGlowEffect(selx, sely, r, elite.color, '#FFD700', 14);
     }
 
     const bH = 5, bW = 46;
-    const bY = s.y - r - 4 - bH;
+    const bY = sely - r - 4 - bH;
     const barColor = elite.isHunterElite ? (elite.glowColor || '#CC44FF') : '#CC44FF';
-    drawHealthBar(s.x, bY, elite.hp, elite.maxHp, bW, barColor, '#330033', bH);
-    drawNameTag(s.x, bY - 4, elite.label, elite.isHunterElite ? (elite.glowColor || '#FFD700') : '#FFD700', 'bold 11px Arial');
+    drawHealthBar(selx, bY, elite.hp, elite.maxHp, bW, barColor, '#330033', bH);
+    drawNameTag(selx, bY - 4, elite.label, elite.isHunterElite ? (elite.glowColor || '#FFD700') : '#FFD700', 'bold 11px Arial');
 }
 
-function _drawHunterElite(s, r, t2, elite) {
+function _drawHunterElite(sx, sy, r, t2, elite) {
     const color     = elite.color;
     const glowColor = elite.glowColor;
     const ring      = elite.glowRing || 'pulse';
@@ -426,7 +427,7 @@ function _drawHunterElite(s, r, t2, elite) {
     ctx.shadowColor = glowColor;
     ctx.shadowBlur  = 10;
     ctx.beginPath();
-    ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
@@ -438,7 +439,7 @@ function _drawHunterElite(s, r, t2, elite) {
         ctx.globalAlpha = alpha;
         ctx.lineWidth   = 2.5;
         ctx.beginPath();
-        ctx.arc(s.x, s.y, r + 5, 0, Math.PI * 2);
+        ctx.arc(sx, sy, r + 5, 0, Math.PI * 2);
         ctx.stroke();
     } else if (ring === 'rotate') {
         elite._ringAngle = ((elite._ringAngle || 0) + 0.03) % (Math.PI * 2);
@@ -448,7 +449,7 @@ function _drawHunterElite(s, r, t2, elite) {
         ctx.lineDashOffset = -elite._ringAngle * 10;
         ctx.globalAlpha = 0.8;
         ctx.beginPath();
-        ctx.arc(s.x, s.y, r + 5, 0, Math.PI * 2);
+        ctx.arc(sx, sy, r + 5, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
     } else if (ring === 'fog') {
@@ -458,14 +459,15 @@ function _drawHunterElite(s, r, t2, elite) {
         ctx.globalAlpha = Math.max(0, fogAlpha);
         ctx.lineWidth   = 1.5;
         ctx.beginPath();
-        ctx.arc(s.x, s.y, fogR, 0, Math.PI * 2);
+        ctx.arc(sx, sy, fogR, 0, Math.PI * 2);
         ctx.stroke();
     }
     ctx.restore();
 
     // 幽靈隼：瞄準線 + 目標準心（與 Boss 雷射同等視覺強度）
     if (elite.eliteType === 'specterFalcon' && elite._aimTarget) {
-        const ts    = worldToScreen(elite._aimTarget.x, elite._aimTarget.y);
+        const tsx = worldToScreen(elite._aimTarget.x, elite._aimTarget.y).x;
+        const tsy = _screenPos.y;
         const pulse = Math.abs(Math.sin(Date.now() / 90));
         ctx.save();
         ctx.strokeStyle = `rgba(255, 80, 80, ${(pulse * 0.45 + 0.45).toFixed(2)})`;
@@ -474,19 +476,19 @@ function _drawHunterElite(s, r, t2, elite) {
         ctx.shadowColor = '#FF3333';
         ctx.shadowBlur  = 10;
         ctx.beginPath();
-        ctx.moveTo(s.x, s.y);
-        ctx.lineTo(ts.x, ts.y);
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(tsx, tsy);
         ctx.stroke();
         ctx.setLineDash([]);
         // 目標準心圓 + 十字
         ctx.strokeStyle = `rgba(255, 60, 60, ${(pulse * 0.55 + 0.35).toFixed(2)})`;
         ctx.lineWidth   = 2;
         ctx.beginPath();
-        ctx.arc(ts.x, ts.y, 16, 0, Math.PI * 2);
+        ctx.arc(tsx, tsy, 16, 0, Math.PI * 2);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(ts.x - 10, ts.y); ctx.lineTo(ts.x + 10, ts.y);
-        ctx.moveTo(ts.x, ts.y - 10); ctx.lineTo(ts.x, ts.y + 10);
+        ctx.moveTo(tsx - 10, tsy); ctx.lineTo(tsx + 10, tsy);
+        ctx.moveTo(tsx, tsy - 10); ctx.lineTo(tsx, tsy + 10);
         ctx.stroke();
         ctx.restore();
     }
