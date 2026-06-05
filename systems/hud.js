@@ -66,6 +66,7 @@ let _fogCloudCanvas         = null;
 let _minimapAlpha           = 1.0;
 let _minimapFadeTimer       = 0;
 let _minimapStopTimer       = 0;
+let _fogFrameCount          = 0;
 
 // =============================================================
 // 小地圖系統
@@ -385,6 +386,8 @@ function _drawArcherLockOn() {
 }
 
 export function updateMinimapFog() {
+    _fogFrameCount++;
+    if (_fogFrameCount % 3 !== 0) return;
     if (!gameState.fogMap) return;
     const COLS = MAP_WIDTH  / TILE_SIZE; // 400
     const ROWS = MAP_HEIGHT / TILE_SIZE; // 400
@@ -1494,6 +1497,29 @@ export function updateUI() {
     }
     console.log && false; // [v0.47.0] 七+八+十: HUD 更新完成
 }
+
+function resetUICache() {
+    for (const key of Object.keys(_uiCache)) _uiCache[key] = null;
+}
+
+function resetPerceptionCache() {
+    _perceptionCache.path = null;
+    _perceptionCache.pathLastCalc = 0;
+    _perceptionCache.pathFruitCount = 0;
+    _perceptionCache.pathPlayerX = null;
+    _perceptionCache.pathPlayerY = null;
+    _perceptionCache.nearestCorpse = null;
+    _perceptionCache.corpseLastCalc = 0;
+    _perceptionCache.corpseCount = 0;
+    _perceptionCache.nearestBone = null;
+    _perceptionCache.boneLastCalc = 0;
+    _perceptionCache.boneCount = 0;
+}
+
+function resetFogFrameCount() {
+    _fogFrameCount = 0;
+}
+
 
 function drawTreasures() {
     for (const t of gameState.treasures) {

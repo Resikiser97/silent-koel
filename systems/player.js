@@ -272,6 +272,7 @@ export function _archerAttack() {
 const _XP_POOL_SIZE = 10;
 let _xpPopupPool = [];
 let _xpPoolReady = false;
+let _treeProductionTimer = 0;
 
 export function _initXpPool() {
     if (_xpPoolReady) return;
@@ -532,6 +533,9 @@ export function checkFruitCollision() {
 }
 
 export function updateTreeFruitProduction(deltaTime) {
+    _treeProductionTimer += FIXED_DELTA;
+    if (_treeProductionTimer < 500) return;
+    _treeProductionTimer = 0;
     for (const tree of gameState.trees) {
         const range     = tree.isLarge ? 80 : 60;
         const maxNearby = tree.isLarge ?  5 :  3;
@@ -717,4 +721,8 @@ export function findBestPerceptionPath(player, fruits, detectionRange) {
 
     if (!bestEndpoint) return null;
     return { endpoint: bestEndpoint, fruits: bestFruits, angle: bestAngle };
+}
+
+function resetTreeProductionTimer() {
+    _treeProductionTimer = 0;
 }
