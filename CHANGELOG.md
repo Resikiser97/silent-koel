@@ -1,6 +1,18 @@
-## v0.1.3.6
+## v0.1.3.7
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.3.7 - 2026-06-05
+
+### 修復
+- 靈敏知覺三等級改用快取，限制重算頻率，大幅減少手機 spike lag
+  - Lv1 果子路徑（`findBestPerceptionPath`）：距上次計算 >500ms、果子數量改變、或玩家移動 >50px 才重算
+  - Lv2 最近屍體：距上次計算 >300ms 或屍體數量改變才重算
+  - Lv3 最近白骨：距上次計算 >300ms 或白骨數量改變才重算
+  - 新增模組頂部 `_perceptionCache` 快取物件
+  - 新增 `resetPerceptionCache()`，在 `initializeGame()` 每局開始時重置快取
 
 ---
 

@@ -1,4 +1,4 @@
-## v0.1.3.6
+## v0.1.3.7
 
 # The Silent Koel — 模組架構說明
 
@@ -124,7 +124,7 @@ systems/chat.js           _sha256, loadChatSettings, saveChatSettings
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
                           _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）
-systems/hud.js            drawGame, updateUI, resetUICache, drawTopBarUI
+systems/hud.js            drawGame, updateUI, resetUICache, resetPerceptionCache, drawTopBarUI
                           drawMinimap（含所有 _minimap 變數 + _minimapAlpha/FadeTimer/StopTimer 透明度計時器，v0.0.66.1）, drawTreasures
                           drawProjectiles（子彈繪製）, updateMinimapFog（小地圖霧效更新）
                           _drawArcherfish（夜晚三角光圈 + F技紅色三角框，v0.57.4）

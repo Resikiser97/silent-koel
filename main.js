@@ -146,6 +146,7 @@ function _applyCharacterStats() {
 
 function initializeGame() {
     if (typeof resetUICache === 'function') resetUICache();
+    if (typeof resetPerceptionCache === 'function') resetPerceptionCache();
     localStorage.setItem('hasPlayedBefore', 'true');
 
     // 清除首頁公告標籤
