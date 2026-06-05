@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 2C — ESM 遷移 批次3（systems/ 核心層 + main.js）
-目前批次     : S2C-1 完成，等待瀏覽器完整人工測試
+所在 Stage   : Stage 3 — 架構重構（待開始）
+目前批次     : Stage 2 全部完成（三批次人工測試通過）
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-05
-最後操作者   : Claude Code + Codex（批次3遷移完成 + Playwright smoke test 通過）
+最後操作者   : 你（Stage 2 人工測試完成）
 ```
 
 ---
@@ -36,21 +36,21 @@
 
 ### Stage 2A — ESM 遷移 批次1（config/ + lang/ + map/）
 - [x] S2A-1：Claude Code 執行批次1遷移
-- [ ] S2A-2：Codex 靜態語法檢查
-- [ ] S2A-3：你開瀏覽器人工測試
-- [ ] S2A-4：commit 批次1
+- [x] S2A-2：Codex 靜態語法檢查
+- [x] S2A-3：你開瀏覽器人工測試
+- [x] S2A-4：commit 批次1
 
 ### Stage 2B — ESM 遷移 批次2（systems/ 基礎層）
 - [x] S2B-1：Claude Code 執行批次2遷移
-- [ ] S2B-2：Codex 靜態語法檢查
-- [ ] S2B-3：你開瀏覽器人工測試
-- [ ] S2B-4：commit 批次2
+- [x] S2B-2：Codex 靜態語法檢查
+- [x] S2B-3：你開瀏覽器人工測試
+- [x] S2B-4：commit 批次2
 
 ### Stage 2C — ESM 遷移 批次3（systems/ 核心層 + main.js）
 - [x] S2C-1：Claude Code 執行批次3遷移
 - [x] S2C-2：Codex Playwright smoke test（無 ESM runtime error）
-- [ ] S2C-3：你開瀏覽器人工測試（完整測試：完成一局遊戲）
-- [ ] S2C-4：commit 批次3
+- [x] S2C-3：你開瀏覽器人工測試（完整測試：完成一局遊戲）
+- [x] S2C-4：commit 批次3
 
 ### Stage 3 — 架構重構
 - [ ] Phase 1：TODO-06 localStorage 統一
@@ -70,6 +70,18 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 2 全部完成）
+- 狀態：Stage 2A / 2B / 2C 三批次遷移全部通過人工測試，Stage 2 正式收尾
+- 操作者：你（人工測試）+ Claude Code（文件更新）
+- 完成項目：
+  - 簡單難度勝利測試通過
+  - 簡單難度失敗測試通過
+  - 普通難度勝利測試通過
+  - S2C-3 / S2C-4 標記完成
+  - Stage 2A / 2B 全部勾選完成
+- 發現問題：無
+- 下一步：Stage 3 架構重構（Phase 1：TODO-06 localStorage 統一 / TODO-04 AudioManager 統一）
 
 ### 2026-06-05（Stage 2C S2C-1/S2C-2 完成）
 - 狀態：批次3遷移完成，Playwright smoke test 通過，等待人工完整測試
