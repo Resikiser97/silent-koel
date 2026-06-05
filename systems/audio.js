@@ -45,7 +45,7 @@ const AudioManager = {
             }
         });
         // 預熱常用音效
-        ['eatFruit', 'levelUp', 'attacked'].forEach(key => {
+        ['eatFruit', 'levelUp', 'hurt'].forEach(key => {
             this._getPooledAudio(key);
         });
         this._ready = true;

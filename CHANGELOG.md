@@ -1,6 +1,15 @@
-## v0.1.4.0
+## v0.1.4.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.4.1 - 2026-06-05
+
+### 效能
+- `updateTreeFruitProduction` 節流改為累積時間補給：節流前累積 `elapsed`，觸發時一次把 elapsed 補給 `tree.fruitTimer`，果子生產速度恢復正常（修復節流導致速度變 1/30 的副作用）
+- `showFloatingText` 移除 `void el.offsetWidth` 強制 reflow，改用 `requestAnimationFrame` + CSS class `.float-text-animate` 切換觸發 animation，改善 iOS Safari 連續浮字時的 spike
+- AudioManager 預熱清單修正：移除不存在的 `'attacked'`，補上實際播放的 `'hurt'`，避免第一次被打時 lazy 建立 pool 造成卡頓
 
 ---
 

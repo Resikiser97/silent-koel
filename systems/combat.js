@@ -48,17 +48,17 @@ function showFloatingText(wx, wy, text, color, fontSize) {
     el.style.left       = (s.x - 20) + 'px';
     el.style.top        = (s.y - 10) + 'px';
     el.style.color      = color || 'white';
-    el.style.animation  = 'none';
+    el.classList.remove('float-text-animate');
     el.innerText        = text;
     el.style.display    = 'block';
 
-    // 強制 reflow 讓 animation 重新觸發
-    void el.offsetWidth;
-    el.style.animation  = 'fadeOutUp 0.8s forwards';
+    requestAnimationFrame(() => {
+        el.classList.add('float-text-animate');
+    });
 
     slot.timer = setTimeout(() => {
         el.style.display = 'none';
-        el.style.animation = 'none';
+        el.classList.remove('float-text-animate');
         slot.inUse = false;
         slot.timer = null;
     }, 800);
@@ -68,7 +68,7 @@ function resetFloatPool() {
     for (const slot of _floatPool) {
         if (slot.timer) { clearTimeout(slot.timer); slot.timer = null; }
         slot.el.style.display = 'none';
-        slot.el.style.animation = 'none';
+        slot.el.classList.remove('float-text-animate');
         slot.inUse = false;
     }
     // 不重置 _floatPoolReady，pool DOM 元素保留重用
