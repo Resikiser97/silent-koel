@@ -139,6 +139,7 @@ export function loadSettings() {
             if (parsed.volume && typeof parsed.volume === 'object') {
                 gameState.settings.volume = Object.assign({}, DEFAULT_SETTINGS.volume, parsed.volume);
             }
+            AudioManager.loadVolume(gameState.settings.volume);
             if (parsed.keys)   Object.assign(gameState.settings.keys,   parsed.keys);
             if (parsed.language && LANG[parsed.language]) {
                 gameState.settings.language = parsed.language;
@@ -234,7 +235,11 @@ export function switchLanguage(lang) {
 }
 
 export function saveSettings() {
-    storageSetJSON(STORAGE_KEYS.GAME_SETTINGS, gameState.settings);
+    // 從 AudioManager 取得最新音量再存入
+    const settingsToSave = Object.assign({}, gameState.settings, {
+        volume: AudioManager.serializeVolume()
+    });
+    storageSetJSON(STORAGE_KEYS.GAME_SETTINGS, settingsToSave);
 }
 
 function _keyDisplay(k) {
@@ -304,7 +309,12 @@ export function showSettings(fromHome) {
             tog.style.background = on ? '#2a8a2a' : '#555';
         };
         refreshTog();
-        tog.onclick = () => { gameState.settings.volume[ok] = !gameState.settings.volume[ok]; refreshTog(); AudioManager.refreshMusicVolume(); saveSettings(); };
+        tog.onclick = () => {
+            const currentValue = gameState.settings.volume[ok];
+            AudioManager.setVolume(ok, !currentValue);
+            refreshTog();
+            saveSettings();
+        };
         row.appendChild(tog);
         const lbl = document.createElement('div');
         lbl.style.cssText = 'min-width:68px;font-size:13px;'; lbl.textContent = label;
@@ -316,7 +326,12 @@ export function showSettings(fromHome) {
         const valLbl = document.createElement('div');
         valLbl.style.cssText = 'min-width:36px;text-align:right;font-size:13px;';
         valLbl.textContent = slider.value + '%';
-        slider.oninput = () => { gameState.settings.volume[vk] = parseInt(slider.value); valLbl.textContent = slider.value + '%'; AudioManager.refreshMusicVolume(); saveSettings(); };
+        slider.oninput = () => {
+            const newValue = parseInt(slider.value);
+            AudioManager.setVolume(vk, newValue);
+            valLbl.textContent = slider.value + '%';
+            saveSettings();
+        };
         row.appendChild(slider); row.appendChild(valLbl);
         volSec.appendChild(row);
     });
@@ -770,7 +785,8 @@ export function showSettings(fromHome) {
         const keepLang = gameState.settings.language;
         gameState.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
         gameState.settings.language = keepLang;
-        saveSettings(); AudioManager.refreshMusicVolume();
+        AudioManager.loadVolume(DEFAULT_SETTINGS.volume);
+        saveSettings();
         applyDeviceMode();
         hideSettings(); showSettings();
     };

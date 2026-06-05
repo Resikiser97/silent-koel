@@ -3,7 +3,7 @@
 //           playIntroTheme / stopIntroTheme（首頁背景音樂）
 // =============================================================
 import { AUDIO_FILES } from '../config/gameConfig.js';
-import { DEFAULT_SETTINGS, gameState } from './gameState.js';
+import { gameState } from './gameState.js';
 
 let _introThemeAudio = null;
 
@@ -12,12 +12,7 @@ export function playIntroTheme() {
     _introThemeAudio = new Audio(AUDIO_FILES.introTheme);
     _introThemeAudio.loop = true;
     _introThemeAudio.currentTime = 0;
-    const v = gameState.settings && gameState.settings.volume
-        ? gameState.settings.volume
-        : DEFAULT_SETTINGS.volume;
-    const masterOn = v.masterOn !== false;
-    const musicOn  = v.musicOn  !== false;
-    const vol = masterOn && musicOn ? (v.master / 100) * (v.music / 100) * 0.4 : 0;
+    const vol = AudioManager._musicVol() * 0.4;
     _introThemeAudio.volume = Math.max(0, Math.min(1, vol));
     _introThemeAudio.play().catch(() => {});
 }
@@ -37,6 +32,10 @@ export const AudioManager = {
     _sfxPools: {},
     _sfxPoolSize: 4,
     _sfxLastPlayed: {},
+    _vol: {
+        master: 80, music: 70, sfx: 80,
+        masterOn: true, musicOn: true, sfxOn: true
+    },
 
     init() {
         Object.entries(AUDIO_FILES).forEach(([key, src]) => {
@@ -54,15 +53,37 @@ export const AudioManager = {
         this._ready = true;
     },
 
+    // 從 settings 物件載入音量（loadSettings 呼叫）
+    loadVolume(volumeSettings) {
+        if (!volumeSettings) return;
+        this._vol = Object.assign({}, this._vol, volumeSettings);
+        this.refreshMusicVolume();
+    },
+
+    // 設定單一音量 key（UI 滑桿呼叫）
+    setVolume(key, value) {
+        this._vol[key] = value;
+        // 同步更新 gameState.settings.volume（保持相容）
+        if (gameState.settings && gameState.settings.volume) {
+            gameState.settings.volume[key] = value;
+        }
+        this.refreshMusicVolume();
+    },
+
+    // 取得序列化音量（saveSettings 呼叫）
+    serializeVolume() {
+        return Object.assign({}, this._vol);
+    },
+
     _sfxVol() {
-        const v = gameState.settings.volume;
-        if (!v.masterOn || !v.sfxOn) return 0;
+        const v = this._vol;
+        if (!v || !v.masterOn || !v.sfxOn) return 0;
         return (v.master / 100) * (v.sfx / 100);
     },
 
     _musicVol() {
-        const v = gameState.settings.volume;
-        if (!v.masterOn || !v.musicOn) return 0;
+        const v = this._vol;
+        if (!v || !v.masterOn || !v.musicOn) return 0;
         return (v.master / 100) * (v.music / 100);
     },
 

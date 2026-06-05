@@ -12,10 +12,10 @@
 
 ```
 所在 Stage   : Stage 3 — 架構重構（Phase 1 進行中）
-目前批次     : TODO-06 全部完成（Step A + Step B）
+目前批次     : TODO-04 AudioManager 統一完成
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-05
-最後操作者   : Codex（TODO-06 Step B Batch 3 / Final）
+最後操作者   : Codex（TODO-04 AudioManager 統一）
 ```
 
 ---
@@ -55,7 +55,7 @@
 ### Stage 3 — 架構重構
 - [x] Phase 1：TODO-06 Step A localStorage key 定義與 helper 建立
 - [x] Phase 1：TODO-06 Step B 逐檔替換直接 localStorage 呼叫
-- [ ] Phase 1：TODO-04 AudioManager 統一
+- [x] Phase 1：TODO-04 AudioManager 統一
 - [ ] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
 - [ ] Phase 2：TODO-03 變異技能面板統一
 - [ ] Phase 3：TODO-02 結算畫面統一
@@ -71,6 +71,17 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 3 TODO-04 AudioManager 統一完成）
+- 狀態：Stage 3 Phase 1 TODO-04 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/audio.js` 新增 AudioManager 內部 `_vol` 狀態，統一管理 master/music/sfx 音量與開關
+  - 新增 `loadVolume()`、`setVolume()`、`serializeVolume()`，由 AudioManager 掌握音量狀態並同步 `gameState.settings.volume`
+  - `_sfxVol()`、`_musicVol()` 與 `playIntroTheme()` 改由 AudioManager 內部音量計算
+  - `systems/ui.js` 的 load/save/toggle/slider/reset 音量流程改用 AudioManager API
+- 發現問題：無
+- 下一步：Stage 3 Phase 2 TODO-01 buildSkillTreeOverlay 拆模組
 
 ### 2026-06-05（Stage 3 TODO-06 Step B Batch 3 / Final 完成）
 - 狀態：Stage 3 Phase 1 TODO-06 全部完成
