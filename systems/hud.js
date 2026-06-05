@@ -1329,6 +1329,30 @@ function drawGame() {
 
     // 15. 上方血條UI（精英/Boss/巨人化/Alpha）
     drawTopBarUI();
+
+    // FPS 顯示（只在 devMode 開啟時顯示）
+    if (gameState.devMode) {
+        const now = performance.now();
+        if (!drawGame._fpsLastTime) {
+            drawGame._fpsLastTime = now;
+            drawGame._fpsCount = 0;
+            drawGame._fpsDisplay = 0;
+        }
+        drawGame._fpsCount++;
+        if (now - drawGame._fpsLastTime >= 500) {
+            drawGame._fpsDisplay = Math.round(
+                drawGame._fpsCount / ((now - drawGame._fpsLastTime) / 1000)
+            );
+            drawGame._fpsCount = 0;
+            drawGame._fpsLastTime = now;
+        }
+        ctx.save();
+        ctx.font = 'bold 14px Arial';
+        ctx.fillStyle = drawGame._fpsDisplay >= 50 ? '#00FF00'
+                      : drawGame._fpsDisplay >= 30 ? '#FFAA00' : '#FF4444';
+        ctx.fillText('FPS: ' + drawGame._fpsDisplay, 10, VIEW_H - 10);
+        ctx.restore();
+    }
 }
 
 function _heartPath(ctx, x, y, size) {
