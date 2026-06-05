@@ -74,6 +74,7 @@ LANG['en'] = {
         cameraSmart:     'Smart',
         cameraManual:    'Manual',
         patchNotes:       '📋 Patch Notes',
+        discordBtn:       '💬 Discord Community',
         patchNotesTitle:  '📋 Version Update Notes',
         patchAdded:       '✅ Added',
         patchFixed:       '🔧 Fixed',

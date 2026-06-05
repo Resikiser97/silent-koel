@@ -76,6 +76,7 @@ LANG['zh-TW'] = {
         cameraSmart:     '智能',
         cameraManual:    '手動',
         patchNotes:       '📋 更新日誌',
+        discordBtn:       '💬 Discord 社群',
         patchNotesTitle:  '📋 版本更新公告',
         patchAdded:       '✅ 新增',
         patchFixed:       '🔧 修復',

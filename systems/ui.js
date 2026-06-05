@@ -2093,8 +2093,43 @@ function showStartScreen() {
         patchBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
     };
     patchBtn.onclick = () => { hideChat(); showPatchNotes(); };
+
+    // ── Discord 按鈕（在更新日誌按鈕下方）
+    const discordBtn = document.createElement('div');
+    discordBtn.id = 'discord-btn';
+    discordBtn.style.cssText = `
+        position: absolute;
+        top: 172px;
+        left: 20px;
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 220, 130, 0.12);
+        border: 2px solid rgba(255, 220, 130, 0.45);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: all;
+        transition: all 0.2s ease;
+        z-index: 201;
+    `;
+    discordBtn.innerHTML = '<div style="font-size:28px;line-height:1;">💬</div><div style="font-size:9px;color:#FFF5DC;letter-spacing:0.5px;margin-top:2px;text-align:center;line-height:1.4;">' + t('discordBtn').replace('💬 ', '').replace(' ', '<br>') + '</div>';
+    discordBtn.onmouseenter = () => {
+        discordBtn.style.background = 'rgba(255, 220, 130, 0.28)';
+        discordBtn.style.transform = 'scale(1.08)';
+        discordBtn.style.borderColor = 'rgba(255, 220, 130, 0.8)';
+    };
+    discordBtn.onmouseleave = () => {
+        discordBtn.style.background = 'rgba(255, 220, 130, 0.12)';
+        discordBtn.style.transform = 'scale(1)';
+        discordBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
+    };
+    discordBtn.onclick = () => { window.open('https://discord.gg/BCAJMQrGeN', '_blank'); };
     overlay.appendChild(bookBtn);
     overlay.appendChild(patchBtn);
+    overlay.appendChild(discordBtn);
 
     // ── 首頁公告標籤（右上角旋轉印章）
     if (!document.getElementById('_badge-style')) {
