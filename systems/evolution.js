@@ -1006,3 +1006,11 @@ function _upgradeMutationSkill(skillId) {
     skill.level++;
     if (typeof _saveMutationSkills === 'function') _saveMutationSkills();
 }
+
+// 監聽變異資料修復事件，重建技能樹 overlay
+document.addEventListener('mutationRepaired', () => {
+    // 只在技能樹 overlay 存在時重建
+    if (document.getElementById('skill-tree-overlay')) {
+        buildSkillTreeOverlay(null, false, false, 'postGame');
+    }
+});

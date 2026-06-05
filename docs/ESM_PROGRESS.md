@@ -12,10 +12,10 @@
 
 ```
 所在 Stage   : Stage 3 — 架構重構（Phase 2 進行中）
-目前批次     : TODO-01 buildSkillTreeOverlay 拆模組完成
+目前批次     : TODO-03 變異技能面板統一完成
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-05
-最後操作者   : Codex（TODO-01 buildSkillTreeOverlay 拆模組）
+最後操作者   : Codex（TODO-03 打破 mutation/evolution 循環依賴）
 ```
 
 ---
@@ -57,7 +57,7 @@
 - [x] Phase 1：TODO-06 Step B 逐檔替換直接 localStorage 呼叫
 - [x] Phase 1：TODO-04 AudioManager 統一
 - [x] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
-- [ ] Phase 2：TODO-03 變異技能面板統一
+- [x] Phase 2：TODO-03 變異技能面板統一
 - [ ] Phase 3：TODO-02 結算畫面統一
 - [ ] Phase 3：TODO-05 設定面板 fromHome 移除
 - [ ] Phase 3：TODO-07 gameState 存取控制
@@ -71,6 +71,16 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 3 TODO-03 打破 mutation/evolution 循環依賴完成）
+- 狀態：Stage 3 Phase 2 TODO-03 完成
+- 操作者：Codex
+- 完成項目：
+  - 打破 `mutation.js` ↔ `evolution.js` 循環依賴
+  - `mutation.js` 改用 `CustomEvent` 通知，不再直接 import `evolution.js`
+  - `evolution.js` 監聽 `mutationRepaired` 事件，在技能樹 overlay 存在時重建 UI
+- 發現問題：無
+- 下一步：Phase 3 TODO-02
 
 ### 2026-06-05（Stage 3 TODO-01 buildSkillTreeOverlay 拆模組完成）
 - 狀態：Stage 3 Phase 2 TODO-01 完成

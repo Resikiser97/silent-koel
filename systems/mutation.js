@@ -10,7 +10,6 @@
 import { gameState } from './gameState.js';
 import { showFloatingText } from './combat.js';
 import { t } from '../lang.js';
-import { buildSkillTreeOverlay } from './evolution.js';
 import {
     STORAGE_KEYS,
     storageGet,
@@ -513,9 +512,10 @@ export function _checkAndRepairMutationSkills() {
         if (typeof showFloatingText === 'function' && gameState.player) {
             showFloatingText(gameState.player.x, gameState.player.y - 60, '⚠️ 變異技能點已修復', '#FFD700', 16);
         }
+        // 通知外部技能樹 overlay 需要重建（不直接依賴 evolution.js）
         const overlay = document.getElementById('skill-tree-overlay');
-        if (overlay && typeof buildSkillTreeOverlay === 'function') {
-            buildSkillTreeOverlay(null, false, false, 'postGame');
+        if (overlay) {
+            document.dispatchEvent(new CustomEvent('mutationRepaired'));
         }
     }, 1000);
 }
