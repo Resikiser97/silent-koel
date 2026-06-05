@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 3 — 架構重構（Phase 1 進行中）
-目前批次     : TODO-04 AudioManager 統一完成
+所在 Stage   : Stage 3 — 架構重構（Phase 2 進行中）
+目前批次     : TODO-01 buildSkillTreeOverlay 拆模組完成
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-05
-最後操作者   : Codex（TODO-04 AudioManager 統一）
+最後操作者   : Codex（TODO-01 buildSkillTreeOverlay 拆模組）
 ```
 
 ---
@@ -56,7 +56,7 @@
 - [x] Phase 1：TODO-06 Step A localStorage key 定義與 helper 建立
 - [x] Phase 1：TODO-06 Step B 逐檔替換直接 localStorage 呼叫
 - [x] Phase 1：TODO-04 AudioManager 統一
-- [ ] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
+- [x] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
 - [ ] Phase 2：TODO-03 變異技能面板統一
 - [ ] Phase 3：TODO-02 結算畫面統一
 - [ ] Phase 3：TODO-05 設定面板 fromHome 移除
@@ -71,6 +71,18 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 3 TODO-01 buildSkillTreeOverlay 拆模組完成）
+- 狀態：Stage 3 Phase 2 TODO-01 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/evolution.js` 將 `buildSkillTreeOverlay()` 拆成 coordinator 與 4 個 private sub-functions
+  - 新增 `_resolveSkillTreeState()` 處理模式判定、狀態同步、storage reload 與 `applyDeviceMode()`
+  - 新增 `_createSkillTreeShell()` 建立 overlay 外殼、標題列、切換按鈕與主內容容器
+  - 新增 `_buildOrganInheritanceSections()` 建立 postGame 本局器官保留區
+  - 新增 `_buildSkillTreeMainContent()` 保留技能點、技能卡、lastRun 繼承/顯示、底部按鈕與變異面板切換流程
+- 發現問題：無
+- 下一步：Stage 3 Phase 2 TODO-03 變異技能面板統一
 
 ### 2026-06-05（Stage 3 TODO-04 AudioManager 統一完成）
 - 狀態：Stage 3 Phase 1 TODO-04 完成

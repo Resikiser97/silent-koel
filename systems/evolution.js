@@ -303,6 +303,19 @@ export function showSkillTree(cause) {
 }
 
 export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
+    const state = _resolveSkillTreeState(cause, fromHome, startAfter, mode);
+    if (!state) return;
+    const shell = _createSkillTreeShell(state.effectiveMode, state.fromHome, state.cause);
+    _buildOrganInheritanceSections(state.effectiveMode, shell.overlay);
+    _buildSkillTreeMainContent(state.effectiveMode, shell.overlay, shell.titleEl, shell.switchBtn);
+    if (state.fromHome || state.startAfter) {
+        document.getElementById('game-container').appendChild(shell.overlay);
+    } else {
+        document.getElementById('ui-overlay').appendChild(shell.overlay);
+    }
+}
+
+function _resolveSkillTreeState(cause, fromHome, startAfter, mode) {
     // B8 防呆：玩家或技能資料尚未初始化時直接返回
     if (!gameState.player || !gameState.playerSkills) return;
     if (typeof _syncMutationSkillPoints === 'function') _syncMutationSkillPoints();
@@ -340,6 +353,15 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             } catch(e) {}
         }
     }
+    return {
+        cause,
+        effectiveMode,
+        fromHome: effectiveMode === 'fromHome',
+        startAfter: effectiveMode === 'forceStart',
+    };
+}
+
+function _createSkillTreeShell(effectiveMode, fromHome, cause) {
     const existing = document.getElementById('skill-tree-overlay');
     if (existing) existing.remove();
     const overlay = document.createElement('div');
@@ -365,7 +387,12 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
 
     const skillContent = document.createElement('div');
     skillContent.style.cssText = 'display:flex;flex-direction:column;align-items:center;width:100%;';
+    overlay._skillContent = skillContent;
+    return { overlay, titleEl, switchBtn, skillContent };
+}
 
+function _buildOrganInheritanceSections(effectiveMode, overlay) {
+    const skillContent = overlay._skillContent;
     const organsToKeep = gameState.playerSkills.organMemory || 0;
     // 過濾掉 noInherit: true 的器官（如毒囊），不顯示在繼承選擇列表中
     const playerOrgans = gameState.player.organs.filter(o => {
@@ -495,7 +522,10 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         hiddenSection.appendChild(hiddenGrid);
         skillContent.appendChild(hiddenSection);
     }
+}
 
+function _buildSkillTreeMainContent(effectiveMode, overlay, titleEl, switchBtn) {
+    const skillContent = overlay._skillContent;
     const ptsRow = document.createElement('div');
     ptsRow.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:14px;';
     const pts = document.createElement('div');
@@ -787,7 +817,6 @@ export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         }
     };
 
-    (effectiveMode === 'fromHome' || effectiveMode === 'forceStart' ? document.getElementById('game-container') : document.getElementById('ui-overlay')).appendChild(overlay);
 }
 
 export function upgradeSkill(id) {
