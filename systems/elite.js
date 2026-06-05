@@ -16,6 +16,14 @@ import { applyDamageToPlayer, showFloatingText } from './combat.js';
 import { _effSpeed } from './creatures.js';
 import { drawArrow, drawGlowEffect, drawHealthBar, drawNameTag } from './utils.js';
 import { t } from '../lang.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
 const _HUNTER_ELITE_META = {
     specterDog:   { label: '幽靈犬',   color: '#3949AB', glowColor: '#5C6BC0', ring: 'pulse'  },
@@ -179,7 +187,7 @@ export function spawnEliteCreature(nightNum) {
 export function _handleHunterEliteKill(elite) {
     const rewards = _HUNTER_ELITE_REWARDS[elite.starTier] || _HUNTER_ELITE_REWARDS[1];
     gameState.skillPoints += rewards.skillPts;
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + rewards.mutPts;
     if (elite.starTier === 3 && Math.random() < 0.1) {
         const extra = 1 + Math.floor(Math.random() * 3);

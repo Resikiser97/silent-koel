@@ -11,6 +11,14 @@ import { gameState } from './gameState.js';
 import { showFloatingText } from './combat.js';
 import { t } from '../lang.js';
 import { buildSkillTreeOverlay } from './evolution.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
 export const DEFAULT_MUTATION_DATA = {
     levels: { fang: 0, tail: 0, wing: 0, eye: 0 },
@@ -39,9 +47,9 @@ export const MUTATION_COMPENSATION_CONFIG = {
 
 export function initMutationData() {
     try {
-        const raw = localStorage.getItem('mutationData');
+        const raw = storageGetJSON(STORAGE_KEYS.MUTATION_DATA);
         if (raw) {
-            gameState.mutationData = JSON.parse(raw);
+            gameState.mutationData = raw;
             // 確保所有欄位都存在（舊存檔相容）
             gameState.mutationData = Object.assign({}, DEFAULT_MUTATION_DATA, gameState.mutationData);
             // 確保 levels 子欄位完整
@@ -66,7 +74,7 @@ export function initMutationData() {
 
 export function saveMutationData() {
     try {
-        localStorage.setItem('mutationData', JSON.stringify(gameState.mutationData));
+        storageSetJSON(STORAGE_KEYS.MUTATION_DATA, gameState.mutationData);
     } catch(e) {
         console.error('[Mutation] Failed to save mutation data:', e);
     }
@@ -208,8 +216,8 @@ export function checkMutationCompensation() {
             : 0;
         const skillPts = Math.floor(totalSkillPts * config.skillPointsRate);
         if (skillPts > 0) {
-            const current = parseInt(localStorage.getItem('skillPoints')) || 0;
-            localStorage.setItem('skillPoints', String(current + skillPts));
+            const current = parseInt(storageGet(STORAGE_KEYS.SKILL_POINTS)) || 0;
+            storageSet(STORAGE_KEYS.SKILL_POINTS, String(current + skillPts));
             data.skillPointsCompensated = (data.skillPointsCompensated || 0) + skillPts;
         }
     }
@@ -375,7 +383,7 @@ export function showMutationPanel() {
             gameState.skillPoints -= 100;
             gameState.mutationData.points += 10;
             gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + 10;
-            localStorage.setItem('skillPoints', String(gameState.skillPoints));
+            storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
             saveMutationData();
             overlay.remove();
             gameState.mutationPanelOpen = false;
@@ -417,9 +425,8 @@ export const DEFAULT_MUTATION_SKILLS = {
 
 export function initMutationSkills() {
     try {
-        const raw = localStorage.getItem('mutationSkills');
-        if (raw) {
-            const saved = JSON.parse(raw);
+        const saved = storageGetJSON(STORAGE_KEYS.MUTATION_SKILLS);
+        if (saved) {
             if (saved.version !== DEFAULT_MUTATION_SKILLS.version) {
                 gameState.mutationSkills = JSON.parse(JSON.stringify(DEFAULT_MUTATION_SKILLS));
             } else {
@@ -446,7 +453,7 @@ export function initMutationSkills() {
 export function _saveMutationSkills() {
     try {
         const toSave = Object.assign({}, gameState.mutationSkills, { _points: gameState.mutationSkillPoints });
-        localStorage.setItem('mutationSkills', JSON.stringify(toSave));
+        storageSetJSON(STORAGE_KEYS.MUTATION_SKILLS, toSave);
     } catch(e) {}
 }
 

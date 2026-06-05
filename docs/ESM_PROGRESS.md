@@ -12,10 +12,10 @@
 
 ```
 所在 Stage   : Stage 3 — 架構重構（Phase 1 進行中）
-目前批次     : TODO-06 Step B Batch 1 完成
+目前批次     : TODO-06 Step B Batch 2 完成
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-05
-最後操作者   : Codex（TODO-06 Step B Batch 1）
+最後操作者   : Codex（TODO-06 Step B Batch 2）
 ```
 
 ---
@@ -71,6 +71,17 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 3 TODO-06 Step B Batch 2 完成）
+- 狀態：Stage 3 Phase 1 TODO-06 Step B Batch 2 完成
+- 操作者：Codex
+- 完成項目：
+  - `main.js` 改用 `storage/index.js` helper 存取 localStorage
+  - `systems/mutation.js` 改用 `storage/index.js` helper 存取 `mutationData` / `mutationSkills` / `skillPoints`
+  - `systems/organs.js` 改用 `storage/index.js` helper 存取 `tutorialCompleted` / `tutorialCombatDone` / `skillPoints`
+  - `systems/elite.js` 改用 `storage/index.js` helper 存取 `skillPoints`
+- 發現問題：無
+- 下一步：TODO-06 Step B 下一批，繼續逐檔替換直接 localStorage 呼叫
 
 ### 2026-06-05（Stage 3 TODO-06 Step B Batch 1 完成）
 - 狀態：Stage 3 Phase 1 TODO-06 Step B Batch 1 完成

@@ -48,6 +48,14 @@ import {
 } from './systems/ui.js';
 import { showTutorial } from './systems/tutorial.js';
 import { disconnectChat, hideChat } from './systems/chat.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from './storage/index.js';
 
 const FIXED_FPS = 60;
 const FIXED_DELTA = 1000 / FIXED_FPS;
@@ -207,7 +215,7 @@ export function initializeGame() {
     if (typeof resetTreeProductionTimer === 'function') resetTreeProductionTimer();
     if (typeof resetFogFrameCount === 'function') resetFogFrameCount();
     gameState.floatTexts = [];
-    localStorage.setItem('hasPlayedBefore', 'true');
+    storageSet(STORAGE_KEYS.HAS_PLAYED_BEFORE, 'true');
 
     // 清除首頁公告標籤
     const _badge = document.getElementById('announce-badge');
@@ -290,7 +298,7 @@ export function initializeGame() {
 
     // B1: 再來一局保留難度 — 若 currentMap 為 null（頁面重整後），從 localStorage 恢復
     if (!gameState.currentMap) {
-        const savedDiff = localStorage.getItem('lastDifficulty') || 'easy';
+        const savedDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
         gameState.lastDifficulty = savedDiff;
         gameState.currentMap = (savedDiff === 'normal' && typeof NORMAL_MAP !== 'undefined')
             ? NORMAL_MAP
@@ -428,11 +436,16 @@ export function initializeGame() {
     canvas.addEventListener('mouseleave', hideTooltip);
 
     // 存檔版本檢查：版本不一致時清除所有存檔
-    const SAVE_KEYS = ['playerSkills', 'skillPoints', 'savedOrgans', 'savedHiddenOrgans'];
-    const storedSaveVer = localStorage.getItem('saveVersion');
+    const SAVE_KEYS = [
+        STORAGE_KEYS.PLAYER_SKILLS,
+        STORAGE_KEYS.SKILL_POINTS,
+        STORAGE_KEYS.SAVED_ORGANS,
+        STORAGE_KEYS.SAVED_HIDDEN_ORGANS
+    ];
+    const storedSaveVer = storageGet(STORAGE_KEYS.SAVE_VERSION);
     if (storedSaveVer !== GAME_INFO.SAVE_VERSION) {
-        SAVE_KEYS.forEach(k => localStorage.removeItem(k));
-        localStorage.setItem('saveVersion', GAME_INFO.SAVE_VERSION);
+        SAVE_KEYS.forEach(k => storageRemove(k));
+        storageSet(STORAGE_KEYS.SAVE_VERSION, GAME_INFO.SAVE_VERSION);
         console.log('--- 存檔版本不一致，已清除所有存檔（' + storedSaveVer + ' → ' + GAME_INFO.SAVE_VERSION + '）---');
     }
 
@@ -441,9 +454,9 @@ export function initializeGame() {
 
     // 8. 載入技能與進化資料並套用起始加成
     try {
-        const savedSkills = localStorage.getItem('playerSkills');
-        if (savedSkills) gameState.playerSkills = JSON.parse(savedSkills);
-        const savedPoints = localStorage.getItem('skillPoints');
+        const savedSkills = storageGetJSON(STORAGE_KEYS.PLAYER_SKILLS);
+        if (savedSkills) gameState.playerSkills = savedSkills;
+        const savedPoints = storageGet(STORAGE_KEYS.SKILL_POINTS);
         if (savedPoints) gameState.skillPoints = Math.max(0, parseInt(savedPoints, 10) || 0);
     } catch(e) {}
 
@@ -472,7 +485,7 @@ export function initializeGame() {
     requestAnimationFrame(gameLoop);
 
     // 12. 新手教學：首次遊玩自動觸發
-    if (!localStorage.getItem('tutorialCompleted')) {
+    if (!storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED)) {
         showTutorial();
     }
 }
@@ -501,7 +514,7 @@ window.onload = () => {
         initializeGame();
         return;
     }
-    if (!localStorage.getItem('hasPlayedBefore')) {
+    if (!storageGet(STORAGE_KEYS.HAS_PLAYED_BEFORE)) {
         showSplashScreen();
         setTimeout(() => showGuideStory(), 300);
     } else {

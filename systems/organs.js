@@ -21,6 +21,14 @@ import { resumePlayTimer, pausePlayTimer } from '../main.js';
 import { _handleHunterEliteKill } from './elite.js';
 import { getGameFont } from './utils.js';
 import { showTooltip, hideTooltip } from './ui.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
 // 器官點擊區域（由 drawOrganUI 寫入，由 ui.js 讀取）
 export let _organHitRegions = [];
@@ -153,7 +161,7 @@ export function showOrganSelection() {
         return;
     }
     // 戰鬥教學：第一教學完成、戰鬥教學尚未完成 → 鎖定只能選攻擊器官
-    if (localStorage.getItem('tutorialCompleted') && !localStorage.getItem('tutorialCombatDone')) {
+    if (storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED) && !storageGet(STORAGE_KEYS.TUTORIAL_COMBAT_DONE)) {
         gameState.tutorialOrganPhase = true;
     }
     const p = gameState.player;
@@ -548,7 +556,7 @@ export function handleEliteKill(elite) {
     gameState.skillPoints += eliteSkillPts;
     if (!gameState.sessionSkillPoints) gameState.sessionSkillPoints = { elite: 0, boss: 0 };
     gameState.sessionSkillPoints.elite += eliteSkillPts;
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
     gameState.timeRemaining = nextDayTime;
     updateDayNightCycle();
