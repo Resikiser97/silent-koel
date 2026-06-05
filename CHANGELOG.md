@@ -1,6 +1,19 @@
-## v0.1.4.2
+## v0.1.4.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.4.3 - 2026-06-05
+
+### 效能
+- `showXPPopup` 改為呼叫 Canvas `showFloatingText`，移除 DOM XP popup pool
+  - 完全移除 `_XP_POOL_SIZE`、`_xpPopupPool`、`_xpPoolReady`、`_initXpPool()`
+  - `showXPPopup` 直接呼叫 `showFloatingText`，吃果子浮字納入 Canvas 批次繪製
+  - 移除 `main.js` 中的 `_initXpPool()` 呼叫
+- AudioManager 音效節流：一般音效 100ms，hurt/attack/playerAttack 150ms
+  - 新增 `_sfxLastPlayed` 快取記錄上次播放時間
+  - `play()` 開頭加入節流判斷，避免多隻生物同幀同時播放音效造成手機音訊壓力
 
 ---
 

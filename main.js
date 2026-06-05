@@ -242,7 +242,6 @@ function initializeGame() {
     }
     if (typeof initEliteOrder === 'function') initEliteOrder();
 
-    if (typeof _initXpPool === 'function') _initXpPool();
     gameState.spawnProtectUntil    = 0;
     if (typeof resetPackNames === 'function') resetPackNames();
     _usedHyenaPackNames = [];

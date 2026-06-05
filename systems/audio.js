@@ -34,6 +34,7 @@ const AudioManager = {
     _ready: false,
     _sfxPools: {},
     _sfxPoolSize: 4,
+    _sfxLastPlayed: {},
 
     init() {
         Object.entries(AUDIO_FILES).forEach(([key, src]) => {
@@ -84,6 +85,14 @@ const AudioManager = {
         if (!this._ready) return;
         const vol = this._sfxVol();
         if (vol <= 0) return;
+
+        // 音效節流：同音效 100ms 內只播一次；hurt/attack 類 150ms
+        const now = Date.now();
+        const throttleMs = (key === 'hurt' || key === 'attack' || key === 'playerAttack')
+            ? 150 : 100;
+        if (this._sfxLastPlayed[key] && now - this._sfxLastPlayed[key] < throttleMs) return;
+        this._sfxLastPlayed[key] = now;
+
         const audio = this._getPooledAudio(key);
         if (!audio) return;
         audio.volume = vol;
