@@ -68,6 +68,14 @@ let _minimapFadeTimer       = 0;
 let _minimapStopTimer       = 0;
 let _fogFrameCount          = 0;
 
+// ── UI dirty check 快取（每局開始由 resetUICache() 重置）
+let _uiCache = {
+    xp: null, xpMax: null, xpBarW: null,
+    biome: null, time: null, playtime: null,
+    mutLv: null, mutDot: null,
+    hp: null, maxHp: null
+};
+
 // =============================================================
 // 小地圖系統
 // =============================================================
@@ -1435,27 +1443,57 @@ export function updateUI() {
     const barPct      = Math.min(1, p.levelXP / lvThreshold);
 
     const xpText = document.getElementById('tl-xp-text');
-    if (xpText) xpText.textContent = 'Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold;
+    if (xpText) {
+        const newXpStr = 'Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold;
+        if (newXpStr !== _uiCache.xp) {
+            xpText.textContent = newXpStr;
+            _uiCache.xp = newXpStr;
+        }
+    }
 
     const xpBar = document.getElementById('tl-xp-bar');
-    if (xpBar) xpBar.style.width = Math.round(barPct * 100) + '%';
+    if (xpBar) {
+        const newXpBarW = Math.round(barPct * 100) + '%';
+        if (newXpBarW !== _uiCache.xpBarW) {
+            xpBar.style.width = newXpBarW;
+            _uiCache.xpBarW = newXpBarW;
+        }
+    }
 
-    _drawHpHearts(document.getElementById('hp-hearts-canvas'));
+    const hpCanvas = document.getElementById('hp-hearts-canvas');
+    if (hpCanvas && (gameState.player.hp !== _uiCache.hp || gameState.player.maxHp !== _uiCache.maxHp)) {
+        _drawHpHearts(hpCanvas);
+        _uiCache.hp = gameState.player.hp;
+        _uiCache.maxHp = gameState.player.maxHp;
+    }
 
     const mmBiomeEl = document.getElementById('minimap-biome');
     const mmTimeEl  = document.getElementById('minimap-time');
     if (mmBiomeEl) {
         const biomeIcons = { forest: t('biomeForest'), ocean: t('biomeOcean'), desert: t('biomeDesert') };
-        mmBiomeEl.innerText = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
+        const newBiome = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
+        if (newBiome !== _uiCache.biome) {
+            mmBiomeEl.innerText = newBiome;
+            _uiCache.biome = newBiome;
+        }
     }
-    if (mmTimeEl) mmTimeEl.innerText = gameState.stats.timeStatus;
+    if (mmTimeEl) {
+        if (gameState.stats.timeStatus !== _uiCache.time) {
+            mmTimeEl.innerText = gameState.stats.timeStatus;
+            _uiCache.time = gameState.stats.timeStatus;
+        }
+    }
     const mmPlaytimeEl = document.getElementById('minimap-playtime');
     if (mmPlaytimeEl) {
         const rpt = (gameState.realPlayTime || 0) +
             (gameState._playTimerStart ? Date.now() - gameState._playTimerStart : 0);
         const rpm = String(Math.floor(rpt / 60000)).padStart(2, '0');
         const rps = String(Math.floor((rpt % 60000) / 1000)).padStart(2, '0');
-        mmPlaytimeEl.innerText = '⏱ ' + rpm + ':' + rps;
+        const newPlaytime = '⏱ ' + rpm + ':' + rps;
+        if (newPlaytime !== _uiCache.playtime) {
+            mmPlaytimeEl.innerText = newPlaytime;
+            _uiCache.playtime = newPlaytime;
+        }
     }
 
     if (gameState.devMode) {
@@ -1471,19 +1509,23 @@ export function updateUI() {
         if (mutLvEl) {
             const totalLv = (mutData.levels.fang || 0) + (mutData.levels.tail || 0) +
                             (mutData.levels.wing || 0) + (mutData.levels.eye  || 0);
-            mutLvEl.textContent = t('mutationOrgLabel', { lv: totalLv });
+            const newMutLv = t('mutationOrgLabel', { lv: totalLv });
+            if (newMutLv !== _uiCache.mutLv) {
+                mutLvEl.textContent = newMutLv;
+                _uiCache.mutLv = newMutLv;
+            }
         }
         const mutDotEl = document.getElementById('mutation-red-dot');
         if (mutDotEl) {
-            mutDotEl.style.display = mutData.hasNewPoints ? 'inline-block' : 'none';
-        }
-        // 可升級時脈動動畫
-        const mutRowEl = document.getElementById('mutation-icon-row');
-        if (mutRowEl) {
-            if (mutData.hasNewPoints) {
-                mutRowEl.classList.add('mutation-pulse');
-            } else {
-                mutRowEl.classList.remove('mutation-pulse');
+            const newMutDot = mutData.hasNewPoints ? 'inline-block' : 'none';
+            if (newMutDot !== _uiCache.mutDot) {
+                mutDotEl.style.display = newMutDot;
+                _uiCache.mutDot = newMutDot;
+                const mutRowEl = document.getElementById('mutation-icon-row');
+                if (mutRowEl) {
+                    if (mutData.hasNewPoints) mutRowEl.classList.add('mutation-pulse');
+                    else mutRowEl.classList.remove('mutation-pulse');
+                }
             }
         }
     }
