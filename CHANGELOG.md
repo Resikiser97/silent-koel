@@ -1,6 +1,17 @@
-## v0.1.4.1
+## v0.1.4.2
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.4.2 - 2026-06-05
+
+### 效能
+- `showFloatingText` 從 DOM pool 改為 Canvas 批次繪製
+  - 完全移除 `_FLOAT_POOL_SIZE`、`_floatPool`、`_floatPoolReady`、`_initFloatPool()`、`resetFloatPool()` 及 `.float-text-animate` CSS
+  - `gameState.floatTexts` 陣列統一收集浮字，`drawGame()` 末段一次批次繪製，無多層 text-shadow
+  - 手機上限 12 個，桌機 20 個；100ms 內同位置同顏色數字自動合併
+  - 字大又粗模式：+8px + 簡單黑色描邊一次（取代 4 層 CSS shadow）
 
 ---
 

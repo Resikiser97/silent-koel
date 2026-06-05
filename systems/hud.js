@@ -1330,6 +1330,55 @@ function drawGame() {
     // 15. 上方血條UI（精英/Boss/巨人化/Alpha）
     drawTopBarUI();
 
+    // 浮動文字批次繪製
+    if (gameState.floatTexts && gameState.floatTexts.length > 0) {
+        const now = Date.now();
+        const boldLarge = gameState.settings && gameState.settings.fontBoldLarge;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // 反向遍歷方便 splice 移除
+        for (let i = gameState.floatTexts.length - 1; i >= 0; i--) {
+            const ft = gameState.floatTexts[i];
+            const age = now - ft.startTime;
+            if (age >= ft.duration) {
+                gameState.floatTexts.splice(i, 1);
+                continue;
+            }
+
+            const t = age / ft.duration;          // 0~1
+            const alpha = 1 - t;                  // 淡出
+            const offsetY = t * 30;               // 上移 30px
+
+            // 畫面座標（用當下最新的世界座標重新轉換，讓文字跟著視野移動）
+            const s = worldToScreen(ft.wx, ft.wy);
+            const drawX = (s.x) | 0;
+            const drawY = (s.y - offsetY) | 0;
+
+            const fz = boldLarge ? (ft.fontSize + 8) : ft.fontSize;
+            ctx.font = boldLarge
+                ? 'bold ' + fz + 'px Arial'
+                : fz + 'px Arial';
+
+            ctx.globalAlpha = alpha;
+
+            if (boldLarge) {
+                // 字大又粗：簡單黑色描邊一次
+                ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+                ctx.lineWidth = 2;
+                ctx.lineJoin = 'round';
+                ctx.strokeText(ft.text, drawX, drawY);
+            }
+
+            ctx.fillStyle = ft.color;
+            ctx.fillText(ft.text, drawX, drawY);
+        }
+
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+
     // FPS 顯示（只在 devMode 開啟時顯示）
     if (gameState.devMode) {
         const now = performance.now();

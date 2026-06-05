@@ -149,7 +149,7 @@ function initializeGame() {
     if (typeof resetPerceptionCache === 'function') resetPerceptionCache();
     if (typeof resetTreeProductionTimer === 'function') resetTreeProductionTimer();
     if (typeof resetFogFrameCount === 'function') resetFogFrameCount();
-    if (typeof resetFloatPool === 'function') resetFloatPool();
+    gameState.floatTexts = [];
     localStorage.setItem('hasPlayedBefore', 'true');
 
     // 清除首頁公告標籤

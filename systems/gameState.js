@@ -136,6 +136,7 @@ const gameState = {
     spawnProtectUntil: 0,       // 出生保護：此時間戳前不補充生成肉食怪
     dashEffect: null,           // 閃現特效狀態（{ ax,ay,bx,by,startTime,duration }）
     projectiles:  [],           // 子彈陣列（阿奇爾射水）
+    floatTexts:   [],           // Canvas 批次浮動文字陣列
     mouseWorld:   { x: 0, y: 0 }, // 滑鼠世界座標（保留相容性，勿刪）
     mouseScreen:  { sx: 0, sy: 0 }, // 滑鼠 canvas 螢幕座標（攻擊方向計算用，不受玩家移動影響）
     cameraZoom: 1.0,           // 手機視野縮放（體型增加時自動縮小；桌機固定1.0）
