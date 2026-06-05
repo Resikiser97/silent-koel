@@ -17,7 +17,7 @@ import { handleKeyDown, handleKeyUp, _updateMouseWorld } from './systems/input.j
 import { initAudio, stopIntroTheme, AudioManager } from './systems/audio.js';
 import { _joyPaused } from './systems/mobile.js';
 import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from './systems/spawning.js';
-import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir, _initXpPool } from './systems/player.js';
+import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir } from './systems/player.js';
 import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack } from './systems/combat.js';
 import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion } from './systems/organs.js';
 import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans } from './systems/evolution.js';
@@ -299,7 +299,6 @@ export function initializeGame() {
     }
     if (typeof initEliteOrder === 'function') initEliteOrder();
 
-    if (typeof _initXpPool === 'function') _initXpPool();
     gameState.spawnProtectUntil    = 0;
     if (typeof resetPackNames === 'function') resetPackNames();
     resetHyenaPackNames();
