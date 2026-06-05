@@ -28,7 +28,7 @@ function isGamePaused() {
            gameState.tutorialOpen;
 }
 
-function updateGameLogic() {
+function _runGameLogic() {
     updateTimer();
     updateDayNightCycle();
     updateCreatureSpawning();
@@ -59,6 +59,67 @@ function updateGameLogic() {
     }
 }
 
+function updateGameLogic() {
+    if (!gameState.devMode) {
+        _runGameLogic();
+        return;
+    }
+
+    const t0 = performance.now();
+    // --- playerMovement ---
+    updateTimer();
+    updateDayNightCycle();
+    updateCreatureSpawning();
+    updatePlayerMovement();
+    updateCamera();
+    _updateCameraZoom();
+    const t1 = performance.now();
+    // --- fruitCollision ---
+    checkFruitCollision();
+    const t2 = performance.now();
+    // --- treeProduction ---
+    updateTreeFruitProduction(FIXED_DELTA);
+    const t3 = performance.now();
+    // --- neutralCreatures ---
+    updateNeutralCreatures();
+    const t4 = performance.now();
+    // --- hostileCreatures ---
+    updateHostileCreatures();
+    const t5 = performance.now();
+    // --- statusEffects + combat ---
+    if (gameState.boss && gameState.boss.hp > 0) updateBoss();
+    if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) updateEliteCreature();
+    updatePassiveOrgans();
+    updateStatusEffects();
+    checkTreasureCollision();
+    updateCorpseEating();
+    updateBoneEating();
+    updateProjectiles();
+    updateMinimapFog();
+    const t6 = performance.now();
+    // --- other ---
+    if (gameState.settings.autoAttack &&
+        !_joyPaused() &&
+        (gameState.player.isRanged ||
+         gameState.player.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack'))) {
+        playerAttack();
+    }
+    const t7 = performance.now();
+
+    const total = t7 - t0;
+    if (total > 8) {
+        console.log('[PERF] updateGameLogic ' + total.toFixed(1) + 'ms', {
+            player:   (t1-t0).toFixed(1),
+            fruit:    (t2-t1).toFixed(1),
+            tree:     (t3-t2).toFixed(1),
+            neutral:  (t4-t3).toFixed(1),
+            hostile:  (t5-t4).toFixed(1),
+            combat:   (t6-t5).toFixed(1),
+            other:    (t7-t6).toFixed(1),
+        });
+    }
+}
+
 function gameLoop(timestamp) {
     if (!lastTimestamp) lastTimestamp = timestamp;
     const elapsed = Math.min(timestamp - lastTimestamp, 100); // 最大100ms防止跳幀
@@ -77,8 +138,25 @@ function gameLoop(timestamp) {
         accumulator -= FIXED_DELTA;
     }
 
-    drawGame();
-    updateUI();
+    if (gameState.devMode) {
+        const td0 = performance.now();
+        drawGame();
+        const td1 = performance.now();
+        const drawMs = td1 - td0;
+        if (drawMs > 8) {
+            console.log('[PERF] drawGame ' + drawMs.toFixed(1) + 'ms');
+        }
+        const tu0 = performance.now();
+        updateUI();
+        const tu1 = performance.now();
+        const uiMs = tu1 - tu0;
+        if (uiMs > 4) {
+            console.log('[PERF] updateUI ' + uiMs.toFixed(1) + 'ms');
+        }
+    } else {
+        drawGame();
+        updateUI();
+    }
     requestAnimationFrame(gameLoop);
 }
 
