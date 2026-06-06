@@ -63,6 +63,8 @@ let _minimapFogCtx         = null;
 let _minimapFogImageData   = null;
 let _minimapFogRenderCanvas = null;
 let _minimapFogRenderCtx    = null;
+let _fogCache               = null;
+let _fogFrameCounter        = 0;
 let _fogCloudCanvas         = null;
 let _minimapAlpha           = 1.0;
 let _minimapFadeTimer       = 0;
@@ -454,39 +456,52 @@ function _drawMinimapFog(mctx) {
         _minimapFogRenderCanvas.width  = RC;
         _minimapFogRenderCanvas.height = RC;
         _minimapFogRenderCtx           = _minimapFogRenderCanvas.getContext('2d');
+        _fogCache = null;
+    }
+    if (!_fogCache || _fogCache.width !== mm || _fogCache.height !== mm) {
+        _fogCache        = document.createElement('canvas');
+        _fogCache.width  = mm;
+        _fogCache.height = mm;
     }
     if (!_fogCloudCanvas) _fogCloudCanvas = _buildFogCloudTexture();
 
-    // 寫入硬邊迷霧像素（白天白色 / 夜晚黑色）
-    const d      = _minimapFogImageData.data;
-    const fogMap = gameState.fogMap;
-    const v      = gameState.isNight ? 0 : 255;
-    for (let gy = 0; gy < 400; gy++) {
-        const row = fogMap[gy];
-        for (let gx = 0; gx < 400; gx++) {
-            const i = (gy * 400 + gx) * 4;
-            if (row[gx]) { d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255; }
-            else          { d[i + 3] = 0; }
+    _fogFrameCounter++;
+    if (_fogFrameCounter % 3 === 0 || !_fogCache._ready) {
+        // 寫入硬邊迷霧像素（白天白色 / 夜晚黑色）
+        const d      = _minimapFogImageData.data;
+        const fogMap = gameState.fogMap;
+        const v      = gameState.isNight ? 0 : 255;
+        for (let gy = 0; gy < 400; gy++) {
+            const row = fogMap[gy];
+            for (let gx = 0; gx < 400; gx++) {
+                const i = (gy * 400 + gx) * 4;
+                if (row[gx]) { d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255; }
+                else          { d[i + 3] = 0; }
+            }
         }
+        _minimapFogCtx.putImageData(_minimapFogImageData, 0, 0);
+
+        // 渲染到 330×330 暫存畫布，使 blur kernel 在可視邊緣（距邊 15px）有足夠霧像素可採樣
+        const rc = _minimapFogRenderCtx;
+        rc.clearRect(0, 0, RC, RC);
+        rc.filter = 'blur(8px)';
+        rc.drawImage(_minimapFogCanvas, 0, 0, 400, 400, 0, 0, RC, RC);
+        rc.filter = 'none';
+
+        // 白天：用 source-atop 把雲霧材質貼在迷霧形狀內
+        if (!gameState.isNight) {
+            rc.globalCompositeOperation = 'source-atop';
+            rc.drawImage(_fogCloudCanvas, 0, 0, 300, 300, 0, 0, RC, RC);
+            rc.globalCompositeOperation = 'source-over';
+        }
+
+        const fc = _fogCache.getContext('2d');
+        fc.clearRect(0, 0, mm, mm);
+        fc.drawImage(_minimapFogRenderCanvas, MARGIN, MARGIN, mm, mm, 0, 0, mm, mm);
+        _fogCache._ready = true;
     }
-    _minimapFogCtx.putImageData(_minimapFogImageData, 0, 0);
 
-    // 渲染到 330×330 暫存畫布，使 blur kernel 在可視邊緣（距邊 15px）有足夠霧像素可採樣
-    const rc = _minimapFogRenderCtx;
-    rc.clearRect(0, 0, RC, RC);
-    rc.filter = 'blur(8px)';
-    rc.drawImage(_minimapFogCanvas, 0, 0, 400, 400, 0, 0, RC, RC);
-    rc.filter = 'none';
-
-    // 白天：用 source-atop 把雲霧材質貼在迷霧形狀內
-    if (!gameState.isNight) {
-        rc.globalCompositeOperation = 'source-atop';
-        rc.drawImage(_fogCloudCanvas, 0, 0, 300, 300, 0, 0, RC, RC);
-        rc.globalCompositeOperation = 'source-over';
-    }
-
-    // 只取中央 mm×mm，兩側各 15px 的邊緣失真區不顯示
-    mctx.drawImage(_minimapFogRenderCanvas, MARGIN, MARGIN, mm, mm, 0, 0, mm, mm);
+    mctx.drawImage(_fogCache, 0, 0);
 }
 
 function _buildMinimapTerrainCanvas() {
@@ -953,7 +968,6 @@ export function drawGame() {
             ctx.restore();
             // 名稱標籤
             ctx.save();
-            ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
             ctx.fillStyle   = '#FFFFFF';
             ctx.font        = getGameFont(12, false);
             ctx.textAlign   = 'center';
@@ -1736,6 +1750,8 @@ function resetPerceptionCache() {
 
 function resetFogFrameCount() {
     _fogFrameCount = 0;
+    _fogFrameCounter = 0;
+    _fogCache = null;
 }
 
 
