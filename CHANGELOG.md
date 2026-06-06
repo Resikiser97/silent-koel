@@ -1,6 +1,15 @@
-## v0.1.7.0
+## v0.1.7.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.7.1 - 2026-06-07
+
+### 修復
+- boss.js `_screenPos is not defined`：
+  `_drawHunterAimingWarning()` 改用 `worldToScreen()` 取得螢幕座標
+  （與 elite.js 同類問題，ESM 遷移遺漏）
 
 ---
 

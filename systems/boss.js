@@ -536,12 +536,14 @@ function _drawSharkChargeArrow(boss) {
     if (!isWarning && !isCharging) return;
 
     const { angle, dist, fromX, fromY } = boss._chargeArrow;
-    const fromSx = worldToScreen(fromX, fromY).x;
-    const fromSy = _screenPos.y;
+    const fromS  = worldToScreen(fromX, fromY);
+    const fromSx = fromS.x;
+    const fromSy = fromS.y;
     const toWorldX  = fromX + Math.cos(angle) * dist;
     const toWorldY  = fromY + Math.sin(angle) * dist;
-    const toSx = worldToScreen(toWorldX, toWorldY).x;
-    const toSy = _screenPos.y;
+    const toS  = worldToScreen(toWorldX, toWorldY);
+    const toSx = toS.x;
+    const toSy = toS.y;
     const screenLen = Math.sqrt((toSx - fromSx) ** 2 + (toSy - fromSy) ** 2);
     if (screenLen < 1) return;
 
@@ -662,10 +664,12 @@ export function _drawSandStormOverlay() {
 // ── 黑色獵人瞄準警告（cull 前呼叫，Boss 在螢幕外時玩家也能看到鎖定提示）
 function _drawHunterAimingWarning(boss) {
     if (!boss._aimTarget) return;
-    const bsx = worldToScreen(boss.x, boss.y).x;
-    const bsy = _screenPos.y;
-    const tsx = worldToScreen(boss._aimTarget.x, boss._aimTarget.y).x;
-    const tsy = _screenPos.y;
+    const bs  = worldToScreen(boss.x, boss.y);
+    const bsx = bs.x;
+    const bsy = bs.y;
+    const ts  = worldToScreen(boss._aimTarget.x, boss._aimTarget.y);
+    const tsx = ts.x;
+    const tsy = ts.y;
     // 紅色虛線：Boss → 目標（Boss off-screen 時線從螢幕邊緣射向玩家）
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 50, 50, 0.75)';
