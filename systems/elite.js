@@ -34,10 +34,7 @@ const _HUNTER_ELITE_META = {
     venomFalcon:  { label: '毒霧隼',   color: '#1B5E20', glowColor: '#66BB6A', ring: 'fog'    },
 };
 
-const _HUNTER_ELITE_STAR = {
-    specterDog: '★', shadowDog: '★★', venomDog: '★★★',
-    specterFalcon: '★', shadowFalcon: '★★', venomFalcon: '★★★',
-};
+const _HUNTER_ELITE_STARS = ['★', '★★', '★★★'];
 
 const _HUNTER_ELITE_REWARDS = {
     1: { xp: 200, skillPts: 2, mutPts: 1 },
@@ -46,25 +43,39 @@ const _HUNTER_ELITE_REWARDS = {
 };
 
 export function initEliteOrder() {
-    const map = gameState.currentMap;
-    if (!map) return;
-    const useHard = !!(map.features && map.features.hardElites);
-    if (!useHard) {
-        const pool = ['specterDog', 'shadowDog', 'venomDog'];
-        for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-        gameState.eliteOrder = pool;
-    } else {
-        const tiers = ['specter', 'shadow', 'venom'];
-        for (let i = tiers.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [tiers[i], tiers[j]] = [tiers[j], tiers[i]];
-        }
-        gameState.eliteOrder = tiers.map(tier =>
-            tier + (Math.random() < 0.5 ? 'Falcon' : 'Dog')
+    const seed = gameState.mapSeed || Math.random() * 65536;
+
+    // Seeded shuffle for type order [specter, shadow, venom]
+    const types = ['specter', 'shadow', 'venom'];
+    let s = seed;
+    function seededRand() {
+        s = (s * 9301 + 49297) % 233280;
+        return s / 233280;
+    }
+    for (let i = types.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRand() * (i + 1));
+        [types[i], types[j]] = [types[j], types[i]];
+    }
+
+    // Determine falcon or dog for hard difficulty
+    const isHard = gameState.currentMap &&
+                   gameState.currentMap.features &&
+                   gameState.currentMap.features.hardElites;
+
+    let usesFalcon = false;
+    if (isHard) {
+        usesFalcon = seededRand() < 0.5;
+    }
+
+    // Build elite order: [night1type, night2type, night3type]
+    // Night number determines star level, type order from seed
+    if (isHard) {
+        gameState.eliteOrder = types.map(type =>
+            type + (usesFalcon ? 'Falcon' : 'Dog')
         );
+    } else {
+        // Easy/Normal: always dog
+        gameState.eliteOrder = types.map(type => type + 'Dog');
     }
 }
 
@@ -77,7 +88,7 @@ function _spawnHunterElite(nightNum, eliteType) {
     const map  = gameState.currentMap;
     const tier = map.elites[nightNum - 1];
     const meta = _HUNTER_ELITE_META[eliteType];
-    const star = _HUNTER_ELITE_STAR[eliteType];
+    const star = _HUNTER_ELITE_STARS[nightNum - 1] || _HUNTER_ELITE_STARS[0];
     const isHardMap = !!(map.features && map.features.hardElites);
 
     // 困難地圖：固定數值；Easy/Normal 地圖：依地圖 elites 倍率動態計算
@@ -107,7 +118,9 @@ function _spawnHunterElite(nightNum, eliteType) {
         hp, maxHp: hp,
         speed,
         damage,
-        aggroRange: 1000,
+        aggroRange: eliteType === 'specterFalcon' ? 1400 :
+                    eliteType === 'shadowFalcon'  ? 900  :
+                    eliteType === 'venomFalcon'   ? 1050 : 1000,
         attackRange: cfg.type === 'ranged' ? (cfg.range || 900) : 28,
         attackCooldown: 0,
         state: 'patrolling',
@@ -277,6 +290,29 @@ export function updateEliteCreature() {
     // 死亡判斷（HP 被外部傷害清零後由 handleEliteKill 處理，此處僅保險）
     if (elite.isHunterElite) {
         _updateEliteVenomPuddle(elite);
+        // venomFalcon puddle 傷害 tick + 過期清理（獨立路徑，不依賴 boss.js desert 區塊）
+        if (gameState.venomPuddles) {
+            for (let i = gameState.venomPuddles.length - 1; i >= 0; i--) {
+                const puddle = gameState.venomPuddles[i];
+                if (puddle.owner !== 'venomFalcon') continue;
+                if (now >= puddle.startTime + puddle.duration) {
+                    gameState.venomPuddles.splice(i, 1);
+                    if (elite._venomPuddleCount > 0) elite._venomPuddleCount--;
+                    continue;
+                }
+                if (now - puddle.lastTick >= 1000) {
+                    puddle.lastTick = now;
+                    const dist2 = Math.sqrt(
+                        Math.pow(p.x - puddle.x, 2) +
+                        Math.pow(p.y - puddle.y, 2)
+                    );
+                    if (dist2 < puddle.radius + (p.radius || 10)) {
+                        applyDamageToPlayer(puddle.dmgPerSec || 8, null);
+                        showFloatingText(p.x, p.y - 20, '-' + (puddle.dmgPerSec || 8), '#50C878');
+                    }
+                }
+            }
+        }
     }
 
     const { dx, dy } = wrappedDelta(elite.x, elite.y, p.x, p.y);
@@ -367,17 +403,18 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
     }
 
     // ── 隼族（遠程）
-    if (dist < elite.attackRange) {
+    // 已在蓄力中（_aimTarget 存在）時允許跨越 attackRange 完成射擊，避免 falcon 凍結
+    if (dist < elite.attackRange || elite._aimTarget) {
         if (now - elite.attackCooldown >= cfg.attackCooldown) {
             if (elite.eliteType === 'specterFalcon') {
-                // 蓄力 0.3 秒
-                if (!elite._aimTarget) {
+                // 蓄力 0.3 秒（只在射程內才開始新的瞄準）
+                if (!elite._aimTarget && dist < elite.attackRange) {
                     elite._aimTarget = { x: p.x, y: p.y };
                     elite._aimUntil  = now + (cfg.aimDuration || 300);
                     AudioManager.play('specterFalconAim');
                 }
-                if (now >= elite._aimUntil) {
-                    _fireEliteFalconProjectile(elite, p, 1, cfg.maxRange || 1000, cfg.bulletSpeed || 14);
+                if (elite._aimTarget && now >= elite._aimUntil) {
+                    _fireEliteFalconProjectile(elite, p, 1, elite.attackRange * 2, cfg.bulletSpeed || 14);
                     AudioManager.play('specterFalconFire');
                     elite._aimTarget = null;
                 }

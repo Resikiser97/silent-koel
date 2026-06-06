@@ -763,7 +763,7 @@ function drawTopBarUI() {
         displayName = target.name || 'Boss';
         barColor    = '#CC2200';
     } else if (target === gameState.eliteCreature) {
-        displayName = '★★ 精英 ' + (target.name || '');
+        displayName = gameState.eliteCreature.label || target.label || displayName;
         barColor    = '#AA22CC';
     } else if (target.isAlpha) {
         displayName = _getCreatureDisplayName(target) + '（Alpha）';

@@ -352,6 +352,7 @@ export function initializeGame() {
             : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         console.log('[v0.47.0 B1] currentMap restored:', gameState.currentMap ? gameState.currentMap.name : 'null');
     }
+    gameState.mapSeed = Math.random() * 65536;
     if (typeof initEliteOrder === 'function') initEliteOrder();
 
     gameState.spawnProtectUntil    = 0;
@@ -370,8 +371,7 @@ export function initializeGame() {
     console.log("--- 遊戲初始化開始 ---");
     console.log('[v0.47.0] B1+B8+二+三+四+五+六+七+八+九+十+十一+十二 全部套用');
 
-    // 1. 設定地圖種子並生成 Noise 地形
-    gameState.mapSeed = Math.random() * 65536;
+    // 1. 使用已設定的地圖種子生成 Noise 地形
     generateTerrain();
 
     // 1b. 初始化迷霧地圖（400×400，全部遮蓋）

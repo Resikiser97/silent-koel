@@ -4,6 +4,22 @@
 
 ---
 
+## v0.1.7.2 - 2026-06-07
+
+### 修復
+- 毒霧隼攻擊 3 次後卡死：puddle 過期時遞減 `_venomPuddleCount`，elite.js 加入獨立 puddle 傷害 tick + 過期清理，不再依賴 boss.js desert 路徑
+- 幽靈隼不攻擊：aggroRange 擴大（specterFalcon 1400 / shadowFalcon 900 / venomFalcon 1050），提供追擊緩衝區
+- 幽靈隼蓄力中玩家跑出射程後 falcon 凍結：蓄力進行中（`_aimTarget` 存在）允許跨越 attackRange 完成射擊；子彈 maxRange 改為 `attackRange × 2`
+- 黑色獵人 Phase 1/3 蓄力後不開槍：`aiming` state 加入 chasing/strafing 條件，確保後續幀繼續執行蓄力完成邏輯
+- 黑色獵人不攻擊：Phase 1 triggerRange 1500→1800，Phase 2 攻擊觸發距離 800→1000
+
+### 重構（Codex）
+- elite.js `initEliteOrder()`：改用 mapSeed 決定性亂序，三隼/三犬同局統一（不再每夜隨機）
+- boss.js 黑色獵人血條：顯示當前 HP 數字 + 下一管預覽色彩
+- hud.js 精英怪上方血條名稱：改用 `elite.label` 顯示正確名稱
+
+---
+
 ## v0.1.7.1 - 2026-06-07
 
 ### 修復

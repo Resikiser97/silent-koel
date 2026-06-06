@@ -768,28 +768,60 @@ export function drawBoss() {
     ctx.fillStyle = '#550000';
     ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
     if (boss.biome === 'hunter') {
-        // Hunter 5管：顏色依剩餘管數
-        const bars = boss.barsRemaining || 1;
-        const barColors = { 5: '#4FC3F7', 4: '#1976D2', 3: '#FF9800', 2: '#E64A19', 1: '#FF1744' };
-        let barColor = barColors[bars] || '#FF4400';
-        if (bars === 1) {
-            const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
-            ctx.globalAlpha = pulse;
-        }
-        ctx.fillStyle = barColor;
-        ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
-        ctx.globalAlpha = 1;
-        // 管數標記（最後一管不顯示）
-        if (bars > 1) {
+        const barColors = {
+            5: '#4FC3F7',
+            4: '#1976D2',
+            3: '#FF9800',
+            2: '#E64A19',
+            1: '#FF1744'
+        };
+        const remaining = boss.barsRemaining || 1;
+        const currentColor = barColors[remaining] || '#FF1744';
+        const nextBarColors = {
+            5: '#1976D2',
+            4: '#FF9800',
+            3: '#E64A19',
+            2: '#FF1744',
+            1: null
+        };
+        const nextColor = nextBarColors[remaining];
+        const hpRatio = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
+
+        ctx.fillStyle = '#222';
+        ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
+        if (remaining === 1) {
             ctx.save();
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 9px Arial';
-            ctx.textAlign = 'left';
-            ctx.shadowColor = '#000';
-            ctx.shadowBlur  = 3;
-            ctx.fillText('x' + bars, bBarX - 22, bBarY + 6);
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#FF1744';
+            ctx.globalAlpha = 0.85;
+            ctx.fillStyle = currentColor;
+            ctx.fillRect(bBarX, bBarY, bBarW * hpRatio, bBarH);
             ctx.restore();
+        } else {
+            ctx.globalAlpha = 0.85;
+            ctx.fillStyle = currentColor;
+            ctx.fillRect(bBarX, bBarY, bBarW * hpRatio, bBarH);
+            ctx.globalAlpha = 1;
         }
+        if (nextColor) {
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle = nextColor;
+            ctx.fillRect(bBarX + bBarW * hpRatio, bBarY, bBarW * (1 - hpRatio), bBarH);
+            ctx.globalAlpha = 1;
+        }
+        ctx.save();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 8px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 3;
+        ctx.fillText(Math.ceil(boss.hp) + ' / ' + (boss.maxHp || 1), bBarX + bBarW / 2, bBarY + bBarH / 2);
+        if (remaining > 1) {
+            ctx.textAlign = 'left';
+            ctx.fillText('x' + remaining, bBarX + bBarW + 4, bBarY + bBarH / 2);
+        }
+        ctx.restore();
     } else {
         ctx.fillStyle = '#FF4400';
         ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
@@ -1066,10 +1098,10 @@ function _updateHunterBoss(boss, p, now) {
 
     // 形態 1：Sniper — 維持 1200~1500px，繞圈移動
     if (boss._phase === 1) {
-        const triggerRange = 1500;
+        const triggerRange = 1800;
         // 不覆蓋戰鬥中間狀態（aiming 蓄力中）
         if (boss.state !== 'aiming' && dist < boss.aggroRange) boss.state = 'chasing';
-        if (boss.state === 'chasing' || boss.state === 'strafing') {
+        if (boss.state === 'chasing' || boss.state === 'strafing' || boss.state === 'aiming') {
             // 蓄力瞄準
             if (dist < triggerRange && now - boss.attackCooldown > cfg.phase1AttackInterval) {
                 if (!boss._aimTarget) {
@@ -1107,7 +1139,7 @@ function _updateHunterBoss(boss, p, now) {
         // 不覆蓋戰鬥中間狀態（pumping 泵管中）
         if (boss.state !== 'pumping' && dist < boss.aggroRange) boss.state = 'chasing';
         if (boss.state === 'chasing') {
-            if (dist < 800 && now - boss.attackCooldown > cfg.phase2AttackInterval) {
+            if (dist < 1000 && now - boss.attackCooldown > cfg.phase2AttackInterval) {
                 boss._pumpUntil = now + cfg.phase2PumpDuration;
                 boss.state = 'pumping';
                 AudioManager.play('hunterShotgunPump');
@@ -1134,7 +1166,7 @@ function _updateHunterBoss(boss, p, now) {
     if (boss._phase === 3) {
         // 不覆蓋戰鬥中間狀態（aiming 蓄力中）
         if (boss.state !== 'aiming' && dist < boss.aggroRange) boss.state = 'chasing';
-        if (boss.state === 'chasing' || boss.state === 'strafing') {
+        if (boss.state === 'chasing' || boss.state === 'strafing' || boss.state === 'aiming') {
             if (dist < 1500 && now - boss.attackCooldown > cfg.phase3AttackInterval) {
                 if (!boss._aimTarget) {
                     boss._aimTarget = { x: p.x, y: p.y };
