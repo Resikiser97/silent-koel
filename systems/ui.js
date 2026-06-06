@@ -797,7 +797,7 @@ export function showSettings() {
     // ─── 底部按鈕 ───
     const saveBtn = document.createElement('button');
     saveBtn.style.cssText = 'width:100%;margin-top:14px;padding:10px;cursor:pointer;border:1px solid #4a8a4a;background:#2a5a2a;color:white;border-radius:4px;font-size:15px;';
-    saveBtn.textContent = fromHome ? t('close') : t('saveAndBack');
+    saveBtn.textContent = t('saveAndBack');
     saveBtn.onclick = () => { saveSettings(); hideSettings(); };
     panel.appendChild(saveBtn);
 
