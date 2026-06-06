@@ -1,6 +1,20 @@
-## v0.1.5.0
+## v0.1.5.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.5.1 - 2026-06-06
+
+### 修復
+- **BUG-01**：阿奇爾角色音效誤植修復，4 個呼叫點加入角色判斷（`selectedCharacter === 'archerfish'`）
+  - `systems/combat.js`：受傷音效路由（`hurt` → `archerHurt`）
+  - `systems/combat.js`：攻擊/暴擊音效路由（`attackNormal/attackCrit` → `archerAttackNormal/archerAttackCrit`）
+  - `systems/player.js`：遠程攻擊音效路由（`attackNormal` → `archerAttackNormal`）
+  - `main.js`：滑鼠點擊攻擊音效路由（`attackNormal` → `archerAttackNormal`）
+- **TODO-UI-01**：精英怪公告文字手機版截斷修復（`systems/hud.js`）
+  - `VIEW_W < 700` 時字體從 36px 縮小為 22px
+  - `ctx.fillText` 加入 `maxWidth = VIEW_W * 0.9` 防止畫布邊緣截斷
 
 ---
 

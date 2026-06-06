@@ -453,7 +453,9 @@ export function initializeGame() {
                     hasCrit:      false,
                 });
                 p.attackVisual = Date.now();
-                AudioManager.play('attackNormal');
+                const normalKey = gameState.selectedCharacter === 'archerfish'
+                    ? 'archerAttackNormal' : 'attackNormal';
+                AudioManager.play(normalKey);
             }
         }
         p.chargeConsumed = 0;

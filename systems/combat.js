@@ -72,7 +72,9 @@ export function applyDamageToPlayer(rawDamage, attacker) {
     }
     const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
     gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
-    AudioManager.play('hurt');
+    const isArcher = gameState.selectedCharacter === 'archerfish';
+    const hurtKey = isArcher ? 'archerHurt' : 'hurt';
+    AudioManager.play(hurtKey);
     if (p.thornDamage > 0 && attacker && attacker.hp > 0) {
         const thornMult = p.comboShellArmor ? 2 : 1; // 龜殼+刺甲組合：反彈時傷害翻倍
         // 刺甲：反彈最大HP百分比的傷害
@@ -345,7 +347,12 @@ export function playerAttack() {
         }
     }
 
-    if (anyHit) AudioManager.play(anyCrit ? 'attackCrit' : 'attackNormal');
+    if (anyHit) {
+        const isArcher = gameState.selectedCharacter === 'archerfish';
+        const critKey   = isArcher ? 'archerAttackCrit'   : 'attackCrit';
+        const normalKey = isArcher ? 'archerAttackNormal' : 'attackNormal';
+        AudioManager.play(anyCrit ? critKey : normalKey);
+    }
     if (bossDied) handleBossKill(gameState.boss);
 }
 

@@ -263,7 +263,9 @@ export function _archerAttack() {
     });
 
     p.attackVisual = now;
-    AudioManager.play('attackNormal');
+    const isArcher  = gameState.selectedCharacter === 'archerfish';
+    const normalKey = isArcher ? 'archerAttackNormal' : 'attackNormal';
+    AudioManager.play(normalKey);
 }
 
 let _treeProductionTimer = 0;

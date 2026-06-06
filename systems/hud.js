@@ -1291,10 +1291,13 @@ export function drawGame() {
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.fillStyle = 'white';
-        ctx.font = getGameFont(36, true);
+        const isMobileView      = VIEW_W < 700;
+        const announceFontSize  = isMobileView ? 22 : 36;
+        const announceMaxWidth  = VIEW_W * 0.9;
+        ctx.font = getGameFont(announceFontSize, true);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(msg.text, VIEW_W / 2, VIEW_H / 2);
+        ctx.fillText(msg.text, VIEW_W / 2, VIEW_H / 2, announceMaxWidth);
         ctx.restore();
     }
 
