@@ -148,14 +148,26 @@ export const AudioManager = {
         newAudio.loop = true;
         newAudio.currentTime = 0;
         newAudio.volume = 0;
-        newAudio.play().catch(() => {});
         this._music = newAudio;
 
-        const target = this._musicVol();
+        if (this._musicVol() <= 0) return;
+
+        newAudio.play().catch(() => {});
+
         let fv = 0;
-        const step = Math.max(0.02, target / 10);
         const fadeIn = setInterval(() => {
-            fv = Math.min(target, fv + step);
+            const target = this._musicVol();
+
+            if (target <= 0) {
+                try {
+                    newAudio.volume = 0;
+                    newAudio.pause();
+                } catch(e) {}
+                clearInterval(fadeIn);
+                return;
+            }
+
+            fv = Math.min(target, fv + Math.max(0.02, target / 10));
             try { newAudio.volume = fv; } catch(e) {}
             if (fv >= target) clearInterval(fadeIn);
         }, 50);
@@ -184,8 +196,30 @@ export const AudioManager = {
     },
 
     refreshMusicVolume() {
-        if (this._music) { try { this._music.volume = this._musicVol(); } catch(e) {} }
-        if (_introThemeAudio) { try { _introThemeAudio.volume = 0.4 * this._musicVol(); } catch(e) {} }
+        const vol = this._musicVol();
+
+        if (this._music) {
+            try {
+                this._music.volume = vol;
+                if (vol <= 0 && !this._music.paused) {
+                    this._music.pause();
+                } else if (vol > 0 && this._music.paused && this._currentMusicKey) {
+                    this._music.play().catch(() => {});
+                }
+            } catch(e) {}
+        }
+
+        if (_introThemeAudio) {
+            try {
+                const introVol = 0.4 * vol;
+                _introThemeAudio.volume = introVol;
+                if (introVol <= 0 && !_introThemeAudio.paused) {
+                    _introThemeAudio.pause();
+                } else if (introVol > 0 && _introThemeAudio.paused) {
+                    _introThemeAudio.play().catch(() => {});
+                }
+            } catch(e) {}
+        }
     }
 };
 

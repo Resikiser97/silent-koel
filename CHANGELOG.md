@@ -4,6 +4,16 @@
 
 ---
 
+## v0.1.6.2 - 2026-06-07
+
+### 修復
+- iOS Safari 音樂開關修復（方案 1）：
+  `refreshMusicVolume()` 改用 pause/play 控制，不依賴 volume = 0
+  `playMusic()` fade-in 每 tick 重新讀取音量目標
+  音樂關閉狀態下 `playMusic()` 不呼叫 play()，等開啟時恢復
+
+---
+
 ## v0.1.6.1 - 2026-06-06
 
 ### 效能優化
