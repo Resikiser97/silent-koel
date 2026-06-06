@@ -3,7 +3,7 @@
 // ✦ 名稱與描述為中文預設；切換語言時由 lang.js applyLanguage() 覆寫
 // =============================================================
 
-const ORGANS = {
+export const ORGANS = {
     // ── 攻擊類
     crabClaw: {
         id: 'crabClaw', name: '蟹鉗', type: 'attack', maxLevel: 3,
@@ -195,7 +195,7 @@ const ORGANS = {
     }
 };
 
-const HIDDEN_ORGANS = {
+export const HIDDEN_ORGANS = {
     strongHeart: {
         id: 'strongHeart', name: '強大的心臟', type: 'hidden',
         desc: '移速+0.6，攻擊+5，HP上限+60，體型+20%',
@@ -218,7 +218,7 @@ const HIDDEN_ORGANS = {
     }
 };
 
-const COMBOS = [
+export const COMBOS = [
     { ids: ['poisonStinger', 'poisonSac'],             key: 'comboCrabPoison', desc: '毒傷翻倍（毒刺Lv3且擁有毒囊）' },
     { ids: ['crabClaw',      'boxingGloves'],          key: 'comboCrabGloves', desc: '流血傷害翻倍，命中敵人施加回復量-50%（蟹鉗+搏擊拳套各達Lv3）' },
     { ids: ['turtleShell',   'thornArmor'],            key: 'comboShellArmor', desc: '反彈時傷害翻倍（各達Lv3）' },

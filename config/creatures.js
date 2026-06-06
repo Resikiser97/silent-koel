@@ -3,7 +3,7 @@
 // ✦ 名稱與標籤為中文預設；切換語言時由 lang.js applyLanguage() 覆寫
 // =============================================================
 
-const CREATURE_CONFIG = {
+export const CREATURE_CONFIG = {
     hostile: {
         maxSpeed:  7.5,
         maxDamage: 20,
@@ -14,7 +14,7 @@ const CREATURE_CONFIG = {
     }
 };
 
-const ELITE_CONFIG = {
+export const ELITE_CONFIG = {
     base: { hp: 50, speed: 1.0, damage: 8, poisonResist: 0.2 },
     nights: [
         { hpMult: 5,   speed: 3.9, damage: 12, xp: 150, label: '★精英',   color: '#5B0EA6' },
@@ -27,7 +27,7 @@ const ELITE_CONFIG = {
 // 生態生物種類（v0.36.0）
 // 每個生態區各有一種草系（herbivore）和一種肉系（carnivore）
 // =============================================================
-const BIOME_CREATURES = {
+export const BIOME_CREATURES = {
     forest: {
         herbivore: { id: 'moose',  name: '🌿 駝鹿',     nameEn: '🌿 Moose'         },
         carnivore: { id: 'lynx',   name: '🌿 猞猁',     nameEn: '🌿 Lynx'          },
@@ -42,7 +42,7 @@ const BIOME_CREATURES = {
     },
 };
 
-const BOSS_CONFIG = {
+export const BOSS_CONFIG = {
     forest: {
         name: '🌿 黑熊',    label: '⚠️🌿黑熊',
         radius: 25, hp: 500,  speed: 3.0, damage: 15, aggroRange: 99999, attackRange: 30,

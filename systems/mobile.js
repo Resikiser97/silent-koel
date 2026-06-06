@@ -19,21 +19,30 @@
 //   - systems/player.js：playerDash()
 // =============================================================
 
+import { gameState } from './gameState.js';
+import { VIEW_W, VIEW_H, setViewSize } from './map.js';
+import { _organHitRegions } from './organs.js';
+import { playerDash } from './player.js';
+import { playerAttack } from './combat.js';
+import { showTooltip, hideTooltip } from './ui.js';
+import { AudioManager } from './audio.js';
+import { t } from '../lang.js';
+
 // =============================================================
 // 裝置偵測與方向控制
 // =============================================================
 
 let _orientationBarDismissed = false;
 
-function detectMobile() {
+export function detectMobile() {
     return ('ontouchstart' in window) || window.innerWidth <= 768;
 }
 
-function getOrientation() {
+export function getOrientation() {
     return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
 }
 
-function _effectiveMobile() {
+export function _effectiveMobile() {
     if (gameState.forceMode === 'mobile')  return true;
     if (gameState.forceMode === 'desktop') return false;
     return detectMobile();
@@ -41,14 +50,14 @@ function _effectiveMobile() {
 
 function _setViewSize(w, h) {
     if (VIEW_W === w && VIEW_H === h) return;
-    VIEW_W = w; VIEW_H = h;
+    setViewSize(w, h);
     const gc = document.getElementById('gameCanvas');
     const co = document.getElementById('game-container');
     if (gc) { gc.width = w; gc.height = h; }
     if (co) { co.style.width = w + 'px'; co.style.height = h + 'px'; }
 }
 
-const MOBILE_GAME_SCALE = 0.6;
+export const MOBILE_GAME_SCALE = 0.6;
 
 function _applyMobileScale() {
     const container = document.getElementById('game-container');
@@ -93,7 +102,7 @@ function _applyMobileScale() {
     container.style.transform       = 'scale(' + scale + ')';
 }
 
-function applyDeviceMode() {
+export function applyDeviceMode() {
     gameState.forceMode  = gameState.settings.deviceMode !== undefined ? gameState.settings.deviceMode : null;
     gameState.isMobile   = _effectiveMobile();
     gameState.orientation = getOrientation();
@@ -191,7 +200,7 @@ function _dashZone(x, y) {
         && y >= centerY - dashH / 2 && y <= centerY + dashH / 2;
 }
 
-function _renderMobileOverlay() {
+export function _renderMobileOverlay() {
     const jc = document.getElementById('joystick-canvas');
     if (!jc) return;
     const jctx = jc.getContext('2d');
@@ -344,14 +353,14 @@ function _renderMobileOverlay() {
 
 let _joyDocListeners = null;
 
-function _joyPaused() {
+export function _joyPaused() {
     return !gameState.gameStarted ||
            gameState.organSelectionActive || gameState.settingsOpen ||
            gameState.skillTreeOpen || gameState.gameOver || gameState.victory ||
            gameState.mutationPanelOpen;
 }
 
-function _attachJoystickListeners() {
+export function _attachJoystickListeners() {
     if (_joyDocListeners) return;
 
     const onStart = (e) => {
@@ -543,7 +552,7 @@ function _attachJoystickListeners() {
     _joyDocListeners = { onStart, onMove, onEnd, onCancel };
 }
 
-function _detachJoystickListeners() {
+export function _detachJoystickListeners() {
     if (!_joyDocListeners) return;
     const { onStart, onMove, onEnd, onCancel } = _joyDocListeners;
     document.removeEventListener('touchstart',  onStart,  { passive: false });
@@ -553,7 +562,7 @@ function _detachJoystickListeners() {
     _joyDocListeners = null;
 }
 
-function _updateJoystickCanvas() {
+export function _updateJoystickCanvas() {
     const jc = document.getElementById('joystick-canvas');
     if (!jc) return;
     if (gameState.isMobile) {

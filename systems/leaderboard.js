@@ -16,12 +16,36 @@
 // =============================================================
 
 // ── 排行榜難度狀態（模組級，跨面板同步）
-let _lbDifficulty   = 'easy'; // 全屏排行榜目前選擇的難度
-let _top10Difficulty = 'easy'; // TOP10 浮窗目前選擇的難度
-/** 難度 ID → 語言包 key，例如 'easy' → 'diffEasy' */
-function _diffKey(d) { return 'diff' + d.charAt(0).toUpperCase() + d.slice(1); }
+import { gameState } from './gameState.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import {
+    submitScore,
+    fetchVictoryRecords,
+    fetchDefeatRecords,
+    fetchTop10,
+    fetchFunSpeedVictory,
+    fetchFunSpeedDeath,
+    fetchFunGiantKills,
+    fetchFunKillerKills,
+    fetchFunKillerMaxLevel,
+    fetchFunBossKillSpeed,
+    fetchFunMaxLevel,
+    fetchFunHunterKill,
+    fetchFunFruitsEaten,
+    fetchFunNormalKills,
+    fetchAvailableDifficulties
+} from '../config/supabase.js';
+import { applyDeviceMode } from './mobile.js';
+import { showChat } from './chat.js';
+import { t } from '../lang.js';
+import { getRankIcon } from './utils.js';
 
-function showLeaderboard() {
+export let _lbDifficulty   = 'easy'; // 全屏排行榜目前選擇的難度
+export let _top10Difficulty = 'easy'; // TOP10 浮窗目前選擇的難度
+/** 難度 ID → 語言包 key，例如 'easy' → 'diffEasy' */
+export function _diffKey(d) { return 'diff' + d.charAt(0).toUpperCase() + d.slice(1); }
+
+export function showLeaderboard() {
     applyDeviceMode();
     let currentPage = 1;
     const PAGE_SIZE = 20;
@@ -224,7 +248,7 @@ function showLeaderboard() {
     });
 }
 
-function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
+export function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
     const popup = document.createElement('div');
     popup.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:150;color:white;font-family:Arial,sans-serif;';
 
@@ -515,7 +539,7 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
 // =============================================================
 // 趣味排行榜（九）
 // =============================================================
-function showFunLeaderboard(difficulty) {
+export function showFunLeaderboard(difficulty) {
     applyDeviceMode();
     difficulty = difficulty || 'easy';
     const overlay = document.createElement('div');

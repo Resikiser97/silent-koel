@@ -5,6 +5,26 @@
 // =============================================================
 
 // 靜音獵隊精英怪顯示資料（名稱/顏色/光環樣式）
+import { gameState, ctx } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H } from './map.js';
+import { worldToScreen, wrappedDelta } from './camera.js';
+import { ELITE_CONFIG } from '../config/creatures.js';
+import { HARD_ELITE_CONFIG } from '../config/gameConfig.js';
+import { AudioManager } from './audio.js';
+import { moveCreature } from './spawning.js';
+import { applyDamageToPlayer, showFloatingText } from './combat.js';
+import { _effSpeed } from './creatures.js';
+import { drawArrow, drawGlowEffect, drawHealthBar, drawNameTag } from './utils.js';
+import { t } from '../lang.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
+
 const _HUNTER_ELITE_META = {
     specterDog:   { label: '幽靈犬',   color: '#3949AB', glowColor: '#5C6BC0', ring: 'pulse'  },
     shadowDog:    { label: '暗影犬',   color: '#212121', glowColor: '#FF7043', ring: 'rotate' },
@@ -25,7 +45,7 @@ const _HUNTER_ELITE_REWARDS = {
     3: { xp: 500, skillPts: 4, mutPts: 3 },
 };
 
-function initEliteOrder() {
+export function initEliteOrder() {
     const map = gameState.currentMap;
     if (!map) return;
     const useHard = !!(map.features && map.features.hardElites);
@@ -122,7 +142,7 @@ function _spawnHunterElite(nightNum, eliteType) {
     AudioManager.play('dogAppearFanfare');
 }
 
-function spawnEliteCreature(nightNum) {
+export function spawnEliteCreature(nightNum) {
     const features = gameState.currentMap && gameState.currentMap.features;
 
     // 困難地圖：靜音獵隊（隼+犬）
@@ -164,10 +184,10 @@ function spawnEliteCreature(nightNum) {
 }
 
 // ── Hunter 精英怪死亡獎勵（不含 addXP，xp 由呼叫端決定時機）
-function _handleHunterEliteKill(elite) {
+export function _handleHunterEliteKill(elite) {
     const rewards = _HUNTER_ELITE_REWARDS[elite.starTier] || _HUNTER_ELITE_REWARDS[1];
     gameState.skillPoints += rewards.skillPts;
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + rewards.mutPts;
     if (elite.starTier === 3 && Math.random() < 0.1) {
         const extra = 1 + Math.floor(Math.random() * 3);
@@ -247,7 +267,7 @@ function _updateEliteVenomPuddle(elite) {
     elite._venomLandPos = null;
 }
 
-function updateEliteCreature() {
+export function updateEliteCreature() {
     const elite = gameState.eliteCreature;
     if (!elite || elite.hp <= 0) return;
     const now = Date.now();
@@ -381,7 +401,7 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
     }
 }
 
-function drawEliteCreature() {
+export function drawEliteCreature() {
     const elite = gameState.eliteCreature;
     if (!elite || elite.hp <= 0) return;
     const s = worldToScreen(elite.x, elite.y);
@@ -482,7 +502,7 @@ function _drawHunterElite(sx, sy, r, t2, elite) {
     }
 }
 
-function drawEliteArrow() {
+export function drawEliteArrow() {
     const elite = gameState.eliteCreature;
     if (!elite || elite.hp <= 0) return;
     const es = worldToScreen(elite.x, elite.y);

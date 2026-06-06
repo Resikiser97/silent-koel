@@ -1,12 +1,14 @@
 // =============================================================
 // 鏡頭系統 - wrappedDistance / wrappedDelta / worldToScreen / updateCamera
 // =============================================================
+import { gameState } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H } from './map.js';
 
 // 重用物件，避免每幀大量短命物件造成 GC pressure
 const _screenPos = { x: 0, y: 0 };
 const _delta = { dx: 0, dy: 0 };
 
-function wrappedDistance(x1, y1, x2, y2) {
+export function wrappedDistance(x1, y1, x2, y2) {
     let dx = Math.abs(x2 - x1);
     if (dx > MAP_WIDTH  / 2) dx = MAP_WIDTH  - dx;
     let dy = Math.abs(y2 - y1);
@@ -14,7 +16,7 @@ function wrappedDistance(x1, y1, x2, y2) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-function wrappedDelta(ax, ay, bx, by) {
+export function wrappedDelta(ax, ay, bx, by) {
     let dx = bx - ax;
     let dy = by - ay;
     if (dx >  MAP_WIDTH  / 2) dx -= MAP_WIDTH;
@@ -26,7 +28,7 @@ function wrappedDelta(ax, ay, bx, by) {
     return _delta;
 }
 
-function worldToScreen(wx, wy) {
+export function worldToScreen(wx, wy) {
     let sx = wx - gameState.camera.x;
     let sy = wy - gameState.camera.y;
     if (sx < -MAP_WIDTH  / 2) sx += MAP_WIDTH;
@@ -46,7 +48,7 @@ function worldToScreen(wx, wy) {
 }
 
 // 視野縮放：由 cameraZoomLevel 決定 baseZoom，智能模式隨體型縮小
-function _updateCameraZoom() {
+export function _updateCameraZoom() {
     const settings = gameState.settings;
 
     // 手機：10格=0.84，每格差 0.04（公式：0.48 + level * 0.04）
@@ -70,7 +72,7 @@ function _updateCameraZoom() {
     gameState.cameraZoom = Math.max(0.3, baseZoom - zoomReduction);
 }
 
-function updateCamera() {
+export function updateCamera() {
     const p = gameState.player;
     const cam = gameState.camera;
     // 永遠居中：閾值設為 50% → 等效鎖定中心；預設 30%

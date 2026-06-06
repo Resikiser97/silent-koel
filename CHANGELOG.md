@@ -1,6 +1,20 @@
-## v0.1.4.3
+## v0.1.5.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.5.0 - 2026-06-06
+
+### 架構
+- ESM 全模組化完成（Stage 0–3）：37 個 JS 檔案從全域 `<script src>` 改為 `import`/`export`
+- `index.html` 改為單一 `<script type="module" src="./main.js">` 入口
+- `storage/index.js`：集中所有 `localStorage` key 定義與讀寫 helper
+- `systems/audio.js`：AudioManager 統一音量狀態（`_vol`、`loadVolume`、`setVolume`、`serializeVolume`）
+- `systems/evolution.js`：`buildSkillTreeOverlay` 拆成 coordinator + 4 個 private sub-functions
+- `mutation.js` ↔ `evolution.js` 循環依賴改用 `CustomEvent` 解耦
+- `systems/ui.js`：`showSettings()` 移除 `fromHome` 參數，改用 DOM 自動偵測
+- 結算畫面統一：新增 `buildEndGameOverlay()` 共用勝利/死亡外殼
 
 ---
 

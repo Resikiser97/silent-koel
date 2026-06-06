@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 3 — 架構重構（待開始）
-目前批次     : Stage 2 全部完成（三批次人工測試通過）
-分支狀態     : esm-refactor（已建立）
-最後更新     : 2026-06-05
-最後操作者   : 你（Stage 2 人工測試完成）
+所在 Stage   : Stage 4 — Branch 對調（進行中）
+目前批次     : esm-refactor 正在 merge 進 master
+分支狀態     : master（merge 進行中）
+最後更新     : 2026-06-06
+最後操作者   : Claude Code（Stage 4 Branch 對調）
 ```
 
 ---
@@ -53,23 +53,150 @@
 - [x] S2C-4：commit 批次3
 
 ### Stage 3 — 架構重構
-- [ ] Phase 1：TODO-06 localStorage 統一
-- [ ] Phase 1：TODO-04 AudioManager 統一
-- [ ] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
-- [ ] Phase 2：TODO-03 變異技能面板統一
-- [ ] Phase 3：TODO-02 結算畫面統一
-- [ ] Phase 3：TODO-05 設定面板 fromHome 移除
-- [ ] Phase 3：TODO-07 gameState 存取控制
-- [ ] Phase 4：TODO-08/09/10 收尾清理
+- [x] Phase 1：TODO-06 Step A localStorage key 定義與 helper 建立
+- [x] Phase 1：TODO-06 Step B 逐檔替換直接 localStorage 呼叫
+- [x] Phase 1：TODO-04 AudioManager 統一
+- [x] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
+- [x] Phase 2：TODO-03 變異技能面板統一
+- [x] Phase 3：TODO-02 結算畫面統一
+- [x] Phase 3：TODO-05 設定面板 fromHome 移除
+- [x] Phase 3：TODO-07 gameState 存取控制（Stage 3 範圍：settings helper）
+- [x] Phase 4：TODO-08/09/10 收尾清理
 
 ### Stage 4 — Branch 對調
-- [ ] esm-refactor merge 進 master
+- [x] esm-refactor merge 進 master
 - [ ] master merge 進 stable
 - [ ] Vercel Production Branch 確認
 
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-06（Stage 4 完成）
+- 狀態：esm-refactor merge 進 master，Stage 4 完成
+- 操作者：Claude Code
+- 完成項目：merge 成功，版本 bump 至 v0.1.5.0，ESM 遷移全部完成
+- 發現問題：無
+- 下一步：Codex 靜態檢查，Vercel 確認部署
+
+### 2026-06-06（Stage 3 Phase 4 TODO-08/09/10 收尾清理完成）
+- 狀態：Stage 3 Phase 4 TODO-08/09/10 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/mutation.js` 移除 `_checkAndRepairMutationSkills()`、`initMutationSkills()` 呼叫點與 `window._checkAndRepairMutationSkills` 掛載
+  - `systems/evolution.js` 移除無 dispatch 來源的 `mutationRepaired` event listener
+  - `systems/evolution.js` 將 `_skillTreeMode` 改為模組私有狀態，並補上模組內部狀態註解
+  - TODO-09 已由 TODO-01 的 `buildSkillTreeOverlay()` coordinator 拆分自然完成
+- 發現問題：`systems/ui.js` 仍 import `_skillTreeFromHome`，因此本次依 TODO-10 安全規則保留 `_skillTreeFromHome` export，僅清理 `_skillTreeMode` export
+- 下一步：Stage 4 branch 對調準備
+
+### 2026-06-06（Stage 3 TODO-07 gameState 存取控制 Stage 3 範圍完成）
+- 狀態：Stage 3 Phase 3 TODO-07（settings helper）完成
+- 操作者：Codex
+- 完成項目：
+  - `storage/index.js` 新增 `getSettings()` 與 `saveSettingsToStorage(settings)`，集中 `gameSettings` 的 localStorage 讀寫入口
+  - `systems/ui.js` 的 `loadSettings()` / `saveSettings()` 改用 settings helper
+  - `systems/audio.js` 的 `AudioManager.playMusic()` 在音樂開始播放時自動儲存目前 settings，避免音量調整因重新整理遺失
+  - `docs/ESM_TODO.md` 記錄 TODO-07 Stage 3 完成範圍，並將 `mutationSkills` / `sessionStats` 存取控制列為 v0.2.x 待辦
+- 發現問題：無
+- 下一步：Phase 4 TODO-08/09/10 收尾清理
+
+### 2026-06-05（Stage 3 TODO-05 設定面板 fromHome 移除完成）
+- 狀態：Stage 3 Phase 3 TODO-05 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/ui.js` 的 `showSettings()` 移除 `fromHome` 參數
+  - `showSettings()` 內部改用 `!!document.getElementById('start-screen')` 自動偵測首頁狀態
+  - `switchLanguage()` 重建 settings overlay 與首頁設定按鈕呼叫點改為無參數 `showSettings()`
+  - 修正重設預設值後從首頁開啟設定時會被當成遊戲中設定的潛在問題
+- 發現問題：無
+- 下一步：Phase 3 TODO-07 gameState 存取控制
+
+### 2026-06-05（Stage 3 TODO-02 結算畫面統一完成）
+- 狀態：Stage 3 Phase 3 TODO-02 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/ui.js` 新增 `buildEndGameOverlay()` 共用死亡/勝利結算畫面外殼
+  - `systems/evolution.js` 的 `showDeathSettlement` 改用 `buildEndGameOverlay()`，保留原 overlay id、按鈕排列與回首頁二段警告
+  - `systems/boss.js` 的 `doShowVictory` 改用 `buildEndGameOverlay()`，保留原勝利資料、結算副作用與雲端保存流程
+  - `systems/daynight.js` 刪除無呼叫點的 `showGameOver()` dead code
+  - `MAIN.md` / `QUICKREF.md` 同步移除 `showGameOver` 索引並補上結算 builder 說明
+- 發現問題：附件範例 builder 的 `confirm()` 與現有二段警告行為不一致，已依確認採用保留原行為的方案 A
+- 下一步：Phase 3 TODO-05 設定面板 fromHome 移除
+
+### 2026-06-05（Stage 3 TODO-03 打破 mutation/evolution 循環依賴完成）
+- 狀態：Stage 3 Phase 2 TODO-03 完成
+- 操作者：Codex
+- 完成項目：
+  - 打破 `mutation.js` ↔ `evolution.js` 循環依賴
+  - `mutation.js` 改用 `CustomEvent` 通知，不再直接 import `evolution.js`
+  - `evolution.js` 監聽 `mutationRepaired` 事件，在技能樹 overlay 存在時重建 UI
+- 發現問題：無
+- 下一步：Phase 3 TODO-02
+
+### 2026-06-05（Stage 3 TODO-01 buildSkillTreeOverlay 拆模組完成）
+- 狀態：Stage 3 Phase 2 TODO-01 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/evolution.js` 將 `buildSkillTreeOverlay()` 拆成 coordinator 與 4 個 private sub-functions
+  - 新增 `_resolveSkillTreeState()` 處理模式判定、狀態同步、storage reload 與 `applyDeviceMode()`
+  - 新增 `_createSkillTreeShell()` 建立 overlay 外殼、標題列、切換按鈕與主內容容器
+  - 新增 `_buildOrganInheritanceSections()` 建立 postGame 本局器官保留區
+  - 新增 `_buildSkillTreeMainContent()` 保留技能點、技能卡、lastRun 繼承/顯示、底部按鈕與變異面板切換流程
+- 發現問題：無
+- 下一步：Stage 3 Phase 2 TODO-03 變異技能面板統一
+
+### 2026-06-05（Stage 3 TODO-04 AudioManager 統一完成）
+- 狀態：Stage 3 Phase 1 TODO-04 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/audio.js` 新增 AudioManager 內部 `_vol` 狀態，統一管理 master/music/sfx 音量與開關
+  - 新增 `loadVolume()`、`setVolume()`、`serializeVolume()`，由 AudioManager 掌握音量狀態並同步 `gameState.settings.volume`
+  - `_sfxVol()`、`_musicVol()` 與 `playIntroTheme()` 改由 AudioManager 內部音量計算
+  - `systems/ui.js` 的 load/save/toggle/slider/reset 音量流程改用 AudioManager API
+- 發現問題：無
+- 下一步：Stage 3 Phase 2 TODO-01 buildSkillTreeOverlay 拆模組
+
+### 2026-06-05（Stage 3 TODO-06 Step B Batch 3 / Final 完成）
+- 狀態：Stage 3 Phase 1 TODO-06 全部完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/evolution.js` 改用 `storage/index.js` helper 存取 localStorage
+  - `systems/boss.js` 改用 `storage/index.js` helper，並用 `storageKey` 產生通關與 Boss 擊殺統計 dynamic key
+  - `systems/chat.js` 改用 `storage/index.js` helper，`_applyRemoteData()` 保留 dynamic key 行為並跳過 `STORAGE_KEYS.SAVE_VERSION`
+  - 清除 `systems/ui.js` 先前批次保留的 `savedOrgans` direct localStorage 呼叫
+  - TODO-06 Step A + Step B 全批次完成，9 個目標檔案已無 direct localStorage 呼叫
+- 發現問題：Batch 1 保留的 `systems/ui.js` `savedOrgans` 呼叫需於 Final 一併清理，已完成
+- 下一步：Stage 3 Phase 1 TODO-04 AudioManager 統一
+
+### 2026-06-05（Stage 3 TODO-06 Step B Batch 2 完成）
+- 狀態：Stage 3 Phase 1 TODO-06 Step B Batch 2 完成
+- 操作者：Codex
+- 完成項目：
+  - `main.js` 改用 `storage/index.js` helper 存取 localStorage
+  - `systems/mutation.js` 改用 `storage/index.js` helper 存取 `mutationData` / `mutationSkills` / `skillPoints`
+  - `systems/organs.js` 改用 `storage/index.js` helper 存取 `tutorialCompleted` / `tutorialCombatDone` / `skillPoints`
+  - `systems/elite.js` 改用 `storage/index.js` helper 存取 `skillPoints`
+- 發現問題：無
+- 下一步：TODO-06 Step B 下一批，繼續逐檔替換直接 localStorage 呼叫
+
+### 2026-06-05（Stage 3 TODO-06 Step B Batch 1 完成）
+- 狀態：Stage 3 Phase 1 TODO-06 Step B Batch 1 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/tutorial.js` 改用 `storage/index.js` helper 存取 `tutorialCompleted` / `tutorialCombatDone`
+  - `systems/ui.js` 指定 key 改用 `storage/index.js` helper，保留本批不處理的 `savedOrgans`
+- 發現問題：無
+- 下一步：TODO-06 Step B 下一批，繼續逐檔替換直接 localStorage 呼叫
+
+### 2026-06-05（Stage 3 TODO-06 Step A 完成）
+- 狀態：Stage 3 Phase 1 TODO-06 Step A 完成
+- 操作者：Codex
+- 完成項目：
+  - 建立 `storage/index.js`，定義所有 localStorage key 常數和統一讀寫函式
+  - 修正 saveVersion/SAVE_VERSION 命名不一致 bug
+- 發現問題：`hunterSlayerUnlocked` 目前已寫入但未讀取，保留於 `STORAGE_KEYS` 備用
+- 下一步：TODO-06 Step B，逐檔替換直接 localStorage 呼叫
 
 ### 2026-06-05（Stage 2 全部完成）
 - 狀態：Stage 2A / 2B / 2C 三批次遷移全部通過人工測試，Stage 2 正式收尾

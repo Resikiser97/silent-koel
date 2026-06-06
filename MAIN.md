@@ -1,4 +1,4 @@
-## v0.1.4.3
+## v0.1.5.0
 
 # The Silent Koel — 模組架構說明
 
@@ -105,7 +105,7 @@ systems/boss.js           spawnBoss, updateBoss, showVictory
                           drawBossShape, _drawBear, _drawShark, _drawScorp, _drawHunter, BOSS_COLORS
                           _drawBossDebuffIcons（血條 Debuff 圖示，v0.56.0）
 systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayTransition
-                          updateDayNightCycle, showGameOver
+                          updateDayNightCycle
 systems/leaderboard.js    _lbDifficulty, _top10Difficulty, _diffKey
                           showLeaderboard, showScoreSubmitPopup
                           showFunLeaderboard（趣味排行榜，v0.47.0；👑 最高等級分類 v0.51.0）
@@ -130,6 +130,7 @@ systems/hud.js            drawGame, updateUI, resetUICache, resetPerceptionCache
                           drawProjectiles（子彈繪製）, updateMinimapFog（小地圖霧效更新）
                           _drawArcherfish（夜晚三角光圈 + F技紅色三角框，v0.57.4）
 systems/ui.js             showTooltip, hideTooltip, showMapSelect
+                          buildEndGameOverlay（死亡/勝利結算畫面共用外殼，保留各呼叫點原樣式與二段回首頁警告）
                           showSplashScreen（開發者 Splash 畫面，v0.1.0.1）
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式

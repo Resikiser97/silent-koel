@@ -7,12 +7,28 @@
 //            _checkProjectileHit（子彈系統）
 //            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
 // =============================================================
+import { gameState } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
+import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
+import { FIXED_DELTA, ARCHER_BULLET_SPEED } from '../config/gameConfig.js';
+import { ORGANS } from '../config/organs.js';
+import { EVOLUTION_PATHS } from '../config/evolution.js';
+import { AudioManager } from './audio.js';
+import { applyTenacity } from './utils.js';
+import { t } from '../lang.js';
+import { applyDamageToPlayer, handleKill, handleGiantKill, showFloatingText } from './combat.js';
+import { handleEliteKill } from './organs.js';
+import { handleBossKill } from './boss.js';
+import { spawnFruitFromTree } from './spawning.js';
+import { getOrganLevel, getOrganCumulative, applyOrganEffects, showOrganSelection } from './organs.js';
+import { _joyPaused } from './mobile.js';
+import { handleTutorialStumpKill } from './tutorial.js';
 
 // =============================================================
 // 子彈系統（阿奇爾 Archerfish 射水）
 // =============================================================
 
-function updateProjectiles() {
+export function updateProjectiles() {
     const projs = gameState.projectiles;
     const p = gameState.player;
     for (let i = projs.length - 1; i >= 0; i--) {
@@ -47,7 +63,7 @@ function updateProjectiles() {
     }
 }
 
-function _checkProjectileHit(b, idx) {
+export function _checkProjectileHit(b, idx) {
     const targets = [
         ...gameState.hostileCreatures,
         ...gameState.neutralCreatures,
@@ -117,7 +133,7 @@ function _checkProjectileHit(b, idx) {
 // 阿奇爾攻擊系統
 // =============================================================
 
-function _getAllAttackTargets() {
+export function _getAllAttackTargets() {
     return [
         ...gameState.hostileCreatures.filter(c => c.hp > 0),
         ...gameState.neutralCreatures.filter(c => c.hp > 0),
@@ -135,7 +151,7 @@ function _getAllAttackTargets() {
  *
  * @returns {object|null}
  */
-function _findArcherAutoTarget() {
+export function _findArcherAutoTarget() {
     const p    = gameState.player;
     const tgts = _getAllAttackTargets();
     if (tgts.length === 0) return null;
@@ -167,7 +183,7 @@ function _findArcherAutoTarget() {
     return best;
 }
 
-function _getArcherShootDir() {
+export function _getArcherShootDir() {
     const p = gameState.player;
 
     if (gameState.settings.autoAttack) {
@@ -198,7 +214,7 @@ function _getArcherShootDir() {
     }
 }
 
-function _archerAttack() {
+export function _archerAttack() {
     const p = gameState.player;
     const now = Date.now();
 
@@ -275,7 +291,7 @@ function _collectFruit(p, fruit) {
     }
 }
 
-function playerDash() {
+export function playerDash() {
     const p = gameState.player;
     if (p.dashCooldown > 0) return;
     if (_joyPaused()) return;
@@ -361,7 +377,7 @@ function playerDash() {
     }
 }
 
-function updatePlayerMovement() {
+export function updatePlayerMovement() {
     const p = gameState.player;
     const now = Date.now();
 
@@ -481,7 +497,7 @@ function updatePlayerMovement() {
     p.y = ((p.y + dy) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT;
 }
 
-function checkFruitCollision() {
+export function checkFruitCollision() {
     const p = gameState.player;
     const bodyScale = p.radius / 10;
     const collisionRadius = (p.radius + 6 + p.pickupRange) * bodyScale;
@@ -497,7 +513,7 @@ function checkFruitCollision() {
     return false;
 }
 
-function updateTreeFruitProduction(deltaTime) {
+export function updateTreeFruitProduction(deltaTime) {
     _treeProductionTimer += FIXED_DELTA;
     if (_treeProductionTimer < 500) return;
     const elapsed = _treeProductionTimer;
@@ -521,12 +537,12 @@ function updateTreeFruitProduction(deltaTime) {
     }
 }
 
-function showXPPopup(wx, wy, amount) {
+export function showXPPopup(wx, wy, amount) {
     if (!amount || amount <= 0) return;
     showFloatingText(wx, wy, '+' + amount, '#FFD700', 13);
 }
 
-function checkTreasureCollision() {
+export function checkTreasureCollision() {
     const p = gameState.player;
     for (let i = gameState.treasures.length - 1; i >= 0; i--) {
         const t = gameState.treasures[i];
@@ -538,7 +554,7 @@ function checkTreasureCollision() {
     }
 }
 
-function updatePassiveOrgans() {
+export function updatePassiveOrgans() {
     const now = Date.now();
     const p = gameState.player;
 
@@ -582,14 +598,14 @@ function updatePassiveOrgans() {
     }
 }
 
-function checkXPMilestone() {
+export function checkXPMilestone() {
     if (gameState.organSelectionActive) return;
     if (gameState.stats.xpCurrent >= gameState.xpThreshold) {
         showOrganSelection();
     }
 }
 
-function addXP(amount) {
+export function addXP(amount) {
     const xpMult = (gameState.player.mutationXpBonus || 1);
     const finalAmount = xpMult !== 1 ? Math.round(amount * xpMult) : amount;
     gameState.stats.xpCurrent += finalAmount;
@@ -614,7 +630,7 @@ function checkLevelUp() {
 // 靈敏知覺算法 - 找出果子最多的高效率直線路徑
 // =============================================================
 
-function findBestPerceptionPath(player, fruits, detectionRange) {
+export function findBestPerceptionPath(player, fruits, detectionRange) {
     if (!fruits || fruits.length === 0) return null;
 
     // 篩選範圍內的果子

@@ -28,6 +28,18 @@
 //   ⚠️ _chatExpanded 狀態由 systems/input.js 的 ESC 鍵處理讀取，不可隨意重命名
 // =============================================================
 
+import { SUPABASE_URL, SUPABASE_KEY, supabaseQuery } from '../config/supabase.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { gameState } from './gameState.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
+
 // ─────────────────────────────────────────────
 // SHA-256 工具（帳號密碼雜湊用）
 // ─────────────────────────────────────────────
@@ -74,20 +86,19 @@ const CHAT_POLL_MS = 8000;            // polling 間隔（ms）
 // 拖拽狀態（供 _makeDraggable 與 gearBtn.onclick 共用）
 const _chatDragState = { wasDragging: false };
 
-let _chatExpanded = false;  // 收合/展開狀態
+export let _chatExpanded = false;  // 收合/展開狀態
 
 // ─────────────────────────────────────────────
 // 聊天室位置 localStorage 讀寫
 // ─────────────────────────────────────────────
 
 function _saveChatPosition(pos) {
-    try { localStorage.setItem('chatPosition', JSON.stringify(pos)); } catch(e) {}
+    try { storageSetJSON(STORAGE_KEYS.CHAT_POSITION, pos); } catch(e) {}
 }
 
 function _loadChatPosition() {
     try {
-        const raw = localStorage.getItem('chatPosition');
-        return raw ? JSON.parse(raw) : null;
+        return storageGetJSON(STORAGE_KEYS.CHAT_POSITION);
     } catch(e) { return null; }
 }
 
@@ -95,10 +106,9 @@ function _loadChatPosition() {
 // localStorage 聊天室帳號設定
 // ─────────────────────────────────────────────
 
-function loadChatSettings() {
+export function loadChatSettings() {
     try {
-        const raw = localStorage.getItem('chatSettings');
-        const d   = raw ? JSON.parse(raw) : {};
+        const d = storageGetJSON(STORAGE_KEYS.CHAT_SETTINGS) || {};
         return {
             playerName: d.playerName || '',
             isGM:       d.isGM       || false,
@@ -110,8 +120,8 @@ function loadChatSettings() {
     }
 }
 
-function saveChatSettings(obj) {
-    localStorage.setItem('chatSettings', JSON.stringify(obj));
+export function saveChatSettings(obj) {
+    storageSetJSON(STORAGE_KEYS.CHAT_SETTINGS, obj);
 }
 
 // ─────────────────────────────────────────────
@@ -132,13 +142,18 @@ function _calcProgressScore(data) {
 
 function _collectLocalData() {
     const keys = [
-        'playerSkills', 'skillPoints', 'savedOrgans',
-        'savedHiddenOrgans', 'lastRunOrgans', 'gameSettings',
-        'mutationData', 'SAVE_VERSION'
+        STORAGE_KEYS.PLAYER_SKILLS,
+        STORAGE_KEYS.SKILL_POINTS,
+        STORAGE_KEYS.SAVED_ORGANS,
+        STORAGE_KEYS.SAVED_HIDDEN_ORGANS,
+        STORAGE_KEYS.LAST_RUN_ORGANS,
+        STORAGE_KEYS.GAME_SETTINGS,
+        STORAGE_KEYS.MUTATION_DATA,
+        STORAGE_KEYS.SAVE_VERSION
     ];
     const obj = {};
     keys.forEach(k => {
-        const v = localStorage.getItem(k);
+        const v = storageGet(k);
         if (v !== null) obj[k] = v;
     });
     return obj;
@@ -147,8 +162,8 @@ function _collectLocalData() {
 function _applyRemoteData(gameData) {
     if (!gameData) return;
     Object.entries(gameData).forEach(([k, v]) => {
-        if (k === 'SAVE_VERSION') return; // 不覆蓋本地版本號
-        localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+        if (k === STORAGE_KEYS.SAVE_VERSION) return; // 不覆蓋本地版本號
+        storageSet(k, v);
     });
 }
 
@@ -231,7 +246,7 @@ async function chatLogin(username, password) {
     return { ok: true, msg: syncMsg, isGM: user.is_gm };
 }
 
-async function chatSaveProgress() {
+export async function chatSaveProgress() {
     const settings = loadChatSettings();
     if (!settings.loggedIn || !settings.playerName) return { ok: false, msg: '請先登入' };
     const localData = _collectLocalData();
@@ -295,13 +310,19 @@ async function chatSyncData() {
     return { ok: true, msg: '✅ 資料已是最新' };
 }
 
-function chatLogout() {
+export function chatLogout() {
     const keys = [
-        'playerSkills', 'skillPoints', 'savedOrgans',
-        'savedHiddenOrgans', 'lastRunOrgans', 'gameSettings',
-        'mutationData', 'chatSettings', 'SAVE_VERSION'
+        STORAGE_KEYS.PLAYER_SKILLS,
+        STORAGE_KEYS.SKILL_POINTS,
+        STORAGE_KEYS.SAVED_ORGANS,
+        STORAGE_KEYS.SAVED_HIDDEN_ORGANS,
+        STORAGE_KEYS.LAST_RUN_ORGANS,
+        STORAGE_KEYS.GAME_SETTINGS,
+        STORAGE_KEYS.MUTATION_DATA,
+        STORAGE_KEYS.CHAT_SETTINGS,
+        STORAGE_KEYS.SAVE_VERSION
     ];
-    keys.forEach(k => localStorage.removeItem(k));
+    keys.forEach(k => storageRemove(k));
     saveChatSettings({ playerName: '', isGM: false, loggedIn: false });
 }
 
@@ -309,7 +330,7 @@ function chatLogout() {
 // Supabase 聊天室核心函式
 // ─────────────────────────────────────────────
 
-async function initChat() {
+export async function initChat() {
     // 先確保斷線（重入時重新建立乾淨連線）
     disconnectChat();
 
@@ -406,7 +427,7 @@ async function _pollNewMessages() {
     } catch(e) {}
 }
 
-function disconnectChat() {
+export function disconnectChat() {
     if (_chatChannel && _sbClient) {
         try { _sbClient.removeChannel(_chatChannel); } catch(e) {}
         _chatChannel = null;
@@ -435,7 +456,7 @@ async function sendChatMessage(content) {
     // 計算變異等級
     let mutLevel = 0;
     try {
-        const md = JSON.parse(localStorage.getItem('mutationData') || '{}');
+        const md = storageGetJSON(STORAGE_KEYS.MUTATION_DATA) || {};
         const lv = md.levels || {};
         mutLevel = (lv.fang || 0) + (lv.tail || 0) + (lv.wing || 0) + (lv.eye || 0);
     } catch(e) {}
@@ -570,14 +591,14 @@ async function verifyGM(code) {
 // 階段 3：聊天室 UI
 // ─────────────────────────────────────────────
 
-function showChat() {
+export function showChat() {
     const collapsed = document.getElementById('chat-collapsed-panel');
     const fakeInput = document.getElementById('chat-fake-input');
     if (collapsed) collapsed.style.display = '';
     if (fakeInput)  fakeInput.style.display  = '';
 }
 
-function hideChat() {
+export function hideChat() {
     ['chat-collapsed-panel', 'chat-fake-input',
      'chat-expanded-panel', 'chat-overlay-backdrop',
      'chat-settings-panel'].forEach(id => {
@@ -688,7 +709,7 @@ function _expandChat() {
     if (inp) setTimeout(() => inp.focus(), 80);
 }
 
-function _collapseChat() {
+export function _collapseChat() {
     _chatExpanded = false;
     const collapsed = document.getElementById('chat-collapsed-panel');
     const fakeInput = document.getElementById('chat-fake-input');
@@ -878,7 +899,7 @@ function _renderChatSettingsPanel(panel) {
     }
 }
 
-function buildChatUI() {
+export function buildChatUI() {
     // 清除所有舊元素
     ['chat-collapsed-panel', 'chat-fake-input', 'chat-expanded-panel',
      'chat-overlay-backdrop', 'chat-settings-panel',
@@ -1316,7 +1337,7 @@ function _buildMsgText(msg) {
     return name + '：' + (msg.content || '');
 }
 
-function renderChat() {
+export function renderChat() {
     // 檢查 pin 是否過期
     if (_pinnedMessage && _pinnedMessage.pinUntil) {
         if (new Date(_pinnedMessage.pinUntil).getTime() < Date.now()) {
@@ -1414,7 +1435,7 @@ function _parseName(msg) {
     return { lvTag, lvTagHtml, lvNum, name, titleStr, gmLabel, titleHtml, nameHtml, isGm: msg.is_gm };
 }
 
-function _esc(s) {
+export function _esc(s) {
     return String(s || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -1455,7 +1476,7 @@ function _parseColorTags(escapedContent, isVIP) {
 // TODO: 先驅者判斷函式 — 交接點
 // 實作時在此填入判斷邏輯（例如查 chat_users.is_pioneer 欄位或 titleStr === '先驅者'）
 // 目前暫時回傳 false（所有玩家使用一般顏色限制）
-function isVipPlayer(msg) {
+export function isVipPlayer(msg) {
     // TODO: 先驅者系統實作點
     return false;
 }

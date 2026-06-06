@@ -3,7 +3,7 @@
 // ✦ 名稱與描述為中文預設；切換語言時由 lang.js applyLanguage() 覆寫
 // =============================================================
 
-const EVOLUTION_PATHS = {
+export const EVOLUTION_PATHS = {
     herbivore: {
         id: 'herbivore', name: '草食性', icon: '🌿', maxLevel: 5,
         levels: [
@@ -36,7 +36,7 @@ const EVOLUTION_PATHS = {
     }
 };
 
-const SKILLS = {
+export const SKILLS = {
     vitality:            { id: 'vitality',            name: '強壯體魄', maxLevel: 3, desc: '起始 HP +20（每級）' },
     agility:             { id: 'agility',             name: '敏捷身手', maxLevel: 3, desc: '起始速度 +0.2（每級）' },
     forager:             { id: 'forager',             name: '採集專家', maxLevel: 3, desc: '果子 XP +3（每級）' },

@@ -4,6 +4,33 @@
 // =============================================================
 
 // ── Boss 顏色常數 ─────────────────────────────────────────────
+import { gameState, ctx } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
+import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { BOSS_CONFIG } from '../config/creatures.js';
+import { AudioManager } from './audio.js';
+import { moveCreature } from './spawning.js';
+import { applyDamageToPlayer, showFloatingText } from './combat.js';
+import { _effSpeed } from './creatures.js';
+import { addXP } from './player.js';
+import { buildSkillTreeOverlay, saveLastRunOrgans } from './evolution.js';
+import { saveSettings, buildEndGameOverlay } from './ui.js';
+import { showScoreSubmitPopup } from './leaderboard.js';
+import { loadChatSettings, chatSaveProgress } from './chat.js';
+import { pausePlayTimer } from '../main.js';
+import { t } from '../lang.js';
+import { drawArrow } from './utils.js';
+import {
+    STORAGE_KEYS,
+    storageKey,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
+
 const BOSS_COLORS = {
     bear: {
         body:  '#2a1808',
@@ -44,7 +71,7 @@ const BOSS_COLORS = {
 };
 
 // ── Boss 主繪製分派 ───────────────────────────────────────────
-function drawBossShape(ctx, boss, sx, sy) {
+export function drawBossShape(ctx, boss, sx, sy) {
     ctx.save();
     ctx.translate(sx, sy);
     const r = boss.radius * (gameState.cameraZoom || 1);
@@ -598,7 +625,7 @@ function _drawVenomEffects(boss) {
 // ── 蠍王沙暴螢幕外圈遮罩 ─────────────────────────────────────────
 // radialGradient：中央透明，外圈沙色 alpha=0.3，淡入淡出各500ms
 // 由 hud.js drawGame() 在所有世界物件後、UI前呼叫
-function _drawSandStormOverlay() {
+export function _drawSandStormOverlay() {
     const boss = gameState.boss;
     if (!boss || !boss._sandStormVisual) return;
 
@@ -684,7 +711,7 @@ function _drawHunterAimingWarning(boss) {
 }
 
 // ── drawBoss（每幀由 hud.js 呼叫）──────────────────────────────
-function drawBoss() {
+export function drawBoss() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
 
@@ -821,7 +848,7 @@ function _drawBossDebuffIcons(boss, barX, barY, barW) {
     ctx.restore();
 }
 
-function spawnBoss() {
+export function spawnBoss() {
     // 困難地圖：直接生成黑色獵人
     const features = gameState.currentMap && gameState.currentMap.features;
     if (features && features.hunterBoss) {
@@ -968,7 +995,7 @@ function _triggerHunterPhaseCheck(boss) {
     }
 }
 
-function handleBossKill(boss) {
+export function handleBossKill(boss) {
     if (!boss) { showVictory(); return; }
     if (boss.biome === 'hunter') {
         boss.barsRemaining--;
@@ -977,17 +1004,17 @@ function handleBossKill(boss) {
             _recordBossKill('hunter');
             addXP(1000);
             gameState.skillPoints += 5;
-            localStorage.setItem('skillPoints', String(gameState.skillPoints));
+            storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
             gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + 5;
-            localStorage.setItem('hunterSlayerUnlocked', 'true');
+            storageSet(STORAGE_KEYS.HUNTER_SLAYER_UNLOCKED, 'true');
             _showHunterDialogue(HUNTER_DIALOGUE.death, 5000);
             AudioManager.play('hunterVoiceDeath');
             showFloatingText(boss.x, boss.y - 60, '🎯 獵人已倒！', '#FF4444', 22);
             // 困難地圖通關記錄
-            const diffKey = 'clearCount_hard';
-            localStorage.setItem(diffKey, (parseInt(localStorage.getItem(diffKey) || '0') + 1).toString());
-            const charKey = 'clearCount_char_' + (gameState.selectedCharacter || 'koel');
-            localStorage.setItem(charKey, (parseInt(localStorage.getItem(charKey) || '0') + 1).toString());
+            const diffKey = storageKey.clearCountDiff('hard');
+            storageSet(diffKey, (parseInt(storageGet(diffKey) || '0') + 1).toString());
+            const charKey = storageKey.clearCountChar(gameState.selectedCharacter || 'koel');
+            storageSet(charKey, (parseInt(storageGet(charKey) || '0') + 1).toString());
             setTimeout(() => showVictory(), 2000);
         } else {
             boss.hp    = boss.maxHpPerBar;
@@ -1173,7 +1200,7 @@ function _fireHunterShotgun(boss, p, pelletCount) {
     AudioManager.play('hunterPelletFly');
 }
 
-function updateBoss() {
+export function updateBoss() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
     const now = Date.now();
@@ -1369,18 +1396,18 @@ function updateBoss() {
 function _recordClearStats() {
     const diff   = gameState.lastDifficulty || 'easy';
     const charId = gameState.selectedCharacter || 'koel';
-    const diffKey = 'clearCount_' + diff;
-    localStorage.setItem(diffKey, (parseInt(localStorage.getItem(diffKey) || '0') + 1).toString());
-    const charKey = 'clearCount_char_' + charId;
-    localStorage.setItem(charKey, (parseInt(localStorage.getItem(charKey) || '0') + 1).toString());
+    const diffKey = storageKey.clearCountDiff(diff);
+    storageSet(diffKey, (parseInt(storageGet(diffKey) || '0') + 1).toString());
+    const charKey = storageKey.clearCountChar(charId);
+    storageSet(charKey, (parseInt(storageGet(charKey) || '0') + 1).toString());
 }
 
 function _recordBossKill(bossType) {
-    const key = 'killCount_' + bossType;
-    localStorage.setItem(key, (parseInt(localStorage.getItem(key) || '0') + 1).toString());
+    const key = storageKey.killCountBoss(bossType);
+    storageSet(key, (parseInt(storageGet(key) || '0') + 1).toString());
 }
 
-function showVictory() {
+export function showVictory() {
     if (gameState.gameOver) return;
     saveSettings();
     pausePlayTimer();
@@ -1393,7 +1420,7 @@ function showVictory() {
     addXP(500);
     // F19：普通難度通關 → 解鎖第二章劇情
     if (gameState.lastDifficulty === 'normal') {
-        localStorage.setItem('chapter2Unlocked', 'true');
+        storageSet(STORAGE_KEYS.CHAPTER2_UNLOCKED, 'true');
     }
     // F20：記錄 Boss 擊殺次數
     if (gameState.boss) {
@@ -1409,79 +1436,62 @@ function showVictory() {
     const eliteBonus = (gameState.sessionSkillPoints && gameState.sessionSkillPoints.elite) || 0;
     if (gameState.sessionSkillPoints) gameState.sessionSkillPoints.boss = 3;
     gameState.skillPoints += 3 + timeBonus + levelBonus;
-    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
-    localStorage.removeItem('savedOrgans');
-    localStorage.removeItem('savedHiddenOrgans');
+    storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+    storageRemove(STORAGE_KEYS.SAVED_ORGANS);
+    storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
     const bossKillTime = gameState.bossSpawnTime ? Math.floor((Date.now() - gameState.bossSpawnTime) / 1000) : null;
     const doShowVictory = () => {
-        const overlay = document.createElement('div');
-        overlay.id = 'victory-overlay';
-        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
-        const title = document.createElement('div');
-        title.style.cssText = 'font-size:52px;margin-bottom:16px;';
-        title.textContent = t('victoryTitle');
-        overlay.appendChild(title);
-        const desc1 = document.createElement('div');
-        desc1.style.cssText = 'font-size:22px;margin-bottom:8px;';
         const bossName = gameState.boss && gameState.boss.name ? gameState.boss.name : (BOSS_CONFIG.forest.name);
-        desc1.textContent = t('victoryDesc', { boss: bossName });
-        overlay.appendChild(desc1);
-        const desc2 = document.createElement('div');
-        desc2.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
-        desc2.textContent = t('victoryReward');
-        overlay.appendChild(desc2);
-        const spSection = document.createElement('div');
-        spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;';
         const spLines = [t('skillPtBoss', { n: 3 })];
         if (eliteBonus > 0)  spLines.push(t('skillPtElite', { n: eliteBonus }));
         if (timeBonus > 0)   spLines.push(t('skillPtTime',  { n: timeBonus }));
         if (levelBonus > 0)  spLines.push(t('skillPtLevel', { n: levelBonus }));
-        spSection.innerHTML = spLines.join('<br>');
-        overlay.appendChild(spSection);
-        const btnTree = document.createElement('button');
-        btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
-        btnTree.textContent = t('goSkillTree');
-        btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'postGame'); };
-        overlay.appendChild(btnTree);
-        const vBtnRow = document.createElement('div');
-        vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;';
-        const vWarnEl = document.createElement('div');
-        vWarnEl.style.cssText = 'display:none;font-size:13px;color:#f80;text-align:center;';
-        vBtnRow.appendChild(vWarnEl);
-        const vRowInner = document.createElement('div');
-        vRowInner.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
-        const vHomeBtn = document.createElement('button');
-        vHomeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        vHomeBtn.textContent = t('backHome');
-        let vHomeWarned = false;
-        vHomeBtn.onclick = () => {
-            if (!vHomeWarned) {
-                vHomeWarned = true;
-                vWarnEl.textContent = t('warnNoOrganHome');
-                vWarnEl.style.display = 'block';
-                return;
-            }
-            location.reload();
-        };
-        vRowInner.appendChild(vHomeBtn);
-        const vPlayAgainBtn = document.createElement('button');
-        vPlayAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-        vPlayAgainBtn.textContent = t('playAgain');
-        vPlayAgainBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'forceStart'); };
-        vRowInner.appendChild(vPlayAgainBtn);
-        vBtnRow.appendChild(vRowInner);
-        overlay.appendChild(vBtnRow);
-        const vFooter = document.createElement('div');
-        vFooter.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
-        vFooter.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
-        overlay.appendChild(vFooter);
-        if (gameState.devModeUsed) {
-            const devWarn = document.createElement('div');
-            devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
-            devWarn.textContent = t('devModeWarning');
-            overlay.appendChild(devWarn);
-        }
+        const overlay = buildEndGameOverlay({
+            id: 'victory-overlay',
+            overlayStyle: 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;',
+            titleStyle: 'font-size:52px;margin-bottom:16px;',
+            titleText: t('victoryTitle'),
+            content: [
+                {
+                    style: 'font-size:22px;margin-bottom:8px;',
+                    text: t('victoryDesc', { boss: bossName })
+                },
+                {
+                    style: 'font-size:18px;margin-bottom:10px;color:#FFD700;',
+                    text: t('victoryReward')
+                },
+                {
+                    style: 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;',
+                    html: spLines.join('<br>')
+                }
+            ],
+            primaryButton: {
+                style: 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;',
+                text: t('goSkillTree'),
+                onClick: () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'postGame'); }
+            },
+            buttonRowStyle: 'display:flex;gap:12px;pointer-events:all;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;',
+            warningStyle: 'display:none;font-size:13px;color:#f80;text-align:center;',
+            buttonInnerStyle: 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;',
+            secondaryButtons: [
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;',
+                    text: t('backHome'),
+                    warningText: t('warnNoOrganHome'),
+                    onClick: () => { location.reload(); }
+                },
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;',
+                    text: t('playAgain'),
+                    onClick: () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'forceStart'); }
+                }
+            ],
+            footerStyle: 'font-size:12px;color:#555;margin-top:20px;',
+            footerText: '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version,
+            devWarningStyle: 'font-size:12px;color:#f80;margin-top:12px;',
+            devWarningText: gameState.devModeUsed ? t('devModeWarning') : null
+        });
         document.getElementById('game-container').appendChild(overlay);
     };
     // 自動雲端保存進度（已登入才執行）
@@ -1509,7 +1519,7 @@ function showVictory() {
     }
 }
 
-function drawBossArrow() {
+export function drawBossArrow() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
     const bs = worldToScreen(boss.x, boss.y);

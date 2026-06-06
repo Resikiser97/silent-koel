@@ -2,6 +2,9 @@
 // lang.js — 多語系容器與工具函式
 //           applyLanguage(lang) / t(key, params)
 // =============================================================
+import { ORGANS, HIDDEN_ORGANS, COMBOS } from './config/organs.js';
+import { EVOLUTION_PATHS, SKILLS } from './config/evolution.js';
+import { ELITE_CONFIG, BOSS_CONFIG } from './config/creatures.js';
 // ✦ 翻譯外包說明（給新語言譯者）：
 //   1. 複製 lang/ 資料夾中的 en.js，重新命名為新語言代碼（例如 ja.js）。
 //   2. 在下方 LANG_LIST 加入新語言的 code 與顯示名稱。
@@ -12,23 +15,23 @@
 //   6. 不要修改本檔的 applyLanguage / _langPack / t — 那些是程式邏輯。
 // =============================================================
 
-const LANG_LIST = [
+export const LANG_LIST = [
     { code: 'zh-TW', label: '繁體中文' },
     { code: 'en',    label: 'English' }
 ];
 
 // 語言資料容器：各語言包（lang/zh-TW.js、lang/en.js 等）會在此填入對應資料
-const LANG = {};
+export const LANG = {};
 
 // =============================================================
 // 程式邏輯（譯者請勿修改下方內容）
 // =============================================================
 
-function _langPack(lang) {
+export function _langPack(lang) {
     return LANG[lang] || LANG['zh-TW'];
 }
 
-function applyLanguage(lang) {
+export function applyLanguage(lang) {
     const pack = _langPack(lang);
     // ── 一般器官
     if (pack.organs) Object.keys(ORGANS).forEach(id => {
@@ -67,7 +70,7 @@ function applyLanguage(lang) {
 }
 
 // t(key, params?) — 取得當前語言的 ui 字串，支援 {token} 替換
-function t(key, params) {
+export function t(key, params) {
     const lang = (typeof gameState !== 'undefined' && gameState.language) ? gameState.language : 'zh-TW';
     const pack = _langPack(lang);
     const enPack = LANG['en'];

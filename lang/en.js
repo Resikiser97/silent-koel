@@ -4,6 +4,7 @@
 //   translate only the string values, then add an entry to
 //   LANG_LIST in lang.js. Never rename keys or remove {tokens}.
 // =============================================================
+import { LANG } from '../lang.js';
 
 LANG['en'] = {
     ui: {
@@ -435,3 +436,4 @@ LANG['en'] = {
         desert: { name: '🏜️ Desert Scorpion King', label: '🦂🏜️ Scorpion King' }
     }
 };
+export {};

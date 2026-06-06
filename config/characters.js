@@ -3,7 +3,7 @@
 // 載入位置：config/organs.js 之後，systems/gameState.js 之前
 // =============================================================
 
-const CHARACTERS = {
+export const CHARACTERS = {
     koel: {
         id:          'koel',
         name:        '噪鵑',
@@ -52,6 +52,6 @@ const CHARACTERS = {
 };
 
 // 即將推出的角色佔位
-const CHARACTERS_COMING_SOON = [
+export const CHARACTERS_COMING_SOON = [
     { id: 'unknown1', name: '？', nameEn: '?', icon: '❓', locked: true },
 ];

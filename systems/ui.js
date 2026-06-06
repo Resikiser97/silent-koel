@@ -16,7 +16,47 @@
 // drawGame() / updateUI() / drawTopBarUI() / drawMinimap() / drawTreasures() 已移至 systems/hud.js
 
 // ── Tooltip 全域變數
+import { gameState, DEFAULT_SETTINGS } from './gameState.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { CHARACTERS, CHARACTERS_COMING_SOON } from '../config/characters.js';
+import { ORGANS, HIDDEN_ORGANS, COMBOS } from '../config/organs.js';
+import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { PATCH_NOTES } from '../config/patchnotes.js';
+import { EASY_MAP } from '../map/easymap.js';
+import { NORMAL_MAP } from '../map/normalmap.js';
+import { HARD_MAP } from '../map/hardmap.js';
+import { COMPENDIUM_DATA } from '../config/compendium_data.js';
+import { LANG, LANG_LIST, t, applyLanguage } from '../lang.js';
+import { AudioManager, playIntroTheme } from './audio.js';
+import { applyDeviceMode, _effectiveMobile } from './mobile.js';
+import { addXP } from './player.js';
+import { spawnFruit } from './spawning.js';
+import { getDayNightPhaseIndex } from './daynight.js';
+import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans } from './evolution.js';
+import { buildChatUI, initChat, showChat, hideChat, _esc } from './chat.js';
+import { showLeaderboard, _diffKey } from './leaderboard.js';
+import { fetchTop10 } from '../config/supabase.js';
+import { initializeGame } from '../main.js';
+import { getRankIcon } from './utils.js';
+import { MAP_WIDTH, MAP_HEIGHT } from './map.js';
+import { _updateCameraZoom } from './camera.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    getSettings,
+    saveSettingsToStorage
+} from '../storage/index.js';
+
 let _organHitRegions = [];
+let _settingsKeyHandler = null;
+let _settingsMouseHandler = null;
+let _rebindBlink = null;
+let _rebindTimeout = null;
+let _lbDifficulty = 'easy';
+let _top10Difficulty = 'easy';
 // ── 小地圖大小：記住上次非零值（用於 ON/OFF 切換）
 let _lastMinimapSize = 10;
 const _ttEl = document.getElementById('game-tooltip');
@@ -24,7 +64,7 @@ document.addEventListener('mousemove', function(e) {
     if (_ttEl && _ttEl.style.display !== 'none') _moveTooltip(e.clientX, e.clientY);
 });
 
-function showTooltip(data, cx, cy) {
+export function showTooltip(data, cx, cy) {
     if (!_ttEl) return;
     let html = '<div class="tt-name">' + _escH(data.name || '');
     if (data.level != null) {
@@ -39,7 +79,7 @@ function showTooltip(data, cx, cy) {
     _moveTooltip(cx, cy);
 }
 
-function hideTooltip() {
+export function hideTooltip() {
     if (_ttEl) _ttEl.style.display = 'none';
 }
 
@@ -68,7 +108,7 @@ function _escH(s) {
 // 繪製系統
 // =============================================================
 
-function showAlphaAnnouncement(name) {
+export function showAlphaAnnouncement(name) {
     const el = document.createElement('div');
     el.style.cssText = [
         'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
@@ -92,15 +132,15 @@ function showAlphaAnnouncement(name) {
 // 音效與設定系統
 // =============================================================
 
-function loadSettings() {
+export function loadSettings() {
     try {
-        const saved = localStorage.getItem('gameSettings');
-        if (saved) {
-            const parsed = JSON.parse(saved);
+        const parsed = getSettings();
+        if (parsed) {
             // volume 深度合併，確保子欄位不被 DEFAULT_SETTINGS 整個覆蓋
             if (parsed.volume && typeof parsed.volume === 'object') {
                 gameState.settings.volume = Object.assign({}, DEFAULT_SETTINGS.volume, parsed.volume);
             }
+            AudioManager.loadVolume(gameState.settings.volume);
             if (parsed.keys)   Object.assign(gameState.settings.keys,   parsed.keys);
             if (parsed.language && LANG[parsed.language]) {
                 gameState.settings.language = parsed.language;
@@ -146,24 +186,23 @@ function loadSettings() {
     applyDeviceMode(); // 此後 gameState.isMobile 才正確
 
     // cameraZoomLevel 未存過時，依平台設預設值（需在 applyDeviceMode 之後判斷）
-    const _rawSaved = localStorage.getItem('gameSettings');
-    const _rawParsed = _rawSaved ? JSON.parse(_rawSaved) : {};
+    const _rawParsed = storageGetJSON(STORAGE_KEYS.GAME_SETTINGS) || {};
     if (_rawParsed.cameraZoomLevel === undefined) {
         gameState.settings.cameraZoomLevel = gameState.isMobile ? 10 : 6;
     }
 
     // 視野預設值強制更新（v0.0.66.3 一次性覆蓋，對齊新公式預設值）
     const _ZOOM_RESET_VERSION = 'v0.0.66.3';
-    if (localStorage.getItem('zoomResetVersion') !== _ZOOM_RESET_VERSION) {
+    if (storageGet(STORAGE_KEYS.ZOOM_RESET_VERSION) !== _ZOOM_RESET_VERSION) {
         gameState.settings.cameraZoomLevel = gameState.isMobile ? 10 : 6;
-        localStorage.setItem('zoomResetVersion', _ZOOM_RESET_VERSION);
+        storageSet(STORAGE_KEYS.ZOOM_RESET_VERSION, _ZOOM_RESET_VERSION);
     }
 
     saveSettings(); // 確保新版本新增的欄位預設值都寫入 localStorage
 }
 
 // 切換語言：寫入 settings、重新套用 LANG 資料表、即時刷新開啟中的介面
-function switchLanguage(lang) {
+export function switchLanguage(lang) {
     if (!LANG[lang]) return;
     if (gameState.language === lang) return;
     gameState.language = lang;
@@ -177,7 +216,7 @@ function switchLanguage(lang) {
     const treeOpen     = !!document.getElementById('skill-tree-overlay');
     const guidePage    = guideOpen ? parseInt(document.getElementById('guide-overlay').dataset.page || '0', 10) : 0;
     const treeCause    = treeOpen ? document.getElementById('skill-tree-overlay').dataset.cause || null : null;
-    const treeFromHome = !!_skillTreeFromHome;
+    const treeFromHome = homeOpen;
 
     // 先把所有 overlay 拆掉，順序按 z 由下到上
     if (homeOpen)     { const e = document.getElementById('start-screen');       if (e) e.remove(); }
@@ -189,15 +228,19 @@ function switchLanguage(lang) {
     if (homeOpen)     showStartScreen();
     if (treeOpen)     buildSkillTreeOverlay(treeCause, treeFromHome);
     if (guideOpen)    showGuide(guidePage);
-    if (settingsOpen) showSettings(homeOpen);
+    if (settingsOpen) showSettings();
 
     // 圖鑑開啟中則即時重繪（compendium 不在上方 close/reopen 流程中）
     const _co = document.getElementById('compendium-overlay');
     if (_co && typeof _co._render === 'function') _co._render();
 }
 
-function saveSettings() {
-    localStorage.setItem('gameSettings', JSON.stringify(gameState.settings));
+export function saveSettings() {
+    // 從 AudioManager 取得最新音量再存入
+    const settingsToSave = Object.assign({}, gameState.settings, {
+        volume: AudioManager.serializeVolume()
+    });
+    saveSettingsToStorage(settingsToSave);
 }
 
 function _keyDisplay(k) {
@@ -216,7 +259,8 @@ function _buildSettingsSection(title) {
     return sec;
 }
 
-function showSettings(fromHome) {
+export function showSettings() {
+    const fromHome = !!document.getElementById('start-screen');
     applyDeviceMode();
     if (document.getElementById('settings-overlay')) return;
     gameState.settingsOpen = true;
@@ -267,7 +311,12 @@ function showSettings(fromHome) {
             tog.style.background = on ? '#2a8a2a' : '#555';
         };
         refreshTog();
-        tog.onclick = () => { gameState.settings.volume[ok] = !gameState.settings.volume[ok]; refreshTog(); AudioManager.refreshMusicVolume(); saveSettings(); };
+        tog.onclick = () => {
+            const currentValue = gameState.settings.volume[ok];
+            AudioManager.setVolume(ok, !currentValue);
+            refreshTog();
+            saveSettings();
+        };
         row.appendChild(tog);
         const lbl = document.createElement('div');
         lbl.style.cssText = 'min-width:68px;font-size:13px;'; lbl.textContent = label;
@@ -279,7 +328,12 @@ function showSettings(fromHome) {
         const valLbl = document.createElement('div');
         valLbl.style.cssText = 'min-width:36px;text-align:right;font-size:13px;';
         valLbl.textContent = slider.value + '%';
-        slider.oninput = () => { gameState.settings.volume[vk] = parseInt(slider.value); valLbl.textContent = slider.value + '%'; AudioManager.refreshMusicVolume(); saveSettings(); };
+        slider.oninput = () => {
+            const newValue = parseInt(slider.value);
+            AudioManager.setVolume(vk, newValue);
+            valLbl.textContent = slider.value + '%';
+            saveSettings();
+        };
         row.appendChild(slider); row.appendChild(valLbl);
         volSec.appendChild(row);
     });
@@ -581,7 +635,7 @@ function showSettings(fromHome) {
     tutRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
     const tutTog = document.createElement('button');
     tutTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
-    const _isTutorialOn = () => !localStorage.getItem('tutorialCompleted');
+    const _isTutorialOn = () => !storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED);
     const refreshTutTog = () => {
         const on = _isTutorialOn();
         tutTog.textContent  = on ? t('on') : t('off');
@@ -591,10 +645,10 @@ function showSettings(fromHome) {
     tutTog.onclick = () => {
         if (_isTutorialOn()) {
             // 目前 ON → 關閉（標記已完成，下一場不再顯示）
-            localStorage.setItem('tutorialCompleted', 'true');
+            storageSet(STORAGE_KEYS.TUTORIAL_COMPLETED, 'true');
         } else {
             // 目前 OFF → 開啟（移除完成標記，下一場會出現教學）
-            localStorage.removeItem('tutorialCompleted');
+            storageRemove(STORAGE_KEYS.TUTORIAL_COMPLETED);
         }
         refreshTutTog();
     };
@@ -720,7 +774,7 @@ function showSettings(fromHome) {
     restartBtn.onclick = () => {
         if (!confirm(t('confirmRestart'))) return;
         saveLastRunOrgans();
-        localStorage.setItem('skillPoints', String(gameState.skillPoints));
+        storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
         saveSettings(); // 重啟前確保設定已存入 localStorage
         window.location.reload();
     };
@@ -733,7 +787,8 @@ function showSettings(fromHome) {
         const keepLang = gameState.settings.language;
         gameState.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
         gameState.settings.language = keepLang;
-        saveSettings(); AudioManager.refreshMusicVolume();
+        AudioManager.loadVolume(DEFAULT_SETTINGS.volume);
+        saveSettings();
         applyDeviceMode();
         hideSettings(); showSettings();
     };
@@ -743,7 +798,7 @@ function showSettings(fromHome) {
     // ─── 底部按鈕 ───
     const saveBtn = document.createElement('button');
     saveBtn.style.cssText = 'width:100%;margin-top:14px;padding:10px;cursor:pointer;border:1px solid #4a8a4a;background:#2a5a2a;color:white;border-radius:4px;font-size:15px;';
-    saveBtn.textContent = fromHome ? t('close') : t('saveAndBack');
+    saveBtn.textContent = t('saveAndBack');
     saveBtn.onclick = () => { saveSettings(); hideSettings(); };
     panel.appendChild(saveBtn);
 
@@ -751,7 +806,7 @@ function showSettings(fromHome) {
     document.getElementById('game-container').appendChild(overlay);
 }
 
-function hideSettings() {
+export function hideSettings() {
     if (_settingsKeyHandler)   { document.removeEventListener('keydown',   _settingsKeyHandler,   true); _settingsKeyHandler   = null; }
     if (_settingsMouseHandler) { document.removeEventListener('mousedown', _settingsMouseHandler, true); _settingsMouseHandler = null; }
     if (_rebindBlink)   { clearInterval(_rebindBlink);  _rebindBlink   = null; }
@@ -769,7 +824,7 @@ function hideSettings() {
 // 計時器
 // =============================================================
 
-function updateTimer() {
+export function updateTimer() {
     const now = Date.now();
     if (gameState.lastTimeTick === 0) { gameState.lastTimeTick = now; return; }
     const elapsed = (now - gameState.lastTimeTick) / 1000;
@@ -790,30 +845,30 @@ function updateTimer() {
 // 開發者模式 (Developer Mode)
 // =============================================================
 
-function toggleDevMode() {
+export function toggleDevMode() {
     gameState.devMode = !gameState.devMode;
     if (gameState.devMode) gameState.devModeUsed = true;
     document.getElementById('dev-panel').style.display    = gameState.devMode ? 'block' : 'none';
     document.getElementById('dev-indicator').style.display = gameState.devMode ? 'block' : 'none';
 }
 
-function devAddXP() {
+export function devAddXP() {
     addXP(50);
 }
 
-function devAddHP() {
+export function devAddHP() {
     gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 20);
 }
 
-function devFullHP() {
+export function devFullHP() {
     gameState.stats.hpCurrent = gameState.stats.hpMax;
 }
 
-function devSpawnFruits() {
+export function devSpawnFruits() {
     for (let i = 0; i < 5; i++) spawnFruit();
 }
 
-function devKillHostiles() {
+export function devKillHostiles() {
     const now = Date.now();
     for (const c of gameState.hostileCreatures) {
         if (c.hp > 0) {
@@ -823,7 +878,7 @@ function devKillHostiles() {
     }
 }
 
-function devSpawnNeutral() {
+export function devSpawnNeutral() {
     const p = gameState.player;
     const angle = Math.random() * Math.PI * 2;
     const dist = 60 + Math.random() * 40;
@@ -840,7 +895,7 @@ function devSpawnNeutral() {
     });
 }
 
-function devSpawnHostile() {
+export function devSpawnHostile() {
     const p = gameState.player;
     const angle = Math.random() * Math.PI * 2;
     const dist = 100 + Math.random() * 50;
@@ -859,17 +914,17 @@ function devSpawnHostile() {
     });
 }
 
-function devFastForward() {
+export function devFastForward() {
     gameState.timeRemaining = Math.max(0, gameState.timeRemaining - 300);
     gameState.lastTimeTick = Date.now();
 }
 
-function devRewind() {
+export function devRewind() {
     gameState.timeRemaining = Math.min(600, gameState.timeRemaining + 300);
     gameState.lastTimeTick = Date.now();
 }
 
-function devToggleDayNight() {
+export function devToggleDayNight() {
     // 將 timeRemaining 跳到下一個時段起點，讓 updateDayNightCycle 自動觸發切換
     const nextIdx = (getDayNightPhaseIndex() + 1) % 8;
     gameState.timeRemaining = Math.max(0, 600 - nextIdx * 75 - 1);
@@ -882,7 +937,7 @@ function devToggleDayNight() {
 
 let _guideKeyHandler = null;
 
-function showGuide(startPage) {
+export function showGuide(startPage) {
     applyDeviceMode();
     if (document.getElementById('guide-overlay')) return;
     const TOTAL = 4;
@@ -1044,7 +1099,7 @@ function showGuide(startPage) {
     render();
 }
 
-function hideGuide() {
+export function hideGuide() {
     const el = document.getElementById('guide-overlay');
     if (el) el.remove();
     if (_guideKeyHandler) {
@@ -1059,7 +1114,7 @@ function hideGuide() {
 
 let _compendiumPaused = false;
 
-function getOrganDisplayName(id) {
+export function getOrganDisplayName(id) {
     if (ORGANS[id]) return ORGANS[id].name;
     if (HIDDEN_ORGANS[id]) return HIDDEN_ORGANS[id].name;
     return id;
@@ -1067,7 +1122,7 @@ function getOrganDisplayName(id) {
 
 // 進化圖鑑：從 EVOLUTION_PATHS 的 effects 動態生成累計描述
 // 草食/雜食速度為累計值；肉食攻擊、雜食白骨素為固定值（當級顯示當級）
-function buildEvoLevelDesc(pathId, upToLevel) {
+export function buildEvoLevelDesc(pathId, upToLevel) {
     const path = EVOLUTION_PATHS[pathId];
     if (!path) return '';
     const levels = path.levels.slice(0, upToLevel);
@@ -1126,7 +1181,7 @@ function buildEvoLevelDesc(pathId, upToLevel) {
     return parts.join('，');
 }
 
-function showCompendium(startTab) {
+export function showCompendium(startTab) {
     applyDeviceMode();
     if (document.getElementById('compendium-overlay')) return;
 
@@ -1715,7 +1770,7 @@ function showCompendium(startTab) {
 // 開始畫面
 // =============================================================
 
-function showMapSelect() {
+export function showMapSelect() {
     applyDeviceMode();
     const prev = document.getElementById('start-screen');
     if (prev) prev.remove();
@@ -1834,14 +1889,15 @@ function showMapSelect() {
         const selDiff = diffs.find(d => d.id === selectedDiff);
         gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         gameState.lastDifficulty = selectedDiff;
-        localStorage.setItem('lastDifficulty', selectedDiff); // B1: 儲存難度供重整頁面後恢復
+        storageSet(STORAGE_KEYS.LAST_DIFFICULTY, selectedDiff); // B1: 儲存難度供重整頁面後恢復
         // 儲存角色選擇
         gameState.selectedCharacter = selectedChar;
+        storageSet(STORAGE_KEYS.LAST_CHARACTER, selectedChar);
         overlay.remove();
         let hasOrgans = false;
         try {
-            const so = localStorage.getItem('savedOrgans');
-            hasOrgans = !!so && JSON.parse(so).length > 0;
+            const so = storageGetJSON(STORAGE_KEYS.SAVED_ORGANS);
+            hasOrgans = !!so && so.length > 0;
         } catch(e) {}
         if (hasOrgans) {
             initializeGame();
@@ -1855,15 +1911,16 @@ function showMapSelect() {
     document.getElementById('game-container').appendChild(overlay);
 }
 
-function showStartScreen() {
+export function showStartScreen() {
     applyDeviceMode();
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
         // 恢復上一場難度與地圖
-        const lastDiff = localStorage.getItem('lastDifficulty') || 'easy';
+        const lastDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
         const _diffMapTable = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
-        gameState.currentMap     = _diffMapTable[lastDiff] || EASY_MAP;
-        gameState.lastDifficulty = lastDiff;
+        gameState.currentMap        = _diffMapTable[lastDiff] || EASY_MAP;
+        gameState.lastDifficulty    = lastDiff;
+        gameState.selectedCharacter = storageGet(STORAGE_KEYS.LAST_CHARACTER) || 'koel';
         initializeGame();
         return;
     }
@@ -1937,7 +1994,7 @@ function showStartScreen() {
     const settingsBtn = document.createElement('button');
     settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
     settingsBtn.textContent = t('settings');
-    settingsBtn.onclick = () => { hideChat(); showSettings(true); };
+    settingsBtn.onclick = () => { hideChat(); showSettings(); };
     _addMenuHover(settingsBtn, 'rgba(50,50,90,0.3)', 'rgba(70,70,140,0.6)', '#4a4a8a', '#7a7aaa', '100,100,200');
     overlay.appendChild(settingsBtn);
 
@@ -2073,7 +2130,7 @@ function showStartScreen() {
     patchBtn.innerHTML = '<div style="font-size:28px;line-height:1;">📋</div><div style="font-size:11px;color:#FFF5DC;letter-spacing:1px;margin-top:3px;">更新</div>';
     // B12: 未讀版本時顯示紅點
     if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
-        const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+        const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
         if (lastSeen !== PATCH_NOTES[0].version) {
             const redDot = document.createElement('div');
             redDot.id = 'patch-red-dot';
@@ -2172,7 +2229,7 @@ function showStartScreen() {
 // Splash 畫面（開發者品牌）
 // =============================================================
 
-function showSplashScreen() {
+export function showSplashScreen() {
     const splash = document.createElement('div');
     splash.id = 'splash-screen';
     splash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:9999;cursor:pointer;transition:opacity 0.8s ease;user-select:none;';
@@ -2220,11 +2277,11 @@ function showSplashScreen() {
 // 版本更新公告系統
 // =============================================================
 
-function showPatchNotes() {
+export function showPatchNotes() {
     applyDeviceMode();
     if (document.getElementById('patch-notes-overlay')) return;
 
-    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
     // 不立即標記已讀，改為追蹤本次已讀的版本 Tab
     const readInSession = new Set();
 
@@ -2287,7 +2344,7 @@ function showPatchNotes() {
         const allRead = _unreadNotes.every(n => readInSession.has(n.version));
         if (allRead) {
             if (notes.length > 0) {
-                localStorage.setItem('lastSeenPatchVersion', notes[0].version);
+                storageSet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION, notes[0].version);
             }
             const _rd = document.getElementById('patch-red-dot');
             if (_rd) _rd.remove();
@@ -2415,20 +2472,20 @@ function showPatchNotes() {
     }
 }
 
-function checkPatchNotesPopup() {
+export function checkPatchNotesPopup() {
     // 新玩家不彈出
-    if (!localStorage.getItem('hasPlayedBefore')) return;
+    if (!storageGet(STORAGE_KEYS.HAS_PLAYED_BEFORE)) return;
     if (typeof PATCH_NOTES === 'undefined' || PATCH_NOTES.length === 0) return;
-    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
     if (lastSeen === PATCH_NOTES[0].version) return;
     // 有未讀版本，自動彈出
     setTimeout(() => showPatchNotes(), 400);
 }
 
-function showGuideStory() {
+export function showGuideStory() {
     applyDeviceMode();
     if (document.getElementById('guide-story-overlay')) return;
-    const chapter2Unlocked = localStorage.getItem('chapter2Unlocked') === 'true';
+    const chapter2Unlocked = storageGet(STORAGE_KEYS.CHAPTER2_UNLOCKED) === 'true';
 
     const overlay = document.createElement('div');
     overlay.id = 'guide-story-overlay';
@@ -2668,7 +2725,7 @@ function showGuideStory() {
             renderPage(currentPage);
         } else {
             overlay.remove();
-            localStorage.setItem('hasPlayedBefore', 'true');
+            storageSet(STORAGE_KEYS.HAS_PLAYED_BEFORE, 'true');
             const startScreen = document.getElementById('start-screen');
             if (startScreen) startScreen.remove();
             initializeGame();
@@ -3160,3 +3217,80 @@ function _getGuideStoryPages() {
 
 // showLeaderboard() 已移至 systems/leaderboard.js
 // showScoreSubmitPopup() 已移至 systems/leaderboard.js
+
+export function buildEndGameOverlay(options) {
+    const overlay = document.createElement('div');
+    overlay.id = options.id;
+    overlay.style.cssText = options.overlayStyle;
+
+    const title = document.createElement('div');
+    title.style.cssText = options.titleStyle;
+    title.textContent = options.titleText;
+    overlay.appendChild(title);
+
+    (options.content || []).forEach(section => {
+        const el = document.createElement('div');
+        el.style.cssText = section.style;
+        if (section.html !== undefined) {
+            el.innerHTML = section.html;
+        } else {
+            el.textContent = section.text || '';
+        }
+        overlay.appendChild(el);
+    });
+
+    if (options.primaryButton) {
+        const primary = document.createElement('button');
+        primary.style.cssText = options.primaryButton.style;
+        primary.textContent = options.primaryButton.text;
+        primary.onclick = options.primaryButton.onClick;
+        overlay.appendChild(primary);
+    }
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = options.buttonRowStyle;
+    const warnEl = document.createElement('div');
+    warnEl.style.cssText = options.warningStyle;
+    btnRow.appendChild(warnEl);
+
+    const rowInner = document.createElement('div');
+    rowInner.style.cssText = options.buttonInnerStyle;
+    (options.secondaryButtons || []).forEach(buttonDef => {
+        const btn = document.createElement('button');
+        btn.style.cssText = buttonDef.style;
+        btn.textContent = buttonDef.text;
+        if (buttonDef.warningText) {
+            let warned = false;
+            btn.onclick = () => {
+                if (!warned) {
+                    warned = true;
+                    warnEl.textContent = buttonDef.warningText;
+                    warnEl.style.display = 'block';
+                    return;
+                }
+                buttonDef.onClick();
+            };
+        } else {
+            btn.onclick = buttonDef.onClick;
+        }
+        rowInner.appendChild(btn);
+    });
+    btnRow.appendChild(rowInner);
+    overlay.appendChild(btnRow);
+
+    if (options.footerText) {
+        const footer = document.createElement('div');
+        footer.style.cssText = options.footerStyle;
+        footer.textContent = options.footerText;
+        overlay.appendChild(footer);
+    }
+
+    if (options.devWarningText) {
+        const devWarn = document.createElement('div');
+        devWarn.style.cssText = options.devWarningStyle;
+        devWarn.textContent = options.devWarningText;
+        overlay.appendChild(devWarn);
+    }
+
+    return overlay;
+}
