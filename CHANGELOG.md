@@ -1,6 +1,20 @@
-## v0.1.6.0
+## v0.1.6.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.6.1 - 2026-06-06
+
+### 效能優化
+- Stage E：移除生物名稱標籤 shadowBlur，改用 strokeText 描邊
+- Stage E：名稱標籤改用 viewport culling，移除 300px 距離剔除
+
+### 調整
+- getGameFont() 強制大字粗體（size + 8px，永遠 bold）
+- 浮動文字永遠大字 + strokeText 描邊
+- fontBoldLarge 開關改為「無字天書/Greek」，開啟後隱藏所有遊戲文字（保留血條）
+- 移除 fontBoldLargeHint 和相關 DOM 元素
 
 ---
 

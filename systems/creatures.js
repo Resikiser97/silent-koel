@@ -1165,6 +1165,7 @@ export function updateNeutralCreatures() {
 }
 
 export function drawNeutralCreatures() {
+    const greekMode = !!(gameState.settings && gameState.settings.fontBoldLarge);
     for (const creature of gameState.neutralCreatures) {
         if (creature.hp <= 0) continue;
         const s = worldToScreen(creature.x, creature.y);
@@ -1206,39 +1207,39 @@ export function drawNeutralCreatures() {
         ctx.fillStyle = '#00CC00';
         ctx.fillRect(barX, barY, barW * (creature.hp / (creature.maxHp || 30)), barH);
 
-        const displayName = creature.isAlpha     ? (creature.name || '') + '（Alpha）'
-                          : creature.isGiantized ? (creature.name || '') + '（巨人化）'
-                          : (creature.name || '');
-        if (displayName) {
-            ctx.save();
-            ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
-            ctx.fillStyle = creature.isAlpha ? '#FFD700' : '#FFFFFF';
-            ctx.font = creature.isGiantized ? getGameFont(13, true) : getGameFont(12, false);
-            ctx.textAlign = 'center';
-            ctx.lineJoin = 'round';
-            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
-            ctx.strokeText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
-            ctx.fillText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
-            ctx.restore();
-        }
-        if (creature.packName) {
-            const leader = creature.packLeader ? creature : creature.packLeaderRef;
-            const memberCount = leader
-                ? 1 + (leader.packMembers ? leader.packMembers.filter(m => m.hp > 0).length : 0)
-                : 1;
-            const packLimit = leader ? _getPackLimit(leader) : 5;
-            ctx.save();
-            ctx.shadowColor = '#000'; ctx.shadowBlur = 2;
-            ctx.font = getGameFont(10, false);
-            ctx.fillStyle = 'rgba(255,230,150,0.85)';
-            ctx.textAlign = 'center';
-            ctx.lineJoin = 'round';
-            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
-            ctx.strokeText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
-            ctx.fillText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
-            ctx.restore();
+        if (!greekMode) {
+            const displayName = creature.isAlpha     ? (creature.name || '') + '（Alpha）'
+                              : creature.isGiantized ? (creature.name || '') + '（巨人化）'
+                              : (creature.name || '');
+            if (displayName) {
+                ctx.save();
+                ctx.fillStyle = creature.isAlpha ? '#FFD700' : '#FFFFFF';
+                ctx.font = creature.isGiantized ? getGameFont(13, true) : getGameFont(12, false);
+                ctx.textAlign = 'center';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                ctx.lineWidth = 3.5;
+                ctx.strokeText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
+                ctx.fillText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
+                ctx.restore();
+            }
+            if (creature.packName) {
+                const leader = creature.packLeader ? creature : creature.packLeaderRef;
+                const memberCount = leader
+                    ? 1 + (leader.packMembers ? leader.packMembers.filter(m => m.hp > 0).length : 0)
+                    : 1;
+                const packLimit = leader ? _getPackLimit(leader) : 5;
+                ctx.save();
+                ctx.font = getGameFont(10, false);
+                ctx.fillStyle = 'rgba(255,230,150,0.85)';
+                ctx.textAlign = 'center';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                ctx.lineWidth = 3.5;
+                ctx.strokeText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
+                ctx.fillText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
+                ctx.restore();
+            }
         }
     }
 }
@@ -1644,6 +1645,7 @@ export function drawCorpses() {
 }
 
 export function drawHostileCreatures() {
+    const greekMode = !!(gameState.settings && gameState.settings.fontBoldLarge);
     for (const creature of gameState.hostileCreatures) {
         if (creature.hp <= 0) continue;
         const s = worldToScreen(creature.x, creature.y);
@@ -1673,44 +1675,44 @@ export function drawHostileCreatures() {
         ctx.fillStyle = '#00CC00';
         ctx.fillRect(barX, barY, barW * (creature.hp / (creature.maxHp || 50)), barH);
 
-        const hostileDisplayName = _getCreatureDisplayName(creature);
-        if (hostileDisplayName) {
-            ctx.save();
-            ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
-            ctx.fillStyle   = creature.isKiller ? '#FF8800' : '#FFFFFF';
-            ctx.font        = creature.isKiller  ? getGameFont(12, true) : getGameFont(12, false);
-            ctx.textAlign   = 'center';
-            ctx.lineJoin = 'round';
-            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
-            ctx.strokeText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
-            ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
-            ctx.restore();
-        }
-        // ── 鬣狗隊名標籤 ──
-        if (creature.speciesId === 'hyena' && creature.packName) {
-            const packCount = gameState.hostileCreatures.filter(
-                c => c.speciesId === 'hyena' && c.packGroup === creature.packGroup && c.hp > 0
-            ).length;
-            ctx.save();
-            ctx.shadowColor = '#000'; ctx.shadowBlur = 2;
-            ctx.font = getGameFont(10, false);
-            ctx.fillStyle = 'rgba(255, 200, 100, 0.85)';
-            ctx.textAlign = 'center';
-            ctx.lineJoin = 'round';
-            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
-            ctx.strokeText(
-                creature.packName + '(' + packCount + '/3)',
-                s.x,
-                s.y - creature.radius * (gameState.cameraZoom || 1) - 22
-            );
-            ctx.fillText(
-                creature.packName + '(' + packCount + '/3)',
-                s.x,
-                s.y - creature.radius * (gameState.cameraZoom || 1) - 22
-            );
-            ctx.restore();
+        if (!greekMode) {
+            const hostileDisplayName = _getCreatureDisplayName(creature);
+            if (hostileDisplayName) {
+                ctx.save();
+                ctx.fillStyle   = creature.isKiller ? '#FF8800' : '#FFFFFF';
+                ctx.font        = creature.isKiller  ? getGameFont(12, true) : getGameFont(12, false);
+                ctx.textAlign   = 'center';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                ctx.lineWidth = 3.5;
+                ctx.strokeText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
+                ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
+                ctx.restore();
+            }
+            // ── 鬣狗隊名標籤 ──
+            if (creature.speciesId === 'hyena' && creature.packName) {
+                const packCount = gameState.hostileCreatures.filter(
+                    c => c.speciesId === 'hyena' && c.packGroup === creature.packGroup && c.hp > 0
+                ).length;
+                ctx.save();
+                ctx.font = getGameFont(10, false);
+                ctx.fillStyle = 'rgba(255, 200, 100, 0.85)';
+                ctx.textAlign = 'center';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                ctx.lineWidth = 3.5;
+                ctx.strokeText(
+                    creature.packName + '(' + packCount + '/3)',
+                    s.x,
+                    s.y - creature.radius * (gameState.cameraZoom || 1) - 22
+                );
+                ctx.fillText(
+                    creature.packName + '(' + packCount + '/3)',
+                    s.x,
+                    s.y - creature.radius * (gameState.cameraZoom || 1) - 22
+                );
+                ctx.restore();
+            }
         }
     }
 }

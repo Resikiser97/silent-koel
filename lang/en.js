@@ -67,7 +67,7 @@ LANG['en'] = {
         alwaysCenter:     'Center Camera',
         alwaysCenterHint: '',
         minimapFade:      'Map Fade',
-        fontBoldLarge:    'Big & Bold',
+        fontBoldLarge:    'Greek',
         sectionMinimap:  'Minimap Settings',
         sectionCamera:   'Camera Settings',
         minimapSize:     'Minimap',

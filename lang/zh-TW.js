@@ -69,7 +69,7 @@ LANG['zh-TW'] = {
         alwaysCenter:     '角色居中',
         alwaysCenterHint: '',
         minimapFade:      '地圖透明',
-        fontBoldLarge:    '字大又粗',
+        fontBoldLarge:    '無字天書',
         sectionMinimap:  '小地圖設定',
         sectionCamera:   '視野設定',
         minimapSize:     '小地圖',

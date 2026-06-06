@@ -1377,9 +1377,17 @@ export function drawGame() {
     const _t7 = gameState.devMode ? performance.now() : 0;
 
     // 浮動文字批次繪製
-    if (gameState.floatTexts && gameState.floatTexts.length > 0) {
+    const _greekMode = !!(gameState.settings && gameState.settings.fontBoldLarge);
+    if (_greekMode) {
+        // 無字天書：清除過期項目但不繪製
         const now = Date.now();
-        const boldLarge = gameState.settings && gameState.settings.fontBoldLarge;
+        for (let i = gameState.floatTexts.length - 1; i >= 0; i--) {
+            if (now - gameState.floatTexts[i].startTime >= gameState.floatTexts[i].duration) {
+                gameState.floatTexts.splice(i, 1);
+            }
+        }
+    } else if (gameState.floatTexts && gameState.floatTexts.length > 0) {
+        const now = Date.now();
         ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -1402,21 +1410,12 @@ export function drawGame() {
             const drawX = (s.x) | 0;
             const drawY = (s.y - offsetY) | 0;
 
-            const fz = boldLarge ? (ft.fontSize + 8) : ft.fontSize;
-            ctx.font = boldLarge
-                ? 'bold ' + fz + 'px Arial'
-                : fz + 'px Arial';
-
+            ctx.font = `bold ${ft.fontSize + 8}px Arial`;
             ctx.globalAlpha = alpha;
-
-            if (boldLarge) {
-                // 字大又粗：簡單黑色描邊一次
-                ctx.strokeStyle = 'rgba(0,0,0,0.9)';
-                ctx.lineWidth = 2;
-                ctx.lineJoin = 'round';
-                ctx.strokeText(ft.text, drawX, drawY);
-            }
-
+            ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            ctx.strokeText(ft.text, drawX, drawY);
             ctx.fillStyle = ft.color;
             ctx.fillText(ft.text, drawX, drawY);
         }
