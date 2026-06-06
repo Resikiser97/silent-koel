@@ -770,9 +770,21 @@ function _buildSkillTreeMainContent(effectiveMode, overlay, titleEl, switchBtn) 
     mutCloseBtn.onmouseenter = () => { mutCloseBtn.style.background = 'rgba(255,255,255,0.16)'; };
     mutCloseBtn.onmouseleave = () => { mutCloseBtn.style.background = 'rgba(255,255,255,0.08)'; };
     mutCloseBtn.onclick = () => {
-        const ov = document.getElementById('skill-tree-overlay');
-        if (ov) ov.remove();
-        gameState.skillTreeOpen = false;
+        if (_skillTreeMode === 'postGame') {
+            // postGame 模式：關閉變異面板，顯示技能樹主內容
+            // 不移除整個 overlay，只切換回 skillContent
+            mutContent.style.display = 'none';
+            skillContent.style.display = '';
+            titleEl.style.display = '';
+            if (switchBtn) switchBtn.style.display = '';
+            mutCloseRow.style.display = 'none';
+        } else {
+            // 其他模式（fromHome / forceStart）：
+            // 關閉整個 overlay 是正確行為
+            const ov = document.getElementById('skill-tree-overlay');
+            if (ov) ov.remove();
+            gameState.skillTreeOpen = false;
+        }
     };
     mutCloseRow.appendChild(mutCloseBtn);
     overlay.appendChild(mutCloseRow);
