@@ -30,9 +30,9 @@ import {
     storageSetJSON
 } from '../storage/index.js';
 
-// 模組內部狀態：記錄技能樹當前模式與來源
-// 僅供 evolution.js 內部使用；_skillTreeFromHome 仍暫時 export 給 ui.js 恢復 overlay 狀態
-export let _skillTreeFromHome = false;
+// 模組內部狀態：記錄技能樹是否從首頁開啟
+// 僅供 evolution.js 內部使用，不對外暴露
+let _skillTreeFromHome = false;
 let _skillTreeMode     = null;
 
 export function checkEvolutionUnlock() {

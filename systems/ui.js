@@ -32,7 +32,7 @@ import { applyDeviceMode, _effectiveMobile } from './mobile.js';
 import { addXP } from './player.js';
 import { spawnFruit } from './spawning.js';
 import { getDayNightPhaseIndex } from './daynight.js';
-import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans, _skillTreeFromHome } from './evolution.js';
+import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans } from './evolution.js';
 import { buildChatUI, initChat, showChat, hideChat, _esc } from './chat.js';
 import { showLeaderboard, _diffKey } from './leaderboard.js';
 import { fetchTop10 } from '../config/supabase.js';
@@ -216,7 +216,7 @@ export function switchLanguage(lang) {
     const treeOpen     = !!document.getElementById('skill-tree-overlay');
     const guidePage    = guideOpen ? parseInt(document.getElementById('guide-overlay').dataset.page || '0', 10) : 0;
     const treeCause    = treeOpen ? document.getElementById('skill-tree-overlay').dataset.cause || null : null;
-    const treeFromHome = !!_skillTreeFromHome;
+    const treeFromHome = homeOpen;
 
     // 先把所有 overlay 拆掉，順序按 z 由下到上
     if (homeOpen)     { const e = document.getElementById('start-screen');       if (e) e.remove(); }
