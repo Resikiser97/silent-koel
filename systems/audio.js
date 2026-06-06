@@ -11,6 +11,7 @@ let _introThemeAudio = null;
 export function playIntroTheme() {
     if (_introThemeAudio) return;
     _introThemeAudio = new Audio(AUDIO_FILES.introTheme);
+    AudioManager._connectMusicElement(_introThemeAudio);
     _introThemeAudio.loop = true;
     _introThemeAudio.currentTime = 0;
     const vol = AudioManager._musicVol() * 0.4;
@@ -33,6 +34,14 @@ export const AudioManager = {
     _sfxPools: {},
     _sfxPoolSize: 4,
     _sfxLastPlayed: {},
+    _sfxBuffers: {},
+    _sfxLoading: {},
+    _audioCtx: null,
+    _masterGain: null,
+    _musicGain: null,
+    _sfxGain: null,
+    _unlocked: false,
+    _mediaSourceMap: new Map(),
     _vol: {
         master: 80, music: 70, sfx: 80,
         masterOn: true, musicOn: true, sfxOn: true
@@ -47,11 +56,125 @@ export const AudioManager = {
                 this._sounds[key] = a;
             }
         });
-        // 預熱常用音效
-        ['eatFruit', 'levelUp', 'hurt'].forEach(key => {
-            this._getPooledAudio(key);
-        });
         this._ready = true;
+        // 預熱常用音效（async，不阻塞）
+        ['eatFruit', 'levelUp', 'hurt', 'attackNormal',
+         'archerAttackNormal', 'archerHurt'].forEach(key => {
+            this._loadSfxBuffer(key).catch(() => {});
+        });
+        // Attempt early unlock (may fail without user gesture, that's ok)
+        this.unlock().catch(() => {});
+    },
+
+    // Stubs：由 Part A 覆寫；若 Codex 尚未完成則回傳 null
+    unlock() {
+        if (this._unlocked) return Promise.resolve();
+        try {
+            if (!this._audioCtx) {
+                this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (!this._masterGain) {
+                this._masterGain = this._audioCtx.createGain();
+                this._masterGain.connect(this._audioCtx.destination);
+            }
+            if (!this._musicGain) {
+                this._musicGain = this._audioCtx.createGain();
+                this._musicGain.connect(this._masterGain);
+            }
+            if (!this._sfxGain) {
+                this._sfxGain = this._audioCtx.createGain();
+                this._sfxGain.connect(this._masterGain);
+            }
+            if (this._music) this._connectMusicElement(this._music);
+            if (_introThemeAudio) this._connectMusicElement(_introThemeAudio);
+
+            return this._audioCtx.resume().then(() => {
+                this._unlocked = true;
+                this._applyGainVolumes();
+            }).catch(() => {});
+        } catch(e) {
+            return Promise.resolve();
+        }
+    },
+
+    getContext() {
+        return this._audioCtx;
+    },
+
+    getSfxGain() {
+        return this._sfxGain;
+    },
+
+    _applyGainVolumes() {
+        if (!this._audioCtx || !this._unlocked) return;
+        const master = this._vol.masterOn ? this._vol.master / 100 : 0;
+        const music  = this._vol.musicOn  ? this._vol.music  / 100 : 0;
+        const sfx    = this._vol.sfxOn    ? this._vol.sfx    / 100 : 0;
+        this._masterGain.gain.value = master;
+        this._musicGain.gain.value  = music;
+        this._sfxGain.gain.value    = sfx;
+    },
+
+    _connectMusicElement(audio) {
+        if (!this._audioCtx || !this._musicGain) return;
+        if (this._mediaSourceMap.has(audio)) return;
+        try {
+            const source = this._audioCtx.createMediaElementSource(audio);
+            source.connect(this._musicGain);
+            this._mediaSourceMap.set(audio, source);
+        } catch(e) {}
+    },
+
+    async _loadSfxBuffer(key) {
+        if (this._sfxBuffers[key]) return this._sfxBuffers[key];
+        if (this._sfxLoading[key]) return this._sfxLoading[key];
+
+        const src = AUDIO_FILES[key];
+        if (!src) return null;
+
+        const urls = Array.isArray(src) ? src : [src];
+
+        this._sfxLoading[key] = Promise.all(
+            urls.map(url =>
+                fetch(url)
+                    .then(r => r.arrayBuffer())
+                    .then(ab => this._audioCtx.decodeAudioData(ab))
+                    .catch(() => null)
+            )
+        ).then(buffers => {
+            const valid = buffers.filter(Boolean);
+            if (valid.length === 0) return null;
+            this._sfxBuffers[key] = valid.length === 1 ? valid[0] : valid;
+            delete this._sfxLoading[key];
+            return this._sfxBuffers[key];
+        });
+
+        return this._sfxLoading[key];
+    },
+
+    _playSfxBuffer(key) {
+        const ctx = this.getContext();
+        const gainNode = this.getSfxGain();
+        if (!ctx || !gainNode || !this._unlocked) return false;
+
+        const bufferOrArr = this._sfxBuffers[key];
+        if (!bufferOrArr) return false;
+
+        // 支援音效變體（陣列隨機選一個）
+        const buffer = Array.isArray(bufferOrArr)
+            ? bufferOrArr[Math.floor(Math.random() * bufferOrArr.length)]
+            : bufferOrArr;
+        if (!buffer) return false;
+
+        try {
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(gainNode);
+            source.start(0);
+            return true;
+        } catch(e) {
+            return false;
+        }
     },
 
     // 從 settings 物件載入音量（loadSettings 呼叫）
@@ -59,6 +182,7 @@ export const AudioManager = {
         if (!volumeSettings) return;
         this._vol = Object.assign({}, this._vol, volumeSettings);
         this.refreshMusicVolume();
+        this._applyGainVolumes();
     },
 
     // 設定單一音量 key（UI 滑桿呼叫）
@@ -69,6 +193,7 @@ export const AudioManager = {
             gameState.settings.volume[key] = value;
         }
         this.refreshMusicVolume();
+        this._applyGainVolumes();
     },
 
     // 取得序列化音量（saveSettings 呼叫）
@@ -117,11 +242,20 @@ export const AudioManager = {
         if (this._sfxLastPlayed[key] && now - this._sfxLastPlayed[key] < throttleMs) return;
         this._sfxLastPlayed[key] = now;
 
+        // 優先用 AudioBuffer（Web Audio API，iOS 不卡頓）
+        if (this._playSfxBuffer(key)) return;
+
+        // Fallback：AudioBuffer 未就緒時用舊 HTMLAudio pool
         const audio = this._getPooledAudio(key);
         if (!audio) return;
         audio.volume = vol;
         audio.currentTime = 0;
         audio.play().catch(() => {});
+
+        // 非同步載入 buffer 供下次使用
+        if (this._audioCtx && !this._sfxBuffers[key]) {
+            this._loadSfxBuffer(key).catch(() => {});
+        }
     },
 
     playMusic(key) {
@@ -149,6 +283,7 @@ export const AudioManager = {
         newAudio.currentTime = 0;
         newAudio.volume = 0;
         this._music = newAudio;
+        this._connectMusicElement(newAudio);
 
         if (this._musicVol() <= 0) return;
 
@@ -220,6 +355,8 @@ export const AudioManager = {
                 }
             } catch(e) {}
         }
+
+        this._applyGainVolumes();
     }
 };
 

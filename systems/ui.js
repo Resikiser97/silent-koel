@@ -1886,6 +1886,7 @@ export function showMapSelect() {
     startBtn.style.cssText = 'font-size:16px;padding:10px 28px;cursor:pointer;border-radius:4px;background:#2a5a2a;border:2px solid #FFD700;color:white;font-weight:bold;pointer-events:all;font-family:Arial,sans-serif;';
     startBtn.textContent = t('btnStart');
     startBtn.onclick = () => {
+        AudioManager.unlock().catch(() => {});
         const selDiff = diffs.find(d => d.id === selectedDiff);
         gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         gameState.lastDifficulty = selectedDiff;
@@ -1966,7 +1967,7 @@ export function showStartScreen() {
     const startBtn = document.createElement('button');
     startBtn.style.cssText = menuBtnStyle + 'background:#2a5a2a;border:1px solid #4a8a4a;';
     startBtn.textContent = t('startGame');
-    startBtn.onclick = () => { hideChat(); showMapSelect(); };
+    startBtn.onclick = () => { AudioManager.unlock().catch(() => {}); hideChat(); showMapSelect(); };
     _addMenuHover(startBtn, '#2a5a2a', '#3a7a3a', '#4a8a4a', '#6aaa6a', '74,170,74');
     overlay.appendChild(startBtn);
 
@@ -2267,6 +2268,7 @@ export function showSplashScreen() {
     });
 
     splash.addEventListener('click', () => {
+        AudioManager.unlock().catch(() => {});
         if (typeof playIntroTheme === 'function') playIntroTheme();
         splash.style.opacity = '0';
         setTimeout(() => { splash.remove(); showStartScreen(); }, 800);
