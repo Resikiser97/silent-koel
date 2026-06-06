@@ -773,10 +773,11 @@ function _buildSkillTreeMainContent(effectiveMode, overlay, titleEl, switchBtn) 
         if (_skillTreeMode === 'postGame') {
             // postGame 模式：關閉變異面板，顯示技能樹主內容
             // 不移除整個 overlay，只切換回 skillContent
+            _showingMut = false;
             mutContent.style.display = 'none';
-            skillContent.style.display = '';
-            titleEl.style.display = '';
-            if (switchBtn) switchBtn.style.display = '';
+            skillContent.style.display = 'flex';
+            titleEl.textContent = t('skillTreeTitle');
+            if (switchBtn) switchBtn.textContent = '⚗️ ' + t('mutationSkillTreeBtn');
             mutCloseRow.style.display = 'none';
         } else {
             // 其他模式（fromHome / forceStart）：
