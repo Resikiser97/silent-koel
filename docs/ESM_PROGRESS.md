@@ -59,7 +59,7 @@
 - [x] Phase 2：TODO-01 buildSkillTreeOverlay 拆模組
 - [x] Phase 2：TODO-03 變異技能面板統一
 - [x] Phase 3：TODO-02 結算畫面統一
-- [ ] Phase 3：TODO-05 設定面板 fromHome 移除
+- [x] Phase 3：TODO-05 設定面板 fromHome 移除
 - [ ] Phase 3：TODO-07 gameState 存取控制
 - [ ] Phase 4：TODO-08/09/10 收尾清理
 
@@ -71,6 +71,17 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-05（Stage 3 TODO-05 設定面板 fromHome 移除完成）
+- 狀態：Stage 3 Phase 3 TODO-05 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/ui.js` 的 `showSettings()` 移除 `fromHome` 參數
+  - `showSettings()` 內部改用 `!!document.getElementById('start-screen')` 自動偵測首頁狀態
+  - `switchLanguage()` 重建 settings overlay 與首頁設定按鈕呼叫點改為無參數 `showSettings()`
+  - 修正重設預設值後從首頁開啟設定時會被當成遊戲中設定的潛在問題
+- 發現問題：無
+- 下一步：Phase 3 TODO-07 gameState 存取控制
 
 ### 2026-06-05（Stage 3 TODO-02 結算畫面統一完成）
 - 狀態：Stage 3 Phase 3 TODO-02 完成

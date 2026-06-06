@@ -227,7 +227,7 @@ export function switchLanguage(lang) {
     if (homeOpen)     showStartScreen();
     if (treeOpen)     buildSkillTreeOverlay(treeCause, treeFromHome);
     if (guideOpen)    showGuide(guidePage);
-    if (settingsOpen) showSettings(homeOpen);
+    if (settingsOpen) showSettings();
 
     // 圖鑑開啟中則即時重繪（compendium 不在上方 close/reopen 流程中）
     const _co = document.getElementById('compendium-overlay');
@@ -258,7 +258,8 @@ function _buildSettingsSection(title) {
     return sec;
 }
 
-export function showSettings(fromHome) {
+export function showSettings() {
+    const fromHome = !!document.getElementById('start-screen');
     applyDeviceMode();
     if (document.getElementById('settings-overlay')) return;
     gameState.settingsOpen = true;
@@ -1992,7 +1993,7 @@ export function showStartScreen() {
     const settingsBtn = document.createElement('button');
     settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
     settingsBtn.textContent = t('settings');
-    settingsBtn.onclick = () => { hideChat(); showSettings(true); };
+    settingsBtn.onclick = () => { hideChat(); showSettings(); };
     _addMenuHover(settingsBtn, 'rgba(50,50,90,0.3)', 'rgba(70,70,140,0.6)', '#4a4a8a', '#7a7aaa', '100,100,200');
     overlay.appendChild(settingsBtn);
 
