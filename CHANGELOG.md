@@ -1,6 +1,15 @@
-## v0.1.5.2
+## v0.1.6.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.6.0 - 2026-06-06
+
+### 重構
+- Stage C Slice 3：建立 `stats/index.js`，sessionStats 讀寫統一（`resetSessionStats` / `getSessionStats` / `incrementStat` / `updateStatMax`）；`main.js`、`systems/combat.js`、`systems/player.js`、`config/supabase.js`、`systems/leaderboard.js` 全部改用 stats 入口
+- Stage C Slice 2：`systems/evolution.js` fromHome/forceStart 與 postGame 的 mutationSkills 載入改呼叫 `initMutationSkills()`，不再直接 `Object.assign` 寫入 `gameState.mutationSkills`
+- 測試：新增 `tests/stats/stats.test.js`（9 tests），修正 `vi.hoisted` hoisting 問題；總計 64/64 通過
 
 ---
 

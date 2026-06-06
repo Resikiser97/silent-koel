@@ -18,6 +18,7 @@ import { addXP, showXPPopup } from './player.js';
 import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
 import { handleBossKill } from './boss.js';
 import { showSkillTree } from './evolution.js';
+import { incrementStat, updateStatMax } from '../stats/index.js';
 import { _archerAttack } from './player.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 
@@ -138,7 +139,7 @@ export function handleGiantKill(c) {
     }
 
     // 記錄巨人化擊殺數
-    if (gameState.sessionStats) gameState.sessionStats.giantKills = (gameState.sessionStats.giantKills || 0) + 1;
+    incrementStat('giantKills');
 
     // 清理隊伍與UI追蹤狀態
     if (c.isAlpha && gameState.alphaCreature === c) gameState.alphaCreature = null;
@@ -174,12 +175,8 @@ function handleKillerKill(creature) {
     }
 
     // 記錄殺手化擊殺數與最高等級
-    if (gameState.sessionStats) {
-        gameState.sessionStats.killerKills = (gameState.sessionStats.killerKills || 0) + 1;
-        if ((creature.killerLevel || 0) > (gameState.sessionStats.killerMaxLevel || 0)) {
-            gameState.sessionStats.killerMaxLevel = creature.killerLevel || 0;
-        }
-    }
+    incrementStat('killerKills');
+    updateStatMax('killerMaxLevel', creature.killerLevel || 0);
 
     // 殺手本身屍體
     gameState.corpses.push({ x: creature.x, y: creature.y, radius: creature.radius, spawnTime: Date.now() });
@@ -194,9 +191,7 @@ export function handleKill(c, isHostile) {
     const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * 10;
     const actualXP = addXP(rawXP);
     showXPPopup(p.x, p.y, actualXP);
-    if (gameState.sessionStats) {
-        gameState.sessionStats.normalKills = (gameState.sessionStats.normalKills || 0) + 1;
-    }
+    incrementStat('normalKills');
 }
 
 export function playerAttack() {

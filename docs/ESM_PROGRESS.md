@@ -72,6 +72,17 @@
 
 ## 事件紀錄（最新在最上方）
 
+### 2026-06-06（Stage C Slice 2 + 3 完成）
+- 狀態：Stage C gameState 存取控制完成（sessionStats + mutationSkills）
+- 操作者：Claude Code
+- 完成項目：
+  - Slice 3：建立 `stats/index.js`，提供 `resetSessionStats` / `getSessionStats` / `incrementStat` / `updateStatMax`；`main.js` / `combat.js` / `player.js` / `supabase.js` / `leaderboard.js` 全部改用 stats 入口
+  - Slice 2：`evolution.js` fromHome/forceStart 與 postGame 的 mutationSkills 載入改呼叫 `initMutationSkills()`，移除兩段直接 `Object.assign` 寫入
+  - 測試：新增 `tests/stats/stats.test.js`（9 tests），修正 `vi.hoisted` hoisting 問題；總計 64/64 通過
+  - 版本 bump：v0.1.5.2 → v0.1.6.0
+- 發現問題：stats.test.js 初版的 `vi.mock` factory 因 hoisting 無法存取 `mockGameState`，已改用 `vi.hoisted()` 修復
+- 下一步：Stage D 中層系統重構
+
 ### 2026-06-06（Codex 靜態審計）
 - 狀態：stable 同步完成，ESM import 靜態審計完成
 - 操作者：Codex

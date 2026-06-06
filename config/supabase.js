@@ -28,7 +28,7 @@
 //   ⚠️ submitScore 的趣味統計欄位若未傳入會自動從 gameState.sessionStats 補填
 // =============================================================
 
-import { gameState } from '../systems/gameState.js';
+import { getSessionStats } from '../stats/index.js';
 
 export const SUPABASE_URL = 'https://wrcblrcihzsuwivowxbw.supabase.co';
 export const SUPABASE_KEY = 'sb_publishable_OXb03F0LNFzkJnMfgmd-uw_c2T3t4Rk';
@@ -59,11 +59,12 @@ export async function supabaseQuery(table, method, body = null, params = '') {
 
 export async function submitScore(data) {
     // 確保趣味統計欄位存在（九）
-    if (data.giant_kills === undefined) data.giant_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.giantKills || 0) : 0;
-    if (data.killer_kills === undefined) data.killer_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.killerKills || 0) : 0;
-    if (data.killer_max_level === undefined) data.killer_max_level = (gameState && gameState.sessionStats) ? (gameState.sessionStats.killerMaxLevel || 0) : 0;
-    if (data.fruits_eaten === undefined) data.fruits_eaten = (gameState && gameState.sessionStats) ? (gameState.sessionStats.fruitsEaten || 0) : 0;
-    if (data.normal_kills === undefined) data.normal_kills = (gameState && gameState.sessionStats) ? (gameState.sessionStats.normalKills || 0) : 0;
+    const ss = getSessionStats();
+    if (data.giant_kills === undefined) data.giant_kills = ss.giantKills || 0;
+    if (data.killer_kills === undefined) data.killer_kills = ss.killerKills || 0;
+    if (data.killer_max_level === undefined) data.killer_max_level = ss.killerMaxLevel || 0;
+    if (data.fruits_eaten === undefined) data.fruits_eaten = ss.fruitsEaten || 0;
+    if (data.normal_kills === undefined) data.normal_kills = ss.normalKills || 0;
     return supabaseQuery('leaderboard', 'POST', data);
 }
 

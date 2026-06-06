@@ -17,6 +17,7 @@
 
 // ── 排行榜難度狀態（模組級，跨面板同步）
 import { gameState } from './gameState.js';
+import { getSessionStats } from '../stats/index.js';
 import { GAME_INFO } from '../config/gameConfig.js';
 import {
     submitScore,
@@ -330,21 +331,21 @@ export function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             label:    '👾 巨人獵人榜',
             fetchFn:  () => fetchFunGiantKills(difficulty),
             colName:  'giant_kills',
-            myValue:  gameState.sessionStats ? (gameState.sessionStats.giantKills || 0) : 0,
+            myValue:  getSessionStats().giantKills || 0,
             ascending: false,  // 越大越好
         },
         {
             label:    '🔪 殺手獵人榜',
             fetchFn:  () => fetchFunKillerKills(difficulty),
             colName:  'killer_kills',
-            myValue:  gameState.sessionStats ? (gameState.sessionStats.killerKills || 0) : 0,
+            myValue:  getSessionStats().killerKills || 0,
             ascending: false,
         },
         {
             label:    '⭐ 殺手克星榜',
             fetchFn:  () => fetchFunKillerMaxLevel(difficulty),
             colName:  'killer_max_level',
-            myValue:  gameState.sessionStats ? (gameState.sessionStats.killerMaxLevel || 0) : 0,
+            myValue:  getSessionStats().killerMaxLevel || 0,
             ascending: false,
         },
         {
@@ -372,14 +373,14 @@ export function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             label:    '🍎 最佳果王',
             fetchFn:  () => fetchFunFruitsEaten(difficulty),
             colName:  'fruits_eaten',
-            myValue:  gameState.sessionStats ? (gameState.sessionStats.fruitsEaten || 0) : 0,
+            myValue:  getSessionStats().fruitsEaten || 0,
             ascending: false,
         },
         {
             label:    '🏹 最強獵戶',
             fetchFn:  () => fetchFunNormalKills(difficulty),
             colName:  'normal_kills',
-            myValue:  gameState.sessionStats ? (gameState.sessionStats.normalKills || 0) : 0,
+            myValue:  getSessionStats().normalKills || 0,
             ascending: false,
         },
     ];

@@ -316,26 +316,11 @@ function _resolveSkillTreeState(cause, fromHome, startAfter, mode) {
             if (sp) gameState.skillPoints = Math.max(0, parseInt(sp, 10) || 0);
             const rawMd = storageGetJSON(STORAGE_KEYS.MUTATION_DATA);
             if (rawMd && gameState.mutationData) Object.assign(gameState.mutationData, rawMd);
-            const rawMs = storageGetJSON(STORAGE_KEYS.MUTATION_SKILLS);
-            if (rawMs && gameState.mutationSkills) Object.assign(gameState.mutationSkills, rawMs);
+            initMutationSkills();
         } catch(e) {}
     }
     if (effectiveMode === 'postGame') {
-        // postGame：確保 mutationSkills 從 localStorage 最新資料載入
-        // （避免遊戲期間記憶體狀態與 localStorage 不同步）
-        const _parsedMS = storageGetJSON(STORAGE_KEYS.MUTATION_SKILLS);
-        if (_parsedMS) {
-            try {
-                if (_parsedMS && _parsedMS.skills) {
-                    gameState.mutationSkills = Object.assign(
-                        {},
-                        gameState.mutationSkills || {},
-                        _parsedMS,
-                        { skills: Object.assign({}, (gameState.mutationSkills && gameState.mutationSkills.skills) || {}, _parsedMS.skills) }
-                    );
-                }
-            } catch(e) {}
-        }
+        initMutationSkills();
     }
     return {
         cause,

@@ -21,6 +21,7 @@ import { handleEliteKill } from './organs.js';
 import { handleBossKill } from './boss.js';
 import { spawnFruitFromTree } from './spawning.js';
 import { getOrganLevel, getOrganCumulative, applyOrganEffects, showOrganSelection } from './organs.js';
+import { incrementStat } from '../stats/index.js';
 import { _joyPaused } from './mobile.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 
@@ -288,9 +289,7 @@ function _collectFruit(p, fruit) {
     const actualFruitXP = addXP(fruitXP);
     AudioManager.play('eatFruit');
     showXPPopup(p.x, p.y, actualFruitXP);
-    if (gameState.sessionStats) {
-        gameState.sessionStats.fruitsEaten = (gameState.sessionStats.fruitsEaten || 0) + 1;
-    }
+    incrementStat('fruitsEaten');
 }
 
 export function playerDash() {
