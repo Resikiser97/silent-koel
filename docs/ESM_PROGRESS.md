@@ -72,6 +72,13 @@
 
 ## 事件紀錄（最新在最上方）
 
+### 2026-06-06（Codex 靜態審計）
+- 狀態：stable 同步完成，ESM import 靜態審計完成
+- 操作者：Codex
+- 完成項目：master merge 進 stable，import 路徑全部驗證
+- 發現問題：無；38 個 JS 檔案檢查完成，0 個失敗，ESM import audit PASSED
+- 下一步：Vercel 確認部署
+
 ### 2026-06-06（Stage 4 完成）
 - 狀態：esm-refactor merge 進 master，Stage 4 完成
 - 操作者：Claude Code
