@@ -261,71 +261,7 @@
 <canvas id="joystick-canvas" style="display:none;position:fixed;top:0;left:0;pointer-events:none;z-index:400;touch-action:none;"></canvas>
 <div id="game-tooltip"></div>
 
-<script src="config/gameConfig.js"></script>
-<script src="config/patchnotes.js"></script>
-<script src="config/supabase.js"></script>
-<script src="config/organs.js"></script>
-<script src="config/characters.js"></script>
-<script src="config/creatures.js"></script>
-<script src="config/evolution.js"></script>
-<script src="map/easymap.js"></script>
-<script src="map/normalmap.js"></script>
-<script src="lang.js"></script>
-<script src="lang/zh-TW.js"></script>
-<script src="lang/en.js"></script>
-<script src="systems/gameState.js"></script>
-<script src="systems/map.js"></script>
-<script src="systems/utils.js"></script>
-<script src="systems/audio.js"></script>
-<script src="systems/camera.js"></script>
-<script src="systems/input.js"></script>
-<script src="systems/spawning.js"></script>
-<script src="systems/player.js"></script>
-<script src="systems/tutorial.js"></script>
-<script src="systems/combat.js"></script>
-<script src="systems/organs.js"></script>
-<script src="systems/mutation.js"></script>
-<script src="systems/evolution.js"></script>
-<script src="systems/creatures.js"></script>
-<script src="systems/elite.js"></script>
-<script src="systems/boss.js"></script>
-<script src="systems/daynight.js"></script>
-<script src="systems/leaderboard.js"></script>
-<script src="systems/mobile.js"></script>
-<script src="systems/hud.js"></script>
-<script src="systems/ui.js"></script>
-<script src="main.js"></script>
-
-<script>
-function buildCrown(type) {
-    return `<span class="crown-${type}">` +
-        `<div class="crown-top">` +
-        `<span class="crown-star">✦</span>` +
-        `<div class="crown-spike"></div>` +
-        `<div class="crown-spike"></div>` +
-        `<div class="crown-spike"></div>` +
-        `<span class="crown-star">✦</span>` +
-        `</div>` +
-        `<div class="crown-base"></div>` +
-        `</span>`;
-}
-
-function getRankIcon(rank) {
-    if (rank === 1) return buildCrown('gold');
-    if (rank === 2) return buildCrown('silver');
-    if (rank === 3) return buildCrown('bronze');
-    if (rank <= 10) return '🎖️';
-    return String(rank);
-}
-
-if (typeof fetchTop10 === 'undefined') {
-    function fetchTop10(difficulty) { return Promise.reject(new Error('no supabase')); }
-    function fetchVictoryRecords(difficulty) { return Promise.reject(new Error('no supabase')); }
-    function fetchDefeatRecords(limit, difficulty) { return Promise.reject(new Error('no supabase')); }
-    function fetchAvailableDifficulties() { return Promise.resolve([]); }
-    function submitScore() { return Promise.reject(new Error('no supabase')); }
-}
-</script>
+<script type="module" src="./main.js"></script>
 
 </body>
 </html>

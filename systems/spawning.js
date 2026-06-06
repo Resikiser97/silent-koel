@@ -5,8 +5,11 @@
 //            _randomPointInBiome / _makeHerbCreature / _makeCarnCreature
 // （generateTrees 已移至 systems/map.js）
 // =============================================================
+import { gameState } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, getBiome } from './map.js';
+import { BIOME_CREATURES } from '../config/creatures.js';
 
-function spawnFruitFromTree(tree) {
+export function spawnFruitFromTree(tree) {
     for (let attempts = 0; attempts < 20; attempts++) {
         const angle = Math.random() * Math.PI * 2;
         const dist = tree.radius + 5 + Math.random() * 20;
@@ -28,7 +31,7 @@ function spawnFruitFromTree(tree) {
     return null;
 }
 
-function spawnFruit() {
+export function spawnFruit() {
     if (gameState.trees.length === 0) return null;
     const tree = gameState.trees[Math.floor(Math.random() * gameState.trees.length)];
     return spawnFruitFromTree(tree);
@@ -60,7 +63,7 @@ function _makeHerbCreature(x, y, biome, spec, strength) {
         baseHp: 30,
         speed:     2.4 * str.speedMultiplier,
         baseSpeed: 2.4,
-        damage:     canFight ? 3 : 0,
+        damage:     canFight ? Math.round(3 * str.damageMultiplier) : 0,
         baseDamage: canFight ? 3 : 0,
         diet: 'herbivore',
         canFight,
@@ -86,19 +89,23 @@ function _makeCarnCreature(x, y, biome, spec, strength, mapConfig) {
     const removeCap = !!(mapConfig && mapConfig.removeHostileCap);
     const aggroRange = (mapConfig && mapConfig.aggroRangeOverride) ? mapConfig.aggroRangeOverride : 150;
     const now = Date.now();
-    let speed  = 3.6 * str.speedMultiplier;
-    let damage = Math.round(5 * str.damageMultiplier);
+    const nightNum  = Math.floor((gameState.currentPhaseIndex + 1) / 2);
+    const hpDmgMult = Math.pow(1.2, nightNum);
+    const speedMult = Math.pow(1.1, nightNum);
+    let speed  = 3.6 * str.speedMultiplier * speedMult;
+    let damage = Math.round(5 * str.damageMultiplier * hpDmgMult);
     if (!removeCap) {
         speed  = Math.min(7.5, speed);
-        damage = Math.min(20, damage);
+        damage = Math.min(20,  damage);
     }
+    const hp = Math.round(50 * str.hpMultiplier * hpDmgMult);
     return {
         x, y, biome,
         speciesId: spec.id,
         name: spec.name,
         radius: 10,
-        hp:    Math.round(50 * str.hpMultiplier),
-        maxHp: Math.round(50 * str.hpMultiplier),
+        hp,
+        maxHp: hp,
         baseHp: 50,
         speed,
         baseSpeed: 3.6,
@@ -129,11 +136,13 @@ function _makeCarnCreature(x, y, biome, spec, strength, mapConfig) {
 }
 
 // ── 初始生成：按生態區各生成草系10隻、肉系8隻
-function spawnBiomeCreatures() {
+export function spawnBiomeCreatures() {
     gameState.neutralCreatures = [];
     gameState.hostileCreatures = [];
+    gameState.spawnProtectUntil = Date.now() + 3000; // 出生後 3 秒內中心附近不生肉食怪
     const map      = gameState.currentMap;
     const strength = map ? map.creatureStrength : null;
+    const centerProtectR = (map && map.terrain && map.terrain.forestCenterRadius) || 400;
 
     for (const biome of ['forest', 'ocean', 'desert']) {
         const herbSpec = BIOME_CREATURES[biome].herbivore;
@@ -144,18 +153,20 @@ function spawnBiomeCreatures() {
         }
         for (let i = 0; i < 8; i++) {
             const { x, y } = _randomPointInBiome(biome);
+            const dx = x - 4000, dy = y - 4000;
+            if (Math.sqrt(dx * dx + dy * dy) < centerProtectR) continue;
             gameState.hostileCreatures.push(_makeCarnCreature(x, y, biome, carnSpec, strength, map));
         }
     }
     console.log('--- 生態生物生成完成：草系' + gameState.neutralCreatures.length + '隻、肉系' + gameState.hostileCreatures.length + '隻 ---');
 }
 
-function moveCreature(entity, newX, newY) {
+export function moveCreature(entity, newX, newY) {
     entity.x = ((newX % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
     entity.y = ((newY % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
 }
 
-function spawnTreasure() {
+export function spawnTreasure() {
     gameState.treasures.push({
         x: Math.random() * (MAP_WIDTH  - 60) + 30,
         y: Math.random() * (MAP_HEIGHT - 60) + 30,
@@ -164,7 +175,7 @@ function spawnTreasure() {
 }
 
 // ── 補充生成：在指定生態區生成一隻草系或肉系生物
-function spawnCreatureAtEdgeBiome(biome, type) {
+export function spawnCreatureAtEdgeBiome(biome, type) {
     const map      = gameState.currentMap;
     const strength = map ? map.creatureStrength : null;
     const { x, y } = _randomPointInBiome(biome);
@@ -177,7 +188,7 @@ function spawnCreatureAtEdgeBiome(biome, type) {
     }
 }
 
-function updateCreatureSpawning() {
+export function updateCreatureSpawning() {
     const now     = Date.now();
     const elapsed = 600 - gameState.timeRemaining;
     gameState.creatureStrengthMultiplier = Math.floor(elapsed / 150);
@@ -199,6 +210,7 @@ function updateCreatureSpawning() {
         const carnKey   = biome + '_carn';
         const carnAlive = gameState.hostileCreatures.filter(c => c.hp > 0 && c.biome === biome).length;
         const carnTimer = carnAlive < 3 ? CARN_INTERVAL * 0.3 : CARN_INTERVAL; // 少於3隻加速70%
+        if (now < (gameState.spawnProtectUntil || 0)) continue; // 出生保護期間不補充肉食怪
         if (carnAlive < 15 && now - (gameState.spawnTimers[carnKey] || 0) >= carnTimer) {
             spawnCreatureAtEdgeBiome(biome, 'carn');
             gameState.spawnTimers[carnKey] = now;

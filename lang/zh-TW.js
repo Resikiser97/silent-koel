@@ -4,6 +4,7 @@
 //   將檔名改為新語言代碼（例如 ja.js），並在 lang.js 的 LANG_LIST 中新增入口。
 //   只需翻譯字串值，不要更動任何 key 名稱或 {token} 佔位符。
 // =============================================================
+import { LANG } from '../lang.js';
 
 LANG['zh-TW'] = {
     ui: {
@@ -65,7 +66,18 @@ LANG['zh-TW'] = {
         autoAttack:      '自動攻擊',
         autoAttackHint:  'Z 鍵切換',
         organTooltip:    '器官提示',
+        alwaysCenter:     '角色居中',
+        alwaysCenterHint: '',
+        minimapFade:      '地圖透明',
+        fontBoldLarge:    '字大又粗',
+        sectionMinimap:  '小地圖設定',
+        sectionCamera:   '視野設定',
+        minimapSize:     '小地圖',
+        cameraMode:      '視野',
+        cameraSmart:     '智能',
+        cameraManual:    '手動',
         patchNotes:       '📋 更新日誌',
+        discordBtn:       '💬 Discord 社群',
         patchNotesTitle:  '📋 版本更新公告',
         patchAdded:       '✅ 新增',
         patchFixed:       '🔧 修復',
@@ -133,6 +145,24 @@ LANG['zh-TW'] = {
         dashCooldownLabel: '冷卻中',
         mutationExchange: '100 技能點 → 10 變異點',
         mutationExchangeHint: '目前技能點：{n}',
+        poisonSacLevelUp: '✨ 毒囊升級 Lv{lv}！',
+        devModeWarning: '⚠️ 本局使用了開發者模式，分數不計入排行榜',
+        autoAttackIndicator: '⚔️ 自動',
+        mutationOrgLabel: '變異器官 ⚗️ Lv.{lv}',
+        tutorialLabel: '新手教學',
+        tutorialHint: '開啟後，下一場遊戲開始時會顯示教學',
+        btnStartAdventure: '⚔️  開始冒險',
+        mutationPanelTitle: '⚗️ 變異器官',
+        mutationPointsLabel: '可用變異點：{n}',
+        mutationUpgradeBtn: '升級（費{n}點）',
+        mutationSkillTree:      '變異技能樹',
+        mutationSkillTreeBtn:   '變異',
+        mutationSkillPointsLabel: '變異技能點：{n}',
+        mutationSkillUpgrade:   '升級（費 {n} 點）',
+        mutationSkillMaxed:     '已滿級',
+        recallOrganSkillName:   '回憶器官',
+        recallOrganSkillDesc:   '增加強大器官的持有上限（每等 +1 個）',
+        lynxCritText: '喵嗚咬死你！',
         // ── 圖鑑
         compendiumTitle:      '📖 圖鑑',
         compendiumTabGuide:   '遊戲說明',
@@ -382,8 +412,8 @@ LANG['zh-TW'] = {
             '可吃果子，HP上限+30',
             'HP+10，果子XP+1，撞到不逃跑',
             'HP+15，果子XP+2，被攻擊也不逃跑',
-            'HP+20，果子XP+3，體型+10%，中立生物完全友善',
-            'HP+25，果子XP+4，體型+20%，中立生物完全友善'
+            'HP+20，果子XP+3，體型+10%，中立生物完全友善，巨人化生物對你傷害 -15%',
+            'HP+25，果子XP+4，體型+20%，中立生物完全友善，巨人化生物對你傷害 -30%'
         ]},
         carnivore: { name: '肉食性', levels: [
             '可吃屍體（5XP，3秒），攻擊+2',
@@ -415,3 +445,4 @@ LANG['zh-TW'] = {
         desert: { name: '🏜️ 沙漠蠍王', label: '🦂🏜️蠍王' }
     }
 };
+export {};

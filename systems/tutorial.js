@@ -1,9 +1,21 @@
 // =============================================================
 // 新手教學系統 - showTutorial / 三步驟教學流程
+//               spawnTutorialStump / showTutorialCombatHint
+//               handleTutorialStumpKill / showTutorialCombatComplete
 // 觸發時機：initializeGame() 結束後，若 localStorage 無 tutorialCompleted
 // =============================================================
-
-(function () {
+import { gameState, canvas } from './gameState.js';
+import { VIEW_W } from './map.js';
+import { worldToScreen, wrappedDistance } from './camera.js';
+import { pausePlayTimer, resumePlayTimer } from '../main.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
     // ── 教學內部狀態
     let _step         = 0;       // 0=未啟動 1=步驟一(凍結) 2=步驟二(解凍) 3=步驟三(凍結)
@@ -16,11 +28,13 @@
     let _xpStart      = 0;       // 步驟二開始時的 XP 基準
     let _xpTimer      = null;    // XP 監聽 interval
     let _dnHighlight  = null;    // 步驟三高亮的 DOM 元素
+    let _dnFlashTimer = null;    // 步驟三閃爍 setTimeout handle（可清除）
 
     // ──────────────────────────────────────────────────────────
     // 公開入口
     // ──────────────────────────────────────────────────────────
     function showTutorial() {
+        _clearDnFlash();
         _step = 1;
         _startStep1();
     }
@@ -322,15 +336,32 @@
         _dnHighlight = target;
 
         let _phase = 0;
-        (function _flash() {
-            if (_step !== 3) return;
+        function _flash() {
+            if (_step !== 3) {
+                _dnFlashTimer = null;
+                return;
+            }
             _phase++;
             const bright = _phase % 2 === 0;
             target.style.boxShadow    = bright ? '0 0 14px 5px #FFD700' : '0 0 5px 2px rgba(255,215,0,0.5)';
             target.style.outline      = bright ? '2px solid #FFD700'     : '2px solid rgba(255,215,0,0.4)';
             target.style.borderRadius = '4px';
-            setTimeout(_flash, 500);
-        }());
+            _dnFlashTimer = setTimeout(_flash, 500);
+        }
+        _flash();
+    }
+
+    function _clearDnFlash() {
+        if (_dnFlashTimer) {
+            clearTimeout(_dnFlashTimer);
+            _dnFlashTimer = null;
+        }
+        if (_dnHighlight) {
+            _dnHighlight.style.boxShadow    = '';
+            _dnHighlight.style.outline      = '';
+            _dnHighlight.style.borderRadius = '';
+            _dnHighlight = null;
+        }
     }
 
     function _makeDialog3() {
@@ -370,6 +401,7 @@
 
         // 停止所有計時器 / 動畫
         _clearTimers();
+        _clearDnFlash();
         if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
 
         // 移除所有教學元素
@@ -377,16 +409,8 @@
         if (_overlay)   { _overlay.remove();   _overlay   = null; }
         if (_hlCanvas)  { _hlCanvas.remove();   _hlCanvas  = null; _hlCtx = null; }
 
-        // 移除日夜指示器高亮
-        if (_dnHighlight) {
-            _dnHighlight.style.boxShadow    = '';
-            _dnHighlight.style.outline      = '';
-            _dnHighlight.style.borderRadius = '';
-            _dnHighlight = null;
-        }
-
         // 標記完成
-        localStorage.setItem('tutorialCompleted', 'true');
+        storageSet(STORAGE_KEYS.TUTORIAL_COMPLETED, 'true');
         gameState.tutorialOpen = false;
         resumePlayTimer();
     }
@@ -585,7 +609,7 @@
             setTimeout(() => {
                 const el = document.getElementById('tutorial-combat-complete');
                 if (el) el.remove();
-                localStorage.setItem('tutorialCombatDone', 'true');
+                storageSet(STORAGE_KEYS.TUTORIAL_COMBAT_DONE, 'true');
                 gameState.tutorialOpen = false;
                 resumePlayTimer();
             }, 2000);
@@ -630,9 +654,11 @@
         _gc().appendChild(el);
     }
 
-    // ── 掛到全域
-    window.showTutorial            = showTutorial;
-    window.spawnTutorialStump      = spawnTutorialStump;
-    window.handleTutorialStumpKill = handleTutorialStumpKill;
+function resetTutorial() {
+    _step = 0;
+    _clearDnFlash();
+    _clearTimers();
+    if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+}
 
-}());
+export { showTutorial, spawnTutorialStump, handleTutorialStumpKill, resetTutorial };

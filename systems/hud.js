@@ -1,5 +1,20 @@
 ﻿// =============================================================
 // HUD 系統 - 遊戲畫面渲染 / HUD 更新 / 小地圖 / 上方血條
+import { gameState, ctx, canvas } from './gameState.js';
+import { VIEW_W, VIEW_H, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, BIOME_COLOR, getBiome, drawTerrain } from './map.js';
+import { worldToScreen, wrappedDistance } from './camera.js';
+import { FIXED_DELTA, GAME_INFO } from '../config/gameConfig.js';
+import { getGameFont, drawArrow } from './utils.js';
+import { t } from '../lang.js';
+import { drawCorpses, drawNeutralCreatures, drawHostileCreatures, _getCreatureDisplayName } from './creatures.js';
+import { drawCorpseEatingBars, drawBones, showFloatingText } from './combat.js';
+import { drawOrganUI } from './organs.js';
+import { _renderMobileOverlay } from './mobile.js';
+import { drawEliteCreature, drawEliteArrow } from './elite.js';
+import { drawBoss, drawBossArrow, _drawSandStormOverlay } from './boss.js';
+import { _findArcherAutoTarget, findBestPerceptionPath } from './player.js';
+import { showSettings } from './ui.js';
+import { showMutationPanel } from './mutation.js';
 //
 // 模組職責：
 //   - drawGame()：每幀主渲染函式，依序繪製地形/生物/玩家/特效/HUD
@@ -7,6 +22,8 @@
 //   - drawTopBarUI()：玩家附近有精英/Boss/巨人化/Alpha時顯示上方血條
 //   - drawMinimap()：右上角小地圖，含霧、生物點、日月圖示
 //   - drawTreasures()：繪製地圖上的寶物
+//   - drawProjectiles()：繪製子彈（阿奇爾射水）
+//   - updateMinimapFog()：更新小地圖霧效
 //
 // 繪製順序（drawGame 內部）：
 //   1. 地形（drawTerrain）
@@ -47,6 +64,33 @@ let _minimapFogImageData   = null;
 let _minimapFogRenderCanvas = null;
 let _minimapFogRenderCtx    = null;
 let _fogCloudCanvas         = null;
+let _minimapAlpha           = 1.0;
+let _minimapFadeTimer       = 0;
+let _minimapStopTimer       = 0;
+let _fogFrameCount          = 0;
+
+// ── 靈敏知覺快取（每局開始由 resetPerceptionCache() 重置）
+let _perceptionCache = {
+    path: null,
+    pathLastCalc: 0,
+    pathFruitCount: 0,
+    pathPlayerX: null,
+    pathPlayerY: null,
+    nearestCorpse: null,
+    corpseLastCalc: 0,
+    corpseCount: 0,
+    nearestBone: null,
+    boneLastCalc: 0,
+    boneCount: 0,
+};
+
+// ── UI dirty check 快取（每局開始由 resetUICache() 重置）
+let _uiCache = {
+    xp: null, xpMax: null, xpBarW: null,
+    biome: null, time: null, playtime: null,
+    mutLv: null, mutDot: null,
+    hp: null, maxHp: null
+};
 
 // =============================================================
 // 小地圖系統
@@ -136,38 +180,115 @@ function _drawArcherfish(ctx, sx, sy, r, p) {
     ctx.restore();
 }
 
+// ── 毒霧隼飛行毒球 + 地面腐蝕液體（地形之上、生物之下）
+function _drawVenomFalconEffects() {
+    const now = Date.now();
+    // A. 飛行中毒球（從發射位置到落點的固定插值圓形）
+    const elite = gameState.eliteCreature;
+    if (elite && elite._venomFireAt > 0 && elite._venomLandPos && elite._venomLandAt > now) {
+        const progress = (now - elite._venomFireAt) / (elite._venomLandAt - elite._venomFireAt);
+        const fp = elite._venomFirePos || elite;
+        const cx = fp.x + (elite._venomLandPos.x - fp.x) * progress;
+        const cy = fp.y + (elite._venomLandPos.y - fp.y) * progress;
+        const s = worldToScreen(cx, cy);
+        if (s.x >= -20 && s.x <= VIEW_W + 20 && s.y >= -20 && s.y <= VIEW_H + 20) {
+            ctx.save();
+            // 外層綠色光暈
+            ctx.shadowColor = '#00FF66';
+            ctx.shadowBlur  = 18;
+            ctx.fillStyle   = 'rgba(30, 160, 80, 0.6)';
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, 14, 0, Math.PI * 2);
+            ctx.fill();
+            // 內核亮綠
+            ctx.shadowBlur = 8;
+            ctx.fillStyle  = '#66FF88';
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+    // B. 落地腐蝕液體（venomFalcon 專屬，scorpion 已由 boss.js 繪製）
+    if (!gameState.venomPuddles) return;
+    for (const puddle of gameState.venomPuddles) {
+        if (puddle.owner !== 'venomFalcon') continue;
+        const elapsed = now - puddle.startTime;
+        if (elapsed >= puddle.duration) continue;
+        let alpha;
+        if      (elapsed < 300)                        alpha = (elapsed / 300) * 0.55;
+        else if (elapsed > puddle.duration - 500)      alpha = ((puddle.duration - elapsed) / 500) * 0.55;
+        else                                           alpha = 0.55;
+        const s = worldToScreen(puddle.x, puddle.y);
+        if (s.x < -puddle.radius - 10 || s.x > VIEW_W + puddle.radius + 10 ||
+            s.y < -puddle.radius - 10 || s.y > VIEW_H + puddle.radius + 10) continue;
+        ctx.save();
+        ctx.shadowColor = '#44FF88';
+        ctx.shadowBlur  = 14;
+        ctx.fillStyle   = `rgba(40, 180, 60, ${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, puddle.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(80, 240, 100, ${Math.min(1, alpha * 1.6).toFixed(3)})`;
+        ctx.lineWidth   = 3;
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
 // =============================================================
 // 阿奇爾 HUD：子彈渲染 + 充能格顯示
 // =============================================================
 
-/** 渲染所有飛行中的子彈（水泡造型） */
+/** 渲染所有飛行中的子彈（水泡造型 / 獵人子彈） */
 function drawProjectiles() {
     if (!gameState.projectiles || gameState.projectiles.length === 0) return;
     for (const b of gameState.projectiles) {
         const s = worldToScreen(b.x, b.y);
         if (s.x < -20 || s.x > VIEW_W + 20 || s.y < -20 || s.y > VIEW_H + 20) continue;
         ctx.save();
-        // 外圈光暈
-        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, b.radius * 2);
-        grad.addColorStop(0, 'rgba(79,195,247,0.35)');
-        grad.addColorStop(1, 'rgba(79,195,247,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, b.radius * 2, 0, Math.PI * 2);
-        ctx.fill();
-        // 主體水泡
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, b.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(79,195,247,0.65)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(200,240,255,0.9)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        // 高光小點
-        ctx.beginPath();
-        ctx.arc(s.x - b.radius * 0.3, s.y - b.radius * 0.3, b.radius * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fill();
+        if (b.owner === 'hunter') {
+            // 狙擊子彈：長條金屬感
+            if (b.type === 'sniper') {
+                const ang = Math.atan2(b.vy, b.vx);
+                ctx.translate(s.x, s.y);
+                ctx.rotate(ang);
+                ctx.fillStyle = '#FFD700';
+                ctx.shadowColor = '#FF8800';
+                ctx.shadowBlur = 6;
+                ctx.fillRect(-10, -2, 20, 4);
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(-10, -1, 4, 2);
+            } else {
+                // 散彈：小圓橘紅
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, b.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,120,30,0.85)';
+                ctx.shadowColor = '#FF4400';
+                ctx.shadowBlur = 4;
+                ctx.fill();
+            }
+        } else {
+            // 阿奇爾水泡
+            const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, b.radius * 2);
+            grad.addColorStop(0, 'rgba(79,195,247,0.35)');
+            grad.addColorStop(1, 'rgba(79,195,247,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, b.radius * 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, b.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(79,195,247,0.65)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(200,240,255,0.9)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(s.x - b.radius * 0.3, s.y - b.radius * 0.3, b.radius * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fill();
+        }
         ctx.restore();
     }
 }
@@ -250,8 +371,12 @@ function _drawArcherLockOn() {
     const best = (typeof _findArcherAutoTarget === 'function') ? _findArcherAutoTarget() : null;
     if (!best) return;
 
-    const ps  = worldToScreen(p.x, p.y);
-    const ts  = worldToScreen(best.x, best.y);
+    let _ws = worldToScreen(p.x, p.y);
+    const psx = _ws.x;
+    const psy = _ws.y;
+    _ws = worldToScreen(best.x, best.y);
+    const tsx = _ws.x;
+    const tsy = _ws.y;
     const now = Date.now();
 
     ctx.save();
@@ -263,8 +388,8 @@ function _drawArcherLockOn() {
     ctx.setLineDash([5, 8]);
     ctx.lineDashOffset = -(now / 60) % 13;
     ctx.beginPath();
-    ctx.moveTo(ps.x, ps.y);
-    ctx.lineTo(ts.x, ts.y);
+    ctx.moveTo(psx, psy);
+    ctx.lineTo(tsx, tsy);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
@@ -279,14 +404,16 @@ function _drawArcherLockOn() {
         const startA = rotAngle + i * (Math.PI / 2);
         const endA   = startA + Math.PI / 2 * 0.6;
         ctx.beginPath();
-        ctx.arc(ts.x, ts.y, lockR, startA, endA);
+        ctx.arc(tsx, tsy, lockR, startA, endA);
         ctx.stroke();
     }
 
     ctx.restore();
 }
 
-function updateMinimapFog() {
+export function updateMinimapFog() {
+    _fogFrameCount++;
+    if (_fogFrameCount % 3 !== 0) return;
     if (!gameState.fogMap) return;
     const COLS = MAP_WIDTH  / TILE_SIZE; // 400
     const ROWS = MAP_HEIGHT / TILE_SIZE; // 400
@@ -304,7 +431,11 @@ function updateMinimapFog() {
     }
 }
 
-function _mmSize() { return gameState.isMobile ? 200 : 300; }
+function _mmSize() {
+    const size = gameState.settings.minimapSize;
+    const max  = gameState.isMobile ? 200 : 300;
+    return Math.round(size / 10 * max);
+}
 
 function _drawMinimapFog(mctx) {
     if (!gameState.fogMap) return;
@@ -450,6 +581,57 @@ function _drawMinimapEntities(mctx) {
 }
 
 function drawMinimap() {
+    // ── 地圖透明：每幀更新淡化計時器
+    if (gameState.settings.minimapFade) {
+        const ks = gameState.settings.keys;
+        const pressed = gameState.keys || {};
+        const mob = gameState.mobileInput || {};
+        const isMoving = pressed[ks.up] || pressed[ks.down] || pressed[ks.left] || pressed[ks.right] ||
+            mob.dx !== 0 || mob.dy !== 0;
+        if (isMoving) {
+            _minimapStopTimer = 0;
+            _minimapFadeTimer += FIXED_DELTA;
+            if (_minimapFadeTimer >= 500) {
+                _minimapFadeTimer -= 500;
+                _minimapAlpha = Math.max(0.5, _minimapAlpha - 0.15);
+            }
+        } else {
+            _minimapFadeTimer = 0;
+            _minimapAlpha += (1.0 - _minimapAlpha) * 0.008;
+            if (_minimapAlpha > 0.999) _minimapAlpha = 1.0;
+        }
+    } else {
+        _minimapAlpha = 1.0;
+        _minimapFadeTimer = 0;
+        _minimapStopTimer = 0;
+    }
+
+    // ── 小地圖關閉（minimapSize === 0）
+    if (!gameState.settings.minimapSize || gameState.settings.minimapSize === 0) {
+        const mc = document.getElementById('minimapCanvas');
+        const mi = document.getElementById('minimap-info');
+        const tl = document.getElementById('top-left');
+        if (mc) mc.style.display = 'none';
+        if (mi && tl) {
+            const tlRect = tl.getBoundingClientRect();
+            mi.style.position = 'fixed';
+            mi.style.top      = tlRect.top + 'px';
+            mi.style.right    = '10px';
+            mi.style.width    = 'auto';
+        }
+        return;
+    }
+    // ── 小地圖開啟：恢復正常位置
+    const mc2 = document.getElementById('minimapCanvas');
+    const mi2 = document.getElementById('minimap-info');
+    if (mc2) mc2.style.display = '';
+    if (mi2) {
+        mi2.style.position = '';
+        mi2.style.top      = '';
+        mi2.style.right    = '';
+        mi2.style.width    = '';
+    }
+
     if (!_minimapCanvas) {
         _minimapCanvas = document.getElementById('minimapCanvas');
         if (!_minimapCanvas) return;
@@ -472,6 +654,7 @@ function drawMinimap() {
         _drawMinimapFog(_minimapCtx);
         _drawMinimapEntities(_minimapCtx);
     }
+    if (_minimapCanvas) _minimapCanvas.style.opacity = String(_minimapAlpha);
     _drawSunMoonIndicator();
 }
 
@@ -615,9 +798,13 @@ function drawTopBarUI() {
 
     // 目標名稱
     ctx.fillStyle = target.isAlpha ? '#FFD700' : '#FFFFFF';
-    ctx.font = 'bold 13px Arial';
+    ctx.font = getGameFont(13, true);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+    ctx.strokeText(displayName, x + barW / 2, topBarY + 5);
     ctx.fillText(displayName, x + barW / 2, topBarY + 5);
 
     // 血條底色
@@ -632,7 +819,7 @@ function drawTopBarUI() {
 
     // HP 數值
     ctx.fillStyle = '#CCC';
-    ctx.font = '11px Arial';
+    ctx.font = getGameFont(11, false);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(
@@ -659,7 +846,7 @@ function drawTopBarUI() {
             ctx.strokeRect(ix, iconY, iconSize, iconSize);
             // 標籤（垂直置中）
             ctx.fillStyle = d.color;
-            ctx.font      = 'bold 8px Arial';
+            ctx.font      = getGameFont(8, true);
             ctx.textAlign = 'center';
             ctx.fillText(d.label, ix + iconSize / 2, iconY + iconSize / 2);
             // 剩餘時間弧（順時針）
@@ -682,9 +869,12 @@ function drawTopBarUI() {
     ctx.restore();
 }
 
-function drawGame() {
+export function drawGame() {
+    const _t0 = gameState.devMode ? performance.now() : 0;
+
     // 1. 貼上地形預渲染底圖（離屏 Canvas），夜晚遮罩在 drawTerrain 內疊加
     drawTerrain();
+    const _t1 = gameState.devMode ? performance.now() : 0;
 
     // 2. 繪製環境 (樹木)
     gameState.trees.forEach(tree => {
@@ -699,7 +889,7 @@ function drawGame() {
         if (gameState.devMode) {
             const maxN = tree.isLarge ? 5 : 3;
             ctx.save();
-            ctx.font = '9px Arial';
+            ctx.font = getGameFont(9, false);
             ctx.fillStyle = '#FFD700';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
@@ -707,6 +897,7 @@ function drawGame() {
             ctx.restore();
         }
     });
+    const _t2 = gameState.devMode ? performance.now() : 0;
 
     // 3. 繪製果子
     gameState.fruits.forEach(fruit => {
@@ -720,6 +911,7 @@ function drawGame() {
 
     // 4. 繪製寶物
     drawTreasures();
+    const _t3 = gameState.devMode ? performance.now() : 0;
 
     // 5. 繪製屍體（在生物之下）
     drawCorpses();
@@ -728,11 +920,16 @@ function drawGame() {
     // 5b. 繪製白骨
     drawBones();
 
+    // 5c. 毒霧隼飛行毒球 + 地面腐蝕液體（地形之上、生物之下）
+    _drawVenomFalconEffects();
+
     // 5. 繪製中立生物
     drawNeutralCreatures();
+    const _t4 = gameState.devMode ? performance.now() : 0;
 
     // 6. 繪製敵意生物
     drawHostileCreatures();
+    const _t5 = gameState.devMode ? performance.now() : 0;
 
     // 7. 繪製 Boss（純 Canvas 幾何形狀，見 systems/boss.js drawBoss）
     drawBoss();
@@ -758,8 +955,12 @@ function drawGame() {
             ctx.save();
             ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
             ctx.fillStyle   = '#FFFFFF';
-            ctx.font        = '12px Arial';
+            ctx.font        = getGameFont(12, false);
             ctx.textAlign   = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(st.name, ss.x, ss.y - st.radius - 10);
             ctx.fillText(st.name, ss.x, ss.y - st.radius - 10);
             ctx.restore();
             // 血條
@@ -776,13 +977,14 @@ function drawGame() {
     // 8. 攻擊範圍視覺圓圈（0.2 秒淡出，遠程角色不顯示）
     const p = gameState.player;
     const ps = worldToScreen(p.x, p.y);
+    const psx = ps.x, psy = ps.y;
     if (!p.isRanged && p.attackVisual > 0 && Date.now() - p.attackVisual < 200) {
         const alpha = 1 - (Date.now() - p.attackVisual) / 200;
         ctx.strokeStyle = 'rgba(255,255,255,' + alpha.toFixed(2) + ')';
         ctx.fillStyle   = 'rgba(255,255,255,' + (alpha * 0.12).toFixed(2) + ')';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(ps.x, ps.y, p.attackRange, 0, Math.PI * 2);
+        ctx.arc(psx, psy, p.attackRange * (gameState.cameraZoom || 1), 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.lineWidth = 1;
@@ -796,20 +998,24 @@ function drawGame() {
         if (t >= 1) {
             gameState.dashEffect = null;
         } else {
-            const sa = worldToScreen(ef.ax, ef.ay);
-            const sb = worldToScreen(ef.bx, ef.by);
+            let _ws = worldToScreen(ef.ax, ef.ay);
+            const sax = _ws.x;
+            const say = _ws.y;
+            _ws = worldToScreen(ef.bx, ef.by);
+            const sbx = _ws.x;
+            const sby = _ws.y;
             ctx.save();
 
             // 特效 1：出發點 A 金色煙霧（0~100ms）
             if (elapsed < 100) {
                 const smokeAlpha = (1 - elapsed / 100) * 0.6;
                 const smokeR     = 20 + elapsed * 0.3;
-                const grad = ctx.createRadialGradient(sa.x, sa.y, 0, sa.x, sa.y, smokeR);
+                const grad = ctx.createRadialGradient(sax, say, 0, sax, say, smokeR);
                 grad.addColorStop(0, 'rgba(255,200,50,' + smokeAlpha + ')');
                 grad.addColorStop(1, 'rgba(255,150,0,0)');
                 ctx.fillStyle = grad;
                 ctx.beginPath();
-                ctx.arc(sa.x, sa.y, smokeR, 0, Math.PI * 2);
+                ctx.arc(sax, say, smokeR, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -818,22 +1024,22 @@ function drawGame() {
                 const ballProgress = (elapsed - 50) / (ef.duration - 50);
                 const ballAlpha    = (1 - ballProgress) * 0.8;
                 const ballR        = 15 + ballProgress * 10;
-                const gradB = ctx.createRadialGradient(sb.x, sb.y, 0, sb.x, sb.y, ballR);
+                const gradB = ctx.createRadialGradient(sbx, sby, 0, sbx, sby, ballR);
                 gradB.addColorStop(0, 'rgba(255,255,255,' + ballAlpha + ')');
                 gradB.addColorStop(1, 'rgba(200,220,255,0)');
                 ctx.fillStyle = gradB;
                 ctx.beginPath();
-                ctx.arc(sb.x, sb.y, ballR, 0, Math.PI * 2);
+                ctx.arc(sbx, sby, ballR, 0, Math.PI * 2);
                 ctx.fill();
             }
 
             // 特效 3：A→B 光線掃過（整個 duration）
             const headT = t;
             const tailT = Math.max(0, t - 0.35);
-            const headX = sa.x + (sb.x - sa.x) * headT;
-            const headY = sa.y + (sb.y - sa.y) * headT;
-            const tailX = sa.x + (sb.x - sa.x) * tailT;
-            const tailY = sa.y + (sb.y - sa.y) * tailT;
+            const headX = sax + (sbx - sax) * headT;
+            const headY = say + (sby - say) * headT;
+            const tailX = sax + (sbx - sax) * tailT;
+            const tailY = say + (sby - say) * tailT;
             const lineLen = Math.sqrt((headX - tailX) * (headX - tailX) + (headY - tailY) * (headY - tailY));
             if (lineLen > 1) {
                 const lineGrad = ctx.createLinearGradient(tailX, tailY, headX, headY);
@@ -853,20 +1059,20 @@ function drawGame() {
     }
 
     // 9. 繪製玩家角色（根據 selectedCharacter 分派不同外觀）
-    const drawRadius = Math.max(1, p.radius);
-    if (gameState.selectedCharacter === 'archerfish') {
-        _drawArcherfish(ctx, ps.x, ps.y, drawRadius, p);
+    const drawRadius = Math.max(1, p.radius * (gameState.cameraZoom || 1));
+    if (p.isRanged) {
+        _drawArcherfish(ctx, psx, psy, drawRadius, p);
     } else {
         // 噪鵑（預設）：夜晚發光圓 + 黑色圓形
         if (gameState.isNight) {
             ctx.fillStyle = 'rgba(0,255,136,0.9)';
             ctx.beginPath();
-            ctx.arc(ps.x, ps.y, drawRadius + 3, 0, Math.PI * 2);
+            ctx.arc(psx, psy, drawRadius + 3, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(ps.x, ps.y, drawRadius, 0, Math.PI * 2);
+        ctx.arc(psx, psy, drawRadius, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -877,8 +1083,8 @@ function drawGame() {
     drawProjectiles();
 
     // 9-charge. 阿奇爾充能格 + 蓄力氣泡
-    if (gameState.selectedCharacter === 'archerfish') {
-        _drawArcherChargeVisual(ctx, ps.x, ps.y, p);
+    if (p.isRanged) {
+        _drawArcherChargeVisual(ctx, psx, psy, p);
     }
 
     drawEliteArrow();
@@ -887,12 +1093,20 @@ function drawGame() {
     // 9e. 沙暴螢幕外圈遮罩（蠍王血量<40%觸發，所有世界物件後、UI前）
     _drawSandStormOverlay();
 
+    // 9f. 黑色獵人 Phase 3 切換紅色閃光（1幀）
+    if (gameState._hunterPhase3Flash && Date.now() - gameState._hunterPhase3Flash < 80) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,0,0,0.2)';
+        ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+        ctx.restore();
+    }
+
     // 9b. 大腦衝能條（玩家正下方）
     if (p.brainActive) {
         const barW = p.radius * 2;
         const barH = 4;
-        const barX = ps.x - barW / 2;
-        const barY = ps.y + p.radius + 8;
+        const barX = psx - barW / 2;
+        const barY = psy + p.radius + 8;
         const prog = Math.min(1, (Date.now() - p.brainTimer) / p.brainInterval);
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.fillRect(barX, barY, barW, barH);
@@ -922,9 +1136,27 @@ function drawGame() {
 
     // 9d. 靈敏知覺路徑
     const sharpSenseLv = (p.organs.find(o => o.id === 'sharpSense') || {}).level || 0;
+    const _percNow = Date.now();
     // Lv1+：紅線（果子最佳路徑）
     if (p.perceptionRange > 0 && gameState.fruits.length > 0) {
-        const path = findBestPerceptionPath(p, gameState.fruits, p.perceptionRange);
+        const px = gameState.player.x;
+        const py = gameState.player.y;
+        const fruitCount = gameState.fruits.length;
+        const moved = _perceptionCache.pathPlayerX === null ||
+            Math.abs(px - _perceptionCache.pathPlayerX) > 50 ||
+            Math.abs(py - _perceptionCache.pathPlayerY) > 50;
+        const needsRecalc =
+            _percNow - _perceptionCache.pathLastCalc > 500 ||
+            fruitCount !== _perceptionCache.pathFruitCount ||
+            moved;
+        if (needsRecalc) {
+            _perceptionCache.path = findBestPerceptionPath(p, gameState.fruits, p.perceptionRange);
+            _perceptionCache.pathLastCalc = _percNow;
+            _perceptionCache.pathFruitCount = fruitCount;
+            _perceptionCache.pathPlayerX = px;
+            _perceptionCache.pathPlayerY = py;
+        }
+        const path = _perceptionCache.path;
         if (path) {
             const endS = worldToScreen(path.endpoint.x, path.endpoint.y);
             const clampedEnd = {
@@ -937,7 +1169,7 @@ function drawGame() {
             ctx.lineWidth = 2;
             ctx.setLineDash([6, 4]);
             ctx.beginPath();
-            ctx.moveTo(ps.x, ps.y);
+            ctx.moveTo(psx, psy);
             ctx.lineTo(clampedEnd.x, clampedEnd.y);
             ctx.stroke();
             ctx.setLineDash([]);
@@ -956,11 +1188,19 @@ function drawGame() {
     }
     // Lv2+：黃線（最近屍體）
     if (sharpSenseLv >= 2 && gameState.corpses && gameState.corpses.length > 0) {
-        let nearestCorpse = null, nearestDist = Infinity;
-        for (const c of gameState.corpses) {
-            const d = wrappedDistance(p.x, p.y, c.x, c.y);
-            if (d < nearestDist) { nearestDist = d; nearestCorpse = c; }
+        const corpseCount = gameState.corpses ? gameState.corpses.length : 0;
+        if (_percNow - _perceptionCache.corpseLastCalc > 300 ||
+            corpseCount !== _perceptionCache.corpseCount) {
+            let nearest = null, nearestDist = Infinity;
+            for (const c of gameState.corpses) {
+                const d = wrappedDistance(p.x, p.y, c.x, c.y);
+                if (d < nearestDist) { nearestDist = d; nearest = c; }
+            }
+            _perceptionCache.nearestCorpse = nearest;
+            _perceptionCache.corpseLastCalc = _percNow;
+            _perceptionCache.corpseCount = corpseCount;
         }
+        const nearestCorpse = _perceptionCache.nearestCorpse;
         if (nearestCorpse) {
             const endS = worldToScreen(nearestCorpse.x, nearestCorpse.y);
             const clampedEnd = {
@@ -973,7 +1213,7 @@ function drawGame() {
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
-            ctx.moveTo(ps.x, ps.y);
+            ctx.moveTo(psx, psy);
             ctx.lineTo(clampedEnd.x, clampedEnd.y);
             ctx.stroke();
             ctx.setLineDash([]);
@@ -982,11 +1222,19 @@ function drawGame() {
     }
     // Lv3+：白線（最近白骨）
     if (sharpSenseLv >= 3 && gameState.bones && gameState.bones.length > 0) {
-        let nearestBone = null, nearestDist2 = Infinity;
-        for (const b of gameState.bones) {
-            const d = wrappedDistance(p.x, p.y, b.x, b.y);
-            if (d < nearestDist2) { nearestDist2 = d; nearestBone = b; }
+        const boneCount = gameState.bones ? gameState.bones.length : 0;
+        if (_percNow - _perceptionCache.boneLastCalc > 300 ||
+            boneCount !== _perceptionCache.boneCount) {
+            let nearest = null, nearestDist2 = Infinity;
+            for (const b of gameState.bones) {
+                const d = wrappedDistance(p.x, p.y, b.x, b.y);
+                if (d < nearestDist2) { nearestDist2 = d; nearest = b; }
+            }
+            _perceptionCache.nearestBone = nearest;
+            _perceptionCache.boneLastCalc = _percNow;
+            _perceptionCache.boneCount = boneCount;
         }
+        const nearestBone = _perceptionCache.nearestBone;
         if (nearestBone) {
             const endS = worldToScreen(nearestBone.x, nearestBone.y);
             const clampedEnd = {
@@ -999,13 +1247,15 @@ function drawGame() {
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
-            ctx.moveTo(ps.x, ps.y);
+            ctx.moveTo(psx, psy);
             ctx.lineTo(clampedEnd.x, clampedEnd.y);
             ctx.stroke();
             ctx.setLineDash([]);
             ctx.restore();
         }
     }
+
+    const _t6 = gameState.devMode ? performance.now() : 0;
 
     // 9. 繪製器官清單（左下角）
     drawOrganUI();
@@ -1014,7 +1264,7 @@ function drawGame() {
     ctx.save();
     ctx.globalAlpha = 0.6;
     ctx.fillStyle = 'white';
-    ctx.font = '12px Arial';
+    ctx.font = getGameFont(12, false);
     ctx.textAlign = 'left';
     ctx.fillText('© ' + GAME_INFO.author, 6, VIEW_H - 20);
     ctx.fillText(GAME_INFO.version, 6, VIEW_H - 5);
@@ -1027,7 +1277,7 @@ function drawGame() {
         ctx.save();
         ctx.globalAlpha = lvAlpha;
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 40px Arial';
+        ctx.font = getGameFont(40, true);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(lvMsg.text, VIEW_W / 2, VIEW_H / 2 - 60);
@@ -1041,7 +1291,7 @@ function drawGame() {
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 36px Arial';
+        ctx.font = getGameFont(36, true);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(msg.text, VIEW_W / 2, VIEW_H / 2);
@@ -1054,10 +1304,10 @@ function drawGame() {
         ctx.save();
         ctx.globalAlpha = 0.2;
         ctx.fillStyle = 'white';
-        ctx.font = '100px Arial';
+        ctx.font = getGameFont(100, false);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('⚔️ 自動', VIEW_W / 2, VIEW_H / 2);
+        ctx.fillText(t('autoAttackIndicator'), VIEW_W / 2, VIEW_H / 2);
         ctx.restore();
     }
 
@@ -1078,12 +1328,12 @@ function drawGame() {
         const _dashKeyLabel = (gameState.settings.keys.dash || 'f').toUpperCase();
         if (dashCD <= 0) {
             ctx.globalAlpha = 0.15;
-            ctx.font = '28px Arial';
+            ctx.font = getGameFont(28, false);
             ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
         } else {
             // 圖示（暗）
             ctx.globalAlpha = 0.08;
-            ctx.font = '28px Arial';
+            ctx.font = getGameFont(28, false);
             ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
             // 冷卻進度條（從上往下）
             const prog = dashCD / 15000;
@@ -1093,7 +1343,7 @@ function drawGame() {
             // 倒數秒數
             ctx.globalAlpha = 0.7;
             ctx.fillStyle = 'white';
-            ctx.font = '20px Arial';
+            ctx.font = getGameFont(20, false);
             ctx.fillText(Math.ceil(dashCD / 1000) + 's', dashCX, dashCY);
         }
         ctx.restore();
@@ -1107,7 +1357,99 @@ function drawGame() {
 
     // 15. 上方血條UI（精英/Boss/巨人化/Alpha）
     drawTopBarUI();
+    const _t7 = gameState.devMode ? performance.now() : 0;
+
+    // 浮動文字批次繪製
+    if (gameState.floatTexts && gameState.floatTexts.length > 0) {
+        const now = Date.now();
+        const boldLarge = gameState.settings && gameState.settings.fontBoldLarge;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // 反向遍歷方便 splice 移除
+        for (let i = gameState.floatTexts.length - 1; i >= 0; i--) {
+            const ft = gameState.floatTexts[i];
+            const age = now - ft.startTime;
+            if (age >= ft.duration) {
+                gameState.floatTexts.splice(i, 1);
+                continue;
+            }
+
+            const t = age / ft.duration;          // 0~1
+            const alpha = 1 - t;                  // 淡出
+            const offsetY = t * 30;               // 上移 30px
+
+            // 畫面座標（用當下最新的世界座標重新轉換，讓文字跟著視野移動）
+            const s = worldToScreen(ft.wx, ft.wy);
+            const drawX = (s.x) | 0;
+            const drawY = (s.y - offsetY) | 0;
+
+            const fz = boldLarge ? (ft.fontSize + 8) : ft.fontSize;
+            ctx.font = boldLarge
+                ? 'bold ' + fz + 'px Arial'
+                : fz + 'px Arial';
+
+            ctx.globalAlpha = alpha;
+
+            if (boldLarge) {
+                // 字大又粗：簡單黑色描邊一次
+                ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+                ctx.lineWidth = 2;
+                ctx.lineJoin = 'round';
+                ctx.strokeText(ft.text, drawX, drawY);
+            }
+
+            ctx.fillStyle = ft.color;
+            ctx.fillText(ft.text, drawX, drawY);
+        }
+
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+
+    // FPS 顯示（只在 devMode 開啟時顯示）
+    if (gameState.devMode) {
+        const now = performance.now();
+        if (!drawGame._fpsLastTime) {
+            drawGame._fpsLastTime = now;
+            drawGame._fpsCount = 0;
+            drawGame._fpsDisplay = 0;
+        }
+        drawGame._fpsCount++;
+        if (now - drawGame._fpsLastTime >= 500) {
+            drawGame._fpsDisplay = Math.round(
+                drawGame._fpsCount / ((now - drawGame._fpsLastTime) / 1000)
+            );
+            drawGame._fpsCount = 0;
+            drawGame._fpsLastTime = now;
+        }
+        ctx.save();
+        ctx.font = 'bold 14px Arial';
+        ctx.fillStyle = drawGame._fpsDisplay >= 50 ? '#00FF00'
+                      : drawGame._fpsDisplay >= 30 ? '#FFAA00' : '#FF4444';
+        ctx.fillText('FPS: ' + drawGame._fpsDisplay, VIEW_W / 2 - 30, VIEW_H - 10);
+        ctx.restore();
+    }
+
+    if (gameState.devMode) {
+        const _total = performance.now() - _t0;
+        if (_total > 6) {
+            console.log('[DRAW] total=' + _total.toFixed(1) + 'ms', {
+                terrain:  (_t1-_t0).toFixed(1),
+                trees:    (_t2-_t1).toFixed(1),
+                fruits:   (_t3-_t2).toFixed(1),
+                neutral:  (_t4-_t3).toFixed(1),
+                hostile:  (_t5-_t4).toFixed(1),
+                eliteBoss:(_t6-_t5).toFixed(1),
+                player:   (_t7-_t6).toFixed(1),
+                float:    (performance.now()-_t7).toFixed(1),
+            });
+        }
+    }
 }
+
+
 
 function _heartPath(ctx, x, y, size) {
     const w = size, h = size;
@@ -1174,7 +1516,25 @@ function _initTopLeftUI() {
 
     const icon = document.createElement('span');
     icon.textContent = '🐦';
-    icon.style.cssText = 'font-size:28px;line-height:1;flex-shrink:0;';
+    icon.style.cssText = 'font-size:28px;line-height:1;flex-shrink:0;cursor:pointer;pointer-events:all;';
+    let _devTapCount = 0;
+    let _devTapTimer = null;
+    icon.addEventListener('click', () => {
+        _devTapCount++;
+        if (_devTapTimer) clearTimeout(_devTapTimer);
+        _devTapTimer = setTimeout(() => { _devTapCount = 0; }, 2000);
+        if (_devTapCount >= 8) {
+            _devTapCount = 0;
+            gameState.devMode = !gameState.devMode;
+            const msg = document.createElement('div');
+            msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+                'background:rgba(0,0,0,0.8);color:#FFD700;padding:12px 24px;' +
+                'border-radius:8px;font-size:16px;font-weight:bold;z-index:9999;pointer-events:none;';
+            msg.textContent = gameState.devMode ? '🛠 Dev Mode ON' : '🛠 Dev Mode OFF';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 1500);
+        }
+    });
 
     const xpWrap = document.createElement('div');
     xpWrap.style.cssText = 'flex:1;min-width:0;';
@@ -1218,7 +1578,7 @@ function _initTopLeftUI() {
         mutRow.style.background = '';
     });
     mutRow.addEventListener('click', () => {
-        if (typeof showMutationPanel === 'function') showMutationPanel();
+        showMutationPanel();
     });
 
     const mutIcon = document.createElement('span');
@@ -1248,7 +1608,7 @@ function _initTopLeftUI() {
     tl.appendChild(wrap);
 }
 
-function updateUI() {
+export function updateUI() {
     _initTopLeftUI();
 
     const p           = gameState.player;
@@ -1256,27 +1616,57 @@ function updateUI() {
     const barPct      = Math.min(1, p.levelXP / lvThreshold);
 
     const xpText = document.getElementById('tl-xp-text');
-    if (xpText) xpText.textContent = 'Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold;
+    if (xpText) {
+        const newXpStr = 'Lv.' + p.level + '  XP: ' + p.levelXP + '/' + lvThreshold;
+        if (newXpStr !== _uiCache.xp) {
+            xpText.textContent = newXpStr;
+            _uiCache.xp = newXpStr;
+        }
+    }
 
     const xpBar = document.getElementById('tl-xp-bar');
-    if (xpBar) xpBar.style.width = Math.round(barPct * 100) + '%';
+    if (xpBar) {
+        const newXpBarW = Math.round(barPct * 100) + '%';
+        if (newXpBarW !== _uiCache.xpBarW) {
+            xpBar.style.width = newXpBarW;
+            _uiCache.xpBarW = newXpBarW;
+        }
+    }
 
-    _drawHpHearts(document.getElementById('hp-hearts-canvas'));
+    const hpCanvas = document.getElementById('hp-hearts-canvas');
+    if (hpCanvas && (gameState.stats.hpCurrent !== _uiCache.hp || gameState.stats.hpMax !== _uiCache.maxHp)) {
+        _drawHpHearts(hpCanvas);
+        _uiCache.hp = gameState.stats.hpCurrent;
+        _uiCache.maxHp = gameState.stats.hpMax;
+    }
 
     const mmBiomeEl = document.getElementById('minimap-biome');
     const mmTimeEl  = document.getElementById('minimap-time');
     if (mmBiomeEl) {
         const biomeIcons = { forest: t('biomeForest'), ocean: t('biomeOcean'), desert: t('biomeDesert') };
-        mmBiomeEl.innerText = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
+        const newBiome = biomeIcons[getBiome(gameState.player.x, gameState.player.y)] || '';
+        if (newBiome !== _uiCache.biome) {
+            mmBiomeEl.innerText = newBiome;
+            _uiCache.biome = newBiome;
+        }
     }
-    if (mmTimeEl) mmTimeEl.innerText = gameState.stats.timeStatus;
+    if (mmTimeEl) {
+        if (gameState.stats.timeStatus !== _uiCache.time) {
+            mmTimeEl.innerText = gameState.stats.timeStatus;
+            _uiCache.time = gameState.stats.timeStatus;
+        }
+    }
     const mmPlaytimeEl = document.getElementById('minimap-playtime');
     if (mmPlaytimeEl) {
         const rpt = (gameState.realPlayTime || 0) +
             (gameState._playTimerStart ? Date.now() - gameState._playTimerStart : 0);
         const rpm = String(Math.floor(rpt / 60000)).padStart(2, '0');
         const rps = String(Math.floor((rpt % 60000) / 1000)).padStart(2, '0');
-        mmPlaytimeEl.innerText = '⏱ ' + rpm + ':' + rps;
+        const newPlaytime = '⏱ ' + rpm + ':' + rps;
+        if (newPlaytime !== _uiCache.playtime) {
+            mmPlaytimeEl.innerText = newPlaytime;
+            _uiCache.playtime = newPlaytime;
+        }
     }
 
     if (gameState.devMode) {
@@ -1292,19 +1682,23 @@ function updateUI() {
         if (mutLvEl) {
             const totalLv = (mutData.levels.fang || 0) + (mutData.levels.tail || 0) +
                             (mutData.levels.wing || 0) + (mutData.levels.eye  || 0);
-            mutLvEl.textContent = '變異器官 ⚗️ Lv.' + totalLv;
+            const newMutLv = t('mutationOrgLabel', { lv: totalLv });
+            if (newMutLv !== _uiCache.mutLv) {
+                mutLvEl.textContent = newMutLv;
+                _uiCache.mutLv = newMutLv;
+            }
         }
         const mutDotEl = document.getElementById('mutation-red-dot');
         if (mutDotEl) {
-            mutDotEl.style.display = mutData.hasNewPoints ? 'inline-block' : 'none';
-        }
-        // 可升級時脈動動畫
-        const mutRowEl = document.getElementById('mutation-icon-row');
-        if (mutRowEl) {
-            if (mutData.hasNewPoints) {
-                mutRowEl.classList.add('mutation-pulse');
-            } else {
-                mutRowEl.classList.remove('mutation-pulse');
+            const newMutDot = mutData.hasNewPoints ? 'inline-block' : 'none';
+            if (newMutDot !== _uiCache.mutDot) {
+                mutDotEl.style.display = newMutDot;
+                _uiCache.mutDot = newMutDot;
+                const mutRowEl = document.getElementById('mutation-icon-row');
+                if (mutRowEl) {
+                    if (mutData.hasNewPoints) mutRowEl.classList.add('mutation-pulse');
+                    else mutRowEl.classList.remove('mutation-pulse');
+                }
             }
         }
     }
@@ -1318,6 +1712,29 @@ function updateUI() {
     }
     console.log && false; // [v0.47.0] 七+八+十: HUD 更新完成
 }
+
+function resetUICache() {
+    for (const key of Object.keys(_uiCache)) _uiCache[key] = null;
+}
+
+function resetPerceptionCache() {
+    _perceptionCache.path = null;
+    _perceptionCache.pathLastCalc = 0;
+    _perceptionCache.pathFruitCount = 0;
+    _perceptionCache.pathPlayerX = null;
+    _perceptionCache.pathPlayerY = null;
+    _perceptionCache.nearestCorpse = null;
+    _perceptionCache.corpseLastCalc = 0;
+    _perceptionCache.corpseCount = 0;
+    _perceptionCache.nearestBone = null;
+    _perceptionCache.boneLastCalc = 0;
+    _perceptionCache.boneCount = 0;
+}
+
+function resetFogFrameCount() {
+    _fogFrameCount = 0;
+}
+
 
 function drawTreasures() {
     for (const t of gameState.treasures) {

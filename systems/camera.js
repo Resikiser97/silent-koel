@@ -1,8 +1,14 @@
 // =============================================================
 // 鏡頭系統 - wrappedDistance / wrappedDelta / worldToScreen / updateCamera
 // =============================================================
+import { gameState } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H } from './map.js';
 
-function wrappedDistance(x1, y1, x2, y2) {
+// 重用物件，避免每幀大量短命物件造成 GC pressure
+const _screenPos = { x: 0, y: 0 };
+const _delta = { dx: 0, dy: 0 };
+
+export function wrappedDistance(x1, y1, x2, y2) {
     let dx = Math.abs(x2 - x1);
     if (dx > MAP_WIDTH  / 2) dx = MAP_WIDTH  - dx;
     let dy = Math.abs(y2 - y1);
@@ -10,48 +16,69 @@ function wrappedDistance(x1, y1, x2, y2) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-function wrappedDelta(ax, ay, bx, by) {
+export function wrappedDelta(ax, ay, bx, by) {
     let dx = bx - ax;
     let dy = by - ay;
     if (dx >  MAP_WIDTH  / 2) dx -= MAP_WIDTH;
     else if (dx < -MAP_WIDTH  / 2) dx += MAP_WIDTH;
     if (dy >  MAP_HEIGHT / 2) dy -= MAP_HEIGHT;
     else if (dy < -MAP_HEIGHT / 2) dy += MAP_HEIGHT;
-    return { dx, dy };
+    _delta.dx = dx;
+    _delta.dy = dy;
+    return _delta;
 }
 
-function worldToScreen(wx, wy) {
+export function worldToScreen(wx, wy) {
     let sx = wx - gameState.camera.x;
     let sy = wy - gameState.camera.y;
     if (sx < -MAP_WIDTH  / 2) sx += MAP_WIDTH;
     else if (sx >  MAP_WIDTH  / 2) sx -= MAP_WIDTH;
     if (sy < -MAP_HEIGHT / 2) sy += MAP_HEIGHT;
     else if (sy >  MAP_HEIGHT / 2) sy -= MAP_HEIGHT;
-    // 手機視野縮放：以螢幕中心為基準縮放
-    const zoom = (gameState.isMobile && gameState.cameraZoom && gameState.cameraZoom !== 1.0)
+    // 視野縮放：以螢幕中心為基準縮放
+    const zoom = (gameState.cameraZoom && gameState.cameraZoom !== 1.0)
         ? gameState.cameraZoom : 1.0;
     if (zoom !== 1.0) {
         sx = (sx - VIEW_W / 2) * zoom + VIEW_W / 2;
         sy = (sy - VIEW_H / 2) * zoom + VIEW_H / 2;
     }
-    return { x: sx, y: sy };
+    _screenPos.x = sx;
+    _screenPos.y = sy;
+    return _screenPos;
 }
 
-// 手機視野縮放：隨玩家體型增大而縮小鏡頭
-function _updateMobileCameraZoom() {
-    if (!gameState.isMobile) return;
+// 視野縮放：由 cameraZoomLevel 決定 baseZoom，智能模式隨體型縮小
+export function _updateCameraZoom() {
+    const settings = gameState.settings;
+
+    // 手機：10格=0.84，每格差 0.04（公式：0.48 + level * 0.04）
+    // 電腦：6格=1.00，每格差 0.04（公式：0.80 + level * 0.04）
+    const baseZoom = gameState.isMobile
+        ? 0.48 + settings.cameraZoomLevel * 0.04
+        : 0.80 + settings.cameraZoomLevel * 0.04;
+
+    if (settings.cameraMode === 'manual') {
+        // 手動模式：固定 zoom，不受體型影響
+        gameState.cameraZoom = baseZoom;
+        return;
+    }
+
+    // 智能模式：體型越大 zoom 越小（在 baseZoom 基礎上往下縮）
     const p = gameState.player;
-    const baseRadius    = 8;                               // 初始體型
+    const baseRadius    = 8;
     const increaseRatio = Math.max(0, (p.radius - baseRadius) / baseRadius);
-    const zoomReduction = increaseRatio * 0.25;            // 體型每增加 20% → 縮小 5%
-    gameState.cameraZoom = Math.max(0.6, 1.0 - zoomReduction);
+    const zoomReduction = increaseRatio * 0.25;
+    // 智能模式的最小 zoom = baseZoom * 0.6（不低於 0.3）
+    gameState.cameraZoom = Math.max(0.3, baseZoom - zoomReduction);
 }
 
-function updateCamera() {
+export function updateCamera() {
     const p = gameState.player;
     const cam = gameState.camera;
-    const marginX = VIEW_W * 0.30;
-    const marginY = VIEW_H * 0.30;
+    // 永遠居中：閾值設為 50% → 等效鎖定中心；預設 30%
+    const edgeThreshold = gameState.settings.alwaysCenter ? 0.5 : 0.3;
+    const marginX = VIEW_W * edgeThreshold;
+    const marginY = VIEW_H * edgeThreshold;
     let screenX = p.x - cam.x;
     let screenY = p.y - cam.y;
     if (screenX < -MAP_WIDTH  / 2) screenX += MAP_WIDTH;

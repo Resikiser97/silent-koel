@@ -1,4 +1,553 @@
+## v0.1.5.0
+
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.5.0 - 2026-06-06
+
+### 架構
+- ESM 全模組化完成（Stage 0–3）：37 個 JS 檔案從全域 `<script src>` 改為 `import`/`export`
+- `index.html` 改為單一 `<script type="module" src="./main.js">` 入口
+- `storage/index.js`：集中所有 `localStorage` key 定義與讀寫 helper
+- `systems/audio.js`：AudioManager 統一音量狀態（`_vol`、`loadVolume`、`setVolume`、`serializeVolume`）
+- `systems/evolution.js`：`buildSkillTreeOverlay` 拆成 coordinator + 4 個 private sub-functions
+- `mutation.js` ↔ `evolution.js` 循環依賴改用 `CustomEvent` 解耦
+- `systems/ui.js`：`showSettings()` 移除 `fromHome` 參數，改用 DOM 自動偵測
+- 結算畫面統一：新增 `buildEndGameOverlay()` 共用勝利/死亡外殼
+
+---
+
+## v0.1.4.3 - 2026-06-05
+
+### 效能
+- `showXPPopup` 改為呼叫 Canvas `showFloatingText`，移除 DOM XP popup pool
+  - 完全移除 `_XP_POOL_SIZE`、`_xpPopupPool`、`_xpPoolReady`、`_initXpPool()`
+  - `showXPPopup` 直接呼叫 `showFloatingText`，吃果子浮字納入 Canvas 批次繪製
+  - 移除 `main.js` 中的 `_initXpPool()` 呼叫
+- AudioManager 音效節流：一般音效 100ms，hurt/attack/playerAttack 150ms
+  - 新增 `_sfxLastPlayed` 快取記錄上次播放時間
+  - `play()` 開頭加入節流判斷，避免多隻生物同幀同時播放音效造成手機音訊壓力
+
+---
+
+## v0.1.4.2 - 2026-06-05
+
+### 效能
+- `showFloatingText` 從 DOM pool 改為 Canvas 批次繪製
+  - 完全移除 `_FLOAT_POOL_SIZE`、`_floatPool`、`_floatPoolReady`、`_initFloatPool()`、`resetFloatPool()` 及 `.float-text-animate` CSS
+  - `gameState.floatTexts` 陣列統一收集浮字，`drawGame()` 末段一次批次繪製，無多層 text-shadow
+  - 手機上限 12 個，桌機 20 個；100ms 內同位置同顏色數字自動合併
+  - 字大又粗模式：+8px + 簡單黑色描邊一次（取代 4 層 CSS shadow）
+
+---
+
+## v0.1.4.1 - 2026-06-05
+
+### 效能
+- `updateTreeFruitProduction` 節流改為累積時間補給：節流前累積 `elapsed`，觸發時一次把 elapsed 補給 `tree.fruitTimer`，果子生產速度恢復正常（修復節流導致速度變 1/30 的副作用）
+- `showFloatingText` 移除 `void el.offsetWidth` 強制 reflow，改用 `requestAnimationFrame` + CSS class `.float-text-animate` 切換觸發 animation，改善 iOS Safari 連續浮字時的 spike
+- AudioManager 預熱清單修正：移除不存在的 `'attacked'`，補上實際播放的 `'hurt'`，避免第一次被打時 lazy 建立 pool 造成卡頓
+
+---
+
+## v0.1.4.0 - 2026-06-05
+
+### 效能
+- `showFloatingText` 改用 DOM 物件池（pool size 20），避免每次 `createElement` + CSS animation + `remove`，大幅改善手機卡頓
+  - 新增模組頂部 `_FLOAT_POOL_SIZE`、`_floatPool`、`_floatPoolReady` 三個常數/變數
+  - 新增 `_initFloatPool()`：第一次呼叫 `showFloatingText` 時 lazy init，預建 20 個 `div` 並 append 至 `#ui-overlay`
+  - `showFloatingText` 改為從 pool 取閒置 slot，重置 animation 後重複使用，pool 滿時直接跳過不卡主執行緒
+  - 新增 `resetFloatPool()`，在 `initializeGame()` 每局開始時清除所有 timer 並重置 pool 狀態
+
+---
+
+## v0.1.3.9 - 2026-06-05
+
+### 效能
+- AudioManager 音效改用物件池，避免 iOS Safari cloneNode 卡頓
+  - 新增 `_sfxPools`（每個音效 4 個實例）與 `_getPooledAudio(key)`
+  - `play()` 改為從池取閒置實例，不再每次 `cloneNode()`；音量為 0 時直接跳過
+  - `init()` 預熱 `eatFruit`、`levelUp`、`attacked` 三個常用音效池
+- `updateTreeFruitProduction` 改為每 500ms 執行一次（約每 30 幀）
+  - 新增模組頂部 `_treeProductionTimer` 計時器
+  - 新增 `resetTreeProductionTimer()`，在 `initializeGame()` 每局開始時重置
+- `updateMinimapFog` 改為每 3 幀更新一次
+  - 新增模組頂部 `_fogFrameCount` 計數器
+  - 新增 `resetFogFrameCount()`，在 `initializeGame()` 每局開始時重置
+
+---
+
+## v0.1.3.8 - 2026-06-05
+
+### 效能
+- `worldToScreen` 和 `wrappedDelta` 改為物件重用，大幅減少每幀 GC allocation，改善手機 spike lag
+  - `camera.js` 頂部新增 `_screenPos` 和 `_delta` 重用物件
+  - `worldToScreen` 直接寫入 `_screenPos` 並回傳同一物件，不再每次 `return { x, y }`
+  - `wrappedDelta` 直接寫入 `_delta` 並回傳同一物件，不再每次 `return { dx, dy }`
+  - 修正所有「連續呼叫後同時使用兩個結果」的呼叫點（共 5 處），立即萃取數值防止物件被覆蓋：
+    - `boss.js` `_drawSharkChargeArrow`：`fromSx/fromSy` + `toSx/toSy`
+    - `boss.js` `_drawHunterAimingWarning`：`bsx/bsy` + `tsx/tsy`
+    - `elite.js` `_drawHunterElite`：簽名改為傳入數值 `(sx, sy)`，內部瞄準線改用 `tsx/tsy`
+    - `hud.js` `_drawArcherLockOn`：`psx/psy` + `tsx/tsy`
+    - `hud.js` `drawGame` 中 `ps`：新增 `psx/psy` 快取，閃現特效改用 `sax/say/sbx/sby`
+
+---
+
+## v0.1.3.7 - 2026-06-05
+
+### 修復
+- 靈敏知覺三等級改用快取，限制重算頻率，大幅減少手機 spike lag
+  - Lv1 果子路徑（`findBestPerceptionPath`）：距上次計算 >500ms、果子數量改變、或玩家移動 >50px 才重算
+  - Lv2 最近屍體：距上次計算 >300ms 或屍體數量改變才重算
+  - Lv3 最近白骨：距上次計算 >300ms 或白骨數量改變才重算
+  - 新增模組頂部 `_perceptionCache` 快取物件
+  - 新增 `resetPerceptionCache()`，在 `initializeGame()` 每局開始時重置快取
+
+---
+
+## v0.1.3.6 - 2026-06-05
+
+### 修復
+- `tutorial.js` `_highlightDayNight` setTimeout 記憶體洩漏：改用可清除的 timer ID（`_dnFlashTimer`），停止條件時正確 clearTimeout，不再永久在背景跑
+- 新增 `_clearDnFlash()` 統一清除 timer 與 DOM 樣式，在 `_endTutorial()`、`showTutorial()` 頭部呼叫
+- 新增 `resetTutorial()`：`initializeGame()` 每局開始時強制重置教學狀態，防止跨局 timer 殘留導致手機越來越卡
+
+---
+
+## v0.1.3.5 - 2026-06-05
+
+### 修復
+- `updateUI` dirty check：每幀 DOM 操作從 6~9 次降為只在值改變時更新，減少手機卡頓
+  - 新增模組頂部 `_uiCache` 快取物件，記錄上次寫入的 xp 文字、xp 條寬、HP、生態圈、時間、遊玩時間、變異等級、紅點
+  - `_drawHpHearts` 只在 `player.hp` 或 `player.maxHp` 改變時重繪
+  - 新增 `resetUICache()`，在 `initializeGame()` 每局開始時重置快取
+
+---
+
+## v0.1.3.4 - 2026-06-04
+
+### 修復
+- 首頁技能樹的隱藏器官繼承選擇永遠只能選一個（`homeSelHidden` 單選邏輯）
+  - 改為陣列多選，正確讀取 `hiddenOrganLimit`（回憶器官等級 + 1）
+  - 標題動態顯示可繼承數量（上限 > 1 時顯示「選擇繼承最多 N 個」）
+  - 與 postGame 路徑的選擇邏輯保持一致
+
+---
+
+## v0.1.3.3 - 2026-06-04
+
+### 修復
+- 回憶器官升級後 postGame 技能樹強大器官選擇上限未更新
+  - `buildSkillTreeOverlay` postGame 模式加入 localStorage 強制重載 `mutationSkills`
+  - 移除 `_checkAndRepairMutationSkills` 在每次開啟變異面板時的誤呼叫（保留 `initMutationSkills` 載入時的驗算）
+  - 移除 v0.1.2.0 遺留的 `[Debug]` console.log
+- 音量設定刷新後歸回預設值
+  - `window.onload` 補上 `loadSettings()`，確保頁面載入時立即讀取已存設定
+  - `loadSettings()` volume 改為深度合併（`Object.assign` 防禦性寫法）
+  - `playIntroTheme()` 改為即時讀取 `gameState.settings.volume`，不再使用一次性快照
+
+---
+
+## v0.1.3.1 - 2026-06-04
+
+### 修復
+- **變異技能點異常**：升級回憶器官後技能點歸零且等級未保存（出了點數拿不到效果）
+  - `_syncMutationSkillPoints()` 防止 `earned - spent` 為負時強制覆蓋現有點數
+  - `initMutationSkills()` 正確還原 localStorage 的 `_points` 快照，避免每次重算
+  - 新增 `_checkAndRepairMutationSkills()`：啟動時及開啟變異面板時自動驗算，發現異常自動退還所有技能點並顯示 ⚠️ 提示
+
+### 新增（合併自 v0.1.3.0）
+- 趣味排行榜：🍎 最佳果王（單局吃果子數最多）
+- 趣味排行榜：🏹 最強獵戶（單局普通生物擊殺數最多，不含精英/Boss/巨人/殺手）
+- `sessionStats` 新增 `fruitsEaten` 和 `normalKills` 計數（每局重置）
+- Supabase leaderboard 表新增 `fruits_eaten` / `normal_kills` 欄位對應
+
+---
+
+## v0.1.3.0 - 2026-06-04
+
+### 新增
+- 趣味排行榜：🍎 最佳果王（單局吃果子數最多）
+- 趣味排行榜：🏹 最強獵戶（單局普通生物擊殺數最多，不含精英/Boss/巨人/殺手）
+- `sessionStats` 新增 `fruitsEaten` 和 `normalKills` 計數（每局重置）
+- `submitScore` 自動補填 `fruits_eaten` / `normal_kills` 至 Supabase leaderboard 資料表
+
+---
+
+## v0.1.2.0 - 2026-06-04
+
+### 修復
+- **精英怪 UI 名字標籤**：確認 `drawEliteCreature()` 已正確讀取 `elite.label`（Hunter Elite 顯示「★ 幽靈犬」等正確名稱），無需修改
+- **玩家毒傷 tick 未處理**：`updateStatusEffects()` 末尾新增玩家毒傷 tick，毒霧犬咬中後毒效果現可正常生效
+- **輔助功能設定在遊戲結束時未儲存**：`showSkillTree()` 與 `showVictory()` 開頭加入 `saveSettings()`，確保死亡/勝利前所有設定存入 localStorage
+- **回憶器官等級在 postGame 未正確讀取**：`showSkillTree()` 加入 `initMutationSkills` 保障，`buildSkillTreeOverlay` 加入 `[Debug]` log 供確認
+
+### 調整
+- **肉食性生物進食時 Aggro 範圍從 ×1.5 改為 ×0.5**：讓生物能順利進食觸發殺手化
+- **草食性進化 Lv4**：巨人化生物（含 Alpha）對玩家傷害 -15%
+- **草食性進化 Lv5**：巨人化生物（含 Alpha）對玩家傷害 -30%
+
+---
+
+## v0.1.1.3 - 2026-06-04
+
+## v0.1.1.3 - 2026-06-04
+
+### 修復
+- **黑色獵人三形態攻擊完全失效（aggroRange 覆蓋 Bug）**
+  - Phase 1/3 的 `'aiming'` 和 Phase 2 的 `'pumping'` 每幀被 `if (dist < aggroRange)` 覆蓋為 `'chasing'` → Boss 永遠不開槍、Phase 2 音效每幀播放
+  - 修正：各 Phase 加入 `state !== 'aiming'` / `state !== 'pumping'` 保護
+- **黑色獵人 Phase 1/3 瞄準線在螢幕外不可見**
+  - Boss 在 1350px 繞圈超出螢幕，drawBoss cull 把雷射線一起過濾掉
+  - 修正：新增 `_drawHunterAimingWarning()` 在 cull 前呼叫，玩家頭上加準心鎖定環
+- **幽靈隼蓄力時繼續 kiting 可能跑出攻擊範圍**
+  - 設計應為「0.3 秒站立蓄力」，現實是邊蓄力邊後退
+  - 修正：蓄力中（`_aimTarget` 存在）提前 return，凍結移動
+- **幽靈隼瞄準線太細幾乎不可見**
+  - `lineWidth 1.5` 無 shadow → 難以察覺
+  - 修正：強化為紅色虛線 + glow + 目標準心，與 Boss 雷射同等視覺強度
+- **精英怪箭頭在 Boss 螢幕外時被抑制**
+  - `drawEliteArrow` 當 Boss off-screen 時也不畫精英箭頭，Phase 1 期間玩家找不到隼
+  - 修正：移除 Boss off-screen 抑制，精英箭頭獨立顯示
+
+### 新增
+- `docs/BOSS_RANGED_DESIGN_TRAPS.md`：記錄 6 種 Boss / 遠程怪設計陷阱及解法，含設計 Checklist
+
+---
+
+## v0.1.1.2 - 2026-06-04
+
+### 修復
+- **黑色獵人三形態攻擊完全失效**（根本原因：`aggroRange` 覆蓋 Bug）
+  - 每幀 `if (dist < aggroRange) boss.state = 'chasing'` 無條件覆蓋戰鬥中間狀態，導致 `aiming`（Phase 1/3）被打斷每幀重置、`pumping`（Phase 2）`_pumpUntil` 每幀重設永遠不觸發開槍
+  - 修正：各 Phase aggroRange 判斷加入 `boss.state !== 'aiming'` / `boss.state !== 'pumping'` 防護
+- **黑色獵人 Phase 1/3 雷射瞄準線螢幕外不可見**
+  - Boss 以 idealDist 1350px 繞圈，超出螢幕可視範圍，`drawBoss` cull 後雷射線不被繪製
+  - 修正：新增 `_drawHunterAimingWarning()` 在 cull 前呼叫，含：紅色虛線從 Boss 指向玩家（螢幕外也畫）＋玩家頭上脈動準心鎖定環
+  - 移除重複的 `_drawHunter` 內舊版雷射線代碼
+
+---
+
+## v0.1.1.1 - 2026-06-04
+
+### 修復
+- 毒霧隼達到 3 個毒霧上限後，`attackCooldown` 未重置導致每幀觸發攻擊判斷，kiting 無停頓連續後退（逃跑不攻擊）
+- 毒霧隼達上限後補設 `_postShotTimer`，防止毫無停頓的後退循環
+- 毒霧飛行毒球改用 `_venomFirePos`（發射瞬間位置）作為插值起點，避免隨 elite 移動而抖動
+- 毒霧飛行毒球視覺強化：外層光暈半徑 14px + 內核亮綠半徑 7px，`#00FF66` 強光暈（原為暗色 8px）
+- 腐蝕液體視覺強化：透明度由 0.35 → 最高 0.55 + 淡入淡出，加上亮綠色邊框 glow
+
+---
+
+## v0.1.1.0 - 2026-06-04
+
+### 修復
+- 黑色獵人血管標記顯示錯誤（x5 顯示為 x4，已修正為正確管數）
+- 黑色獵人第一形態及第三形態 Sniper 紅色雷射瞄準線不顯示（重寫為從 Boss 中心至目標的精確線段）
+- 三隼子彈缺少 type 欄位：幽靈隼（單發）現正確標記為 `sniper`，暗影隼散彈保持 `shotgun_pellet`
+- 毒霧隼攻擊飛行軌跡視覺缺失（補上暗綠色插值毒球，帶霧氣光暈）
+- 毒霧隼落地腐蝕液體在困難地圖未繪製（在 hud.js 補上 venomFalcon puddle 獨立繪製邏輯）
+- 第三形態融合技瞄準時補上 5 條橘色隨機方向散射預警線
+
+---
+
+## v0.1.0.3 - 2026-06-03
+
+### 修復
+
+#### 平衡性修復
+
+- **擊殺 XP 公式修正**（`systems/combat.js`）：`handleKill()` 的 hostile 擊殺 XP 公式從 `Math.min(80, 30 + Math.round((maxHp/50) * 50))` 改為 `Math.min(80, 30 + Math.round((maxHp/50) * 10))`，移除舊公式導致幾乎所有難度肉食怪都觸發 cap 80 的問題，XP 現在隨 HP 動態變化（簡單約 40、普通約 45、困難約 55）
+
+- **肉食性怪物夜晚增強**（`systems/spawning.js`）：`_makeCarnCreature()` 新增夜晚倍率計算，補充生成的肉食怪依當前夜晚數套用 HP/攻擊 `×1.2^夜`、速度 `×1.1^夜`，第1夜約 +20%/+10%、第3夜約 +73%/+33%；草食性生物不受影響
+
+- **簡單難度 Boss 速度修正**（`map/easymap.js`）：三隻 Boss 速度從地圖設定的過低值（1.0/1.3/1.2）修正為與 `BOSS_CONFIG` 一致的正確值（黑熊 3.0、大白鯊 3.9、蠍王 3.6）
+
+- **精英怪 HP 套用地圖難度倍率**（`systems/elite.js`）：Easy/Normal 地圖的三犬/三隼精英怪 HP 計算新增乘上 `creatureStrength.hostile.hpMultiplier`，修正普通難度精英 HP 與簡單難度相同的問題（普通第1夜 250 → 375、第3夜 500 → 1500）；困難地圖維持固定數值不變
+
+- **隱藏器官掉落 Bug 修復**（`systems/organs.js`）：`handleEliteKill()` 的 Hunter 精英怪分支（`isHunterElite`）在呼叫 `_handleHunterEliteKill()` 後補上隱藏器官掉落判斷，修復 v0.1.0.2 起三犬/三隼擊殺後完全不掉落隱藏器官的問題
+
+---
+
+## v0.1.0.2 - 2026-06-03
+
+### 新增
+- **變異面板左欄整合**（`systems/evolution.js`）：`_buildMutationSkillContent()` 左欄頂部新增可用變異點顯示（`可用變異點：N`）；底部新增兌換按鈕（100 技能點 → 10 變異點），兌換後即時 replaceChild 重建面板
+
+### 修復
+- **變異技能點 NaN 完整修復**（`systems/mutation.js`、`systems/evolution.js`）：`_syncMutationSkillPoints()` 在 `mutationData` 尚未初始化時補設預設值 0；`buildSkillTreeOverlay()` 開頭強制呼叫 `_syncMutationSkillPoints()`；技能點數顯示加入防呆（`?? 0`）；器官升級按鈕改為 replaceChild 方式重建面板確保點數即時刷新
+- **首頁路徑變異點顯示修復**（`systems/evolution.js`）：`buildSkillTreeOverlay(fromHome)` 的 localStorage 同步區塊補讀 `mutationData` 和 `mutationSkills`，確保首頁進入與 postGame 路徑讀取相同資料；`getMutationUpgradeCost` 參數由錯誤的 `def.id`（字串）改為 `lv`（等級數字），消除升級費用 NaN 顯示
+- **返回技能樹按鈕重複 🌿 修復**（`systems/evolution.js`）：切換至變異技能樹時，按鈕文字從 `🌿 🌿 技能樹` 改為 `🌿 技能`
+- **Easy/Normal 三犬精英怪血量修復**（`systems/elite.js`）：`_spawnHunterElite()` 改依地圖 `elites` 倍率動態計算 HP/傷害/速度（Easy 第一夜 HP 從固定 480 → 正確的 250）
+- **黑色獵人 Boss 數值補入**（`map/hardmap.js`）：`hp: 800`、`speed: 4.0`、`damage: 45`（原為 null）
+- **困難地圖草食性生物傷害倍率修復**（`systems/spawning.js`）：`_makeHerbCreature()` 的 damage 補乘 `str.damageMultiplier`，與 HP/速度計算一致
+
+---
+
+## v0.1.0.1 - 2026-06-03
+
+### 新增
+- **GOBLIN NEST Splash 畫面**（`systems/ui.js`、`main.js`）：啟動時顯示開發者品牌頁，點擊後播放 Intro Theme 並進入首頁
+- **首頁背景音樂**（`config/gameConfig.js`、`systems/audio.js`）：`playIntroTheme()` / `stopIntroTheme()`；進入遊戲時自動停止
+- **首頁公告標籤**（`systems/ui.js`）：標題右上側旋轉印章，交替顯示「巨人覺醒！」「獵人入侵！」
+
+### 調整
+- 變異技能樹按鈕移至技能樹 Header 右側；面板改為左右兩欄（左：變異器官、右：技能點/技能）
+- Splash 標題改為立體陰影樣式
+
+### 修復
+- TOP10 難度切換順序固定為 簡單→普通→困難，不再依賴 DB 查詢
+- 技能樹 Header 重複 🌿 emoji 修復
+- 變異技能點升級費用 NaN 修復（`sk.level` 空值防呆）
+- 切換變異面板後返回技能樹佈局還原修復（`display:flex` 明確設定）
+
+---
+
+## v0.1.0.0 - 2026-06-03
+
+### 新增
+- **困難難度地圖**（`map/hardmap.js`）：生物強度 ×2.5、侵略距離 600、精英怪與 Boss 不回血
+- **黑色獵人 Boss**（`systems/boss.js`）：困難地圖專屬，5管血條制；三形態（狙擊/散彈/融合技）；牛仔帽+槍 Canvas 外觀；台詞字幕系統；死亡獎勵 +1000XP / +5技能點 / +5變異點；每管擊破 +30 秒遊戲時間（最多 +120 秒）
+- **靜音獵隊精英怪**（`systems/elite.js`）：困難地圖三隼（幽靈隼★/暗影隼★★/毒霧隼★★★）；普通/簡單地圖三犬（幽靈犬/暗影犬/毒霧犬）；出場廣播字幕 + 警報音效
+- **趣味榜「🎯 獵人終結者」**（`config/supabase.js`、`systems/leaderboard.js`）：困難地圖最快擊殺黑色獵人
+- **音效系統擴充**（`config/gameConfig.js`）：黑色獵人（18 組）、三隼（15 組）、三犬（8 組）、阿奇爾（5 組）音效
+
+### 調整
+- 地圖選擇困難難度正式接入 `HARD_MAP`（`systems/ui.js`）
+- 黑色獵人使用獨立主題曲 `Super boss.mp3`
+- 所有 Boss 死亡路由改為統一 `handleBossKill()`，支援多管血條（`systems/combat.js`、`systems/player.js`）
+
+---
+
+## v0.0.69.0 - 2026-06-03
+
+### 新增
+- **變異技能樹**（`systems/evolution.js`、`systems/mutation.js`、`systems/gameState.js`、`lang/`）：技能樹面板右上角新增「⚗️ 變異」按鈕；`_showMutationSkillPanel()` 子面板；「回憶器官」技能（0/3，每等 +1 隱藏器官保留）；`_upgradeMutationSkill()`；技能點每 50 變異總等級 +1；`DEFAULT_MUTATION_SKILLS`、`initMutationSkills()`、`_saveMutationSkills()`、`_syncMutationSkillPoints()`；隱藏器官選擇改為多選（上限依 recallOrgan 等級）
+- **困難難度解鎖**（`systems/ui.js`）：`showMapSelect()` 中 hard locked 改為 false
+- **第二章劇情**（`systems/ui.js`）：`showGuideStory()` 加入章節 Tab 導航；`_getGuideStoryPages()` 新增 4 頁（第三章獵人的足跡 × 3 + Coming Soon 動態頁）；`renderPage()` 支援 `customRender` 回呼；`chapter2Unlocked` localStorage 控制解鎖
+- **通關解鎖記錄**（`systems/boss.js`）：普通難度通關寫入 `chapter2Unlocked: 'true'`
+- **localStorage 通關統計**（`systems/boss.js`）：`_recordClearStats()`、`_recordBossKill()`；通關時記錄難度 / 角色 / Boss 擊殺次數
+
+---
+
+## v0.0.68.0 - 2026-06-03
+
+### 修復
+- **生物體型隨視野縮放修復**（`systems/creatures.js`、`systems/boss.js`、`systems/hud.js`）：`drawCreatureShape`、`_drawCreatureGlow`、`drawNeutralCreatures`、`drawHostileCreatures`、`drawBoss`、`drawBossShape` 及玩家繪製均改為 `radius * cameraZoom`；血條 Y 偏移、名字/隊伍標籤 Y 偏移同步修正；攻擊範圍圈縮放正常（v0.0.66.0 已修，本次未重複套用）
+- **排行榜舊版本號壓制新版修復**（`systems/leaderboard.js`）：三碼舊格式（如 v0.65.0）`version_order` 強制回傳 0，不再覆蓋四碼新版排名
+
+### 新增
+- **首頁按鈕 Hover 效果**（`systems/ui.js`）：開始遊戲、技能樹、圖鑑、排行榜、設定五個按鈕加入 scale/顏色/陰影 hover 動畫；手機版改為 touch 縮放回饋；新增 `_addMenuHover()` helper
+- **聊天室 `[c=crim]` 深紅色**（`systems/chat.js`）：新增 `crim`（`#C62828`）至一般玩家可用色；顏色面板加入「深紅字」按鈕；加入 `_COLOR_MAP` 統一管理色碼
+- **巨人跨物種組隊**（`systems/creatures.js`）：招募條件改為「雙方 diet === 'herbivore'」，不再限同物種同生態；上限/Alpha 觸發機制不變
+- **鬣狗隊名標籤**（`systems/creatures.js`、`main.js`）：新增三國武將名稱池（20名）`_HYENA_PACK_NAMES`；每個 packGroup 首次組隊時分配隊名；名字下方顯示 `曹操(2/3)` 格式標籤；遊戲重置時清空已用名稱
+
+### 調整
+- **巨人隊名改為仿製詞**（`systems/creatures.js`）：`_PACK_NAMES` 全部改為仿製詞（如 SKT→SK-Tea、T1→T-One），避免侵權
+- **巨人擊殺獎勵上調**（`systems/combat.js`）：普通巨人 XP 60→100；Alpha XP 200→300；Alpha 變異點保底 +1→+2；額外掉落機率 10%→20%、數量 1~3→2~6
+
+---
+
+## v0.0.67.1 - 2026-06-02
+
+### 調整
+- **圖鑑生物百科重新排序**（`config/compendium_data.js`）：精英怪移至最前（特殊生物優先），一般生物改依地區排列（森林→海洋→沙漠）
+- **圖鑑遊戲機制新增「變異器官」條目**（`config/compendium_data.js`）：說明四種變異器官、獲得與升級方式
+- **器官圖鑑與進化系統分頁改為雙欄版面**（`systems/ui.js`）：移除舊式翻頁按鈕，改為桌機左側目錄 + 右側內容、手機橫向 Tab 切換，與遊戲說明分頁風格統一；新增 `_renderOrgans()`、`_renderEvo()` 函式，移除 `buildOrganPages()`、`buildEvoPages()`、`getPages()`
+
+---
+
+## v0.0.67.0 - 2026-06-02
+
+### 新增
+- **遊戲圖鑑系統**（`config/compendium_data.js`、`systems/ui.js`、`index.html`）：新增 `COMPENDIUM_DATA` 全域常數，定義四大分類（遊戲機制 9 條、Biome 3 條、Boss 3 條、生物百科 7 條），共 22 個條目，繁中／英文雙語，數值動態引用 config，不寫死
+- **圖鑑 Guide 分頁重設計**（`systems/ui.js`）：桌機版改為左側 160px 目錄欄 + 右側內容區雙欄版面；手機版改為橫向可滑動 Tab 列 + 下方內容區；各分類用 section color 標色；語言切換即時重繪
+- **圖鑑維護 SOP**（`.claude/instructions.md`）：新增「更新圖鑑」與「檢查圖鑑」兩個 AI 指令步驟說明
+
+---
+
+## v0.0.66.3 - 2026-06-01
+
+### 修復 / 效能
+- **getGameFont cache**（`systems/utils.js`）：新增字體字串快取，相同設定下直接回傳快取值，避免每幀對所有生物重複建立新字串物件；以數字 key 取代字串 key 加快查詢
+- **字大又粗合併 Toggle**（`systems/gameState.js`、`systems/ui.js`、`lang/`）：移除獨立的「字體加大」與「字體加粗」兩個選項，合併為單一「字大又粗」Toggle（+7px + bold），並保留舊 localStorage 自動遷移
+- **showXPPopup DOM 物件池**（`systems/player.js`、`main.js`）：預建 10 個可重複使用的 DOM 元素，吃果子時從池取得而非每次 createElement；池滿時直接跳過，不建立新元素
+- **_checkGuardianRange 節流**（`systems/creatures.js`）：加入 200ms 節流，避免每幀對每隻巨人執行 O(中立×敵意) 雙重迴圈距離計算
+- **視野縮放公式調整**（`systems/camera.js`、`systems/ui.js`）：手機版改用 `0.48 + level × 0.04`（10格=0.84），電腦版改用 `0.80 + level × 0.04`（6格=1.00）；v0.0.66.3 一次性強制覆蓋玩家存檔預設值
+
+---
+
+## v0.0.66.2 - 2026-06-01
+
+### 新增
+- **出生保護區**（`systems/spawning.js`、`systems/gameState.js`、`main.js`）：遊戲開始後 3 秒內不補充生成肉食怪；初始生成時，距地圖中心 forestCenterRadius 以內的位置也不生成肉食怪
+- **巨人 guardianRange 縮小**（`systems/creatures.js`）：`_triggerGiantization()` 中巨人保護範圍由 1000px 縮小為 500px（Alpha 的 1500px 不變）
+- **殺手悄悄獵殺**（`systems/creatures.js`）：殺手化生物在巨人 guardianRange（500px）以外攻擊草食性時，不觸發巨人的 guardianTarget 保護，讓殺手可在外圍悄悄捕獵
+- **隊伍名稱標籤**（`systems/creatures.js`）：巨人化隊長自動分配隊伍名稱（SKT、T1、Fnatic 等，共 26 組）；隊員繼承名稱；名字下方顯示隊伍標籤與成員比（如 `T1(3/6)`）
+
+---
+
+## v0.0.66.1 - 2026-06-01
+
+### 新增
+- **GM 標籤改靛藍色**（`systems/chat.js`）：`_parseName()` 中 GM 的【GM】標籤由彩虹漸層改為固定靛藍色 `#4B9CD3`，移除 `-webkit-background-clip` 等漸層 CSS
+- **聊天顏色按鈕**（`systems/chat.js`）：聊天輸入框新增 🎨 按鈕，點擊彈出面板可插入 `[c=red]`、`[c=blue]`、`[c=green]` 彩色字標籤，游標自動置於兩 tag 中間
+- **角色居中更名**（`lang/zh-TW.js`、`lang/en.js`、`systems/ui.js`）：設定面板「永遠居中」改名為「角色居中」（英文 Center Camera），並刪除底部 hint 提示文字
+- **地圖透明開關**（`systems/gameState.js`、`systems/ui.js`、`systems/hud.js`、`lang/`）：輔助功能新增「地圖透明」Toggle；開啟後移動時小地圖每 0.5 秒降低 0.15 透明度（最低 0.5），停止後緩慢回復至 1.0
+- **器官選擇防誤觸**（`systems/organs.js`）：器官選擇面板開啟後 0.5 秒內點擊無效，防止升級/選擇器官介面一開即誤觸
+- **字體輔助功能**（`systems/gameState.js`、`systems/ui.js`、`systems/utils.js`、`lang/`）：輔助功能新增「字體加大」（+2px）與「字體加粗」兩個 Toggle；新增全域 `getGameFont(baseSize, baseBold)` 函式，套用至 `hud.js`、`creatures.js` 所有 canvas ctx.font 設定
+
+---
+
+## v0.0.66.0 - 2026-05-29
+
+### 修復
+- **攻擊範圍圈縮放修正**（`systems/hud.js`）：攻擊範圍圈半徑乘上 `cameraZoom`，修復縮放不為 1 時圈圈大小錯誤的問題
+- **置頂訊息自動過期**（`systems/chat.js`）：`renderChat()` 開頭新增 `_pinnedMessage.pinUntil` 過期檢查；過期後清除本地置頂狀態並同步清除訊息陣列中的 `is_pinned`
+
+### 新增
+- **排行榜賽季版本制**（`config/gameConfig.js`、`systems/leaderboard.js`）：版本號格式改為四段 `v0.x.y.z`；`version_order` 改取第二段 x，同一個 x 的記錄互相競爭（x=0 為初始賽季）
+- **`/unpin` 指令**（`systems/chat.js`）：GM 可輸入 `/unpin` 取消當前置頂訊息（`_handleUnpinCommand()`），同步更新資料庫與本地狀態
+- **等級顏色辨識系統**（`systems/chat.js`）：變異等級顯示獨立放大（13px, bold）並依等級套色（0 白/50 綠/100 藍/150 紫/200 粉/250 金/300 紅/350 橘/400+ 彩虹漸層）；`_lvColor(lvNum)` 函式
+- **GM 彩虹【GM】標籤 + 金色說話內容**（`systems/chat.js`）：GM 的【GM】標籤改為彩虹漸層色，說話內容以金色 `#FFD700` 顯示
+- **彩色字標籤系統**（`systems/chat.js`）：支援 `[c=red]文字[/c]` 語法，一般玩家限 red/green/blue 三色；`_parseColorTags(escapedContent, isVIP)` 函式
+- **先驅者 VIP TODO 索引**（`systems/chat.js`）：新增 `isVipPlayer(msg)` 函式（目前回傳 false），作為未來先驅者解鎖任意顏色彩色字的交接點
+
+### 調整
+- **聊天訊息移除版本號顯示**（`systems/chat.js`）：`_buildMsgHTML()` 和置頂展開版均移除 `[版本號]` 欄位，介面更簡潔
+
+---
+
+## v0.64.0 - 2026-05-28
+
+### 新增
+- **聊天室可拖拽移動**（`systems/chat.js`）：新增 `_makeDraggable(handle, panels)` 函式，以 `#chat-settings-btn` 為拖拽把手，同步移動 `#chat-history-panel` 與 `#chat-input-panel`；超過 5px 才判定為拖拽，滑動過程以邊界夾住防止拖出畫面外
+- **記住最後位置**（`systems/chat.js`）：拖拽結束後呼叫 `_saveChatPosition()` 存入 `localStorage`；`buildChatUI()` 建立手機版面板後以 `_loadChatPosition()` 還原上次位置
+- **拖拽後不誤觸齒輪**（`systems/chat.js`）：`_chatDragState.wasDragging` 旗標確保拖拽結束後的 click 事件不會開啟設定面板
+- **視窗調整邊界保護**（`systems/chat.js`）：`window.resize` 監聽器確保轉屏後面板不跑出畫面外
+
+---
+
+## v0.63.1 - 2026-05-28
+
+### 新增
+- **聊天室首頁專屬顯示**（`systems/chat.js`、`systems/ui.js`、`systems/evolution.js`、`systems/leaderboard.js`）：新增 `showChat()` / `hideChat()` 工具函式；首頁 7 個按鈕（開始遊戲、技能樹、圖鑑、排行榜、設定、故事、更新）點擊時呼叫 `hideChat()`；`closeCompendium()`、`hideSettings()`、`closeLb()`、故事關閉、更新日誌關閉、技能樹 fromHome 關閉時若仍在首頁則呼叫 `showChat()`；`showStartScreen()` 末尾改用 `showChat()` 取代原本手動顯示 `#chat-panel`
+
+---
+
+## v0.63.0 - 2026-05-28
+
+### 重構
+- **手機版聊天室 UI 重新設計**（`systems/chat.js`）：拆分為兩個獨立 fixed 元素 — `#chat-history-panel`（bottom:23vh, height:18vh，可捲動歷史區，含 sticky 齒輪與置頂訊息）與 `#chat-input-panel`（bottom:5vh, height:5vh，獨立輸入列）；移除舊版 `#chat-panel` 手機分支與 `_adjustMobileChatHeight()`
+- **renderChat() 雙路徑**（`systems/chat.js`）：偵測 `#chat-history-panel` 存在時走手機版路徑（訊息以 `<p>` 直接 append），否則走桌機版路徑（行為不變）
+- **_isAtBottom() 更新**（`systems/chat.js`）：優先抓取 `#chat-history-panel`，桌機版 fallback 至 `#chat-messages`
+
+---
+
+## v0.62.2 - 2026-05-28
+
+### 修復
+- **手機版聊天室底部留空**（`systems/chat.js`）：`#chat-panel` 手機版 `bottom:0` 改為 `bottom:5vh`、`height:25vh` 改為 `height:20vh`，避免與畫面最底部操作區重疊；`border-radius` 改為四角圓（不再貼底）
+- **手機版 flex 佈局補強**（`systems/chat.js`）：手機版專屬補丁補上 `#chat-messages` 的 `box-sizing:border-box`、`#chat-input-row` 的 `height:36px`、`#chat-settings-btn` 的 `flex-shrink:0`，確保輸入列固定底部且不被內容撐出
+
+---
+
+## v0.62.1 - 2026-05-28
+
+### 修復
+- **聊天室移至 body fixed 定位**（`systems/chat.js`）：`#chat-panel` 從 `#game-container` 移至 `document.body`，`position` 改為 `fixed`（桌機 left:10px bottom:10px，手機 bottom:0 left:5% right:5%），完全脫離遊戲容器 CSS 遮蔽，修復滾動與輸入被攔截的問題
+- **設定面板不再被裁切**（`systems/chat.js`）：`#chat-settings-panel` 移至 `document.body`，`position:fixed`、`z-index:9999`；齒輪按鈕 onclick 改用 `getBoundingClientRect()` 動態計算位置，對齊 `#chat-panel` 右上角，解決 `overflow:hidden` 裁切問題
+
+---
+
+## v0.62.0 - 2026-05-28
+
+### 修復
+- **聊天室滾動修復**（`systems/chat.js`）：`#chat-messages` 改用 `overflow-y:scroll` 強制顯示滾動條，補上 `overflow-x:hidden`、`scrollbar-width:thin`；`#chat-input-row` 補 `width:100%`，確保輸入框永遠固定於面板底部不被推出
+
+### 新增
+- **GM 名字金色**（`systems/chat.js`）：`_parseName()` 中 GM 發言的名字欄位套用 `#FFD700` 金色，與【GM】標籤一致
+- **稱號系統**（`systems/chat.js`）：`player_name` 格式擴充為 `lv{N}|{name}|{title}`（稱號選填）；登入時從 `chat_users.title` 讀取並存入 `chatSettings`；訊息格式新增 `[稱號]`（淡藍色 `#88CCFF`），顯示於【GM】後、名字前
+
+---
+
+## v0.61.0 - 2026-05-28
+
+### 新增
+- **聊天室訊息時間戳**（`systems/chat.js`）：每則訊息最左欄新增相對時間顯示（剛剛 / N分鐘前 / N小時前 / 昨天 HH:MM），置頂訊息同步顯示
+- **聊天室往下按鈕**（`systems/chat.js`）：向上捲動後右下角出現 ↓ 按鈕，點擊跳回最新訊息；自動在底部時隱藏
+
+### 修復
+- **輸入框固定底部**（`systems/chat.js`）：`#chat-messages` 補上 `min-height:0`，防止 flex 子元素撐破容器，確保輸入列始終固定於面板底部
+
+---
+
+## v0.60.2 - 2026-05-28
+
+### 修復
+- **聊天室設定面板補上關閉按鈕**（`systems/chat.js`）：`_renderChatSettingsPanel()` 頂部新增 ✕ 按鈕，點擊後隱藏面板，解決設定面板開啟後無法關閉的問題
+
+---
+
+## v0.60.1 - 2026-05-28
+
+### 修復
+- **同步資料不覆蓋本地 SAVE_VERSION**（`systems/chat.js`）：`_applyRemoteData()` 寫回 localStorage 時排除 `SAVE_VERSION`，防止雲端舊版本號覆蓋本地，避免存檔格式判斷錯誤
+
+---
+
+## v0.60.0 - 2026-05-28
+
+### 新增
+- **聊天室帳號系統**（`systems/chat.js`）：⚙️ 設定面板改版為登入/已登入兩狀態；新增 `chatLogin`（查帳/自動註冊/密碼 SHA-256 驗證/進度比較同步）、`chatSaveProgress`、`chatSyncData`、`chatLogout`（清除本地所有遊戲進度）
+- **遊戲結束自動保存**（`systems/boss.js`、`systems/daynight.js`）：死亡與勝利結算前，若已登入則自動呼叫 `chatSaveProgress()` 並顯示 2 秒提示
+
+### 注意
+- ⚠️ 帳號與密碼綁定，忘記密碼請聯絡開發者 Kiser；登出前請先手動保存進度
+
+---
+
+## v0.59.0 - 2026-05-28
+
+### 新增
+- **首頁即時聊天室**（`systems/chat.js`、`systems/ui.js`、`main.js`、`index.html`）：首頁顯示 Supabase Realtime 聊天室面板（桌機 320×220px，手機 25vh）；支援 GM 驗證、置頂訊息（`/pin 1H`）、1 小時閒置自動斷線、24 小時舊訊息自動清理；無 JS Client 時自動降級為 8 秒輪詢
+
+---
+
+## v0.58.0 - 2026-05-25
+
+### 新增
+- **小地圖大小調整**（`systems/gameState.js`、`systems/hud.js`、`systems/ui.js`）：設定面板新增小地圖大小區塊（0~10 格色塊），OFF 時隱藏 minimapCanvas 並將 minimap-info 移至 top-left 同高；數值以 `minimapSize` 儲存於 localStorage，版本更新不重置
+- **視野智能/手動模式**（`systems/gameState.js`、`systems/camera.js`、`systems/ui.js`）：`_updateMobileCameraZoom()` 重構為 `_updateCameraZoom()`，支援桌機與手機；新增 `cameraMode`（smart/manual）與 `cameraZoomLevel`（1~10）設定；`worldToScreen()` 與 `drawTerrain()` 的 zoom 條件移除 `isMobile` 限制；設定面板新增 10 格縮放刻度調整器與智能/手動切換按鈕
+
+---
+
+## v0.57.7 - 2026-05-25
+
+### 修復
+- **技能樹 forceStart 路徑未讀 localStorage**（`systems/evolution.js`）：`buildSkillTreeOverlay(forceStart)` 現在與 `fromHome` 走相同流程——開啟時讀取 `skillPoints` / `playerSkills`，器官繼承列表改讀 `lastRunOrgans`；原本讀記憶體 `gameState.player.organs` 的邏輯限縮至 `postGame` 模式（遊戲剛結束記憶體仍完整的情況）；修復了刷新後進入技能樹看不到技能點與可繼承器官的問題
+
+---
+
+## v0.57.6 - 2026-05-25
+
+### 調整
+- **無草食性時果子 XP 降為 1**（`systems/player.js`）：`_collectFruit()` 新增草食性等級判斷；`ev.herbivore >= 1` 維持原計算（基礎5 + forager + 草食bonus），未達草食性 Lv1 則只給 1 XP；避免刷巨人時玩家靠吃果子觸發升級回血
+
+---
+
+## v0.57.5 - 2026-05-25
+
+### 修復
+- **阿奇爾子彈穿透教學木樁**（`systems/player.js`）：`_checkProjectileHit()` 的 targets 陣列補入 `gameState.tutorialStump`，並確認死亡路由包含 `isTutorialStump` 判斷
+- **開始遊戲跳過技能樹導致所有屬性丟失**（`main.js`、`systems/evolution.js`）：`loadSavedOrgans()` 抽出為獨立函式並在 `initializeGame()` 步驟 8 的 `applySkillBonuses()` 之前呼叫，確保器官效果不依賴技能樹面板開啟；`buildSkillTreeOverlay()` 的 `fromHome` 路徑移除重複的器官載入呼叫
+
+### 新增
+- **輔助功能「永遠居中」選項**（`systems/gameState.js`、`systems/camera.js`、`systems/ui.js`）：設定面板輔助功能區塊新增 Toggle；開啟後視角邊界閾值從 30% 改為 50%，角色永遠固定於畫面正中央；預設關閉，玩家自由選擇
+
+### 調整
+- **手機攻擊蓄力改為 touchstart 即開始計時**（`systems/mobile.js`）：攻擊按鈕 touchstart 瞬間開始蓄力計時，touchend 時依蓄力時間（≥500ms）發動蓄力攻擊（傷害 ×2），否則普通攻擊；touchcancel 重置蓄力狀態；`initializeGame()` 補齊三個蓄力旗標的重置
 
 ---
 

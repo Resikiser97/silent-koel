@@ -2,6 +2,9 @@
 // 共用繪圖工具 - drawArrow / drawHealthBar / drawNameTag / drawGlowEffect
 // 韌性計算      - applyTenacity
 // =============================================================
+import { gameState, ctx } from './gameState.js';
+import { wrappedDelta } from './camera.js';
+import { _spawnBone } from './combat.js';
 
 /**
  * 韌性計算：用目標自身的韌性縮短控制效果持續時間。
@@ -13,14 +16,34 @@
  *   玩家被暈眩 1000ms，魚鱗韌性 30% → applyTenacity(1000, p) = 700ms
  *   敵人被嘴器減速 2000ms，c.tenacity 目前為 0 → 仍為 2000ms
  */
-function applyTenacity(durationMs, target) {
+// 字體 cache — 設定不變時直接回傳快取字串，避免每幀對所有生物建立新物件
+let _fontCacheOn  = null; // null = 未初始化，強制第一次建構
+let _fontCacheMap = new Map();
+
+export function getGameFont(baseSize, baseBold) {
+    const on = !!gameState.settings.fontBoldLarge;
+    if (on !== _fontCacheOn) {
+        _fontCacheOn  = on;
+        _fontCacheMap = new Map();
+    }
+    const key = baseSize * 2 + (baseBold ? 1 : 0); // 數字 key，比字串 key 快
+    let cached = _fontCacheMap.get(key);
+    if (cached !== undefined) return cached;
+    const size = on ? baseSize + 7 : baseSize;
+    const bold = (on || baseBold) ? 'bold ' : '';
+    cached = bold + size + 'px Arial';
+    _fontCacheMap.set(key, cached);
+    return cached;
+}
+
+export function applyTenacity(durationMs, target) {
     const t = (target && target.tenacity) || 0;
     return Math.max(0, Math.round(durationMs * (1 - t)));
 }
 
 // 在玩家螢幕座標 (px, py) 周圍，朝世界座標 (targetWorldX, targetWorldY) 畫一個指向箭頭
 // 距離 = playerRadius + 20px；透明度每 0.5 秒在 0.6↔1.0 之間閃爍
-function drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius) {
+export function drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius) {
     const { dx, dy } = wrappedDelta(gameState.player.x, gameState.player.y, targetWorldX, targetWorldY);
     const angle = Math.atan2(dy, dx);
     const dist = playerRadius + 20;
@@ -41,7 +64,7 @@ function drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius) {
 }
 
 // 在 (sx, sy) 為血條頂端左角畫一條血條；sx 為水平中心點
-function drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height) {
+export function drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height) {
     const bX = sx - width / 2;
     ctx.fillStyle = bgColor;
     ctx.fillRect(bX, sy, width, height);
@@ -50,17 +73,22 @@ function drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height) {
 }
 
 // 在 (sx, sy) 畫名字標籤，sy 為文字基線位置
-function drawNameTag(sx, sy, name, color, font) {
+export function drawNameTag(sx, sy, name, color, font) {
     ctx.save();
     ctx.fillStyle = color;
     ctx.font = font;
     ctx.textAlign = 'center';
+    ctx.lineJoin = 'round';
+    const _ntDark = color && (color.includes('#0') || color.includes('#1') || color.includes('#2') || color.includes('#3') || color === 'black');
+    ctx.strokeStyle = _ntDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+    ctx.strokeText(name, sx, sy);
     ctx.fillText(name, sx, sy);
     ctx.restore();
 }
 
 // 在 (sx, sy) 畫一個帶光暈的填色圓形
-function drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur) {
+export function drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur) {
     ctx.save();
     ctx.shadowColor = glowColor;
     ctx.shadowBlur = glowBlur;
@@ -80,7 +108,7 @@ function drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur) {
 //     type 'bone'  : data = {}，直接呼叫 _spawnBone
 //     （未來 Phase 可新增 mutation 等 type）
 // =============================================================
-function spawnLootCircle(cx, cy, items) {
+export function spawnLootCircle(cx, cy, items) {
     if (!items || items.length === 0) return;
     const count = items.length;
     const now = Date.now();
@@ -102,4 +130,25 @@ function spawnLootCircle(cx, cy, items) {
             _spawnBone(x, y, 8);
         }
     });
+}
+
+export function buildCrown(type) {
+    return `<span class="crown-${type}">` +
+        `<div class="crown-top">` +
+        `<span class="crown-star">✦</span>` +
+        `<div class="crown-spike"></div>` +
+        `<div class="crown-spike"></div>` +
+        `<div class="crown-spike"></div>` +
+        `<span class="crown-star">✦</span>` +
+        `</div>` +
+        `<div class="crown-base"></div>` +
+        `</span>`;
+}
+
+export function getRankIcon(rank) {
+    if (rank === 1) return buildCrown('gold');
+    if (rank === 2) return buildCrown('silver');
+    if (rank === 3) return buildCrown('bronze');
+    if (rank <= 10) return '🎖️';
+    return String(rank);
 }

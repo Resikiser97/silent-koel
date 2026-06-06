@@ -1,7 +1,14 @@
 ﻿// =============================================================
-// UI 系統 - Tooltip / drawGame / updateUI / drawTreasures
-//           Settings / updateTimer / Dev Mode
-//           showGuide / hideGuide / showStartScreen
+// UI 系統 - showTooltip / hideTooltip / showAlphaAnnouncement
+//           loadSettings / saveSettings / switchLanguage
+//           showSettings / hideSettings / updateTimer
+//           toggleDevMode / devAddXP / devAddHP / devFullHP
+//           devSpawnFruits / devKillHostiles / devSpawnNeutral / devSpawnHostile
+//           devFastForward / devRewind / devToggleDayNight
+//           showGuide / hideGuide / showGuideStory
+//           getOrganDisplayName / buildEvoLevelDesc / showCompendium
+//           showMapSelect / showStartScreen / showPatchNotes / checkPatchNotesPopup
+// （drawGame / updateUI / drawTopBarUI / drawMinimap / drawTreasures 已移至 systems/hud.js）
 // =============================================================
 
 // _lbDifficulty / _top10Difficulty / _diffKey() 已移至 systems/leaderboard.js
@@ -9,13 +16,55 @@
 // drawGame() / updateUI() / drawTopBarUI() / drawMinimap() / drawTreasures() 已移至 systems/hud.js
 
 // ── Tooltip 全域變數
+import { gameState, DEFAULT_SETTINGS } from './gameState.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { CHARACTERS, CHARACTERS_COMING_SOON } from '../config/characters.js';
+import { ORGANS, HIDDEN_ORGANS, COMBOS } from '../config/organs.js';
+import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { PATCH_NOTES } from '../config/patchnotes.js';
+import { EASY_MAP } from '../map/easymap.js';
+import { NORMAL_MAP } from '../map/normalmap.js';
+import { HARD_MAP } from '../map/hardmap.js';
+import { COMPENDIUM_DATA } from '../config/compendium_data.js';
+import { LANG, LANG_LIST, t, applyLanguage } from '../lang.js';
+import { AudioManager, playIntroTheme } from './audio.js';
+import { applyDeviceMode, _effectiveMobile } from './mobile.js';
+import { addXP } from './player.js';
+import { spawnFruit } from './spawning.js';
+import { getDayNightPhaseIndex } from './daynight.js';
+import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans } from './evolution.js';
+import { buildChatUI, initChat, showChat, hideChat, _esc } from './chat.js';
+import { showLeaderboard, _diffKey } from './leaderboard.js';
+import { fetchTop10 } from '../config/supabase.js';
+import { initializeGame } from '../main.js';
+import { getRankIcon } from './utils.js';
+import { MAP_WIDTH, MAP_HEIGHT } from './map.js';
+import { _updateCameraZoom } from './camera.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    getSettings,
+    saveSettingsToStorage
+} from '../storage/index.js';
+
 let _organHitRegions = [];
+let _settingsKeyHandler = null;
+let _settingsMouseHandler = null;
+let _rebindBlink = null;
+let _rebindTimeout = null;
+let _lbDifficulty = 'easy';
+let _top10Difficulty = 'easy';
+// ── 小地圖大小：記住上次非零值（用於 ON/OFF 切換）
+let _lastMinimapSize = 10;
 const _ttEl = document.getElementById('game-tooltip');
 document.addEventListener('mousemove', function(e) {
     if (_ttEl && _ttEl.style.display !== 'none') _moveTooltip(e.clientX, e.clientY);
 });
 
-function showTooltip(data, cx, cy) {
+export function showTooltip(data, cx, cy) {
     if (!_ttEl) return;
     let html = '<div class="tt-name">' + _escH(data.name || '');
     if (data.level != null) {
@@ -30,7 +79,7 @@ function showTooltip(data, cx, cy) {
     _moveTooltip(cx, cy);
 }
 
-function hideTooltip() {
+export function hideTooltip() {
     if (_ttEl) _ttEl.style.display = 'none';
 }
 
@@ -59,7 +108,7 @@ function _escH(s) {
 // 繪製系統
 // =============================================================
 
-function showAlphaAnnouncement(name) {
+export function showAlphaAnnouncement(name) {
     const el = document.createElement('div');
     el.style.cssText = [
         'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
@@ -83,12 +132,15 @@ function showAlphaAnnouncement(name) {
 // 音效與設定系統
 // =============================================================
 
-function loadSettings() {
+export function loadSettings() {
     try {
-        const saved = localStorage.getItem('gameSettings');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed.volume) Object.assign(gameState.settings.volume, parsed.volume);
+        const parsed = getSettings();
+        if (parsed) {
+            // volume 深度合併，確保子欄位不被 DEFAULT_SETTINGS 整個覆蓋
+            if (parsed.volume && typeof parsed.volume === 'object') {
+                gameState.settings.volume = Object.assign({}, DEFAULT_SETTINGS.volume, parsed.volume);
+            }
+            AudioManager.loadVolume(gameState.settings.volume);
             if (parsed.keys)   Object.assign(gameState.settings.keys,   parsed.keys);
             if (parsed.language && LANG[parsed.language]) {
                 gameState.settings.language = parsed.language;
@@ -103,14 +155,54 @@ function loadSettings() {
             if (parsed.showOrganTooltip !== undefined) {
                 gameState.settings.showOrganTooltip = parsed.showOrganTooltip;
             }
+            if (parsed.alwaysCenter !== undefined) {
+                gameState.settings.alwaysCenter = parsed.alwaysCenter;
+            }
+            if (parsed.minimapFade !== undefined) {
+                gameState.settings.minimapFade = parsed.minimapFade;
+            }
+            if (parsed.fontBoldLarge !== undefined) {
+                gameState.settings.fontBoldLarge = parsed.fontBoldLarge;
+            } else if (parsed.fontLarge !== undefined || parsed.fontBold !== undefined) {
+                // 舊版 fontLarge/fontBold 遷移至 fontBoldLarge
+                gameState.settings.fontBoldLarge = !!(parsed.fontLarge || parsed.fontBold);
+            }
+            // minimapSize（0=關閉，1~10）：版本更新不重置
+            if (parsed.minimapSize !== undefined) {
+                gameState.settings.minimapSize = parsed.minimapSize;
+            }
+            // cameraMode：版本更新不重置
+            if (parsed.cameraMode !== undefined) {
+                gameState.settings.cameraMode = parsed.cameraMode;
+            }
+            // cameraZoomLevel：先嘗試從 localStorage 讀取
+            if (parsed.cameraZoomLevel !== undefined) {
+                gameState.settings.cameraZoomLevel = parsed.cameraZoomLevel;
+            }
+            // 若 localStorage 沒有此欄位，會在 applyDeviceMode() 後補設（見下方）
         }
     } catch(e) {}
     applyLanguage(gameState.language);
-    applyDeviceMode();
+    applyDeviceMode(); // 此後 gameState.isMobile 才正確
+
+    // cameraZoomLevel 未存過時，依平台設預設值（需在 applyDeviceMode 之後判斷）
+    const _rawParsed = storageGetJSON(STORAGE_KEYS.GAME_SETTINGS) || {};
+    if (_rawParsed.cameraZoomLevel === undefined) {
+        gameState.settings.cameraZoomLevel = gameState.isMobile ? 10 : 6;
+    }
+
+    // 視野預設值強制更新（v0.0.66.3 一次性覆蓋，對齊新公式預設值）
+    const _ZOOM_RESET_VERSION = 'v0.0.66.3';
+    if (storageGet(STORAGE_KEYS.ZOOM_RESET_VERSION) !== _ZOOM_RESET_VERSION) {
+        gameState.settings.cameraZoomLevel = gameState.isMobile ? 10 : 6;
+        storageSet(STORAGE_KEYS.ZOOM_RESET_VERSION, _ZOOM_RESET_VERSION);
+    }
+
+    saveSettings(); // 確保新版本新增的欄位預設值都寫入 localStorage
 }
 
 // 切換語言：寫入 settings、重新套用 LANG 資料表、即時刷新開啟中的介面
-function switchLanguage(lang) {
+export function switchLanguage(lang) {
     if (!LANG[lang]) return;
     if (gameState.language === lang) return;
     gameState.language = lang;
@@ -124,7 +216,7 @@ function switchLanguage(lang) {
     const treeOpen     = !!document.getElementById('skill-tree-overlay');
     const guidePage    = guideOpen ? parseInt(document.getElementById('guide-overlay').dataset.page || '0', 10) : 0;
     const treeCause    = treeOpen ? document.getElementById('skill-tree-overlay').dataset.cause || null : null;
-    const treeFromHome = !!_skillTreeFromHome;
+    const treeFromHome = homeOpen;
 
     // 先把所有 overlay 拆掉，順序按 z 由下到上
     if (homeOpen)     { const e = document.getElementById('start-screen');       if (e) e.remove(); }
@@ -136,11 +228,19 @@ function switchLanguage(lang) {
     if (homeOpen)     showStartScreen();
     if (treeOpen)     buildSkillTreeOverlay(treeCause, treeFromHome);
     if (guideOpen)    showGuide(guidePage);
-    if (settingsOpen) showSettings(homeOpen);
+    if (settingsOpen) showSettings();
+
+    // 圖鑑開啟中則即時重繪（compendium 不在上方 close/reopen 流程中）
+    const _co = document.getElementById('compendium-overlay');
+    if (_co && typeof _co._render === 'function') _co._render();
 }
 
-function saveSettings() {
-    localStorage.setItem('gameSettings', JSON.stringify(gameState.settings));
+export function saveSettings() {
+    // 從 AudioManager 取得最新音量再存入
+    const settingsToSave = Object.assign({}, gameState.settings, {
+        volume: AudioManager.serializeVolume()
+    });
+    saveSettingsToStorage(settingsToSave);
 }
 
 function _keyDisplay(k) {
@@ -159,7 +259,8 @@ function _buildSettingsSection(title) {
     return sec;
 }
 
-function showSettings(fromHome) {
+export function showSettings() {
+    const fromHome = !!document.getElementById('start-screen');
     applyDeviceMode();
     if (document.getElementById('settings-overlay')) return;
     gameState.settingsOpen = true;
@@ -210,7 +311,12 @@ function showSettings(fromHome) {
             tog.style.background = on ? '#2a8a2a' : '#555';
         };
         refreshTog();
-        tog.onclick = () => { gameState.settings.volume[ok] = !gameState.settings.volume[ok]; refreshTog(); AudioManager.refreshMusicVolume(); saveSettings(); };
+        tog.onclick = () => {
+            const currentValue = gameState.settings.volume[ok];
+            AudioManager.setVolume(ok, !currentValue);
+            refreshTog();
+            saveSettings();
+        };
         row.appendChild(tog);
         const lbl = document.createElement('div');
         lbl.style.cssText = 'min-width:68px;font-size:13px;'; lbl.textContent = label;
@@ -222,11 +328,157 @@ function showSettings(fromHome) {
         const valLbl = document.createElement('div');
         valLbl.style.cssText = 'min-width:36px;text-align:right;font-size:13px;';
         valLbl.textContent = slider.value + '%';
-        slider.oninput = () => { gameState.settings.volume[vk] = parseInt(slider.value); valLbl.textContent = slider.value + '%'; AudioManager.refreshMusicVolume(); saveSettings(); };
+        slider.oninput = () => {
+            const newValue = parseInt(slider.value);
+            AudioManager.setVolume(vk, newValue);
+            valLbl.textContent = slider.value + '%';
+            saveSettings();
+        };
         row.appendChild(slider); row.appendChild(valLbl);
         volSec.appendChild(row);
     });
     panel.appendChild(volSec);
+
+    // ─── 小地圖大小 ───
+    const mmSec = _buildSettingsSection(t('sectionMinimap'));
+
+    // 標題列：左側標籤 + 右側 ON/OFF 開關
+    const mmTitleRow = document.createElement('div');
+    mmTitleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
+    const mmLabel = document.createElement('div');
+    mmLabel.style.cssText = 'font-size:13px;color:#ccc;';
+    mmLabel.textContent = t('minimapSize');
+    mmTitleRow.appendChild(mmLabel);
+
+    const mmOnOffTog = document.createElement('button');
+    mmOnOffTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const _refreshMmTog = () => {
+        const on = gameState.settings.minimapSize > 0;
+        mmOnOffTog.textContent   = on ? t('on') : t('off');
+        mmOnOffTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    _refreshMmTog();
+
+    // 10格色塊容器
+    const mmBlocksRow = document.createElement('div');
+    mmBlocksRow.style.cssText = 'display:flex;gap:3px;margin-top:4px;';
+
+    const _buildMmBlocks = () => {
+        mmBlocksRow.innerHTML = '';
+        const cur = gameState.settings.minimapSize;
+        for (let i = 1; i <= 10; i++) {
+            const blk = document.createElement('div');
+            blk.style.cssText = [
+                'flex:1', 'height:18px', 'border-radius:3px', 'cursor:pointer',
+                'background:' + (i <= cur ? '#4a9a4a' : '#333'),
+                'border:1px solid ' + (i <= cur ? '#6aba6a' : '#555'),
+                'transition:background 0.1s'
+            ].join(';');
+            blk.title = i + '/10';
+            blk.addEventListener('click', () => {
+                gameState.settings.minimapSize = i;
+                _lastMinimapSize = i;
+                saveSettings();
+                _refreshMmTog();
+                _buildMmBlocks();
+                mmBlocksRow.style.display = 'flex';
+            });
+            mmBlocksRow.appendChild(blk);
+        }
+        mmBlocksRow.style.display = gameState.settings.minimapSize > 0 ? 'flex' : 'none';
+    };
+    _buildMmBlocks();
+
+    mmOnOffTog.onclick = () => {
+        if (gameState.settings.minimapSize > 0) {
+            // 目前 ON → 關閉
+            _lastMinimapSize = gameState.settings.minimapSize;
+            gameState.settings.minimapSize = 0;
+        } else {
+            // 目前 OFF → 開啟
+            gameState.settings.minimapSize = _lastMinimapSize || 10;
+        }
+        saveSettings();
+        _refreshMmTog();
+        _buildMmBlocks();
+    };
+
+    mmTitleRow.appendChild(mmOnOffTog);
+    mmSec.appendChild(mmTitleRow);
+    mmSec.appendChild(mmBlocksRow);
+    panel.appendChild(mmSec);
+
+    // ─── 視野模式 ───
+    const camSec = _buildSettingsSection(t('sectionCamera'));
+
+    // 標題列：左側標籤 + 右側智能/手動按鈕
+    const camTitleRow = document.createElement('div');
+    camTitleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
+    const camModeLabel = document.createElement('div');
+    camModeLabel.style.cssText = 'font-size:13px;color:#ccc;';
+    camModeLabel.textContent = t('cameraMode');
+    camTitleRow.appendChild(camModeLabel);
+
+    const camModeBtns = document.createElement('div');
+    camModeBtns.style.cssText = 'display:flex;gap:4px;';
+    const _camBtnStyle = (active) => [
+        'padding:2px 10px', 'font-size:12px', 'border-radius:4px', 'cursor:pointer',
+        active
+            ? 'background:#2a5a8a;color:#7FC8FF;border:1px solid #7FC8FF;font-weight:bold;'
+            : 'background:#2a2a2a;color:#aaa;border:1px solid #555;'
+    ].join(';');
+
+    const camSmartBtn  = document.createElement('button');
+    const camManualBtn = document.createElement('button');
+    const _refreshCamBtns = () => {
+        const sm = gameState.settings.cameraMode === 'smart';
+        camSmartBtn.style.cssText  = _camBtnStyle(sm);
+        camManualBtn.style.cssText = _camBtnStyle(!sm);
+    };
+    camSmartBtn.textContent  = t('cameraSmart');
+    camManualBtn.textContent = t('cameraManual');
+    camSmartBtn.onclick = () => {
+        gameState.settings.cameraMode = 'smart';
+        saveSettings(); _refreshCamBtns();
+    };
+    camManualBtn.onclick = () => {
+        gameState.settings.cameraMode = 'manual';
+        saveSettings(); _refreshCamBtns();
+    };
+    _refreshCamBtns();
+    camModeBtns.appendChild(camSmartBtn);
+    camModeBtns.appendChild(camManualBtn);
+    camTitleRow.appendChild(camModeBtns);
+
+    // 10格縮放調整器（永遠顯示）
+    const camBlocksRow = document.createElement('div');
+    camBlocksRow.style.cssText = 'display:flex;gap:3px;margin-top:4px;';
+    const _buildCamBlocks = () => {
+        camBlocksRow.innerHTML = '';
+        const cur = gameState.settings.cameraZoomLevel;
+        for (let i = 1; i <= 10; i++) {
+            const blk = document.createElement('div');
+            blk.style.cssText = [
+                'flex:1', 'height:18px', 'border-radius:3px', 'cursor:pointer',
+                'background:' + (i <= cur ? '#2a5a8a' : '#333'),
+                'border:1px solid ' + (i <= cur ? '#4a8abc' : '#555'),
+                'transition:background 0.1s'
+            ].join(';');
+            blk.title = i + '/10';
+            blk.addEventListener('click', () => {
+                gameState.settings.cameraZoomLevel = i;
+                saveSettings();
+                _buildCamBlocks();
+                if (typeof _updateCameraZoom === 'function') _updateCameraZoom();
+            });
+            camBlocksRow.appendChild(blk);
+        }
+    };
+    _buildCamBlocks();
+
+    camSec.appendChild(camTitleRow);
+    camSec.appendChild(camBlocksRow);
+    panel.appendChild(camSec);
 
     // ─── 按鍵設定 ───
     const keySec = _buildSettingsSection(t('sectionKeys'));
@@ -383,7 +635,7 @@ function showSettings(fromHome) {
     tutRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
     const tutTog = document.createElement('button');
     tutTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
-    const _isTutorialOn = () => !localStorage.getItem('tutorialCompleted');
+    const _isTutorialOn = () => !storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED);
     const refreshTutTog = () => {
         const on = _isTutorialOn();
         tutTog.textContent  = on ? t('on') : t('off');
@@ -393,23 +645,92 @@ function showSettings(fromHome) {
     tutTog.onclick = () => {
         if (_isTutorialOn()) {
             // 目前 ON → 關閉（標記已完成，下一場不再顯示）
-            localStorage.setItem('tutorialCompleted', 'true');
+            storageSet(STORAGE_KEYS.TUTORIAL_COMPLETED, 'true');
         } else {
             // 目前 OFF → 開啟（移除完成標記，下一場會出現教學）
-            localStorage.removeItem('tutorialCompleted');
+            storageRemove(STORAGE_KEYS.TUTORIAL_COMPLETED);
         }
         refreshTutTog();
     };
     const tutLbl = document.createElement('div');
     tutLbl.style.cssText = 'font-size:13px;';
-    tutLbl.textContent = '新手教學';
+    tutLbl.textContent = t('tutorialLabel');
     tutRow.appendChild(tutTog);
     tutRow.appendChild(tutLbl);
     accSec.appendChild(tutRow);
     const tutHint = document.createElement('div');
     tutHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;margin-bottom:4px;';
-    tutHint.textContent = '開啟後，下一場遊戲開始時會顯示教學';
+    tutHint.textContent = t('tutorialHint');
     accSec.appendChild(tutHint);
+
+    // ── 永遠居中 Toggle
+    const centerRow = document.createElement('div');
+    centerRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const centerTog = document.createElement('button');
+    centerTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshCenterTog = () => {
+        const on = gameState.settings.alwaysCenter;
+        centerTog.textContent = on ? t('on') : t('off');
+        centerTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshCenterTog();
+    centerTog.onclick = () => {
+        gameState.settings.alwaysCenter = !gameState.settings.alwaysCenter;
+        refreshCenterTog();
+        saveSettings();
+    };
+    const centerLbl = document.createElement('div');
+    centerLbl.style.cssText = 'font-size:13px;';
+    centerLbl.textContent = t('alwaysCenter');
+    centerRow.appendChild(centerTog);
+    centerRow.appendChild(centerLbl);
+    accSec.appendChild(centerRow);
+
+    // ── 地圖透明 Toggle
+    const mmFadeRow = document.createElement('div');
+    mmFadeRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const mmFadeTog = document.createElement('button');
+    mmFadeTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshMmFadeTog = () => {
+        const on = gameState.settings.minimapFade;
+        mmFadeTog.textContent = on ? t('on') : t('off');
+        mmFadeTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshMmFadeTog();
+    mmFadeTog.onclick = () => {
+        gameState.settings.minimapFade = !gameState.settings.minimapFade;
+        refreshMmFadeTog();
+        saveSettings();
+    };
+    const mmFadeLbl = document.createElement('div');
+    mmFadeLbl.style.cssText = 'font-size:13px;';
+    mmFadeLbl.textContent = t('minimapFade');
+    mmFadeRow.appendChild(mmFadeTog);
+    mmFadeRow.appendChild(mmFadeLbl);
+    accSec.appendChild(mmFadeRow);
+
+    // ── 字大又粗 Toggle
+    const fontBoldLargeRow = document.createElement('div');
+    fontBoldLargeRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+    const fontBoldLargeTog = document.createElement('button');
+    fontBoldLargeTog.style.cssText = 'width:42px;height:22px;border-radius:11px;cursor:pointer;font-size:11px;border:none;flex-shrink:0;';
+    const refreshFontBoldLargeTog = () => {
+        const on = gameState.settings.fontBoldLarge;
+        fontBoldLargeTog.textContent = on ? t('on') : t('off');
+        fontBoldLargeTog.style.background = on ? '#2a8a2a' : '#555';
+    };
+    refreshFontBoldLargeTog();
+    fontBoldLargeTog.onclick = () => {
+        gameState.settings.fontBoldLarge = !gameState.settings.fontBoldLarge;
+        refreshFontBoldLargeTog();
+        saveSettings();
+    };
+    const fontBoldLargeLbl = document.createElement('div');
+    fontBoldLargeLbl.style.cssText = 'font-size:13px;';
+    fontBoldLargeLbl.textContent = t('fontBoldLarge');
+    fontBoldLargeRow.appendChild(fontBoldLargeTog);
+    fontBoldLargeRow.appendChild(fontBoldLargeLbl);
+    accSec.appendChild(fontBoldLargeRow);
 
     const keyAccWrapper = document.createElement('div');
     keyAccWrapper.style.cssText = 'display:flex;flex-direction:row;gap:8px;margin-bottom:14px;';
@@ -453,7 +774,8 @@ function showSettings(fromHome) {
     restartBtn.onclick = () => {
         if (!confirm(t('confirmRestart'))) return;
         saveLastRunOrgans();
-        localStorage.setItem('skillPoints', String(gameState.skillPoints));
+        storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+        saveSettings(); // 重啟前確保設定已存入 localStorage
         window.location.reload();
     };
     otherSec.appendChild(restartBtn);
@@ -465,7 +787,8 @@ function showSettings(fromHome) {
         const keepLang = gameState.settings.language;
         gameState.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
         gameState.settings.language = keepLang;
-        saveSettings(); AudioManager.refreshMusicVolume();
+        AudioManager.loadVolume(DEFAULT_SETTINGS.volume);
+        saveSettings();
         applyDeviceMode();
         hideSettings(); showSettings();
     };
@@ -475,7 +798,7 @@ function showSettings(fromHome) {
     // ─── 底部按鈕 ───
     const saveBtn = document.createElement('button');
     saveBtn.style.cssText = 'width:100%;margin-top:14px;padding:10px;cursor:pointer;border:1px solid #4a8a4a;background:#2a5a2a;color:white;border-radius:4px;font-size:15px;';
-    saveBtn.textContent = fromHome ? t('close') : t('saveAndBack');
+    saveBtn.textContent = t('saveAndBack');
     saveBtn.onclick = () => { saveSettings(); hideSettings(); };
     panel.appendChild(saveBtn);
 
@@ -483,23 +806,25 @@ function showSettings(fromHome) {
     document.getElementById('game-container').appendChild(overlay);
 }
 
-function hideSettings() {
+export function hideSettings() {
     if (_settingsKeyHandler)   { document.removeEventListener('keydown',   _settingsKeyHandler,   true); _settingsKeyHandler   = null; }
     if (_settingsMouseHandler) { document.removeEventListener('mousedown', _settingsMouseHandler, true); _settingsMouseHandler = null; }
     if (_rebindBlink)   { clearInterval(_rebindBlink);  _rebindBlink   = null; }
     if (_rebindTimeout) { clearTimeout(_rebindTimeout); _rebindTimeout = null; }
     gameState._rebindTarget = null;
+    saveSettings(); // 關閉設定時自動存入 localStorage
     const overlay = document.getElementById('settings-overlay');
     if (overlay) overlay.remove();
     gameState.settingsOpen = false;
     gameState.lastTimeTick = Date.now();
+    if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
 }
 
 // =============================================================
 // 計時器
 // =============================================================
 
-function updateTimer() {
+export function updateTimer() {
     const now = Date.now();
     if (gameState.lastTimeTick === 0) { gameState.lastTimeTick = now; return; }
     const elapsed = (now - gameState.lastTimeTick) / 1000;
@@ -520,30 +845,30 @@ function updateTimer() {
 // 開發者模式 (Developer Mode)
 // =============================================================
 
-function toggleDevMode() {
+export function toggleDevMode() {
     gameState.devMode = !gameState.devMode;
     if (gameState.devMode) gameState.devModeUsed = true;
     document.getElementById('dev-panel').style.display    = gameState.devMode ? 'block' : 'none';
     document.getElementById('dev-indicator').style.display = gameState.devMode ? 'block' : 'none';
 }
 
-function devAddXP() {
+export function devAddXP() {
     addXP(50);
 }
 
-function devAddHP() {
+export function devAddHP() {
     gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + 20);
 }
 
-function devFullHP() {
+export function devFullHP() {
     gameState.stats.hpCurrent = gameState.stats.hpMax;
 }
 
-function devSpawnFruits() {
+export function devSpawnFruits() {
     for (let i = 0; i < 5; i++) spawnFruit();
 }
 
-function devKillHostiles() {
+export function devKillHostiles() {
     const now = Date.now();
     for (const c of gameState.hostileCreatures) {
         if (c.hp > 0) {
@@ -553,7 +878,7 @@ function devKillHostiles() {
     }
 }
 
-function devSpawnNeutral() {
+export function devSpawnNeutral() {
     const p = gameState.player;
     const angle = Math.random() * Math.PI * 2;
     const dist = 60 + Math.random() * 40;
@@ -570,7 +895,7 @@ function devSpawnNeutral() {
     });
 }
 
-function devSpawnHostile() {
+export function devSpawnHostile() {
     const p = gameState.player;
     const angle = Math.random() * Math.PI * 2;
     const dist = 100 + Math.random() * 50;
@@ -589,17 +914,17 @@ function devSpawnHostile() {
     });
 }
 
-function devFastForward() {
+export function devFastForward() {
     gameState.timeRemaining = Math.max(0, gameState.timeRemaining - 300);
     gameState.lastTimeTick = Date.now();
 }
 
-function devRewind() {
+export function devRewind() {
     gameState.timeRemaining = Math.min(600, gameState.timeRemaining + 300);
     gameState.lastTimeTick = Date.now();
 }
 
-function devToggleDayNight() {
+export function devToggleDayNight() {
     // 將 timeRemaining 跳到下一個時段起點，讓 updateDayNightCycle 自動觸發切換
     const nextIdx = (getDayNightPhaseIndex() + 1) % 8;
     gameState.timeRemaining = Math.max(0, 600 - nextIdx * 75 - 1);
@@ -612,7 +937,7 @@ function devToggleDayNight() {
 
 let _guideKeyHandler = null;
 
-function showGuide(startPage) {
+export function showGuide(startPage) {
     applyDeviceMode();
     if (document.getElementById('guide-overlay')) return;
     const TOTAL = 4;
@@ -774,7 +1099,7 @@ function showGuide(startPage) {
     render();
 }
 
-function hideGuide() {
+export function hideGuide() {
     const el = document.getElementById('guide-overlay');
     if (el) el.remove();
     if (_guideKeyHandler) {
@@ -789,7 +1114,7 @@ function hideGuide() {
 
 let _compendiumPaused = false;
 
-function getOrganDisplayName(id) {
+export function getOrganDisplayName(id) {
     if (ORGANS[id]) return ORGANS[id].name;
     if (HIDDEN_ORGANS[id]) return HIDDEN_ORGANS[id].name;
     return id;
@@ -797,7 +1122,7 @@ function getOrganDisplayName(id) {
 
 // 進化圖鑑：從 EVOLUTION_PATHS 的 effects 動態生成累計描述
 // 草食/雜食速度為累計值；肉食攻擊、雜食白骨素為固定值（當級顯示當級）
-function buildEvoLevelDesc(pathId, upToLevel) {
+export function buildEvoLevelDesc(pathId, upToLevel) {
     const path = EVOLUTION_PATHS[pathId];
     if (!path) return '';
     const levels = path.levels.slice(0, upToLevel);
@@ -856,7 +1181,7 @@ function buildEvoLevelDesc(pathId, upToLevel) {
     return parts.join('，');
 }
 
-function showCompendium(startTab) {
+export function showCompendium(startTab) {
     applyDeviceMode();
     if (document.getElementById('compendium-overlay')) return;
 
@@ -872,6 +1197,9 @@ function showCompendium(startTab) {
     const tabNames = { guide: t('compendiumTabGuide'), organs: t('compendiumTabOrgans'), evo: t('compendiumTabEvo') };
     let curTab = tabs.includes(startTab) ? startTab : 'guide';
     let curPage = 0;
+    let curGuideEntryId = null;
+    let curOrganEntryId = null;
+    let curEvoEntryId = null;
 
     const overlay = document.createElement('div');
     overlay.id = 'compendium-overlay';
@@ -932,189 +1260,461 @@ function showCompendium(startTab) {
     function _h2(t) { return '<div style="font-size:15px;font-weight:bold;color:#FFD700;margin:10px 0 6px;">' + _esc(t) + '</div>'; }
     function _p(t)  { return '<div style="margin-bottom:5px;">' + _esc(t) + '</div>'; }
 
-    function getPages() {
-        if (curTab === 'guide') {
-            return buildGuidePages();
-        } else if (curTab === 'organs') {
-            return buildOrganPages();
+    // Guide 分頁：從 COMPENDIUM_DATA 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
+    function _renderGuide(container) {
+        if (typeof COMPENDIUM_DATA === 'undefined') {
+            container.innerHTML = '<div style="padding:20px;color:#888;">圖鑑資料未載入</div>';
+            return;
+        }
+        const lang = (gameState.settings && gameState.settings.language) || 'zh-TW';
+        container.innerHTML = '';
+
+        // 若尚未選定條目，預設第一個
+        if (!curGuideEntryId) {
+            curGuideEntryId = COMPENDIUM_DATA.sections[0].entries[0].id;
+        }
+
+        // 找出目前條目與分類
+        function _findEntry(id) {
+            for (var si = 0; si < COMPENDIUM_DATA.sections.length; si++) {
+                var sec = COMPENDIUM_DATA.sections[si];
+                for (var ei = 0; ei < sec.entries.length; ei++) {
+                    if (sec.entries[ei].id === id) return { entry: sec.entries[ei], section: sec };
+                }
+            }
+            return null;
+        }
+
+        var found = _findEntry(curGuideEntryId);
+        if (!found) {
+            curGuideEntryId = COMPENDIUM_DATA.sections[0].entries[0].id;
+            found = _findEntry(curGuideEntryId);
+        }
+
+        if (gameState.isMobile) {
+            // ── 手機版：上方橫向 Tab 列 + 下方內容區
+            container.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+
+            var tabStrip = document.createElement('div');
+            tabStrip.style.cssText = 'display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid #333;scrollbar-width:none;-ms-overflow-style:none;padding:0 4px;';
+
+            var flatIdx = 0, selectedFlatIdx = 0;
+            COMPENDIUM_DATA.sections.forEach(function (section) {
+                section.entries.forEach(function (entry, ei) {
+                    var isSelected = entry.id === curGuideEntryId;
+                    if (isSelected) selectedFlatIdx = flatIdx;
+                    var isFirst = ei === 0;
+                    var sLabel = section.label[lang] || section.label['zh-TW'];
+                    var eLabel = entry.title[lang] || entry.title['zh-TW'];
+                    var label  = isFirst ? (sLabel + '｜' + eLabel) : eLabel;
+                    var tab = document.createElement('div');
+                    tab.style.cssText = 'padding:6px 10px;white-space:nowrap;cursor:pointer;font-size:11px;flex-shrink:0;' +
+                        'border-bottom:' + (isSelected ? '2px' : '1px') + ' solid ' + (isSelected ? section.color : 'transparent') + ';' +
+                        'color:' + (isSelected ? section.color : '#aaa') + ';' +
+                        'font-weight:' + (isSelected ? 'bold' : 'normal') + ';';
+                    tab.textContent = label;
+                    (function (eid) {
+                        tab.onclick = function () { curGuideEntryId = eid; _renderGuide(container); };
+                    })(entry.id);
+                    tabStrip.appendChild(tab);
+                    flatIdx++;
+                });
+            });
+            container.appendChild(tabStrip);
+
+            // 捲動選中 Tab 至可見範圍
+            setTimeout(function () {
+                var tabEl = tabStrip.children[selectedFlatIdx];
+                if (tabEl) tabEl.scrollIntoView({ block: 'nearest', inline: 'center' });
+            }, 0);
+
+            // 內容區
+            var contentArea = document.createElement('div');
+            contentArea.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
+            if (found) {
+                var badge = document.createElement('div');
+                badge.style.cssText = 'display:inline-block;font-size:10px;color:' + found.section.color + ';border:1px solid ' + found.section.color + ';border-radius:3px;padding:1px 6px;margin-bottom:5px;';
+                badge.textContent = found.section.label[lang] || found.section.label['zh-TW'];
+                contentArea.appendChild(badge);
+
+                var mTitle = document.createElement('div');
+                mTitle.style.cssText = 'font-size:14px;font-weight:bold;color:#FFD700;margin-bottom:6px;';
+                mTitle.textContent = found.entry.title[lang] || found.entry.title['zh-TW'];
+                contentArea.appendChild(mTitle);
+
+                var mBody = document.createElement('div');
+                mBody.style.cssText = 'font-size:12px;color:#ccc;line-height:1.8;white-space:pre-wrap;';
+                mBody.textContent = found.entry.content[lang] || found.entry.content['zh-TW'];
+                contentArea.appendChild(mBody);
+            }
+            container.appendChild(contentArea);
+
         } else {
-            return buildEvoPages();
-        }
-    }
+            // ── 桌機版：左欄目錄（160px）+ 右欄內容
+            container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
 
-    // Boss 圖鑑頁：動態引用 EASY_MAP/NORMAL_MAP bosses 數值
-    function _buildBossPage() {
-        const easyBosses   = (typeof EASY_MAP   !== 'undefined') ? EASY_MAP.bosses   : [];
-        const normalBosses = (typeof NORMAL_MAP !== 'undefined') ? NORMAL_MAP.bosses : [];
+            var sidebar = document.createElement('div');
+            sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
 
-        // 技能說明文字：因技能邏輯未 config 化，直接手寫
-        const bossSkills = {
-            'forest': '狂暴化（HP<40%）：速度×1.5、傷害×1.3。森林內 50% 暴擊 1.5倍；離開森林 25% 暴擊 1.25倍',
-            'ocean':  '衝鋒撕咬（每8秒或HP<40%）：命中 1.5倍傷害並暈眩玩家 0.3秒。海洋內速度+30%、每5秒回2%HP',
-            'desert': '毒霧（每10秒或HP<40%）：200px範圍每秒5傷持續3秒。沙漠內觸發沙塵暴：玩家300px外視野遮蔽'
-        };
+            COMPENDIUM_DATA.sections.forEach(function (section) {
+                var secH = document.createElement('div');
+                secH.style.cssText = 'font-size:10px;font-weight:bold;color:' + section.color + ';' +
+                    'padding:6px 8px 2px 8px;border-left:3px solid ' + section.color + ';' +
+                    'margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
+                secH.textContent = section.label[lang] || section.label['zh-TW'];
+                sidebar.appendChild(secH);
 
-        let html = _h2('👾 Boss 圖鑑');
-
-        normalBosses.forEach(bossN => {
-            const bossE = easyBosses.find(b => b.biome === bossN.biome) || {};
-            html += '<div style="margin-bottom:14px;border-left:3px solid #CC4400;padding-left:10px;">';
-            html += '<div style="font-weight:bold;font-size:14px;color:#FFD700;margin-bottom:3px;">' + _esc(bossN.name) + '</div>';
-            const appearsIn = [];
-            if (bossE.hp) appearsIn.push('🌿 簡單');
-            appearsIn.push('⚔️ 普通');
-            html += '<div style="font-size:11px;color:#888;margin-bottom:4px;">出現難度：' + _esc(appearsIn.join(' / ')) + '</div>';
-            if (bossE.hp) {
-                html += '<div style="font-size:11px;color:#88cc88;margin-bottom:2px;">🌿 簡單：HP ' + _esc(String(bossE.hp)) + ' / 速度 ' + _esc(String(bossE.speed)) + ' / 傷害 ' + _esc(String(bossE.damage)) + '</div>';
-            }
-            html += '<div style="font-size:11px;color:#FF9988;margin-bottom:2px;">⚔️ 普通：HP ' + _esc(String(bossN.hp)) + ' / 速度 ' + _esc(String(bossN.speed)) + ' / 傷害 ' + _esc(String(bossN.damage)) + '</div>';
-            const skill = bossSkills[bossN.biome];
-            if (skill) {
-                html += '<div style="font-size:11px;color:#ccaaff;margin-bottom:2px;">技能（普通）：' + _esc(skill) + '</div>';
-            }
-            html += '<div style="font-size:11px;color:#aaaaff;">通用：每3秒回復2%最大HP</div>';
-            html += '</div>';
-        });
-
-        html += '<div style="font-size:11px;color:#aa8844;border-top:1px solid #333;padding-top:8px;margin-top:4px;">⚠️ 弱點提示：離開生態區後特殊技能效果減弱</div>';
-        return html;
-    }
-
-    // 難度介紹頁：動態引用 EASY_MAP / NORMAL_MAP config 數值
-    function _buildDifficultyPage() {
-        const easy   = typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null;
-        const normal = typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null;
-        const fKeys  = ['giantization', 'killer', 'eliteRegen', 'bossRegen'];
-        const fNames = { giantization: '巨人化', killer: '殺手化', eliteRegen: '精英回血', bossRegen: 'Boss 回血' };
-
-        let html = _h2('⚔️ 難度介紹');
-
-        if (easy) {
-            const ec    = easy.creatureStrength.hostile;
-            const feats = easy.features || {};
-            html += '<div style="margin-bottom:14px;">';
-            html += '<div style="font-size:13px;font-weight:bold;color:#88CC88;margin-bottom:4px;">🌿 簡單</div>';
-            html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-style:italic;">適合初次體驗的輕鬆模式。生物強度正常，Boss 相對溫和。探索世界、熟悉器官與進化系統的最佳起點。</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 生物強度：×' + _esc(String(ec.hpMultiplier)) + '（HP / 速度 / 傷害）</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 精英獎勵：第1夜 +1 / 第2夜 +1 / 第3夜 +2 技能點</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• Boss 擊殺獎勵：+3 技能點</div>';
-            html += '<div style="font-size:11px;color:#ccc;">• 特殊機制：' + _esc(fKeys.map(k => fNames[k] + (feats[k] ? ' ✅' : ' ➖')).join('、')) + '</div>';
-            html += '</div>';
-        }
-
-        if (normal) {
-            const nc    = normal.creatureStrength.hostile;
-            const feats = normal.features || {};
-            html += '<div style="margin-bottom:8px;">';
-            html += '<div style="font-size:13px;font-weight:bold;color:#FF9944;margin-bottom:4px;">⚔️ 普通</div>';
-            html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-style:italic;">給有經驗的玩家設計的挑戰模式。生物更強、追擊更積極、Boss 擁有獨特技能。通關更困難，但獎勵與達成感也更豐富。</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 生物強度：×' + _esc(String(nc.hpMultiplier)) + '（HP / 速度 / 傷害）</div>';
-            if (normal.aggroRangeOverride) {
-                html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 追擊範圍：' + _esc(String(normal.aggroRangeOverride)) + 'px（比簡單模式更積極）</div>';
-            }
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• 精英獎勵：第1夜 +1 / 第2夜 +1 / 第3夜 +2 技能點</div>';
-            html += '<div style="font-size:11px;color:#ccc;margin-bottom:2px;">• Boss 擊殺獎勵：+3 技能點</div>';
-            html += '<div style="font-size:11px;color:#ccc;">• 特殊機制：' + _esc(fKeys.map(k => fNames[k] + (feats[k] ? ' ✅' : ' ➖')).join('、')) + '、Boss 獨特技能 ✅</div>';
-            html += '</div>';
-        }
-
-        return html;
-    }
-
-    function buildGuidePages() {
-        const pages = [];
-        // 操作說明（原 showGuide 的四頁內容精簡為文字版）
-        pages.push(
-            _h2(t('guideBasicTitle')) +
-            _p(t('guideMove')) + _p(t('guideAttack')) + _p(t('guideSettings')) +
-            _p(t('guideFruit')) + _p(t('guideGoal')) + _p(t('guideAutoAttack'))
-        );
-        pages.push(
-            _h2(t('guideOrganTitle')) +
-            _p(t('guideOrgan1')) + _p(t('guideOrgan2')) + _p(t('guideOrgan3')) +
-            _p(t('guideOrgan4')) + _p(t('guideOrgan5')) + _p(t('guideOrgan6')) + _p(t('guideOrgan7'))
-        );
-        pages.push(
-            _h2(t('guideEvoTitle')) +
-            _p(t('guideEvo1')) + _p(t('guideEvo2')) + _p(t('guideEvo3')) +
-            _p(t('guideEvo4')) + _p(t('guideEvo5'))
-        );
-        // v0.47.1 新增：Boss 圖鑑頁 + 難度介紹頁
-        pages.push(_buildBossPage());
-        pages.push(_buildDifficultyPage());
-        return pages;
-    }
-
-    function buildOrganPages() {
-        const pages = [];
-        const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF', special: '#AAAAFF' };
-        // 普通器官每頁3個
-        const allOrgans = Object.values(ORGANS).filter(o => !o.noSelection);
-        for (let i = 0; i < allOrgans.length; i += 3) {
-            const chunk = allOrgans.slice(i, i + 3);
-            let html = '';
-            chunk.forEach(org => {
-                const c = typeColor[org.type] || '#FFD700';
-                html += '<div style="margin-bottom:12px;border-left:3px solid ' + c + ';padding-left:8px;">';
-                html += '<div style="font-weight:bold;color:' + c + ';font-size:14px;">' + _esc(org.name) + '</div>';
-                org.levels.forEach((lv, idx) => {
-                    html += '<div style="color:#ccc;font-size:11px;margin-top:2px;"><span style="color:#aaa;">Lv' + (idx+1) + ':</span> ' + _esc(lv.desc) + '</div>';
+                section.entries.forEach(function (entry) {
+                    var isSel = entry.id === curGuideEntryId;
+                    var item = document.createElement('div');
+                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
+                        'color:' + (isSel ? '#fff' : '#bbb') + ';' +
+                        'background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
+                        'border-left:2px solid ' + (isSel ? section.color : 'transparent') + ';';
+                    item.textContent = entry.title[lang] || entry.title['zh-TW'];
+                    (function (eid) {
+                        item.onclick = function () { curGuideEntryId = eid; _renderGuide(container); };
+                    })(entry.id);
+                    sidebar.appendChild(item);
                 });
-                html += '</div>';
             });
-            // 特殊器官：毒囊
-            if (i === 0) {
-                const sac = ORGANS.poisonSac;
-                const sacLang = (LANG[gameState.language] || LANG['zh-TW']).organs.poisonSac;
-                html += '<div style="margin-bottom:12px;border-left:3px solid #AAAAFF;padding-left:8px;">';
-                html += '<div style="font-weight:bold;color:#AAAAFF;font-size:14px;">☠ ' + _esc(sac.name) + ' <span style="font-size:10px;color:#888;">（雜食性Lv1獲得，自動升級）</span></div>';
-                html += '<div style="color:#aaa;font-size:11px;margin-top:3px;">' + t('compendiumSacHint') + '</div>';
-                html += '<div style="margin-top:5px;">';
-                sac.levels.forEach((lv, idx) => {
-                    const desc = sacLang ? sacLang.levels[idx] : lv.desc;
-                    const threshold = sac.thresholds[idx];
-                    html += '<div style="font-size:11px;color:#ccc;line-height:1.6;">'
-                        + '<span style="color:#AAAAFF;margin-right:4px;">Lv' + (idx + 1) + '</span>'
-                        + '<span style="color:#777;margin-right:6px;">[白骨素≥' + threshold + ']</span>'
-                        + _esc(desc || lv.desc)
-                        + '</div>';
-                });
-                html += '</div>';
-                html += '</div>';
+            container.appendChild(sidebar);
+
+            var rightPane = document.createElement('div');
+            rightPane.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
+
+            if (found) {
+                var dBadge = document.createElement('div');
+                dBadge.style.cssText = 'display:inline-block;font-size:10px;color:' + found.section.color + ';border:1px solid ' + found.section.color + ';border-radius:3px;padding:1px 6px;margin-bottom:8px;';
+                dBadge.textContent = found.section.label[lang] || found.section.label['zh-TW'];
+                rightPane.appendChild(dBadge);
+
+                var dTitle = document.createElement('div');
+                dTitle.style.cssText = 'font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:10px;';
+                dTitle.textContent = found.entry.title[lang] || found.entry.title['zh-TW'];
+                rightPane.appendChild(dTitle);
+
+                var dBody = document.createElement('div');
+                dBody.style.cssText = 'font-size:13px;color:#ccc;line-height:1.8;white-space:pre-wrap;';
+                dBody.textContent = found.entry.content[lang] || found.entry.content['zh-TW'];
+                rightPane.appendChild(dBody);
             }
-            pages.push(html);
+            container.appendChild(rightPane);
         }
-        // 隱藏器官頁
-        let hiddenHtml = _h2(t('compendiumHiddenOrgans'));
-        Object.values(HIDDEN_ORGANS).forEach(h => {
-            hiddenHtml += '<div style="margin-bottom:10px;border-left:3px solid #FFD700;padding-left:8px;">';
-            hiddenHtml += '<div style="font-weight:bold;color:#FFD700;">✨ ' + _esc(h.name) + '</div>';
-            hiddenHtml += '<div style="color:#ccc;font-size:11px;margin-top:2px;">' + _esc(h.desc) + '</div>';
-            hiddenHtml += '</div>';
-        });
-        // 組合效果頁
-        hiddenHtml += _h2(t('compendiumCombos'));
-        COMBOS.forEach(combo => {
-            hiddenHtml += '<div style="margin-bottom:8px;">';
-            hiddenHtml += '<div style="color:#FFD700;font-size:12px;">' + _esc(combo.ids.map(id => getOrganDisplayName(id)).join(' + ')) + '</div>';
-            hiddenHtml += '<div style="color:#ccc;font-size:11px;">' + _esc(combo.desc) + '</div>';
-            hiddenHtml += '</div>';
-        });
-        pages.push(hiddenHtml);
-        return pages;
     }
 
-    function buildEvoPages() {
-        const pages = [];
-        Object.values(EVOLUTION_PATHS).forEach(path => {
-            let html = _h2(path.icon + ' ' + path.name + '  (最高Lv' + path.maxLevel + ')');
-            path.levels.forEach((lv, i) => {
-                // 使用 buildEvoLevelDesc 動態生成累計描述，config 改數值後自動同步
-                html += '<div style="margin-bottom:6px;"><span style="color:#FFD700;">Lv' + (i+1) + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(buildEvoLevelDesc(path.id, i + 1)) + '</span></div>';
+    // Organs 分頁：從 ORGANS/HIDDEN_ORGANS/COMBOS 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
+    function _renderOrgans(container) {
+        container.innerHTML = '';
+        var typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
+        var organSections = [
+            {
+                id: 'attack', label: '⚔️ 攻擊', color: '#FF9999',
+                entries: Object.values(ORGANS).filter(function(o) { return o.type === 'attack'; })
+                    .map(function(o) { return { id: 'organ_' + o.id, data: o, type: 'organ' }; })
+            },
+            {
+                id: 'defense', label: '🛡️ 防禦', color: '#88CCFF',
+                entries: Object.values(ORGANS).filter(function(o) { return o.type === 'defense'; })
+                    .map(function(o) { return { id: 'organ_' + o.id, data: o, type: 'organ' }; })
+            },
+            {
+                id: 'spirit', label: '🔮 靈力', color: '#CC99FF',
+                entries: Object.values(ORGANS).filter(function(o) { return o.type === 'spirit'; })
+                    .map(function(o) { return { id: 'organ_' + o.id, data: o, type: 'organ' }; })
+            },
+            {
+                id: 'special', label: '特殊器官', color: '#AAAAFF',
+                entries: [{ id: 'organ_poisonSac', data: ORGANS.poisonSac, type: 'poisonSac' }]
+            },
+            {
+                id: 'hidden', label: '✨ 隱藏器官', color: '#FFD700',
+                entries: Object.values(HIDDEN_ORGANS).map(function(h) { return { id: 'hidden_' + h.id, data: h, type: 'hidden' }; })
+            },
+            {
+                id: 'combo', label: '⚡ 組合效果', color: '#88FF88',
+                entries: COMBOS.map(function(c) { return { id: 'combo_' + c.key, data: c, type: 'combo' }; })
+            }
+        ];
+
+        if (!curOrganEntryId) curOrganEntryId = organSections[0].entries[0].id;
+
+        var foundEntry = null, foundSection = null;
+        for (var si = 0; si < organSections.length; si++) {
+            for (var ei = 0; ei < organSections[si].entries.length; ei++) {
+                if (organSections[si].entries[ei].id === curOrganEntryId) {
+                    foundEntry = organSections[si].entries[ei];
+                    foundSection = organSections[si];
+                }
+            }
+        }
+        if (!foundEntry) {
+            curOrganEntryId = organSections[0].entries[0].id;
+            foundEntry = organSections[0].entries[0];
+            foundSection = organSections[0];
+        }
+
+        function _entryLabel(entry) {
+            if (entry.type === 'organ' || entry.type === 'poisonSac') return entry.data.name;
+            if (entry.type === 'hidden') return entry.data.name;
+            return entry.data.ids.map(function(id) { return getOrganDisplayName(id); }).join('+');
+        }
+
+        function _buildOrganContent(pane, entry, section) {
+            var badge = document.createElement('div');
+            badge.style.cssText = 'display:inline-block;font-size:10px;color:' + section.color + ';border:1px solid ' + section.color + ';border-radius:3px;padding:1px 6px;margin-bottom:8px;';
+            badge.textContent = section.label;
+            pane.appendChild(badge);
+
+            if (entry.type === 'organ') {
+                var org = entry.data;
+                var c = typeColor[org.type] || section.color;
+                var t1 = document.createElement('div');
+                t1.style.cssText = 'font-size:16px;font-weight:bold;color:' + c + ';margin-bottom:10px;';
+                t1.textContent = org.name;
+                pane.appendChild(t1);
+                org.levels.forEach(function(lv, idx) {
+                    var d = document.createElement('div');
+                    d.style.cssText = 'margin-bottom:6px;';
+                    d.innerHTML = '<span style="color:#FFD700;">Lv' + (idx+1) + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(lv.desc) + '</span>';
+                    pane.appendChild(d);
+                });
+            } else if (entry.type === 'poisonSac') {
+                var sac = entry.data;
+                var t2 = document.createElement('div');
+                t2.style.cssText = 'font-size:16px;font-weight:bold;color:#AAAAFF;margin-bottom:6px;';
+                t2.textContent = '☠ ' + sac.name;
+                pane.appendChild(t2);
+                var note = document.createElement('div');
+                note.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:10px;';
+                note.textContent = '無法主動選擇，透過累積白骨素自動升級';
+                pane.appendChild(note);
+                sac.levels.forEach(function(lv, idx) {
+                    var d = document.createElement('div');
+                    d.style.cssText = 'font-size:12px;color:#ccc;line-height:1.6;margin-bottom:2px;';
+                    d.innerHTML = '<span style="color:#AAAAFF;margin-right:4px;">Lv' + (idx+1) + '</span>' +
+                        '<span style="color:#777;margin-right:6px;">[白骨素≥' + sac.thresholds[idx] + ']</span>' +
+                        _esc(lv.desc);
+                    pane.appendChild(d);
+                });
+            } else if (entry.type === 'hidden') {
+                var h = entry.data;
+                var t3 = document.createElement('div');
+                t3.style.cssText = 'font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:6px;';
+                t3.textContent = '✨ ' + h.name;
+                pane.appendChild(t3);
+                var hn = document.createElement('div');
+                hn.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:8px;';
+                hn.textContent = '擊敗精英怪有機率獲得';
+                pane.appendChild(hn);
+                var hd = document.createElement('div');
+                hd.style.cssText = 'font-size:13px;color:#ccc;';
+                hd.textContent = h.desc;
+                pane.appendChild(hd);
+            } else if (entry.type === 'combo') {
+                var combo = entry.data;
+                var t4 = document.createElement('div');
+                t4.style.cssText = 'font-size:15px;font-weight:bold;color:#88FF88;margin-bottom:8px;';
+                t4.textContent = combo.ids.map(function(id) { return getOrganDisplayName(id); }).join(' + ');
+                pane.appendChild(t4);
+                var cd = document.createElement('div');
+                cd.style.cssText = 'font-size:13px;color:#ccc;';
+                cd.textContent = combo.desc;
+                pane.appendChild(cd);
+            }
+        }
+
+        if (gameState.isMobile) {
+            container.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+            var tabStrip = document.createElement('div');
+            tabStrip.style.cssText = 'display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid #333;scrollbar-width:none;-ms-overflow-style:none;padding:0 4px;';
+            var flatIdx = 0, selIdx = 0;
+            organSections.forEach(function(sec) {
+                sec.entries.forEach(function(entry, ei) {
+                    var isSel = entry.id === curOrganEntryId;
+                    if (isSel) selIdx = flatIdx;
+                    var label = (ei === 0 ? (sec.label + '｜') : '') + _entryLabel(entry);
+                    var tab = document.createElement('div');
+                    tab.style.cssText = 'padding:6px 10px;white-space:nowrap;cursor:pointer;font-size:11px;flex-shrink:0;' +
+                        'border-bottom:' + (isSel ? '2px' : '1px') + ' solid ' + (isSel ? sec.color : 'transparent') + ';' +
+                        'color:' + (isSel ? sec.color : '#aaa') + ';font-weight:' + (isSel ? 'bold' : 'normal') + ';';
+                    tab.textContent = label;
+                    (function(eid) { tab.onclick = function() { curOrganEntryId = eid; _renderOrgans(container); }; })(entry.id);
+                    tabStrip.appendChild(tab);
+                    flatIdx++;
+                });
             });
-            pages.push(html);
-        });
-        return pages;
+            container.appendChild(tabStrip);
+            setTimeout(function() { var el = tabStrip.children[selIdx]; if (el) el.scrollIntoView({ block: 'nearest', inline: 'center' }); }, 0);
+            var ca = document.createElement('div');
+            ca.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
+            _buildOrganContent(ca, foundEntry, foundSection);
+            container.appendChild(ca);
+        } else {
+            container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
+            var sidebar = document.createElement('div');
+            sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
+            organSections.forEach(function(sec) {
+                var sh = document.createElement('div');
+                sh.style.cssText = 'font-size:10px;font-weight:bold;color:' + sec.color + ';padding:6px 8px 2px 8px;border-left:3px solid ' + sec.color + ';margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
+                sh.textContent = sec.label;
+                sidebar.appendChild(sh);
+                sec.entries.forEach(function(entry) {
+                    var isSel = entry.id === curOrganEntryId;
+                    var item = document.createElement('div');
+                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
+                        'color:' + (isSel ? '#fff' : '#bbb') + ';background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
+                        'border-left:2px solid ' + (isSel ? sec.color : 'transparent') + ';';
+                    item.textContent = _entryLabel(entry);
+                    (function(eid) { item.onclick = function() { curOrganEntryId = eid; _renderOrgans(container); }; })(entry.id);
+                    sidebar.appendChild(item);
+                });
+            });
+            container.appendChild(sidebar);
+            var rp = document.createElement('div');
+            rp.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
+            _buildOrganContent(rp, foundEntry, foundSection);
+            container.appendChild(rp);
+        }
+    }
+
+    // Evo 分頁：從 EVOLUTION_PATHS/SKILLS 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
+    function _renderEvo(container) {
+        container.innerHTML = '';
+        var pathColors = { herbivore: '#88cc88', carnivore: '#FF9999', omnivore: '#CCAAFF' };
+        var skillColor = '#FFD700';
+        var evoSections = [
+            {
+                id: 'paths', label: '進化路線', color: '#88cc88',
+                entries: Object.values(EVOLUTION_PATHS).map(function(p) {
+                    return { id: 'path_' + p.id, data: p, type: 'path', color: pathColors[p.id] || '#88cc88' };
+                })
+            },
+            {
+                id: 'skills', label: '技能樹', color: skillColor,
+                entries: Object.values(SKILLS).map(function(s) {
+                    return { id: 'skill_' + s.id, data: s, type: 'skill', color: skillColor };
+                })
+            }
+        ];
+
+        if (!curEvoEntryId) curEvoEntryId = evoSections[0].entries[0].id;
+
+        var foundEntry = null, foundSection = null;
+        for (var si = 0; si < evoSections.length; si++) {
+            for (var ei = 0; ei < evoSections[si].entries.length; ei++) {
+                if (evoSections[si].entries[ei].id === curEvoEntryId) {
+                    foundEntry = evoSections[si].entries[ei];
+                    foundSection = evoSections[si];
+                }
+            }
+        }
+        if (!foundEntry) {
+            curEvoEntryId = evoSections[0].entries[0].id;
+            foundEntry = evoSections[0].entries[0];
+            foundSection = evoSections[0];
+        }
+
+        function _buildEvoContent(pane, entry) {
+            if (!entry) return;
+            if (entry.type === 'path') {
+                var path = entry.data;
+                var c = pathColors[path.id] || '#88cc88';
+                var unlockMap = { herbivore: '初始解鎖，無前置條件', carnivore: '無前置條件', omnivore: '需草食性 Lv1 + 肉食性 Lv1' };
+                var t1 = document.createElement('div');
+                t1.style.cssText = 'font-size:16px;font-weight:bold;color:' + c + ';margin-bottom:6px;';
+                t1.textContent = path.icon + ' ' + path.name + '（最高 Lv' + path.maxLevel + '）';
+                pane.appendChild(t1);
+                if (unlockMap[path.id]) {
+                    var ul = document.createElement('div');
+                    ul.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:10px;';
+                    ul.textContent = '解鎖條件：' + unlockMap[path.id];
+                    pane.appendChild(ul);
+                }
+                for (var i = 1; i <= path.maxLevel; i++) {
+                    var d = document.createElement('div');
+                    d.style.cssText = 'margin-bottom:6px;';
+                    d.innerHTML = '<span style="color:#FFD700;">Lv' + i + ':</span> <span style="color:#ccc;font-size:12px;">' + _esc(buildEvoLevelDesc(path.id, i)) + '</span>';
+                    pane.appendChild(d);
+                }
+            } else if (entry.type === 'skill') {
+                var skill = entry.data;
+                var t2 = document.createElement('div');
+                t2.style.cssText = 'font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:8px;';
+                t2.textContent = skill.name;
+                pane.appendChild(t2);
+                var desc = document.createElement('div');
+                desc.style.cssText = 'font-size:13px;color:#ccc;margin-bottom:10px;';
+                desc.textContent = skill.desc;
+                pane.appendChild(desc);
+                for (var i = 1; i <= skill.maxLevel; i++) {
+                    var lv = document.createElement('div');
+                    lv.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:3px;';
+                    lv.innerHTML = '<span style="color:#FFD700;">Lv' + i + '</span><span style="color:#666;margin:0 6px;">費用 ' + i + ' 點</span>';
+                    pane.appendChild(lv);
+                }
+                var hint = document.createElement('div');
+                hint.style.cssText = 'font-size:11px;color:#888;margin-top:10px;border-top:1px solid #333;padding-top:8px;';
+                hint.textContent = '擊殺精英怪、Boss、遊戲時長皆可獲得技能點，技能跨局繼承';
+                pane.appendChild(hint);
+            }
+        }
+
+        if (gameState.isMobile) {
+            container.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+            var tabStrip = document.createElement('div');
+            tabStrip.style.cssText = 'display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid #333;scrollbar-width:none;-ms-overflow-style:none;padding:0 4px;';
+            var flatIdx = 0, selIdx = 0;
+            evoSections.forEach(function(sec) {
+                sec.entries.forEach(function(entry, ei) {
+                    var isSel = entry.id === curEvoEntryId;
+                    if (isSel) selIdx = flatIdx;
+                    var eLabel = entry.type === 'path' ? (entry.data.icon + ' ' + entry.data.name) : entry.data.name;
+                    var label = (sec.id === 'skills' && ei === 0) ? ('技能樹｜' + eLabel) : eLabel;
+                    var tabColor = entry.color;
+                    var tab = document.createElement('div');
+                    tab.style.cssText = 'padding:6px 10px;white-space:nowrap;cursor:pointer;font-size:11px;flex-shrink:0;' +
+                        'border-bottom:' + (isSel ? '2px' : '1px') + ' solid ' + (isSel ? tabColor : 'transparent') + ';' +
+                        'color:' + (isSel ? tabColor : '#aaa') + ';font-weight:' + (isSel ? 'bold' : 'normal') + ';';
+                    tab.textContent = label;
+                    (function(eid) { tab.onclick = function() { curEvoEntryId = eid; _renderEvo(container); }; })(entry.id);
+                    tabStrip.appendChild(tab);
+                    flatIdx++;
+                });
+            });
+            container.appendChild(tabStrip);
+            setTimeout(function() { var el = tabStrip.children[selIdx]; if (el) el.scrollIntoView({ block: 'nearest', inline: 'center' }); }, 0);
+            var ca = document.createElement('div');
+            ca.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
+            _buildEvoContent(ca, foundEntry);
+            container.appendChild(ca);
+        } else {
+            container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
+            var sidebar = document.createElement('div');
+            sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
+            evoSections.forEach(function(sec) {
+                var sh = document.createElement('div');
+                sh.style.cssText = 'font-size:10px;font-weight:bold;color:' + sec.color + ';padding:6px 8px 2px 8px;border-left:3px solid ' + sec.color + ';margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
+                sh.textContent = sec.label;
+                sidebar.appendChild(sh);
+                sec.entries.forEach(function(entry) {
+                    var isSel = entry.id === curEvoEntryId;
+                    var eLabel = entry.type === 'path' ? (entry.data.icon + ' ' + entry.data.name) : entry.data.name;
+                    var item = document.createElement('div');
+                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
+                        'color:' + (isSel ? '#fff' : '#bbb') + ';background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
+                        'border-left:2px solid ' + (isSel ? entry.color : 'transparent') + ';';
+                    item.textContent = eLabel;
+                    (function(eid) { item.onclick = function() { curEvoEntryId = eid; _renderEvo(container); }; })(entry.id);
+                    sidebar.appendChild(item);
+                });
+            });
+            container.appendChild(sidebar);
+            var rp = document.createElement('div');
+            rp.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
+            _buildEvoContent(rp, foundEntry);
+            container.appendChild(rp);
+        }
     }
 
     function render() {
@@ -1124,16 +1724,14 @@ function showCompendium(startTab) {
             tabBtns[tab].style.borderColor = tab === curTab ? '#4a8a4a' : '#555';
             tabBtns[tab].style.color = 'white';
         });
-        const pages = getPages();
-        const total = pages.length;
-        curPage = Math.max(0, Math.min(curPage, total - 1));
-        content.innerHTML = pages[curPage] || '';
-        content.scrollTop = 0;
-        pageLbl.textContent = t('guidePage', {'0': curPage + 1, '1': total});
-        prevBtn.disabled = curPage === 0;
-        nextBtn.disabled = curPage >= total - 1;
-        prevBtn.style.opacity = prevBtn.disabled ? '0.35' : '1';
-        nextBtn.style.opacity = nextBtn.disabled ? '0.35' : '1';
+
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+        pageLbl.style.display = 'none';
+        content.style.cssText = 'display:flex;flex:1;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;overflow:hidden;min-height:0;padding:0;';
+        if (curTab === 'guide') _renderGuide(content);
+        else if (curTab === 'organs') _renderOrgans(content);
+        else _renderEvo(content);
     }
 
     function closeCompendium() {
@@ -1147,10 +1745,11 @@ function showCompendium(startTab) {
             document.removeEventListener('keydown', _compKeyHandler);
             _compKeyHandler = null;
         }
+        if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
     }
 
-    prevBtn.onclick = () => { if (curPage > 0) { curPage--; render(); } };
-    nextBtn.onclick = () => { const pages = getPages(); if (curPage < pages.length - 1) { curPage++; render(); } };
+    prevBtn.onclick = () => {};
+    nextBtn.onclick = () => {};
     closeBtn.onclick = closeCompendium;
     overlay.addEventListener('click', e => { if (e.target === overlay) closeCompendium(); });
 
@@ -1158,15 +1757,10 @@ function showCompendium(startTab) {
     _compKeyHandler = function(e) {
         if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
         if (e.key === 'Escape') { closeCompendium(); return; }
-        const pages = getPages();
-        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-            if (curPage < pages.length - 1) { curPage++; render(); }
-        } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-            if (curPage > 0) { curPage--; render(); }
-        }
     };
     document.addEventListener('keydown', _compKeyHandler);
 
+    overlay._render = render;
     overlay.appendChild(panel);
     document.getElementById('game-container').appendChild(overlay);
     render();
@@ -1176,7 +1770,7 @@ function showCompendium(startTab) {
 // 開始畫面
 // =============================================================
 
-function showMapSelect() {
+export function showMapSelect() {
     applyDeviceMode();
     const prev = document.getElementById('start-screen');
     if (prev) prev.remove();
@@ -1210,7 +1804,7 @@ function showMapSelect() {
     const diffs = [
         { id: 'easy',   key: 'diffEasy',   map: typeof EASY_MAP   !== 'undefined' ? EASY_MAP   : null, locked: false },
         { id: 'normal', key: 'diffNormal', map: typeof NORMAL_MAP !== 'undefined' ? NORMAL_MAP : null, locked: false },
-        { id: 'hard',   key: 'diffHard',   map: null, locked: true },
+        { id: 'hard',   key: 'diffHard',   map: typeof HARD_MAP !== 'undefined' ? HARD_MAP : null, locked: false },
         { id: 'hell',   key: 'diffHell',   map: null, locked: true },
     ];
     const diffBtnEls = {};
@@ -1295,14 +1889,15 @@ function showMapSelect() {
         const selDiff = diffs.find(d => d.id === selectedDiff);
         gameState.currentMap = (selDiff && selDiff.map) ? selDiff.map : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         gameState.lastDifficulty = selectedDiff;
-        localStorage.setItem('lastDifficulty', selectedDiff); // B1: 儲存難度供重整頁面後恢復
+        storageSet(STORAGE_KEYS.LAST_DIFFICULTY, selectedDiff); // B1: 儲存難度供重整頁面後恢復
         // 儲存角色選擇
         gameState.selectedCharacter = selectedChar;
+        storageSet(STORAGE_KEYS.LAST_CHARACTER, selectedChar);
         overlay.remove();
         let hasOrgans = false;
         try {
-            const so = localStorage.getItem('savedOrgans');
-            hasOrgans = !!so && JSON.parse(so).length > 0;
+            const so = storageGetJSON(STORAGE_KEYS.SAVED_ORGANS);
+            hasOrgans = !!so && so.length > 0;
         } catch(e) {}
         if (hasOrgans) {
             initializeGame();
@@ -1316,10 +1911,16 @@ function showMapSelect() {
     document.getElementById('game-container').appendChild(overlay);
 }
 
-function showStartScreen() {
+export function showStartScreen() {
     applyDeviceMode();
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
+        // 恢復上一場難度與地圖
+        const lastDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
+        const _diffMapTable = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
+        gameState.currentMap        = _diffMapTable[lastDiff] || EASY_MAP;
+        gameState.lastDifficulty    = lastDiff;
+        gameState.selectedCharacter = storageGet(STORAGE_KEYS.LAST_CHARACTER) || 'koel';
         initializeGame();
         return;
     }
@@ -1327,46 +1928,74 @@ function showStartScreen() {
     overlay.id = 'start-screen';
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:#0d1a0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;pointer-events:all;color:white;font-family:Arial,sans-serif;';
 
+    const titleContainer = document.createElement('div');
+    titleContainer.style.cssText = 'position:relative;display:inline-block;margin-bottom:10px;';
     const titleEl = document.createElement('div');
-    titleEl.style.cssText = 'font-size:40px;font-weight:bold;margin-bottom:10px;letter-spacing:2px;';
+    titleEl.style.cssText = 'font-size:40px;font-weight:bold;letter-spacing:2px;';
     titleEl.textContent = GAME_INFO.title;
-    overlay.appendChild(titleEl);
+    titleContainer.appendChild(titleEl);
+    overlay.appendChild(titleContainer);
 
     const subtitleEl = document.createElement('div');
     subtitleEl.style.cssText = 'font-size:16px;color:#aaa;letter-spacing:5px;margin-bottom:40px;';
     subtitleEl.textContent = GAME_INFO.subtitle;
     overlay.appendChild(subtitleEl);
 
-    const menuBtnStyle = 'font-size:18px;padding:10px 0;cursor:pointer;pointer-events:all;border-radius:4px;color:white;width:220px;margin-bottom:12px;';
+    const menuBtnStyle = 'font-size:18px;padding:10px 0;cursor:pointer;pointer-events:all;border-radius:4px;color:white;width:220px;margin-bottom:12px;transition:all 0.18s ease;';
+
+    function _addMenuHover(btn, normalBg, hoverBg, normalBorder, hoverBorder, shadowRgb) {
+        if (gameState.isMobile) {
+            btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.97)'; });
+            btn.addEventListener('touchend',   () => { btn.style.transform = 'scale(1)'; });
+        } else {
+            btn.onmouseenter = () => {
+                btn.style.transform = 'scale(1.06)';
+                btn.style.background = hoverBg;
+                btn.style.boxShadow = '0 4px 18px rgba(' + shadowRgb + ', 0.45)';
+                btn.style.borderColor = hoverBorder;
+            };
+            btn.onmouseleave = () => {
+                btn.style.transform = 'scale(1)';
+                btn.style.background = normalBg;
+                btn.style.boxShadow = '';
+                btn.style.borderColor = normalBorder;
+            };
+        }
+    }
 
     const startBtn = document.createElement('button');
     startBtn.style.cssText = menuBtnStyle + 'background:#2a5a2a;border:1px solid #4a8a4a;';
     startBtn.textContent = t('startGame');
-    startBtn.onclick = () => showMapSelect();
+    startBtn.onclick = () => { hideChat(); showMapSelect(); };
+    _addMenuHover(startBtn, '#2a5a2a', '#3a7a3a', '#4a8a4a', '#6aaa6a', '74,170,74');
     overlay.appendChild(startBtn);
 
     const skillBtn = document.createElement('button');
     skillBtn.style.cssText = menuBtnStyle + 'background:rgba(60,100,60,0.3);border:1px solid #4a7a4a;';
     skillBtn.textContent = t('skillTree');
-    skillBtn.onclick = () => buildSkillTreeOverlay(null, true);
+    skillBtn.onclick = () => { hideChat(); buildSkillTreeOverlay(null, true); };
+    _addMenuHover(skillBtn, 'rgba(60,100,60,0.3)', 'rgba(60,100,60,0.6)', '#4a7a4a', '#7aaa7a', '74,170,74');
     overlay.appendChild(skillBtn);
 
     const guideBtn = document.createElement('button');
     guideBtn.style.cssText = menuBtnStyle + 'background:rgba(90,80,40,0.3);border:1px solid #8a7a4a;';
     guideBtn.textContent = t('compendium');
-    guideBtn.onclick = () => showCompendium('guide');
+    guideBtn.onclick = () => { hideChat(); showCompendium('guide'); };
+    _addMenuHover(guideBtn, 'rgba(90,80,40,0.3)', 'rgba(130,110,50,0.6)', '#8a7a4a', '#baaa6a', '186,170,74');
     overlay.appendChild(guideBtn);
 
     const lbMenuBtn = document.createElement('button');
     lbMenuBtn.style.cssText = menuBtnStyle + 'background:rgba(80,60,10,0.3);border:1px solid #8a7a2a;';
     lbMenuBtn.textContent = t('leaderboard');
-    lbMenuBtn.onclick = () => showLeaderboard();
+    lbMenuBtn.onclick = () => { hideChat(); showLeaderboard(); };
+    _addMenuHover(lbMenuBtn, 'rgba(80,60,10,0.3)', 'rgba(120,90,15,0.6)', '#8a7a2a', '#baaa4a', '186,170,42');
     overlay.appendChild(lbMenuBtn);
 
     const settingsBtn = document.createElement('button');
     settingsBtn.style.cssText = menuBtnStyle + 'background:rgba(50,50,90,0.3);border:1px solid #4a4a8a;';
     settingsBtn.textContent = t('settings');
-    settingsBtn.onclick = () => showSettings(true);
+    settingsBtn.onclick = () => { hideChat(); showSettings(); };
+    _addMenuHover(settingsBtn, 'rgba(50,50,90,0.3)', 'rgba(70,70,140,0.6)', '#4a4a8a', '#7a7aaa', '100,100,200');
     overlay.appendChild(settingsBtn);
 
     const footerEl = document.createElement('div');
@@ -1434,14 +2063,12 @@ function showStartScreen() {
 
     // 難度切換：取得有資料的難度後循環，與全屏排行榜同步
     top10DiffBtn.onclick = () => {
-        fetchAvailableDifficulties().then(function(diffs) {
-            const availDiffs = (diffs && diffs.length > 0) ? diffs : ['easy'];
-            const idx = availDiffs.indexOf(_top10Difficulty);
-            _top10Difficulty = availDiffs[(idx + 1) % availDiffs.length];
-            _lbDifficulty = _top10Difficulty;
-            top10DiffBtn.textContent = t(_diffKey(_top10Difficulty));
-            loadTop10();
-        }).catch(() => { loadTop10(); });
+        const availDiffs = ['easy', 'normal', 'hard'];
+        const idx = availDiffs.indexOf(_top10Difficulty);
+        _top10Difficulty = availDiffs[(idx + 1) % availDiffs.length];
+        _lbDifficulty = _top10Difficulty;
+        top10DiffBtn.textContent = t(_diffKey(_top10Difficulty));
+        loadTop10();
     };
 
     loadTop10();
@@ -1477,7 +2104,7 @@ function showStartScreen() {
         bookBtn.style.transform = 'scale(1)';
         bookBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
     };
-    bookBtn.onclick = () => showGuideStory();
+    bookBtn.onclick = () => { hideChat(); showGuideStory(); };
 
     // ── 更新日誌按鈕（在故事書按鈕下方）
     const patchBtn = document.createElement('div');
@@ -1503,7 +2130,7 @@ function showStartScreen() {
     patchBtn.innerHTML = '<div style="font-size:28px;line-height:1;">📋</div><div style="font-size:11px;color:#FFF5DC;letter-spacing:1px;margin-top:3px;">更新</div>';
     // B12: 未讀版本時顯示紅點
     if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
-        const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+        const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
         if (lastSeen !== PATCH_NOTES[0].version) {
             const redDot = document.createElement('div');
             redDot.id = 'patch-red-dot';
@@ -1522,23 +2149,139 @@ function showStartScreen() {
         patchBtn.style.transform = 'scale(1)';
         patchBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
     };
-    patchBtn.onclick = () => showPatchNotes();
+    patchBtn.onclick = () => { hideChat(); showPatchNotes(); };
+
+    // ── Discord 按鈕（在更新日誌按鈕下方）
+    const discordBtn = document.createElement('div');
+    discordBtn.id = 'discord-btn';
+    discordBtn.style.cssText = `
+        position: absolute;
+        top: 172px;
+        left: 20px;
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 220, 130, 0.12);
+        border: 2px solid rgba(255, 220, 130, 0.45);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: all;
+        transition: all 0.2s ease;
+        z-index: 201;
+    `;
+    discordBtn.innerHTML = '<div style="font-size:28px;line-height:1;">💬</div><div style="font-size:9px;color:#FFF5DC;letter-spacing:0.5px;margin-top:2px;text-align:center;line-height:1.4;">' + t('discordBtn').replace('💬 ', '').replace(' ', '<br>') + '</div>';
+    discordBtn.onmouseenter = () => {
+        discordBtn.style.background = 'rgba(255, 220, 130, 0.28)';
+        discordBtn.style.transform = 'scale(1.08)';
+        discordBtn.style.borderColor = 'rgba(255, 220, 130, 0.8)';
+    };
+    discordBtn.onmouseleave = () => {
+        discordBtn.style.background = 'rgba(255, 220, 130, 0.12)';
+        discordBtn.style.transform = 'scale(1)';
+        discordBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
+    };
+    discordBtn.onclick = () => { window.open('https://discord.gg/BCAJMQrGeN', '_blank'); };
     overlay.appendChild(bookBtn);
     overlay.appendChild(patchBtn);
+    overlay.appendChild(discordBtn);
+
+    // ── 首頁公告標籤（右上角旋轉印章）
+    if (!document.getElementById('_badge-style')) {
+        const s = document.createElement('style');
+        s.id = '_badge-style';
+        s.textContent = '@keyframes _badgePulse{0%,100%{transform:scale(1) rotate(8deg)}50%{transform:scale(1.12) rotate(8deg)}}#announce-badge{animation:_badgePulse 1.8s ease-in-out infinite}';
+        document.head.appendChild(s);
+    }
+    const announceBadge = document.createElement('div');
+    announceBadge.id = 'announce-badge';
+    announceBadge.style.cssText = 'position:absolute;top:-18px;right:-120px;width:100px;height:64px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(180,20,20,0.15);border:2px solid rgba(220,40,40,0.7);border-radius:6px;pointer-events:none;z-index:210;';
+    const badgeLines = ['巨人覺醒！', '獵人入侵！'];
+    let _badgeLine = 0;
+    const badgeText = document.createElement('div');
+    badgeText.style.cssText = 'font-size:15px;font-weight:bold;color:#FF3333;text-align:center;line-height:1.4;text-shadow:0 0 8px rgba(255,50,50,0.6);letter-spacing:1px;transition:opacity 0.3s ease;';
+    badgeText.textContent = badgeLines[0];
+    announceBadge.appendChild(badgeText);
+    const _badgeInterval = setInterval(() => {
+        const badge = document.getElementById('announce-badge');
+        if (!badge) { clearInterval(_badgeInterval); return; }
+        _badgeLine = (_badgeLine + 1) % badgeLines.length;
+        badgeText.style.opacity = '0';
+        setTimeout(() => { badgeText.textContent = badgeLines[_badgeLine]; badgeText.style.opacity = '1'; }, 300);
+    }, 2500);
+    titleContainer.appendChild(announceBadge);
 
     document.getElementById('game-container').appendChild(overlay);
     checkPatchNotesPopup();
+
+    // 聊天室：建立 UI（只建一次），顯示面板並連線
+    if (typeof buildChatUI === 'function') buildChatUI();
+    if (typeof showChat === 'function') showChat();
+    if (typeof initChat === 'function') initChat();
+
+    // 首頁背景音樂
+    if (typeof playIntroTheme === 'function') playIntroTheme();
+}
+
+// =============================================================
+// Splash 畫面（開發者品牌）
+// =============================================================
+
+export function showSplashScreen() {
+    const splash = document.createElement('div');
+    splash.id = 'splash-screen';
+    splash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:9999;cursor:pointer;transition:opacity 0.8s ease;user-select:none;';
+
+    const title = document.createElement('div');
+    title.textContent = 'GOBLIN NEST';
+    title.style.cssText = "font-family:Georgia,'Times New Roman',serif;font-size:clamp(28px,6vw,52px);font-weight:bold;letter-spacing:8px;color:#D4A017;text-shadow:2px 2px 0px #7a5500,4px 4px 0px #5a3e00,6px 6px 8px rgba(0,0,0,0.9);opacity:0;transform:translateY(6px);transition:opacity 1.2s ease,transform 1.2s ease;";
+
+    const sub = document.createElement('div');
+    sub.textContent = 'PRESENTS';
+    sub.style.cssText = "font-family:Georgia,serif;font-size:clamp(10px,2vw,14px);letter-spacing:6px;color:rgba(212,160,23,0.6);opacity:0;transition:opacity 1.4s ease 0.3s;";
+
+    const hint = document.createElement('div');
+    hint.textContent = '點擊任意處繼續';
+    hint.style.cssText = 'position:absolute;bottom:36px;font-size:12px;color:rgba(255,255,255,0.25);letter-spacing:2px;animation:_splashHint 2s ease-in-out infinite;';
+
+    if (!document.getElementById('_splash-style')) {
+        const s = document.createElement('style');
+        s.id = '_splash-style';
+        s.textContent = '@keyframes _splashHint{0%,100%{opacity:.25}50%{opacity:.6}}';
+        document.head.appendChild(s);
+    }
+
+    splash.appendChild(title);
+    splash.appendChild(sub);
+    splash.appendChild(hint);
+    document.body.appendChild(splash);
+
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            title.style.opacity = '1';
+            title.style.transform = 'translateY(0)';
+            sub.style.opacity = '1';
+        }, 100);
+    });
+
+    splash.addEventListener('click', () => {
+        if (typeof playIntroTheme === 'function') playIntroTheme();
+        splash.style.opacity = '0';
+        setTimeout(() => { splash.remove(); showStartScreen(); }, 800);
+    }, { once: true });
 }
 
 // =============================================================
 // 版本更新公告系統
 // =============================================================
 
-function showPatchNotes() {
+export function showPatchNotes() {
     applyDeviceMode();
     if (document.getElementById('patch-notes-overlay')) return;
 
-    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
     // 不立即標記已讀，改為追蹤本次已讀的版本 Tab
     const readInSession = new Set();
 
@@ -1576,7 +2319,10 @@ function showPatchNotes() {
         'border-radius:4px', 'width:28px', 'height:28px', 'cursor:pointer',
         'font-size:14px', 'pointer-events:all', 'flex-shrink:0'
     ].join(';');
-    closeBtn.onclick = () => overlay.remove();
+    closeBtn.onclick = () => {
+        overlay.remove();
+        if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
+    };
     titleBar.appendChild(titleText);
     titleBar.appendChild(closeBtn);
     panel.appendChild(titleBar);
@@ -1598,7 +2344,7 @@ function showPatchNotes() {
         const allRead = _unreadNotes.every(n => readInSession.has(n.version));
         if (allRead) {
             if (notes.length > 0) {
-                localStorage.setItem('lastSeenPatchVersion', notes[0].version);
+                storageSet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION, notes[0].version);
             }
             const _rd = document.getElementById('patch-red-dot');
             if (_rd) _rd.remove();
@@ -1726,19 +2472,20 @@ function showPatchNotes() {
     }
 }
 
-function checkPatchNotesPopup() {
+export function checkPatchNotesPopup() {
     // 新玩家不彈出
-    if (!localStorage.getItem('hasPlayedBefore')) return;
+    if (!storageGet(STORAGE_KEYS.HAS_PLAYED_BEFORE)) return;
     if (typeof PATCH_NOTES === 'undefined' || PATCH_NOTES.length === 0) return;
-    const lastSeen = localStorage.getItem('lastSeenPatchVersion') || '';
+    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
     if (lastSeen === PATCH_NOTES[0].version) return;
     // 有未讀版本，自動彈出
     setTimeout(() => showPatchNotes(), 400);
 }
 
-function showGuideStory() {
+export function showGuideStory() {
     applyDeviceMode();
     if (document.getElementById('guide-story-overlay')) return;
+    const chapter2Unlocked = storageGet(STORAGE_KEYS.CHAPTER2_UNLOCKED) === 'true';
 
     const overlay = document.createElement('div');
     overlay.id = 'guide-story-overlay';
@@ -1871,7 +2618,10 @@ function showGuideStory() {
     `;
     closeBtn.onmouseenter = () => closeBtn.style.color = 'rgba(255,255,255,0.95)';
     closeBtn.onmouseleave = () => closeBtn.style.color = 'rgba(255,255,255,0.6)';
-    closeBtn.onclick = () => overlay.remove();
+    closeBtn.onclick = () => {
+        overlay.remove();
+        if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
+    };
 
     book.appendChild(closeBtn);
     book.appendChild(illustrationArea);
@@ -1881,8 +2631,30 @@ function showGuideStory() {
     overlay.appendChild(book);
     document.getElementById('game-container').appendChild(overlay);
 
-    const PAGES = _getGuideStoryPages();
+    const ALL_PAGES = _getGuideStoryPages();
+    const PAGES = chapter2Unlocked ? ALL_PAGES : ALL_PAGES.slice(0, 4);
     let currentPage = 0;
+
+    // ── 章節導航列
+    const chapterNav = document.createElement('div');
+    chapterNav.style.cssText = 'display:flex;gap:8px;padding:8px 16px;border-bottom:1px solid rgba(130,80,20,0.18);flex-shrink:0;';
+    const ch1Tab = document.createElement('button');
+    ch1Tab.textContent = '第一章';
+    ch1Tab.style.cssText = 'padding:4px 12px;border-radius:12px;border:1px solid rgba(130,80,20,0.4);background:rgba(255,220,130,0.22);color:#4a2808;font-size:12px;cursor:pointer;font-family:Georgia,serif;';
+    ch1Tab.onclick = () => { currentPage = 0; renderPage(0); };
+    chapterNav.appendChild(ch1Tab);
+    const ch2Tab = document.createElement('button');
+    ch2Tab.style.cssText = 'padding:4px 12px;border-radius:12px;border:1px solid ' +
+        (chapter2Unlocked ? 'rgba(130,80,20,0.4)' : 'rgba(100,100,100,0.3)') +
+        ';background:' + (chapter2Unlocked ? 'rgba(255,220,130,0.22)' : 'rgba(80,80,80,0.15)') +
+        ';color:' + (chapter2Unlocked ? '#4a2808' : '#888') + ';font-size:12px;cursor:pointer;font-family:Georgia,serif;';
+    ch2Tab.textContent = chapter2Unlocked ? '第二章' : '第二章 🔒';
+    ch2Tab.onclick = () => {
+        if (!chapter2Unlocked) { alert('通關普通難度後解鎖'); return; }
+        currentPage = 4; renderPage(4);
+    };
+    chapterNav.appendChild(ch2Tab);
+    book.insertBefore(chapterNav, illustrationArea);
 
     function renderPage(idx) {
         const page = PAGES[idx];
@@ -1891,7 +2663,12 @@ function showGuideStory() {
         illustrationArea.style.transition = 'opacity 0.3s ease';
         illustrationArea.style.opacity = '0';
         setTimeout(() => {
-            illustrationArea.innerHTML = page.svgIllustration;
+            if (page.customRender) {
+                illustrationArea.innerHTML = '';
+                page.customRender(illustrationArea);
+            } else {
+                illustrationArea.innerHTML = page.svgIllustration;
+            }
             illustrationArea.style.opacity = '1';
         }, 300);
 
@@ -1909,9 +2686,11 @@ function showGuideStory() {
 
         textArea.scrollTop = 0;
 
-        // 進度點
+        // 進度點（只顯示當前章節的頁數）
         dots.innerHTML = '';
-        for (let i = 0; i < PAGES.length; i++) {
+        const chStart = idx < 4 ? 0 : 4;
+        const chEnd   = idx < 4 ? Math.min(4, PAGES.length) : PAGES.length;
+        for (let i = chStart; i < chEnd; i++) {
             const dot = document.createElement('div');
             dot.style.cssText = `
                 width:${i === idx ? '20px' : '8px'};
@@ -1927,7 +2706,7 @@ function showGuideStory() {
         prevBtn.style.cursor = idx === 0 ? 'not-allowed' : 'pointer';
 
         if (idx === PAGES.length - 1) {
-            nextBtn.textContent = '⚔️  開始冒險';
+            nextBtn.textContent = t('btnStartAdventure');
             nextBtn.style.background = 'rgba(80,160,40,0.25)';
             nextBtn.style.borderColor = 'rgba(60,130,20,0.5)';
             nextBtn.style.color = '#2a5008';
@@ -1946,7 +2725,7 @@ function showGuideStory() {
             renderPage(currentPage);
         } else {
             overlay.remove();
-            localStorage.setItem('hasPlayedBefore', 'true');
+            storageSet(STORAGE_KEYS.HAS_PLAYED_BEFORE, 'true');
             const startScreen = document.getElementById('start-screen');
             if (startScreen) startScreen.remove();
             initializeGame();
@@ -2284,9 +3063,234 @@ function _getGuideStoryPages() {
 現在，輪到你改寫這片森林。
 
 「用腦子去贏。」`
+        },
+
+        // ── 第二章（需通關普通難度解鎖）
+        {
+            icon: '🥾',
+            title: '第三章 — 獵人的足跡',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="200" fill="#060d06"/>
+<polygon points="0,200 80,200 0,120" fill="#0a1a0a"/>
+<polygon points="40,200 130,200 40,105" fill="#0c1e0c"/>
+<polygon points="100,200 200,200 100,110" fill="#091508"/>
+<polygon points="380,200 470,200 380,108" fill="#091508"/>
+<polygon points="440,200 520,200 520,130" fill="#0a1a0a"/>
+<g style="animation:_drift 12s ease-in-out infinite alternate" opacity="0.7">
+  <ellipse cx="260" cy="90" rx="90" ry="35" fill="#0d1f0d"/>
+  <ellipse cx="260" cy="82" rx="70" ry="25" fill="#122512"/>
+</g>
+<ellipse cx="260" cy="185" rx="22" ry="6" fill="#1a1a10"/>
+<path d="M244 185 Q252 168 256 175 Q258 178 260 178 Q262 178 264 175 Q268 168 276 185Z" fill="#2a2a18"/>
+<ellipse cx="244" cy="187" rx="10" ry="4" fill="#3a3020" opacity="0.9"/>
+<ellipse cx="276" cy="187" rx="10" ry="4" fill="#3a3020" opacity="0.9"/>
+<g opacity="0.35" style="animation:_emerge 4s ease-out forwards 1s">
+  <ellipse cx="180" cy="130" rx="18" ry="32" fill="#1a2a18"/>
+  <ellipse cx="180" cy="112" rx="10" ry="12" fill="#1a2a18"/>
+  <ellipse cx="173" cy="108" rx="5" ry="8" fill="#151f14"/>
+  <ellipse cx="187" cy="108" rx="5" ry="8" fill="#151f14"/>
+</g>
+<circle cx="350" cy="55" r="1" fill="#c8e0a0" opacity="0.4"/>
+<circle cx="400" cy="30" r="0.8" fill="#c8e0a0" opacity="0.3"/>
+<circle cx="460" cy="48" r="1.2" fill="#c8e0a0" opacity="0.5"/>
+<text x="260" y="196" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#4a6a38" opacity="0.7">不是野獸的腳印。是靴子。</text>
+</svg>`,
+            content: `三個王都倒下了。
+
+森林安靜了片刻——
+但那種安靜，不像是和平。
+更像是……有什麼東西在屏住呼吸。
+
+你的紅眼在黑暗中掃視四方。
+某個角落，留著一個腳印。
+不是野獸的。
+
+是靴子。`
+        },
+        {
+            icon: '🔫',
+            title: '第三章 — 獵人的足跡',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="200" fill="#080808"/>
+<g style="animation:_drift 15s ease-in-out infinite alternate" opacity="0.4">
+  <ellipse cx="400" cy="60" rx="100" ry="40" fill="#2a1a08"/>
+</g>
+<g style="animation:_bfloat 3s ease-in-out infinite">
+  <ellipse cx="180" cy="145" rx="12" ry="5" fill="#c8a040" opacity="0.9"/>
+  <rect x="130" y="138" width="100" height="14" rx="4" fill="#b89030" opacity="0.85"/>
+  <ellipse cx="130" cy="145" rx="12" ry="5" fill="#c8a040" opacity="0.9"/>
+</g>
+<g style="animation:_bfloat 3s ease-in-out infinite 1.1s">
+  <ellipse cx="310" cy="160" rx="10" ry="4" fill="#c0982a" opacity="0.8"/>
+  <rect x="264" y="154" width="92" height="12" rx="4" fill="#a88020" opacity="0.75"/>
+  <ellipse cx="264" cy="160" rx="10" ry="4" fill="#c0982a" opacity="0.8"/>
+</g>
+<g style="animation:_bfloat 3s ease-in-out infinite 0.6s">
+  <ellipse cx="390" cy="148" rx="9" ry="3.5" fill="#c8a040" opacity="0.7"/>
+  <rect x="347" y="143" width="86" height="11" rx="3.5" fill="#b08828" opacity="0.7"/>
+  <ellipse cx="347" cy="148" rx="9" ry="3.5" fill="#c8a040" opacity="0.7"/>
+</g>
+<ellipse cx="420" cy="55" rx="55" ry="18" fill="#1a1a10" opacity="0.6"/>
+<ellipse cx="430" cy="46" rx="40" ry="12" fill="#2a2a18" opacity="0.7"/>
+<ellipse cx="450" cy="38" rx="25" ry="8" fill="#3a3a20" opacity="0.5"/>
+<text x="260" y="196" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#886040" opacity="0.75">他們只是在等你——暴露自己的位置。</text>
+</svg>`,
+            content: `你想起養父說過的話：
+「三個獵人進木屋，只有兩個出來。
+裡面還藏著一個。」
+
+你以為消滅了王，就能掌控這片土地。
+但淨音軍從未停止計算。
+他們只是在等你——
+暴露自己的位置。`
+        },
+        {
+            icon: '🎯',
+            title: '第三章 — 獵人的足跡',
+            svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="520" height="200" fill="#030303"/>
+<path d="M195 10 Q260 0 325 10 L340 200 L180 200Z" fill="#080808"/>
+<path d="M210 15 Q260 6 310 15 L322 200 L198 200Z" fill="#0c0c0c"/>
+<ellipse style="animation:_rpulse 3s ease-in-out infinite" cx="247" cy="75" r="3.5" fill="#cc2222" opacity="0.9"/>
+<ellipse style="animation:_rpulse 3s ease-in-out infinite 0.4s" cx="273" cy="75" r="3.5" fill="#cc2222" opacity="0.9"/>
+<ellipse cx="247" cy="75" r="1.5" fill="#000"/>
+<ellipse cx="273" cy="75" r="1.5" fill="#000"/>
+<text x="260" y="196" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#662222" opacity="0.8">你的名字，已經在他們的名單上了。</text>
+</svg>`,
+            content: `靜音獵隊。
+
+他們不像普通獵人那樣大聲喧嘩。
+沒有叫喊，沒有腳步聲。
+只有一顆子彈，和它飛行的聲音。
+
+你的名字，已經在他們的名單上了。`
+        },
+        {
+            icon: '⏳',
+            title: '靜音獵隊正在逼近……',
+            svgIllustration: null,
+            customRender: (illustrationArea) => {
+                illustrationArea.style.background = '#0a0a0a';
+                illustrationArea.style.display = 'flex';
+                illustrationArea.style.flexDirection = 'column';
+                illustrationArea.style.alignItems = 'center';
+                illustrationArea.style.justifyContent = 'center';
+                illustrationArea.style.gap = '16px';
+
+                const comingSoonText = '靜音獵隊正在逼近……';
+                const textEl = document.createElement('div');
+                textEl.style.cssText = 'font-size:20px;color:#CC2222;font-family:Georgia,serif;letter-spacing:3px;opacity:0;transition:opacity 0.08s ease;';
+                illustrationArea.appendChild(textEl);
+
+                const cursor = document.createElement('span');
+                cursor.textContent = '|';
+                cursor.style.cssText = 'color:#CC2222;animation:_cursorBlink 0.8s infinite;';
+
+                if (!document.getElementById('_cursor-style')) {
+                    const style = document.createElement('style');
+                    style.id = '_cursor-style';
+                    style.textContent = '@keyframes _cursorBlink{0%,100%{opacity:1}50%{opacity:0}}';
+                    document.head.appendChild(style);
+                }
+
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < comingSoonText.length) {
+                        textEl.textContent = comingSoonText.slice(0, i + 1);
+                        textEl.appendChild(cursor);
+                        textEl.style.opacity = '1';
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 80);
+
+                const subText = document.createElement('div');
+                subText.style.cssText = 'font-size:13px;color:#666;letter-spacing:2px;margin-top:8px;font-family:Georgia,serif;';
+                subText.textContent = '— 下一章 即將到來 —';
+                setTimeout(() => { illustrationArea.appendChild(subText); }, comingSoonText.length * 80 + 400);
+            },
+            content: ''
         }
     ];
 }
 
 // showLeaderboard() 已移至 systems/leaderboard.js
 // showScoreSubmitPopup() 已移至 systems/leaderboard.js
+
+export function buildEndGameOverlay(options) {
+    const overlay = document.createElement('div');
+    overlay.id = options.id;
+    overlay.style.cssText = options.overlayStyle;
+
+    const title = document.createElement('div');
+    title.style.cssText = options.titleStyle;
+    title.textContent = options.titleText;
+    overlay.appendChild(title);
+
+    (options.content || []).forEach(section => {
+        const el = document.createElement('div');
+        el.style.cssText = section.style;
+        if (section.html !== undefined) {
+            el.innerHTML = section.html;
+        } else {
+            el.textContent = section.text || '';
+        }
+        overlay.appendChild(el);
+    });
+
+    if (options.primaryButton) {
+        const primary = document.createElement('button');
+        primary.style.cssText = options.primaryButton.style;
+        primary.textContent = options.primaryButton.text;
+        primary.onclick = options.primaryButton.onClick;
+        overlay.appendChild(primary);
+    }
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = options.buttonRowStyle;
+    const warnEl = document.createElement('div');
+    warnEl.style.cssText = options.warningStyle;
+    btnRow.appendChild(warnEl);
+
+    const rowInner = document.createElement('div');
+    rowInner.style.cssText = options.buttonInnerStyle;
+    (options.secondaryButtons || []).forEach(buttonDef => {
+        const btn = document.createElement('button');
+        btn.style.cssText = buttonDef.style;
+        btn.textContent = buttonDef.text;
+        if (buttonDef.warningText) {
+            let warned = false;
+            btn.onclick = () => {
+                if (!warned) {
+                    warned = true;
+                    warnEl.textContent = buttonDef.warningText;
+                    warnEl.style.display = 'block';
+                    return;
+                }
+                buttonDef.onClick();
+            };
+        } else {
+            btn.onclick = buttonDef.onClick;
+        }
+        rowInner.appendChild(btn);
+    });
+    btnRow.appendChild(rowInner);
+    overlay.appendChild(btnRow);
+
+    if (options.footerText) {
+        const footer = document.createElement('div');
+        footer.style.cssText = options.footerStyle;
+        footer.textContent = options.footerText;
+        overlay.appendChild(footer);
+    }
+
+    if (options.devWarningText) {
+        const devWarn = document.createElement('div');
+        devWarn.style.cssText = options.devWarningStyle;
+        devWarn.textContent = options.devWarningText;
+        overlay.appendChild(devWarn);
+    }
+
+    return overlay;
+}

@@ -5,19 +5,47 @@
 //            showOrganSelection / drawOrganUI
 //            handleEliteKill / showHiddenOrganSelection
 // =============================================================
+import { gameState, ctx } from './gameState.js';
+import { VIEW_H } from './map.js';
+import { ORGANS, HIDDEN_ORGANS, COMBOS } from '../config/organs.js';
+import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { t } from '../lang.js';
+import { addXP, showXPPopup } from './player.js';
+import { showFloatingText } from './combat.js';
+import { spawnLootCircle } from './utils.js';
+import { applyEvolutionLevelEffect, checkEvolutionUnlock } from './evolution.js';
+import { applyMutationEffects } from './mutation.js';
+import { spawnTutorialStump } from './tutorial.js';
+import { updateDayNightCycle } from './daynight.js';
+import { resumePlayTimer, pausePlayTimer } from '../main.js';
+import { _handleHunterEliteKill } from './elite.js';
+import { getGameFont } from './utils.js';
+import { showTooltip, hideTooltip } from './ui.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
-function getOrganLevel(id) {
+// 器官點擊區域（由 drawOrganUI 寫入，由 ui.js 讀取）
+export let _organHitRegions = [];
+export let _compendiumBtnRegion = null;
+
+export function getOrganLevel(id) {
     const o = gameState.player.organs.find(o => o.id === id);
     return o ? o.level : 0;
 }
 
-function getOrganCumulative(id, effectKey) {
+export function getOrganCumulative(id, effectKey) {
     const lv = getOrganLevel(id);
     if (!lv || !ORGANS[id]) return 0;
     return ORGANS[id].levels.slice(0, lv).reduce((sum, l) => sum + (l.effects[effectKey] || 0), 0);
 }
 
-function getComboHint(organId) {
+export function getComboHint(organId) {
     for (const combo of COMBOS) {
         if (!combo.ids.includes(organId)) continue;
         const partners = combo.ids.filter(id => id !== organId);
@@ -26,7 +54,7 @@ function getComboHint(organId) {
     return null;
 }
 
-function checkComboEffects() {
+export function checkComboEffects() {
     const p = gameState.player;
     const hasLv3 = id => {
         const o = p.organs.find(o => o.id === id);
@@ -44,13 +72,13 @@ function checkComboEffects() {
     }
 }
 
-function getOrganSlotsUsed() {
+export function getOrganSlotsUsed() {
     return gameState.player.organs
         .filter(o => !ORGANS[o.id] || !ORGANS[o.id].noSelection)
         .reduce((sum, o) => sum + (o.level || 1), 0);
 }
 
-function applyHiddenOrganEffects(organ) {
+export function applyHiddenOrganEffects(organ) {
     const p = gameState.player;
     const fx = organ.effects || (HIDDEN_ORGANS[organ.id] || {}).effects || {};
     if (fx.speedAdd)       p.speed = Math.max(0.3, p.speed + fx.speedAdd);
@@ -70,7 +98,7 @@ function applyHiddenOrganEffects(organ) {
     if (fx.critMultiplierAdd)  p.critMultiplier += fx.critMultiplierAdd;
 }
 
-function applyOrganEffects(organ) {
+export function applyOrganEffects(organ) {
     const p = gameState.player;
     const def = ORGANS[organ.id];
     if (!def) return;
@@ -127,17 +155,18 @@ function checkOrganUpgrade() {
     }
 }
 
-function showOrganSelection() {
+export function showOrganSelection() {
     if (gameState.organSelectionActive) {
         gameState.pendingOrganSelections++;
         return;
     }
     // 戰鬥教學：第一教學完成、戰鬥教學尚未完成 → 鎖定只能選攻擊器官
-    if (localStorage.getItem('tutorialCompleted') && !localStorage.getItem('tutorialCombatDone')) {
+    if (storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED) && !storageGet(STORAGE_KEYS.TUTORIAL_COMBAT_DONE)) {
         gameState.tutorialOrganPhase = true;
     }
     const p = gameState.player;
     gameState.organSelectionActive = true;
+    const _organSelectOpenTime = Date.now();
 
     const organSlotsUsed = getOrganSlotsUsed();
     const slotsFull = organSlotsUsed >= p.organSlots;
@@ -259,6 +288,7 @@ function showOrganSelection() {
                     hideTooltip();
                 };
                 btn.onclick = () => {
+                    if (Date.now() - _organSelectOpenTime < 500) return;
                     if (isUpgrade) {
                         existingOrgan.level = targetLevel;
                         existingOrgan.desc = def.levels[targetLevel - 1].desc;
@@ -318,7 +348,7 @@ function showOrganSelection() {
     document.getElementById('game-container').appendChild(overlay);
 }
 
-function drawOrganUI() {
+export function drawOrganUI() {
     const organs = gameState.player.organs;
     const hiddenOrgans = gameState.player.hiddenOrgans || [];
     const ev = gameState.player.evolution;
@@ -476,10 +506,31 @@ function _drawCompendiumBtn(bx, by) {
     _compendiumBtnRegion = { x: bx, y: by, w: btnW, h: btnH };
 }
 
-let _compendiumBtnRegion = null;
-
-function handleEliteKill(elite) {
+export function handleEliteKill(elite) {
     pausePlayTimer();
+
+    // Hunter 精英怪：特殊獎勵（由 elite.js 的 _handleHunterEliteKill 處理）
+    if (elite && elite.isHunterElite) {
+        const hunterXP = _handleHunterEliteKill(elite); // addXP 已移出，此處拿回 xp 值
+        if (!gameState.gameOver) {
+            const ownedIds = (gameState.player.hiddenOrgans || []).map(h => h.id);
+            const drops = Object.values(HIDDEN_ORGANS).filter(
+                h => !ownedIds.includes(h.id) && Math.random() < 0.5
+            );
+            if (drops.length > 0) showHiddenOrganSelection(drops); // 先開隱藏器官
+        }
+        addXP(hunterXP); // 後加 XP，升級走 pendingOrganSelections++ 排隊
+        gameState.eliteCreature   = null;
+        gameState.eliteJustKilled = true;
+        const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
+        gameState.timeRemaining   = nextDayTime;
+        updateDayNightCycle();
+        gameState.dayNightMessage.text  = t('morningEliteKilled');
+        gameState.dayNightMessage.timer = Date.now();
+        resumePlayTimer();
+        return;
+    }
+
     const xp = elite.xp;
 
     // 精英怪死亡掉落：1個1倍屍體 + 4具白骨（圓形散落）
@@ -491,7 +542,7 @@ function handleEliteKill(elite) {
         { type: 'bone', data: {} },
     ]);
 
-    gameState.eliteCreature = null;
+    gameState.eliteCreature   = null;
     gameState.eliteJustKilled = true;
     if (!gameState.gameOver) {
         const ownedIds = (gameState.player.hiddenOrgans || []).map(h => h.id);
@@ -505,16 +556,16 @@ function handleEliteKill(elite) {
     gameState.skillPoints += eliteSkillPts;
     if (!gameState.sessionSkillPoints) gameState.sessionSkillPoints = { elite: 0, boss: 0 };
     gameState.sessionSkillPoints.elite += eliteSkillPts;
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
     gameState.timeRemaining = nextDayTime;
     updateDayNightCycle();
-    gameState.dayNightMessage.text = t('morningEliteKilled');
+    gameState.dayNightMessage.text  = t('morningEliteKilled');
     gameState.dayNightMessage.timer = Date.now();
     resumePlayTimer();
 }
 
-function showHiddenOrganSelection(drops) {
+export function showHiddenOrganSelection(drops) {
     if (gameState.gameOver || drops.length === 0) return;
     gameState.organSelectionActive = true;
 

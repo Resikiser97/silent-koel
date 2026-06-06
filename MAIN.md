@@ -1,13 +1,16 @@
+## v0.1.5.0
+
 # The Silent Koel — 模組架構說明
 
 ## 載入順序（index.html `<body>` 末端）
 
 ```
-config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES
+config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES, HARD_ELITE_CONFIG
 config/organs.js          ORGANS, HIDDEN_ORGANS, COMBOS
-config/creatures.js       CREATURE_CONFIG, ELITE_CONFIG, BOSS_CONFIG
+config/creatures.js       CREATURE_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人，v0.1.0.0）
 config/evolution.js       EVOLUTION_PATHS, SKILLS
 config/patchnotes.js      PATCH_NOTES
+config/compendium_data.js COMPENDIUM_DATA（四大圖鑑分類，需在 map/normalmap.js 之後載入）
 config/characters.js      CHARACTERS（角色定義常數，v0.56.0）
 
 lang.js                   LANG_LIST, LANG={}, _langPack(), applyLanguage(), t()
@@ -23,31 +26,39 @@ systems/map.js            MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H, TILE_SIZE, NOISE_SCALE
                           generateTrees
 systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
                           applyTenacity（韌性縮短CC時間，v0.56.0）
+                          getGameFont（canvas 字型輔助，依 fontLarge/fontBold 設定動態生成，v0.0.66.1）
                           spawnLootCircle
 systems/audio.js          AudioManager, initAudio
+                          playIntroTheme, stopIntroTheme（首頁背景音樂，v0.1.0.1）
 systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera
-                          _updateMobileCameraZoom（手機視野縮放，v0.56.0）
+                          _updateCameraZoom（視野縮放，重構自 _updateMobileCameraZoom，v0.58.0）
+                          updateCamera：alwaysCenter 設定為 true 時 edgeThreshold=0.5，角色永遠居中（v0.57.5）
 systems/input.js          handleKeyDown, handleKeyUp（含設定介面按鍵 handler refs）
 systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature, spawnTreasure
                           _randomPointInBiome, _makeHerbCreature, _makeCarnCreature
-                          spawnBiomeCreatures, spawnCreatureAtEdgeBiome
-                          updateCreatureSpawning
+                          spawnBiomeCreatures（開局設 spawnProtectUntil +3s，中心保護區不生肉食怪，v0.0.66.2）
+                          spawnCreatureAtEdgeBiome
+                          updateCreatureSpawning（spawnProtectUntil 期間跳過肉食補充，v0.0.66.2）
 systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction
                           showXPPopup, checkTreasureCollision, updatePassiveOrgans
                           checkXPMilestone, addXP, checkLevelUp
                           findBestPerceptionPath
                           playerDash（閃現技能：瞬移+無敵+冷卻，v0.53.0）
-                          _collectFruit（果子吸收 XP 共用函式，v0.54.0）
-                          updateProjectiles, _checkProjectileHit（子彈系統，v0.56.0）
+                          _collectFruit（果子吸收 XP 共用函式，v0.54.0；v0.57.6 加入草食性判斷：ev.herbivore >= 1 才套正常 XP 計算，否則固定 1 XP）
+                          updateProjectiles, _checkProjectileHit（子彈系統，v0.56.0；v0.57.5 補入 tutorialStump）
                           _archerAttack, _getArcherShootDir, _findArcherAutoTarget（阿奇爾攻擊，v0.56.0）
 systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTutorialStump，handleTutorialStumpKill
+                          showTutorialCombatHint，showTutorialCombatComplete
+                          resetTutorial（強制重置教學狀態，供 initializeGame 每局呼叫，v0.1.3.6）
                           （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
 systems/combat.js         showFloatingText, applyDamageToPlayer, handleKill, playerAttack
+                          handleGiantKill, handleKillerKill, addMutationPoints（stub）
                           updateStatusEffects, updateCorpseEating, drawCorpseEatingBars
                           updateBoneEating, _addBoneMaterial, _checkPoisonSacUpgrade
                           _spawnBone, drawBones
                           （playerAttack() 將 tutorialStump 加入攻擊目標；v0.45.0）
                           （playerAttack() 含嘴器減速/鯊魚嗅葉傷害加成/Debuff StartTime；v0.56.0）
+                          （showFloatingText 改為 Canvas 批次繪製，推入 gameState.floatTexts，v0.1.4.2）
 systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, checkComboEffects
                           getOrganSlotsUsed, applyHiddenOrganEffects, applyOrganEffects
                           checkOrganUpgrade, showOrganSelection, drawOrganUI
@@ -55,45 +66,82 @@ systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, check
                           _drawCompendiumBtn（繪製 📖 按鈕，設定 _compendiumBtnRegion）
                           （showOrganSelection() 偵測 tutorialOrganPhase，鎖定第一張攻擊器官；v0.45.0）
 systems/mutation.js       initMutationData, saveMutationData, addMutationPoints
+                          DEFAULT_MUTATION_SKILLS, initMutationSkills, _saveMutationSkills, _syncMutationSkillPoints（變異技能樹，v0.0.69.0）
+                          _checkAndRepairMutationSkills（啟動時驗算並修復異常；不在面板開啟時呼叫，v0.1.3.1/v0.1.3.3）
                           getMutationUpgradeCost, upgradeMutation
                           applyMutationEffects, applyAllMutationBonuses
                           checkMutationCompensation, showMutationPanel
 systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, applyEvolutionEffects
+                          loadSavedOrgans（獨立函式，v0.57.5；initializeGame() 在 applySkillBonuses() 前呼叫確保器官不丟失；buildSkillTreeOverlay(fromHome) 只讀 skillPoints 不再重複套用）
                           applySkillBonuses, saveLastRunOrgans, showSkillTree
                           buildSkillTreeOverlay, upgradeSkill
+                          _buildMutationSkillContent, _buildMutRightCol, _refreshMutContentRight（變異面板建立與更新，v0.1.0.1 重構）
+                          _upgradeMutationSkill（變異技能樹子面板，v0.0.69.0）
+                          buildSkillTreeOverlay 模式說明（v0.57.7）：
+                            fromHome / forceStart → 讀 localStorage skillPoints/playerSkills + 讀 lastRunOrgans 顯示繼承器官
+                            postGame → 讀記憶體 gameState.player.organs（遊戲剛結束，資料仍完整）
                           _grantPoisonSac（雜食性 Lv1 時自動授予毒囊器官）
-systems/creatures.js      updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯）
+systems/creatures.js      _PACK_NAMES / _usedPackNames / resetPackNames()（草食巨人隊伍名稱池，v0.0.66.2；v0.0.68.0 改仿製詞）
+                          _HYENA_PACK_NAMES / _usedHyenaPackNames / _hyenaPackNameMap（鬣狗三國武將名稱池，v0.0.68.0）
+                          drawCreatureShape（物種形狀主分派，含旋轉/翻轉邏輯）
+                          updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯）
                           drawNeutralCreatures
                           updateHostileCreatures（三態移動 + hostileEatMeat 門控）
                           drawCorpses, drawHostileCreatures
                           _effSpeed（嘴器減速有效速度計算，v0.56.0）
-systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCreature
-                          （箭頭繪製改用 systems/utils.js 的 drawArrow）
+systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCreature, drawEliteArrow
+                          _getHunterEliteType, _spawnHunterElite, _handleHunterEliteKill（靜音獵隊精英怪，v0.1.0.0）
+                          _fireEliteFalconProjectile, _fireVenomFalconShot, _updateEliteVenomPuddle
+                          _updateHunterEliteChase, _drawHunterElite
+                          _HUNTER_ELITE_META, _HUNTER_ELITE_STAR, _HUNTER_ELITE_REWARDS（顯示常數）
 systems/boss.js           spawnBoss, updateBoss, showVictory
-                          drawBossShape, _drawBear, _drawShark, _drawScorp, BOSS_COLORS
-                          （箭頭繪製改用 systems/utils.js 的 drawArrow）
+                          handleBossKill（統一 Boss 死亡路由，支援黑色獵人多管血條，v0.1.0.0）
+                          _spawnHunterBoss, _updateHunterBoss（黑色獵人 Boss 系統，v0.1.0.0）
+                          _triggerHunterPhaseCheck, _showHunterDialogue（形態切換/台詞，v0.1.0.0）
+                          _fireHunterSniper, _fireHunterShotgun（狙擊/散彈攻擊，v0.1.0.0）
+                          HUNTER_DIALOGUE（台詞常數，v0.1.0.0）
+                          _recordClearStats, _recordBossKill（通關統計，v0.0.69.0）
+                          drawBoss, drawBossArrow
+                          drawBossShape, _drawBear, _drawShark, _drawScorp, _drawHunter, BOSS_COLORS
                           _drawBossDebuffIcons（血條 Debuff 圖示，v0.56.0）
 systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayTransition
-                          updateDayNightCycle, showGameOver
+                          updateDayNightCycle
 systems/leaderboard.js    _lbDifficulty, _top10Difficulty, _diffKey
                           showLeaderboard, showScoreSubmitPopup
                           showFunLeaderboard（趣味排行榜，v0.47.0；👑 最高等級分類 v0.51.0）
+systems/chat.js           _sha256, loadChatSettings, saveChatSettings
+                          _calcProgressScore, _collectLocalData, _applyRemoteData
+                          chatLogin（查帳/自動註冊/SHA-256/進度比較同步）
+                          chatSaveProgress, chatSyncData, chatLogout
+                          initChat, disconnectChat, sendChatMessage
+                          buildChatUI, _renderChatSettingsPanel, renderChat
+                          showChat, hideChat
+                          _saveChatPosition, _loadChatPosition, _makeDraggable
+                          _handlePinCommand, _handleUnpinCommand（GM 置頂/取消置頂）
+                          _lvColor（等級數字 → 顏色 CSS 字串，v0.0.66.0）
+                          _COLOR_MAP（顏色代碼→CSS 色碼對照，v0.0.68.0）
+                          _parseColorTags（[c=color]文字[/c] 彩色字解析；v0.0.66.0；v0.0.68.0 加入 crim）
+                          isVipPlayer（先驅者判斷 TODO 索引，v0.0.66.0，目前回傳 false）
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
                           _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）
-systems/hud.js            drawGame, updateUI, drawTopBarUI
-                          drawMinimap（含所有 _minimap 變數）, drawTreasures
+systems/hud.js            drawGame, updateUI, resetUICache, resetPerceptionCache, drawTopBarUI
+                          drawMinimap（含所有 _minimap 變數 + _minimapAlpha/FadeTimer/StopTimer 透明度計時器，v0.0.66.1）, drawTreasures
+                          drawProjectiles（子彈繪製）, updateMinimapFog（小地圖霧效更新）
                           _drawArcherfish（夜晚三角光圈 + F技紅色三角框，v0.57.4）
 systems/ui.js             showTooltip, hideTooltip, showMapSelect
+                          buildEndGameOverlay（死亡/勝利結算畫面共用外殼，保留各呼叫點原樣式與二段回首頁警告）
+                          showSplashScreen（開發者 Splash 畫面，v0.1.0.1）
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
                           updateTimer, toggleDevMode, dev* 函式
                           showGuide, hideGuide, showStartScreen
                           showGuideStory, _getGuideStoryPages
                           showPatchNotes, checkPatchNotesPopup
                           buildEvoLevelDesc（全域，動態生成進化圖鑑描述）
-                          showCompendium → _buildBossPage, _buildDifficultyPage（圖鑑新增頁）
+                          showCompendium → _renderGuide / _renderOrgans / _renderEvo（三分頁均為桌機雙欄/手機 Tab 版面，讀 COMPENDIUM_DATA / ORGANS / EVOLUTION_PATHS / SKILLS）
 
-main.js                   isGamePaused, gameLoop, initializeGame, window.onload
+main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
+                          updateGameLogic, gameLoop, initializeGame, window.onload
 ```
 
 ## systems/utils.js
@@ -503,7 +551,9 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 | 檔案 | 說明 |
 |------|------|
 | `map.md` | 地圖設計文件，記錄地形規格與新增難度步驟 |
-| `easymap.js` | 簡單難度（`EASY_MAP`）：地形參數、生物倍率、精英怪配置、Boss 預留結構 |
+| `easymap.js` | 簡單難度（`EASY_MAP`）：地形參數、生物倍率、精英怪配置、Boss 預留結構；`dogElites: true` |
+| `normalmap.js` | 普通難度（`NORMAL_MAP`）：生物×1.5、aggroRange 400、巨人化/殺手化/Boss回血/`dogElites: true` |
+| `hardmap.js` | 困難難度（`HARD_MAP`）：生物×2.5、aggroRange 600、`hardElites: true`、`hunterBoss: true`（v0.1.0.0） |
 
 `generateTerrain()` 讀取 `gameState.currentMap.terrain` 參數（forestCenterRadius / forestThreshold / oceanThreshold / minBiomeTiles / requiredBiomes），`currentMap` 由 `showMapSelect()` 在開始遊戲時寫入。
 
@@ -806,6 +856,31 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 | `myValue` | 本局對應的數值（不適用時填 `null`） |
 | `ascending` | `true` = 越小越好（時間類）；`false` = 越大越好（數量類） |
 
+### 趣味榜 Supabase fetch 函式一覽（config/supabase.js）
+
+| 函式 | 說明 |
+|------|------|
+| `fetchFunSpeedVictory(difficulty)` | 最速通關 |
+| `fetchFunSpeedDeath(difficulty)` | 最速死亡 |
+| `fetchFunGiantKills(difficulty)` | 巨人獵人（giant_kills 最多） |
+| `fetchFunKillerKills(difficulty)` | 殺手獵人（killer_kills 最多） |
+| `fetchFunKillerMaxLevel(difficulty)` | 殺手克星（killer_max_level 最高） |
+| `fetchFunBossKillSpeed(difficulty)` | 最快擊殺 Boss |
+| `fetchFunMaxLevel(difficulty)` | 最高等級 TOP10 |
+| `fetchFunHunterKill(difficulty)` | 最快擊殺黑色獵人（困難地圖） |
+| `fetchFunFruitsEaten(difficulty)` | 最佳果王（fruits_eaten 最多，v0.1.3.0） |
+| `fetchFunNormalKills(difficulty)` | 最強獵戶（normal_kills 最多，v0.1.3.0） |
+
+### sessionStats 欄位（gameState.sessionStats）
+
+| 欄位 | 說明 |
+|------|------|
+| `giantKills` | 單局巨人化擊殺數 |
+| `killerKills` | 單局殺手化擊殺數 |
+| `killerMaxLevel` | 單局擊殺最高殺手等級 |
+| `fruitsEaten` | 單局吃果子總數（v0.1.3.0） |
+| `normalKills` | 單局普通生物擊殺數（草食+肉食，不含精英/Boss/巨人/殺手，v0.1.3.0） |
+
 ### Submit 前名次預覽（v0.54.1）
 
 面板開啟時立即並行查詢（`Promise.all`）：
@@ -875,11 +950,13 @@ main.js                   isGamePaused, gameLoop, initializeGame, window.onload
 
 ---
 
-## 手機視野縮放（v0.56.0）
-- `gameState.cameraZoom`（預設 1.0，手機才生效）
-- 公式：`cameraZoom = max(0.6, 1.0 - (radiusIncrease% / 0.2) × 0.05)`
-- `worldToScreen()`：手機時座標乘以 `cameraZoom`，以螢幕中心為基準
-- `_updateMobileCameraZoom()` 每幀呼叫（`updateGameLogic` 內，非手機直接 return）
+## 視野縮放（v0.58.0，重構自 v0.56.0 手機視野縮放）
+- `gameState.cameraZoom`（預設 1.0，桌機與手機均生效）
+- `gameState.settings.cameraZoomLevel`（1~10，決定 baseZoom；公式：`baseZoom = level/10 * 0.4 + 0.6`）
+- `gameState.settings.cameraMode`（`'smart'` 體型自動縮放 / `'manual'` 固定 baseZoom）
+- 智能模式公式：`cameraZoom = max(0.3, baseZoom - increaseRatio * 0.25)`
+- `worldToScreen()` / `drawTerrain()`：zoom 條件移除 `isMobile` 限制，統一使用 `cameraZoom`
+- `_updateCameraZoom()` 每幀呼叫（`updateGameLogic` 內）
 
 ---
 

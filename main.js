@@ -1,6 +1,61 @@
 // =============================================================
-// 主程式入口 - isGamePaused / gameLoop / initializeGame
+// 主程式入口 - pausePlayTimer / resumePlayTimer / isGamePaused
+//             updateGameLogic / gameLoop / initializeGame
 // =============================================================
+
+import { GAME_INFO } from './config/gameConfig.js';
+import './lang/zh-TW.js';
+import './lang/en.js';
+import { CHARACTERS } from './config/characters.js';
+import { ORGANS } from './config/organs.js';
+import { EASY_MAP } from './map/easymap.js';
+import { NORMAL_MAP } from './map/normalmap.js';
+import { gameState, canvas } from './systems/gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, generateTerrain, generateTrees } from './systems/map.js';
+import { updateCamera, _updateCameraZoom } from './systems/camera.js';
+import { handleKeyDown, handleKeyUp, _updateMouseWorld } from './systems/input.js';
+import { initAudio, stopIntroTheme, AudioManager } from './systems/audio.js';
+import { _joyPaused } from './systems/mobile.js';
+import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from './systems/spawning.js';
+import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir } from './systems/player.js';
+import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack } from './systems/combat.js';
+import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion } from './systems/organs.js';
+import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans } from './systems/evolution.js';
+import { initMutationData, applyAllMutationBonuses } from './systems/mutation.js';
+import { resetPackNames, resetHyenaPackNames, updateNeutralCreatures, updateHostileCreatures } from './systems/creatures.js';
+import { initEliteOrder, updateEliteCreature } from './systems/elite.js';
+import { updateBoss } from './systems/boss.js';
+import { updateDayNightCycle } from './systems/daynight.js';
+import { updateMinimapFog, drawGame, updateUI } from './systems/hud.js';
+import {
+    loadSettings,
+    updateTimer,
+    showCompendium,
+    showSplashScreen,
+    showGuideStory,
+    showTooltip,
+    hideTooltip,
+    devAddXP,
+    devAddHP,
+    devFullHP,
+    devSpawnFruits,
+    devKillHostiles,
+    devSpawnNeutral,
+    devSpawnHostile,
+    devFastForward,
+    devRewind,
+    devToggleDayNight
+} from './systems/ui.js';
+import { showTutorial } from './systems/tutorial.js';
+import { disconnectChat, hideChat } from './systems/chat.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from './storage/index.js';
 
 const FIXED_FPS = 60;
 const FIXED_DELTA = 1000 / FIXED_FPS;
@@ -8,7 +63,18 @@ let accumulator = 0;
 let lastTimestamp = 0;
 let _wasPaused = false;
 
-function pausePlayTimer() {
+window.devAddXP = devAddXP;
+window.devAddHP = devAddHP;
+window.devFullHP = devFullHP;
+window.devSpawnFruits = devSpawnFruits;
+window.devKillHostiles = devKillHostiles;
+window.devSpawnNeutral = devSpawnNeutral;
+window.devSpawnHostile = devSpawnHostile;
+window.devFastForward = devFastForward;
+window.devRewind = devRewind;
+window.devToggleDayNight = devToggleDayNight;
+
+export function pausePlayTimer() {
     if (gameState._playTimerStart !== null) {
         gameState.realPlayTime += Date.now() - gameState._playTimerStart;
         gameState._playTimerStart = null;
@@ -16,28 +82,40 @@ function pausePlayTimer() {
     gameState._playTimerPaused = true;
 }
 
-function resumePlayTimer() {
+export function resumePlayTimer() {
     gameState._playTimerStart = Date.now();
     gameState._playTimerPaused = false;
 }
 
-function isGamePaused() {
+export function isGamePaused() {
     return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen ||
            gameState.gameOver || gameState.victory || gameState.mutationPanelOpen ||
            gameState.tutorialOpen;
 }
 
-function updateGameLogic() {
+export function updateGameLogic() {
+    const _t0 = gameState.devMode ? performance.now() : 0;
+
     updateTimer();
     updateDayNightCycle();
     updateCreatureSpawning();
     updatePlayerMovement();
     updateCamera();
-    _updateMobileCameraZoom();  // 手機視野縮放（非手機時直接 return）
+    _updateCameraZoom();  // 視野縮放（智能/手動模式，依 cameraZoomLevel 計算）
+    const _t1 = gameState.devMode ? performance.now() : 0;
+
     checkFruitCollision();
+    const _t2 = gameState.devMode ? performance.now() : 0;
+
     updateTreeFruitProduction(FIXED_DELTA);
+    const _t3 = gameState.devMode ? performance.now() : 0;
+
     updateNeutralCreatures();
+    const _t4 = gameState.devMode ? performance.now() : 0;
+
     updateHostileCreatures();
+    const _t5 = gameState.devMode ? performance.now() : 0;
+
     if (gameState.boss && gameState.boss.hp > 0) updateBoss();
     if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) updateEliteCreature();
     updatePassiveOrgans();
@@ -47,6 +125,7 @@ function updateGameLogic() {
     updateBoneEating();
     updateProjectiles();   // 阿奇爾子彈飛行 + 碰撞偵測
     updateMinimapFog();
+    const _t6 = gameState.devMode ? performance.now() : 0;
 
     if (gameState.settings.autoAttack &&
         !_joyPaused() &&
@@ -56,9 +135,25 @@ function updateGameLogic() {
          gameState.player.organs.some(o => ORGANS[o.id] && ORGANS[o.id].type === 'attack'))) {
         playerAttack();
     }
+
+    if (gameState.devMode) {
+        const _t7 = performance.now();
+        const total = _t7 - _t0;
+        if (total > 8) {
+            console.log('[PERF] updateGameLogic ' + total.toFixed(1) + 'ms', {
+                player:   (_t1-_t0).toFixed(1),
+                fruit:    (_t2-_t1).toFixed(1),
+                tree:     (_t3-_t2).toFixed(1),
+                neutral:  (_t4-_t3).toFixed(1),
+                hostile:  (_t5-_t4).toFixed(1),
+                combat:   (_t6-_t5).toFixed(1),
+                other:    (_t7-_t6).toFixed(1),
+            });
+        }
+    }
 }
 
-function gameLoop(timestamp) {
+export function gameLoop(timestamp) {
     if (!lastTimestamp) lastTimestamp = timestamp;
     const elapsed = Math.min(timestamp - lastTimestamp, 100); // 最大100ms防止跳幀
     lastTimestamp = timestamp;
@@ -76,8 +171,25 @@ function gameLoop(timestamp) {
         accumulator -= FIXED_DELTA;
     }
 
-    drawGame();
-    updateUI();
+    if (gameState.devMode) {
+        const td0 = performance.now();
+        drawGame();
+        const td1 = performance.now();
+        const drawMs = td1 - td0;
+        if (drawMs > 8) {
+            console.log('[PERF] drawGame ' + drawMs.toFixed(1) + 'ms');
+        }
+        const tu0 = performance.now();
+        updateUI();
+        const tu1 = performance.now();
+        const uiMs = tu1 - tu0;
+        if (uiMs > 4) {
+            console.log('[PERF] updateUI ' + uiMs.toFixed(1) + 'ms');
+        }
+    } else {
+        drawGame();
+        updateUI();
+    }
     requestAnimationFrame(gameLoop);
 }
 
@@ -143,8 +255,23 @@ function _applyCharacterStats() {
     console.log('[角色系統] 套用角色：' + char.name + '（' + charId + '），HP=' + s.hpMax + '，Speed=' + p.speed);
 }
 
-function initializeGame() {
-    localStorage.setItem('hasPlayedBefore', 'true');
+export function initializeGame() {
+    if (typeof resetUICache === 'function') resetUICache();
+    if (typeof resetPerceptionCache === 'function') resetPerceptionCache();
+    if (typeof resetTreeProductionTimer === 'function') resetTreeProductionTimer();
+    if (typeof resetFogFrameCount === 'function') resetFogFrameCount();
+    gameState.floatTexts = [];
+    storageSet(STORAGE_KEYS.HAS_PLAYED_BEFORE, 'true');
+
+    // 清除首頁公告標籤
+    const _badge = document.getElementById('announce-badge');
+    if (_badge) _badge.remove();
+    // 停止首頁背景音樂
+    if (typeof stopIntroTheme === 'function') stopIntroTheme();
+
+    // 離開首頁時斷開聊天室並隱藏面板
+    if (typeof disconnectChat === 'function') disconnectChat();
+    if (typeof hideChat === 'function') hideChat();
 
     // ── 完整重置遊戲狀態（確保「再來一場」直接呼叫時不殘留舊資料）──
     gameState.gameOver            = false;
@@ -179,6 +306,9 @@ function initializeGame() {
     gameState.brainShockwaves     = [];
     gameState.venomPuddles        = [];   // 蠍王定點毒霧陣列
     gameState.projectiles         = [];   // 阿奇爾子彈陣列
+    gameState._mobileCharging     = false;
+    gameState._mobileChargeStart  = null;
+    gameState._mobileChargeAttack = false;
     gameState.neutralCreatures    = [];
     gameState.hostileCreatures    = [];
     gameState.camera              = { x: 3200, y: 3550 };
@@ -207,26 +337,31 @@ function initializeGame() {
     });
     gameState.cameraZoom = 1.0;
     gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };
-    gameState.sessionStats = { giantKills: 0, killerKills: 0, killerMaxLevel: 0 };
+    gameState.sessionStats = { giantKills: 0, killerKills: 0, killerMaxLevel: 0, fruitsEaten: 0, normalKills: 0 };
 
     // ── 套用角色初始屬性（覆蓋上方 Object.assign / stats 預設值，在技能/進化加成前設定基礎值）
     _applyCharacterStats();
 
     // B1: 再來一局保留難度 — 若 currentMap 為 null（頁面重整後），從 localStorage 恢復
     if (!gameState.currentMap) {
-        const savedDiff = localStorage.getItem('lastDifficulty') || 'easy';
+        const savedDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
         gameState.lastDifficulty = savedDiff;
         gameState.currentMap = (savedDiff === 'normal' && typeof NORMAL_MAP !== 'undefined')
             ? NORMAL_MAP
             : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
         console.log('[v0.47.0 B1] currentMap restored:', gameState.currentMap ? gameState.currentMap.name : 'null');
     }
+    if (typeof initEliteOrder === 'function') initEliteOrder();
 
+    gameState.spawnProtectUntil    = 0;
+    if (typeof resetPackNames === 'function') resetPackNames();
+    resetHyenaPackNames();
     gameState.mutationPanelOpen    = false;
     gameState.tutorialOpen         = false;
     gameState.tutorialOrganPhase   = false;
     gameState.tutorialCombatActive = false;
     gameState.tutorialStump        = null;
+    if (typeof resetTutorial === 'function') resetTutorial();
     gameState.dashEffect           = null;
     // mutationData 不重置（跨局永久保存，由 window.onload 的 initMutationData 管理）
 
@@ -347,11 +482,16 @@ function initializeGame() {
     canvas.addEventListener('mouseleave', hideTooltip);
 
     // 存檔版本檢查：版本不一致時清除所有存檔
-    const SAVE_KEYS = ['playerSkills', 'skillPoints', 'savedOrgans', 'savedHiddenOrgans'];
-    const storedSaveVer = localStorage.getItem('saveVersion');
+    const SAVE_KEYS = [
+        STORAGE_KEYS.PLAYER_SKILLS,
+        STORAGE_KEYS.SKILL_POINTS,
+        STORAGE_KEYS.SAVED_ORGANS,
+        STORAGE_KEYS.SAVED_HIDDEN_ORGANS
+    ];
+    const storedSaveVer = storageGet(STORAGE_KEYS.SAVE_VERSION);
     if (storedSaveVer !== GAME_INFO.SAVE_VERSION) {
-        SAVE_KEYS.forEach(k => localStorage.removeItem(k));
-        localStorage.setItem('saveVersion', GAME_INFO.SAVE_VERSION);
+        SAVE_KEYS.forEach(k => storageRemove(k));
+        storageSet(STORAGE_KEYS.SAVE_VERSION, GAME_INFO.SAVE_VERSION);
         console.log('--- 存檔版本不一致，已清除所有存檔（' + storedSaveVer + ' → ' + GAME_INFO.SAVE_VERSION + '）---');
     }
 
@@ -360,11 +500,15 @@ function initializeGame() {
 
     // 8. 載入技能與進化資料並套用起始加成
     try {
-        const savedSkills = localStorage.getItem('playerSkills');
-        if (savedSkills) gameState.playerSkills = JSON.parse(savedSkills);
-        const savedPoints = localStorage.getItem('skillPoints');
+        const savedSkills = storageGetJSON(STORAGE_KEYS.PLAYER_SKILLS);
+        if (savedSkills) gameState.playerSkills = savedSkills;
+        const savedPoints = storageGet(STORAGE_KEYS.SKILL_POINTS);
         if (savedPoints) gameState.skillPoints = Math.max(0, parseInt(savedPoints, 10) || 0);
     } catch(e) {}
+
+    // ← 確保器官效果在技能加成之前套用，不依賴技能樹面板開啟
+    loadSavedOrgans();
+
     applySkillBonuses();
     applyEvolutionEffects();
     applyAllMutationBonuses(); // 套用變異器官 Final 值加成（一次性，在所有器官效果之後）
@@ -387,7 +531,7 @@ function initializeGame() {
     requestAnimationFrame(gameLoop);
 
     // 12. 新手教學：首次遊玩自動觸發
-    if (!localStorage.getItem('tutorialCompleted')) {
+    if (!storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED)) {
         showTutorial();
     }
 }
@@ -405,6 +549,9 @@ window.onload = () => {
         history.pushState(null, '', window.location.href);
     });
 
+    // 頁面載入時立即讀取已存設定（確保首頁音量/語言與 localStorage 一致）
+    if (typeof loadSettings === 'function') loadSettings();
+
     // 先載入變異資料（獨立於遊戲存檔版本）
     initMutationData();
 
@@ -413,10 +560,10 @@ window.onload = () => {
         initializeGame();
         return;
     }
-    if (!localStorage.getItem('hasPlayedBefore')) {
-        showStartScreen();
+    if (!storageGet(STORAGE_KEYS.HAS_PLAYED_BEFORE)) {
+        showSplashScreen();
         setTimeout(() => showGuideStory(), 300);
     } else {
-        showStartScreen();
+        showSplashScreen();
     }
 };

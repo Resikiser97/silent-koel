@@ -1,8 +1,36 @@
 // =============================================================
-// 首領系統 - spawnBoss / updateBoss / showVictory / drawBossArrow
+// 首領系統 - spawnBoss / updateBoss / showVictory
+//            drawBoss / drawBossShape / drawBossArrow
 // =============================================================
 
 // ── Boss 顏色常數 ─────────────────────────────────────────────
+import { gameState, ctx } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
+import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { BOSS_CONFIG } from '../config/creatures.js';
+import { AudioManager } from './audio.js';
+import { moveCreature } from './spawning.js';
+import { applyDamageToPlayer, showFloatingText } from './combat.js';
+import { _effSpeed } from './creatures.js';
+import { addXP } from './player.js';
+import { buildSkillTreeOverlay, saveLastRunOrgans } from './evolution.js';
+import { saveSettings, buildEndGameOverlay } from './ui.js';
+import { showScoreSubmitPopup } from './leaderboard.js';
+import { loadChatSettings, chatSaveProgress } from './chat.js';
+import { pausePlayTimer } from '../main.js';
+import { t } from '../lang.js';
+import { drawArrow } from './utils.js';
+import {
+    STORAGE_KEYS,
+    storageKey,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
+
 const BOSS_COLORS = {
     bear: {
         body:  '#2a1808',
@@ -28,17 +56,30 @@ const BOSS_COLORS = {
         eye:     '#cc00ff',
         pupil:   '#1a0020',
     },
+    hunter: {
+        hat:         '#3E2723',
+        hatBrim:     '#4E342E',
+        hatBand:     '#FFD700',
+        gun:         '#212121',
+        gunDetail:   '#424242',
+        phase1Glow:  '#1565C0',
+        phase2GlowA: '#B0BEC5',
+        phase2GlowB: '#FF7043',
+        phase3Glow:  '#FF1744',
+        phase3White: '#FFFFFF',
+    },
 };
 
 // ── Boss 主繪製分派 ───────────────────────────────────────────
-function drawBossShape(ctx, boss, sx, sy) {
+export function drawBossShape(ctx, boss, sx, sy) {
     ctx.save();
     ctx.translate(sx, sy);
-    const r = boss.radius;
+    const r = boss.radius * (gameState.cameraZoom || 1);
     const t = Date.now();
     if      (boss.biome === 'forest') _drawBear(ctx, r, t, boss);
     else if (boss.biome === 'ocean')  _drawShark(ctx, r, t, boss);
     else if (boss.biome === 'desert') _drawScorp(ctx, r, t, boss);
+    else if (boss.biome === 'hunter') _drawHunter(ctx, r, t, boss);
     ctx.restore();
 }
 
@@ -407,6 +448,83 @@ function _drawScorp(ctx, r, t, boss) {
     ctx.fill();
 }
 
+// ── 黑色獵人（hunter）──────────────────────────────────────────────
+function _drawHunter(ctx, r, t, boss) {
+    const C = BOSS_COLORS.hunter;
+    const bars = boss.barsRemaining || 1;
+    const facingRight = !boss.lastMoveDir || boss.lastMoveDir.dx >= 0;
+
+    // 形態邊框光環
+    ctx.save();
+    if (bars >= 4) {
+        ctx.strokeStyle = C.phase1Glow;
+        ctx.lineWidth   = 3;
+        ctx.shadowColor = C.phase1Glow;
+        ctx.shadowBlur  = 10;
+        ctx.globalAlpha = 0.8;
+    } else if (bars >= 2) {
+        const alt = Math.sin(t / 200) > 0;
+        ctx.strokeStyle = alt ? C.phase2GlowA : C.phase2GlowB;
+        ctx.lineWidth   = 3;
+        ctx.shadowColor = alt ? C.phase2GlowA : C.phase2GlowB;
+        ctx.shadowBlur  = 12;
+        ctx.globalAlpha = 0.85;
+    } else {
+        const pulse = Math.sin(t / 200) * 0.3 + 0.7;
+        ctx.strokeStyle = C.phase3Glow;
+        ctx.lineWidth   = 4;
+        ctx.shadowColor = C.phase3White;
+        ctx.shadowBlur  = 20;
+        ctx.globalAlpha = pulse;
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 身體圓形
+    ctx.fillStyle = '#212121';
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 牛仔帽帽沿
+    ctx.fillStyle = C.hatBrim;
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.9, r * 0.7, r * 0.13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // 帽頂
+    ctx.fillStyle = C.hat;
+    ctx.beginPath();
+    ctx.roundRect
+        ? ctx.roundRect(-r * 0.4, -r * 1.4, r * 0.8, r * 0.5, r * 0.1)
+        : ctx.rect(-r * 0.4, -r * 1.4, r * 0.8, r * 0.5);
+    ctx.fill();
+    // 帽帶（金色線條）
+    ctx.strokeStyle = C.hatBand;
+    ctx.lineWidth   = r * 0.07;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.4, -r * 0.95);
+    ctx.lineTo( r * 0.4, -r * 0.95);
+    ctx.stroke();
+
+    // 槍（跟隨方向）
+    const gunSign = facingRight ? 1 : -1;
+    ctx.save();
+    ctx.rotate(gunSign * 0.3);
+    ctx.fillStyle = C.gun;
+    ctx.beginPath();
+    ctx.rect(gunSign * r * 0.1, r * 0.05, gunSign * r * 1.6, r * 0.16);
+    ctx.fill();
+    ctx.fillStyle = C.gunDetail;
+    ctx.beginPath();
+    ctx.rect(gunSign * r * 0.1, r * 0.12, gunSign * r * 0.4, r * 0.09);
+    ctx.fill();
+    ctx.restore();
+
+    // 瞄準線已由 _drawHunterAimingWarning 在 cull 前統一處理
+}
+
 // ── 大白鯊衝刺警告箭頭 ───────────────────────────────────────────
 // warning=黃色閃爍，charging=紅色；寬度=Boss直徑
 // 長度 = speed×4×0.8×60（實際衝刺距離，世界px轉螢幕px）
@@ -418,11 +536,13 @@ function _drawSharkChargeArrow(boss) {
     if (!isWarning && !isCharging) return;
 
     const { angle, dist, fromX, fromY } = boss._chargeArrow;
-    const from      = worldToScreen(fromX, fromY);
+    const fromSx = worldToScreen(fromX, fromY).x;
+    const fromSy = _screenPos.y;
     const toWorldX  = fromX + Math.cos(angle) * dist;
     const toWorldY  = fromY + Math.sin(angle) * dist;
-    const to        = worldToScreen(toWorldX, toWorldY);
-    const screenLen = Math.sqrt((to.x - from.x) ** 2 + (to.y - from.y) ** 2);
+    const toSx = worldToScreen(toWorldX, toWorldY).x;
+    const toSy = _screenPos.y;
+    const screenLen = Math.sqrt((toSx - fromSx) ** 2 + (toSy - fromSy) ** 2);
     if (screenLen < 1) return;
 
     const arrowW  = boss.radius * 2;
@@ -430,7 +550,7 @@ function _drawSharkChargeArrow(boss) {
     const color   = isWarning ? 'rgba(255, 220, 0, 0.75)' : 'rgba(255, 50, 50, 0.75)';
 
     ctx.save();
-    ctx.translate(from.x, from.y);
+    ctx.translate(fromSx, fromSy);
     ctx.rotate(angle);
 
     // 箭身長方形
@@ -505,7 +625,7 @@ function _drawVenomEffects(boss) {
 // ── 蠍王沙暴螢幕外圈遮罩 ─────────────────────────────────────────
 // radialGradient：中央透明，外圈沙色 alpha=0.3，淡入淡出各500ms
 // 由 hud.js drawGame() 在所有世界物件後、UI前呼叫
-function _drawSandStormOverlay() {
+export function _drawSandStormOverlay() {
     const boss = gameState.boss;
     if (!boss || !boss._sandStormVisual) return;
 
@@ -539,15 +659,71 @@ function _drawSandStormOverlay() {
     ctx.restore();
 }
 
+// ── 黑色獵人瞄準警告（cull 前呼叫，Boss 在螢幕外時玩家也能看到鎖定提示）
+function _drawHunterAimingWarning(boss) {
+    if (!boss._aimTarget) return;
+    const bsx = worldToScreen(boss.x, boss.y).x;
+    const bsy = _screenPos.y;
+    const tsx = worldToScreen(boss._aimTarget.x, boss._aimTarget.y).x;
+    const tsy = _screenPos.y;
+    // 紅色虛線：Boss → 目標（Boss off-screen 時線從螢幕邊緣射向玩家）
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 50, 50, 0.75)';
+    ctx.lineWidth   = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.shadowColor = '#FF0000';
+    ctx.shadowBlur  = 8;
+    ctx.beginPath();
+    ctx.moveTo(bsx, bsy);
+    ctx.lineTo(tsx, tsy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    // 玩家頭上脈動準心（鎖定指示）
+    const pulse = Math.abs(Math.sin(Date.now() / 80));
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 30, 30, ${(pulse * 0.7 + 0.3).toFixed(2)})`;
+    ctx.lineWidth   = 2.5;
+    ctx.shadowColor = '#FF0000';
+    ctx.shadowBlur  = 14;
+    ctx.beginPath();
+    ctx.arc(tsx, tsy, 22, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tsx - 14, tsy);  ctx.lineTo(tsx + 14, tsy);
+    ctx.moveTo(tsx, tsy - 14);  ctx.lineTo(tsx, tsy + 14);
+    ctx.stroke();
+    ctx.restore();
+    // 第三形態：5 條橘色散射預警線（從 Boss 方向射出）
+    if (boss._phase === 3) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,150,0,0.55)';
+        ctx.lineWidth   = 1.5;
+        for (let i = 0; i < 5; i++) {
+            const a = Math.random() * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(bsx, bsy);
+            ctx.lineTo(bsx + Math.cos(a) * 220, bsy + Math.sin(a) * 220);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+
 // ── drawBoss（每幀由 hud.js 呼叫）──────────────────────────────
-function drawBoss() {
+export function drawBoss() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
+
+    // 黑色獵人瞄準線在 cull 前繪製（Boss off-screen 時也要給玩家視覺警告）
+    if (boss.biome === 'hunter' && boss.state === 'aiming' && boss._aimTarget) {
+        _drawHunterAimingWarning(boss);
+    }
 
     const s = worldToScreen(boss.x, boss.y);
     if (s.x < -100 || s.x > VIEW_W + 100 || s.y < -100 || s.y > VIEW_H + 100) return;
 
-    const r       = boss.radius;
+    const r       = boss.radius * (gameState.cameraZoom || 1);
     const flicker = Math.sin(Date.now() * 0.006) * 0.4 + 0.7;
 
     // 光暈環（保留原本的閃爍感）
@@ -587,8 +763,33 @@ function drawBoss() {
     const bBarY = s.y - r - 24;
     ctx.fillStyle = '#550000';
     ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
-    ctx.fillStyle = '#FF4400';
-    ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+    if (boss.biome === 'hunter') {
+        // Hunter 5管：顏色依剩餘管數
+        const bars = boss.barsRemaining || 1;
+        const barColors = { 5: '#4FC3F7', 4: '#1976D2', 3: '#FF9800', 2: '#E64A19', 1: '#FF1744' };
+        let barColor = barColors[bars] || '#FF4400';
+        if (bars === 1) {
+            const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
+            ctx.globalAlpha = pulse;
+        }
+        ctx.fillStyle = barColor;
+        ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+        ctx.globalAlpha = 1;
+        // 管數標記（最後一管不顯示）
+        if (bars > 1) {
+            ctx.save();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 9px Arial';
+            ctx.textAlign = 'left';
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur  = 3;
+            ctx.fillText('x' + bars, bBarX - 22, bBarY + 6);
+            ctx.restore();
+        }
+    } else {
+        ctx.fillStyle = '#FF4400';
+        ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
+    }
 
     // Debuff 圖示（血條下方）
     _drawBossDebuffIcons(boss, bBarX, bBarY, bBarW);
@@ -647,7 +848,14 @@ function _drawBossDebuffIcons(boss, barX, barY, barW) {
     ctx.restore();
 }
 
-function spawnBoss() {
+export function spawnBoss() {
+    // 困難地圖：直接生成黑色獵人
+    const features = gameState.currentMap && gameState.currentMap.features;
+    if (features && features.hunterBoss) {
+        _spawnHunterBoss();
+        return;
+    }
+
     const playerBiome = getBiome(gameState.player.x, gameState.player.y);
     const baseCfg = BOSS_CONFIG[playerBiome] || BOSS_CONFIG.forest;
     // 若當前地圖有地圖專屬 Boss 設定，合併覆蓋（速度/HP/傷害/半徑/名稱）
@@ -680,7 +888,8 @@ function spawnBoss() {
         name: cfg.name, label: cfg.label,
         color: cfg.color, colorChasing: cfg.colorChasing,
         glowColor: cfg.glowColor,
-        biome: playerBiome
+        biome: playerBiome,
+        poisonResist: cfg.poisonResist || 0
     };
     gameState.bossSpawned = true;
     gameState.bossSpawnTime = Date.now();
@@ -689,11 +898,321 @@ function spawnBoss() {
     AudioManager.playMusic('bossTheme');
 }
 
-function updateBoss() {
+// ── 黑色獵人台詞常數 ──────────────────────────────────────────────
+const HUNTER_DIALOGUE = {
+    intro:  '...鎖定目標。',
+    phase1: ['風速正常。', '移動速度...已記錄。', '有趣的移動模式。', '預測路徑...完成。', '還差得遠。'],
+    phase2Entry: '...換彈。繼續。',
+    phase2: ['開始讓我有點感興趣了。', '距離太近了嗎？這才剛開始。', '不錯的反應速度。', '你讓我想起了某個獵物...牠也跑得很快。'],
+    phase3Entry: '...沒想到能讓我走到這一步。好。真的好。',
+    phase3: ['跑啊！', '這才對！這才叫做狩獵！', '讓我看看你還有多少！', '哈——！'],
+    death:  '...了不起。不過下一位...不會像我這樣手下留情。',
+};
+
+function _showHunterDialogue(text, duration) {
+    duration = duration || 3000;
+    const prev = document.getElementById('hunter-dialogue');
+    if (prev) prev.remove();
+    const el = document.createElement('div');
+    el.id = 'hunter-dialogue';
+    el.style.cssText = 'position:absolute;bottom:80px;left:24px;background:rgba(0,0,0,0.78);color:#fff;' +
+        'padding:8px 16px;border-radius:6px;font-size:15px;font-family:Arial,sans-serif;' +
+        'border-left:3px solid #1565C0;z-index:60;pointer-events:none;max-width:320px;';
+    el.textContent = '🎯 「' + text + '」';
+    const gc = document.getElementById('game-container');
+    if (gc) gc.appendChild(el);
+    setTimeout(() => {
+        el.style.transition = 'opacity 0.5s';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 500);
+    }, duration);
+}
+
+function _spawnHunterBoss() {
+    const cfg = BOSS_CONFIG.hunter;
+    const r = cfg.radius;
+    const edge = Math.floor(Math.random() * 4);
+    let bx, by;
+    if (edge === 0)      { bx = Math.random() * MAP_WIDTH;  by = r; }
+    else if (edge === 1) { bx = Math.random() * MAP_WIDTH;  by = MAP_HEIGHT - r; }
+    else if (edge === 2) { bx = r;             by = Math.random() * MAP_HEIGHT; }
+    else                 { bx = MAP_WIDTH - r; by = Math.random() * MAP_HEIGHT; }
+
+    gameState.boss = {
+        x: bx, y: by,
+        radius: cfg.radius,
+        hp: cfg.maxHpPerBar, maxHp: cfg.maxHpPerBar, maxHpPerBar: cfg.maxHpPerBar,
+        speed: cfg.phase1Speed, damage: cfg.sniperDamage,
+        aggroRange: cfg.aggroRange, attackRange: cfg.attackRange,
+        attackCooldown: 0, state: 'patrolling',
+        name: cfg.name, label: cfg.label,
+        color: cfg.color, colorChasing: cfg.color, glowColor: cfg.glowColor,
+        biome: 'hunter',
+        poisonResist: cfg.poisonResist,
+        // Hunter 專屬
+        barsRemaining: cfg.totalBars,
+        _phase: 1,
+        _postShotTimer: 0,
+        _dialogueTimer: 0,
+        _dialogueInterval: 5000 + Math.random() * 5000,
+        _phaseTransitionUntil: 0,
+        _aimTarget: null,
+        _aimUntil: 0,
+        _strafeAngle: Math.random() * Math.PI * 2,
+        lastMoveDir: { dx: 1, dy: 0 },
+        wanderTarget: null, lastWanderTime: Date.now(),
+    };
+    gameState.bossSpawned   = true;
+    gameState.bossSpawnTime = Date.now();
+    gameState.dayNightMessage.text  = t('bossAppeared', { name: cfg.name });
+    gameState.dayNightMessage.timer = Date.now();
+    AudioManager.playMusic('superBossTheme');
+    AudioManager.play('hunterVoiceIntro');
+    setTimeout(() => _showHunterDialogue(HUNTER_DIALOGUE.intro, 3000), 1000);
+}
+
+function _triggerHunterPhaseCheck(boss) {
+    const bars = boss.barsRemaining;
+    const cfg  = BOSS_CONFIG.hunter;
+    if (bars === 3) {
+        boss._phase = 2;
+        boss.speed  = cfg.phase2Speed;
+        boss._phaseTransitionUntil = Date.now() + 800;
+        boss.state  = 'phaseTransition';
+        AudioManager.play('hunterPhase2Activate');
+        _showHunterDialogue(HUNTER_DIALOGUE.phase2Entry, 3500);
+        boss._dialogueInterval = 5000 + Math.random() * 5000;
+    } else if (bars === 1) {
+        boss._phase = 3;
+        boss.speed  = cfg.phase3Speed;
+        boss._phaseTransitionUntil = Date.now() + 1200;
+        boss.state  = 'phaseTransition';
+        AudioManager.play('hunterPhase3Activate');
+        _showHunterDialogue(HUNTER_DIALOGUE.phase3Entry, 4000);
+        boss._dialogueInterval = 4000 + Math.random() * 3000;
+        // 全畫面紅色閃光（疊加 canvas）
+        gameState._hunterPhase3Flash = Date.now();
+    }
+}
+
+export function handleBossKill(boss) {
+    if (!boss) { showVictory(); return; }
+    if (boss.biome === 'hunter') {
+        boss.barsRemaining--;
+        if (boss.barsRemaining <= 0) {
+            // 黑色獵人真正死亡
+            _recordBossKill('hunter');
+            addXP(1000);
+            gameState.skillPoints += 5;
+            storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+            gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + 5;
+            storageSet(STORAGE_KEYS.HUNTER_SLAYER_UNLOCKED, 'true');
+            _showHunterDialogue(HUNTER_DIALOGUE.death, 5000);
+            AudioManager.play('hunterVoiceDeath');
+            showFloatingText(boss.x, boss.y - 60, '🎯 獵人已倒！', '#FF4444', 22);
+            // 困難地圖通關記錄
+            const diffKey = storageKey.clearCountDiff('hard');
+            storageSet(diffKey, (parseInt(storageGet(diffKey) || '0') + 1).toString());
+            const charKey = storageKey.clearCountChar(gameState.selectedCharacter || 'koel');
+            storageSet(charKey, (parseInt(storageGet(charKey) || '0') + 1).toString());
+            setTimeout(() => showVictory(), 2000);
+        } else {
+            boss.hp    = boss.maxHpPerBar;
+            boss.maxHp = boss.maxHpPerBar;
+            _triggerHunterPhaseCheck(boss);
+            addXP(300);
+            gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + 1;
+            // 每管擊破加30秒（最多4管×30s = +120s）
+            gameState.timeRemaining += 30;
+            showFloatingText(boss.x, boss.y - 40, '💠 血管擊破！+300XP  +30秒', '#4FC3F7', 16);
+        }
+        return;
+    }
+    showVictory();
+}
+
+function _updateHunterBoss(boss, p, now) {
+    const cfg = BOSS_CONFIG.hunter;
+    const { dx, dy } = wrappedDelta(boss.x, boss.y, p.x, p.y);
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // 形態切換停頓
+    if (boss.state === 'phaseTransition') {
+        if (now < boss._phaseTransitionUntil) return;
+        boss.state = 'chasing';
+    }
+
+    // 開槍後停頓
+    if (now < boss._postShotTimer) return;
+
+    // 台詞計時
+    if (now - boss._dialogueTimer > boss._dialogueInterval) {
+        boss._dialogueTimer    = now;
+        boss._dialogueInterval = 5000 + Math.random() * 5000;
+        const pool = boss._phase === 3 ? HUNTER_DIALOGUE.phase3 :
+                     boss._phase === 2 ? HUNTER_DIALOGUE.phase2 : HUNTER_DIALOGUE.phase1;
+        _showHunterDialogue(pool[Math.floor(Math.random() * pool.length)], 2500);
+    }
+
+    // 腳步音效（低頻）
+    if (!boss._footstepTimer || now - boss._footstepTimer > 600) {
+        boss._footstepTimer = now;
+        if (boss.state === 'chasing' || boss.state === 'strafing') AudioManager.play('hunterFootstep');
+    }
+
+    // 形態 1：Sniper — 維持 1200~1500px，繞圈移動
+    if (boss._phase === 1) {
+        const triggerRange = 1500;
+        // 不覆蓋戰鬥中間狀態（aiming 蓄力中）
+        if (boss.state !== 'aiming' && dist < boss.aggroRange) boss.state = 'chasing';
+        if (boss.state === 'chasing' || boss.state === 'strafing') {
+            // 蓄力瞄準
+            if (dist < triggerRange && now - boss.attackCooldown > cfg.phase1AttackInterval) {
+                if (!boss._aimTarget) {
+                    boss._aimTarget = { x: p.x, y: p.y };
+                    boss._aimUntil  = now + cfg.phase1AimDuration;
+                    boss.state      = 'aiming';
+                    AudioManager.play('hunterSniperAim');
+                }
+            }
+            if (boss.state === 'aiming') {
+                boss._aimTarget = { x: p.x, y: p.y };
+                if (now >= boss._aimUntil) {
+                    _fireHunterSniper(boss, p);
+                    boss.state      = 'strafing';
+                    boss._aimTarget = null;
+                }
+                return;
+            }
+            // 繞圈保持距離 1200~1500
+            boss._strafeAngle = (boss._strafeAngle || 0) + 0.012;
+            const idealDist = 1350;
+            const tdx = p.x + Math.cos(boss._strafeAngle) * idealDist - boss.x;
+            const tdy = p.y + Math.sin(boss._strafeAngle) * idealDist - boss.y;
+            const tlen = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
+            const mvx = tdx / tlen * boss.speed;
+            const mvy = tdy / tlen * boss.speed;
+            boss.lastMoveDir = { dx: mvx > 0 ? 1 : -1, dy: 0 };
+            moveCreature(boss, boss.x + mvx, boss.y + mvy);
+        }
+        return;
+    }
+
+    // 形態 2：Shotgun — 衝近 600px，快速往返
+    if (boss._phase === 2) {
+        // 不覆蓋戰鬥中間狀態（pumping 泵管中）
+        if (boss.state !== 'pumping' && dist < boss.aggroRange) boss.state = 'chasing';
+        if (boss.state === 'chasing') {
+            if (dist < 800 && now - boss.attackCooldown > cfg.phase2AttackInterval) {
+                boss._pumpUntil = now + cfg.phase2PumpDuration;
+                boss.state = 'pumping';
+                AudioManager.play('hunterShotgunPump');
+            }
+        }
+        if (boss.state === 'pumping') {
+            if (now >= boss._pumpUntil) {
+                _fireHunterShotgun(boss, p);
+                boss.state = 'chasing';
+            }
+            return;
+        }
+        const angle = Math.atan2(dy, dx);
+        const targetDist = dist < 400 ? -1 : 1;
+        const spd = boss.speed * targetDist;
+        const mvx = Math.cos(angle) * spd;
+        const mvy = Math.sin(angle) * spd;
+        boss.lastMoveDir = { dx: mvx > 0 ? 1 : -1, dy: 0 };
+        moveCreature(boss, boss.x + mvx, boss.y + mvy);
+        return;
+    }
+
+    // 形態 3：融合 — 先退到 1200px 發狙擊+散彈，再衝近 400px
+    if (boss._phase === 3) {
+        // 不覆蓋戰鬥中間狀態（aiming 蓄力中）
+        if (boss.state !== 'aiming' && dist < boss.aggroRange) boss.state = 'chasing';
+        if (boss.state === 'chasing' || boss.state === 'strafing') {
+            if (dist < 1500 && now - boss.attackCooldown > cfg.phase3AttackInterval) {
+                if (!boss._aimTarget) {
+                    boss._aimTarget = { x: p.x, y: p.y };
+                    boss._aimUntil  = now + cfg.phase3AimDuration;
+                    boss.state      = 'aiming';
+                    AudioManager.play('hunterSniperAim');
+                    AudioManager.play('hunterPhase3Charge');
+                }
+            }
+            if (boss.state === 'aiming') {
+                boss._aimTarget = { x: p.x, y: p.y };
+                if (now >= boss._aimUntil) {
+                    _fireHunterSniper(boss, p);
+                    _fireHunterShotgun(boss, p, 5);
+                    boss.state      = 'strafing';
+                    boss._aimTarget = null;
+                }
+                return;
+            }
+            const angle = Math.atan2(dy, dx);
+            const idealDist = dist > 1200 ? 800 : 400;
+            const targetDir = dist > idealDist ? 1 : (dist < idealDist - 100 ? -1 : 0);
+            const mvx = Math.cos(angle) * boss.speed * targetDir;
+            const mvy = Math.sin(angle) * boss.speed * targetDir;
+            if (targetDir !== 0) {
+                boss.lastMoveDir = { dx: mvx > 0 ? 1 : -1, dy: 0 };
+                moveCreature(boss, boss.x + mvx, boss.y + mvy);
+            }
+        }
+    }
+}
+
+function _fireHunterSniper(boss, p) {
+    const cfg   = BOSS_CONFIG.hunter;
+    const angle = Math.atan2(p.y - boss.y, p.x - boss.x);
+    gameState.projectiles.push({
+        x: boss.x, y: boss.y,
+        vx: Math.cos(angle) * 18, vy: Math.sin(angle) * 18,
+        speed: 18, damage: cfg.sniperDamage,
+        maxRange: 3000, distTraveled: 0,
+        radius: 5, owner: 'hunter', type: 'sniper',
+    });
+    boss.attackCooldown = Date.now();
+    boss._postShotTimer = Date.now() + cfg.postShotPause;
+    AudioManager.play('hunterSniperFire');
+    AudioManager.play('hunterBulletFly');
+}
+
+function _fireHunterShotgun(boss, p, pelletCount) {
+    const cfg   = BOSS_CONFIG.hunter;
+    pelletCount = pelletCount || 6;
+    const baseAngle = Math.atan2(p.y - boss.y, p.x - boss.x);
+    for (let i = 0; i < pelletCount; i++) {
+        const spread = (Math.random() * 80 - 40) * Math.PI / 180;
+        const angle  = baseAngle + spread;
+        gameState.projectiles.push({
+            x: boss.x, y: boss.y,
+            vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12,
+            speed: 12, damage: cfg.shotgunDamage,
+            maxRange: 900, distTraveled: 0,
+            radius: 4, owner: 'hunter', type: 'shotgun_pellet',
+        });
+    }
+    boss.attackCooldown = Date.now();
+    boss._postShotTimer = Date.now() + cfg.postShotPause;
+    AudioManager.play('hunterShotgunFire');
+    AudioManager.play('hunterPelletFly');
+}
+
+export function updateBoss() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
     const now = Date.now();
     const p = gameState.player;
+
+    // 黑色獵人：由獨立函式處理
+    if (boss.biome === 'hunter') {
+        if (boss.stunnedUntil && now < boss.stunnedUntil) return;
+        _updateHunterBoss(boss, p, now);
+        return;
+    }
+
     if (boss.stunnedUntil && now < boss.stunnedUntil) return;
     const { dx, dy } = wrappedDelta(boss.x, boss.y, p.x, p.y);
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -711,7 +1230,7 @@ function updateBoss() {
     }
 
     // ── 黑熊 (<40% 狂暴)
-    if (boss.name && boss.name.includes('黑熊')) {
+    if (boss.biome === 'forest') {
         if (!boss._enraged && boss.hp / boss.maxHp < 0.4) {
             boss._enraged = true;
             boss.speed *= 1.5;
@@ -722,7 +1241,7 @@ function updateBoss() {
     }
 
     // ── 大白鯊 衝刺攻擊
-    if (boss.name && boss.name.includes('鯊')) {
+    if (boss.biome === 'ocean') {
         if (boss._chargeState === 'charging') {
             // 衝刺移動
             boss.x = ((boss.x + boss._chargeVx + MAP_WIDTH)  % MAP_WIDTH);
@@ -770,7 +1289,7 @@ function updateBoss() {
     }
 
     // ── 沙漠蠍王：毒霧 + 沙暴
-    if (boss.name && boss.name.includes('蠍')) {
+    if (boss.biome === 'desert') {
         // 毒液投擲：每5秒鎖定玩家位置，不限距離
         if (!boss._venomTimer) boss._venomTimer = now;
         if (now - boss._venomTimer > 5000) {
@@ -874,8 +1393,23 @@ function updateBoss() {
     console.log && false; // [v0.47.0] 六：Boss 機制改版完成
 }
 
-function showVictory() {
+function _recordClearStats() {
+    const diff   = gameState.lastDifficulty || 'easy';
+    const charId = gameState.selectedCharacter || 'koel';
+    const diffKey = storageKey.clearCountDiff(diff);
+    storageSet(diffKey, (parseInt(storageGet(diffKey) || '0') + 1).toString());
+    const charKey = storageKey.clearCountChar(charId);
+    storageSet(charKey, (parseInt(storageGet(charKey) || '0') + 1).toString());
+}
+
+function _recordBossKill(bossType) {
+    const key = storageKey.killCountBoss(bossType);
+    storageSet(key, (parseInt(storageGet(key) || '0') + 1).toString());
+}
+
+export function showVictory() {
     if (gameState.gameOver) return;
+    saveSettings();
     pausePlayTimer();
     gameState.topBarTarget = null;
     gameState.topBarFadeTimer = 0;
@@ -884,87 +1418,100 @@ function showVictory() {
     AudioManager.stopMusic();
     AudioManager.play('victory');
     addXP(500);
+    // F19：普通難度通關 → 解鎖第二章劇情
+    if (gameState.lastDifficulty === 'normal') {
+        storageSet(STORAGE_KEYS.CHAPTER2_UNLOCKED, 'true');
+    }
+    // F20：記錄 Boss 擊殺次數
+    if (gameState.boss) {
+        const biomeTypeMap = { forest: 'bear', ocean: 'shark', desert: 'scorpion' };
+        const bossType = biomeTypeMap[gameState.boss.biome];
+        if (bossType) _recordBossKill(bossType);
+    }
+    // F20：記錄通關統計
+    _recordClearStats();
     saveLastRunOrgans();
     const timeBonus = Math.floor((600 - gameState.timeRemaining) / 180);
     const levelBonus = Math.floor(gameState.player.level / 6);
     const eliteBonus = (gameState.sessionSkillPoints && gameState.sessionSkillPoints.elite) || 0;
     if (gameState.sessionSkillPoints) gameState.sessionSkillPoints.boss = 3;
     gameState.skillPoints += 3 + timeBonus + levelBonus;
-    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
-    localStorage.removeItem('savedOrgans');
-    localStorage.removeItem('savedHiddenOrgans');
+    storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+    storageRemove(STORAGE_KEYS.SAVED_ORGANS);
+    storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
     const bossKillTime = gameState.bossSpawnTime ? Math.floor((Date.now() - gameState.bossSpawnTime) / 1000) : null;
     const doShowVictory = () => {
-        const overlay = document.createElement('div');
-        overlay.id = 'victory-overlay';
-        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;';
-        const title = document.createElement('div');
-        title.style.cssText = 'font-size:52px;margin-bottom:16px;';
-        title.textContent = t('victoryTitle');
-        overlay.appendChild(title);
-        const desc1 = document.createElement('div');
-        desc1.style.cssText = 'font-size:22px;margin-bottom:8px;';
         const bossName = gameState.boss && gameState.boss.name ? gameState.boss.name : (BOSS_CONFIG.forest.name);
-        desc1.textContent = t('victoryDesc', { boss: bossName });
-        overlay.appendChild(desc1);
-        const desc2 = document.createElement('div');
-        desc2.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
-        desc2.textContent = t('victoryReward');
-        overlay.appendChild(desc2);
-        const spSection = document.createElement('div');
-        spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;';
         const spLines = [t('skillPtBoss', { n: 3 })];
         if (eliteBonus > 0)  spLines.push(t('skillPtElite', { n: eliteBonus }));
         if (timeBonus > 0)   spLines.push(t('skillPtTime',  { n: timeBonus }));
         if (levelBonus > 0)  spLines.push(t('skillPtLevel', { n: levelBonus }));
-        spSection.innerHTML = spLines.join('<br>');
-        overlay.appendChild(spSection);
-        const btnTree = document.createElement('button');
-        btnTree.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
-        btnTree.textContent = t('goSkillTree');
-        btnTree.onclick = () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'postGame'); };
-        overlay.appendChild(btnTree);
-        const vBtnRow = document.createElement('div');
-        vBtnRow.style.cssText = 'display:flex;gap:12px;pointer-events:all;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;';
-        const vWarnEl = document.createElement('div');
-        vWarnEl.style.cssText = 'display:none;font-size:13px;color:#f80;text-align:center;';
-        vBtnRow.appendChild(vWarnEl);
-        const vRowInner = document.createElement('div');
-        vRowInner.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
-        const vHomeBtn = document.createElement('button');
-        vHomeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        vHomeBtn.textContent = t('backHome');
-        let vHomeWarned = false;
-        vHomeBtn.onclick = () => {
-            if (!vHomeWarned) {
-                vHomeWarned = true;
-                vWarnEl.textContent = t('warnNoOrganHome');
-                vWarnEl.style.display = 'block';
-                return;
-            }
-            location.reload();
-        };
-        vRowInner.appendChild(vHomeBtn);
-        const vPlayAgainBtn = document.createElement('button');
-        vPlayAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-        vPlayAgainBtn.textContent = t('playAgain');
-        vPlayAgainBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'forceStart'); };
-        vRowInner.appendChild(vPlayAgainBtn);
-        vBtnRow.appendChild(vRowInner);
-        overlay.appendChild(vBtnRow);
-        const vFooter = document.createElement('div');
-        vFooter.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
-        vFooter.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
-        overlay.appendChild(vFooter);
-        if (gameState.devModeUsed) {
-            const devWarn = document.createElement('div');
-            devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
-            devWarn.textContent = '⚠️ 本局使用了開發者模式，分數不計入排行榜';
-            overlay.appendChild(devWarn);
-        }
+        const overlay = buildEndGameOverlay({
+            id: 'victory-overlay',
+            overlayStyle: 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;',
+            titleStyle: 'font-size:52px;margin-bottom:16px;',
+            titleText: t('victoryTitle'),
+            content: [
+                {
+                    style: 'font-size:22px;margin-bottom:8px;',
+                    text: t('victoryDesc', { boss: bossName })
+                },
+                {
+                    style: 'font-size:18px;margin-bottom:10px;color:#FFD700;',
+                    text: t('victoryReward')
+                },
+                {
+                    style: 'font-size:14px;color:#aaa;margin-bottom:20px;text-align:center;line-height:1.8;',
+                    html: spLines.join('<br>')
+                }
+            ],
+            primaryButton: {
+                style: 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;',
+                text: t('goSkillTree'),
+                onClick: () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'postGame'); }
+            },
+            buttonRowStyle: 'display:flex;gap:12px;pointer-events:all;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;',
+            warningStyle: 'display:none;font-size:13px;color:#f80;text-align:center;',
+            buttonInnerStyle: 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;',
+            secondaryButtons: [
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;',
+                    text: t('backHome'),
+                    warningText: t('warnNoOrganHome'),
+                    onClick: () => { location.reload(); }
+                },
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;',
+                    text: t('playAgain'),
+                    onClick: () => { overlay.remove(); buildSkillTreeOverlay(null, false, false, 'forceStart'); }
+                }
+            ],
+            footerStyle: 'font-size:12px;color:#555;margin-top:20px;',
+            footerText: '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version,
+            devWarningStyle: 'font-size:12px;color:#f80;margin-top:12px;',
+            devWarningText: gameState.devModeUsed ? t('devModeWarning') : null
+        });
         document.getElementById('game-container').appendChild(overlay);
     };
+    // 自動雲端保存進度（已登入才執行）
+    if (typeof loadChatSettings === 'function' && typeof chatSaveProgress === 'function') {
+        const _cs = loadChatSettings();
+        if (_cs.loggedIn) {
+            chatSaveProgress().then(result => {
+                if (result.ok) {
+                    const tip = document.createElement('div');
+                    tip.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);' +
+                        'background:rgba(0,0,0,0.8);color:#fff;padding:8px 18px;border-radius:8px;' +
+                        'font-size:14px;z-index:9999;pointer-events:none;';
+                    tip.textContent = result.msg;
+                    document.body.appendChild(tip);
+                    setTimeout(() => tip.remove(), 2000);
+                }
+            });
+        }
+    }
+
     if (gameState.devModeUsed) {
         doShowVictory();
     } else {
@@ -972,7 +1519,7 @@ function showVictory() {
     }
 }
 
-function drawBossArrow() {
+export function drawBossArrow() {
     const boss = gameState.boss;
     if (!boss || boss.hp <= 0) return;
     const bs = worldToScreen(boss.x, boss.y);

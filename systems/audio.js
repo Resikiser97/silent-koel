@@ -1,11 +1,42 @@
 // =============================================================
 // 音效系統 - AudioManager / initAudio
+//           playIntroTheme / stopIntroTheme（首頁背景音樂）
 // =============================================================
+import { AUDIO_FILES } from '../config/gameConfig.js';
+import { gameState } from './gameState.js';
+import { getSettings, saveSettingsToStorage } from '../storage/index.js';
 
-const AudioManager = {
+let _introThemeAudio = null;
+
+export function playIntroTheme() {
+    if (_introThemeAudio) return;
+    _introThemeAudio = new Audio(AUDIO_FILES.introTheme);
+    _introThemeAudio.loop = true;
+    _introThemeAudio.currentTime = 0;
+    const vol = AudioManager._musicVol() * 0.4;
+    _introThemeAudio.volume = Math.max(0, Math.min(1, vol));
+    _introThemeAudio.play().catch(() => {});
+}
+
+export function stopIntroTheme() {
+    if (!_introThemeAudio) return;
+    _introThemeAudio.pause();
+    _introThemeAudio.currentTime = 0;
+    _introThemeAudio = null;
+}
+
+export const AudioManager = {
     _sounds: {},
     _music:  null,
     _currentMusicKey: null,
+    _ready: false,
+    _sfxPools: {},
+    _sfxPoolSize: 4,
+    _sfxLastPlayed: {},
+    _vol: {
+        master: 80, music: 70, sfx: 80,
+        masterOn: true, musicOn: true, sfxOn: true
+    },
 
     init() {
         Object.entries(AUDIO_FILES).forEach(([key, src]) => {
@@ -16,31 +47,80 @@ const AudioManager = {
                 this._sounds[key] = a;
             }
         });
+        // 預熱常用音效
+        ['eatFruit', 'levelUp', 'hurt'].forEach(key => {
+            this._getPooledAudio(key);
+        });
+        this._ready = true;
+    },
+
+    // 從 settings 物件載入音量（loadSettings 呼叫）
+    loadVolume(volumeSettings) {
+        if (!volumeSettings) return;
+        this._vol = Object.assign({}, this._vol, volumeSettings);
+        this.refreshMusicVolume();
+    },
+
+    // 設定單一音量 key（UI 滑桿呼叫）
+    setVolume(key, value) {
+        this._vol[key] = value;
+        // 同步更新 gameState.settings.volume（保持相容）
+        if (gameState.settings && gameState.settings.volume) {
+            gameState.settings.volume[key] = value;
+        }
+        this.refreshMusicVolume();
+    },
+
+    // 取得序列化音量（saveSettings 呼叫）
+    serializeVolume() {
+        return Object.assign({}, this._vol);
     },
 
     _sfxVol() {
-        const v = gameState.settings.volume;
-        if (!v.masterOn || !v.sfxOn) return 0;
+        const v = this._vol;
+        if (!v || !v.masterOn || !v.sfxOn) return 0;
         return (v.master / 100) * (v.sfx / 100);
     },
 
     _musicVol() {
-        const v = gameState.settings.volume;
-        if (!v.masterOn || !v.musicOn) return 0;
+        const v = this._vol;
+        if (!v || !v.masterOn || !v.musicOn) return 0;
         return (v.master / 100) * (v.music / 100);
     },
 
-    play(key) {
-        const src = this._sounds[key];
-        if (!src) return;
-        const vol = this._sfxVol();
-        let audio;
-        if (Array.isArray(src)) {
-            audio = src[Math.floor(Math.random() * src.length)].cloneNode();
-        } else {
-            audio = src.cloneNode();
+    _getPooledAudio(key) {
+        const src = AUDIO_FILES[key];
+        if (!src) return null;
+        const srcUrl = Array.isArray(src) ? src[0] : src;
+        if (!this._sfxPools[key]) {
+            this._sfxPools[key] = Array.from({ length: this._sfxPoolSize }, () => {
+                const a = new Audio(srcUrl);
+                a.volume = this._sfxVol();
+                return a;
+            });
         }
+        const pool = this._sfxPools[key];
+        const available = pool.find(a => a.paused || a.ended);
+        if (!available) return null;
+        return available;
+    },
+
+    play(key) {
+        if (!this._ready) return;
+        const vol = this._sfxVol();
+        if (vol <= 0) return;
+
+        // 音效節流：同音效 100ms 內只播一次；hurt/attack 類 150ms
+        const now = Date.now();
+        const throttleMs = (key === 'hurt' || key === 'attack' || key === 'playerAttack')
+            ? 150 : 100;
+        if (this._sfxLastPlayed[key] && now - this._sfxLastPlayed[key] < throttleMs) return;
+        this._sfxLastPlayed[key] = now;
+
+        const audio = this._getPooledAudio(key);
+        if (!audio) return;
         audio.volume = vol;
+        audio.currentTime = 0;
         audio.play().catch(() => {});
     },
 
@@ -79,6 +159,19 @@ const AudioManager = {
             try { newAudio.volume = fv; } catch(e) {}
             if (fv >= target) clearInterval(fadeIn);
         }, 50);
+
+        // 音樂開始播放時自動儲存設定（確保音量設定不會因重整而遺失）
+        try {
+            if (gameState && gameState.settings) {
+                saveSettingsToStorage(
+                    Object.assign({}, gameState.settings, {
+                        volume: this.serializeVolume()
+                    })
+                );
+            }
+        } catch(e) {
+            // 靜默失敗，不影響音樂播放
+        }
     },
 
     stopMusic() {
@@ -92,10 +185,11 @@ const AudioManager = {
 
     refreshMusicVolume() {
         if (this._music) { try { this._music.volume = this._musicVol(); } catch(e) {} }
+        if (_introThemeAudio) { try { _introThemeAudio.volume = 0.4 * this._musicVol(); } catch(e) {} }
     }
 };
 
-function initAudio() {
+export function initAudio() {
     AudioManager.init();
     AudioManager.playMusic('morningTheme');
 }

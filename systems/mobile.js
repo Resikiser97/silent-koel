@@ -16,8 +16,17 @@
 // 跨模組依賴：
 //   - systems/gameState.js：gameState.isMobile / gameState.orientation
 //   - systems/combat.js：playerAttack()
-//   - main.js：isGamePaused()
+//   - systems/player.js：playerDash()
 // =============================================================
+
+import { gameState } from './gameState.js';
+import { VIEW_W, VIEW_H, setViewSize } from './map.js';
+import { _organHitRegions } from './organs.js';
+import { playerDash } from './player.js';
+import { playerAttack } from './combat.js';
+import { showTooltip, hideTooltip } from './ui.js';
+import { AudioManager } from './audio.js';
+import { t } from '../lang.js';
 
 // =============================================================
 // 裝置偵測與方向控制
@@ -25,15 +34,15 @@
 
 let _orientationBarDismissed = false;
 
-function detectMobile() {
+export function detectMobile() {
     return ('ontouchstart' in window) || window.innerWidth <= 768;
 }
 
-function getOrientation() {
+export function getOrientation() {
     return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
 }
 
-function _effectiveMobile() {
+export function _effectiveMobile() {
     if (gameState.forceMode === 'mobile')  return true;
     if (gameState.forceMode === 'desktop') return false;
     return detectMobile();
@@ -41,14 +50,14 @@ function _effectiveMobile() {
 
 function _setViewSize(w, h) {
     if (VIEW_W === w && VIEW_H === h) return;
-    VIEW_W = w; VIEW_H = h;
+    setViewSize(w, h);
     const gc = document.getElementById('gameCanvas');
     const co = document.getElementById('game-container');
     if (gc) { gc.width = w; gc.height = h; }
     if (co) { co.style.width = w + 'px'; co.style.height = h + 'px'; }
 }
 
-const MOBILE_GAME_SCALE = 0.6;
+export const MOBILE_GAME_SCALE = 0.6;
 
 function _applyMobileScale() {
     const container = document.getElementById('game-container');
@@ -93,7 +102,7 @@ function _applyMobileScale() {
     container.style.transform       = 'scale(' + scale + ')';
 }
 
-function applyDeviceMode() {
+export function applyDeviceMode() {
     gameState.forceMode  = gameState.settings.deviceMode !== undefined ? gameState.settings.deviceMode : null;
     gameState.isMobile   = _effectiveMobile();
     gameState.orientation = getOrientation();
@@ -147,6 +156,9 @@ let _archerDirStartY  = 0;
 let _archerDirCurX    = 0;
 let _archerDirCurY    = 0;
 
+// 近戰蓄力攻擊追蹤（touchstart 即開始計時，touchend 依蓄力時間發動普通或蓄力攻擊）
+let _mobileAtkTouchId = null;
+
 function _joyZone(x, y) {
     return !_attackZone(x, y);
 }
@@ -188,7 +200,7 @@ function _dashZone(x, y) {
         && y >= centerY - dashH / 2 && y <= centerY + dashH / 2;
 }
 
-function _renderMobileOverlay() {
+export function _renderMobileOverlay() {
     const jc = document.getElementById('joystick-canvas');
     if (!jc) return;
     const jctx = jc.getContext('2d');
@@ -207,7 +219,7 @@ function _renderMobileOverlay() {
         if (autoAtk) {
             jctx.globalAlpha = 0.2;
             jctx.font = '32px Arial';
-            jctx.fillText('⚔️ 自動', atkCX, atkCY);
+            jctx.fillText(t('autoAttackIndicator'), atkCX, atkCY);
         } else {
             jctx.globalAlpha = 0.2;
             jctx.font = '60px Arial';
@@ -283,7 +295,7 @@ function _renderMobileOverlay() {
         if (autoAtk) {
             jctx.globalAlpha = 0.2;
             jctx.font = '32px Arial';
-            jctx.fillText('⚔️ 自動', atkCX, atkCY);
+            jctx.fillText(t('autoAttackIndicator'), atkCX, atkCY);
         } else {
             jctx.globalAlpha = 0.2;
             jctx.font = '60px Arial';
@@ -341,14 +353,14 @@ function _renderMobileOverlay() {
 
 let _joyDocListeners = null;
 
-function _joyPaused() {
+export function _joyPaused() {
     return !gameState.gameStarted ||
            gameState.organSelectionActive || gameState.settingsOpen ||
            gameState.skillTreeOpen || gameState.gameOver || gameState.victory ||
            gameState.mutationPanelOpen;
 }
 
-function _attachJoystickListeners() {
+export function _attachJoystickListeners() {
     if (_joyDocListeners) return;
 
     const onStart = (e) => {
@@ -395,13 +407,11 @@ function _attachJoystickListeners() {
                     _archerDirStartY  = y;
                     _archerDirCurX    = x;
                     _archerDirCurY    = y;
-                } else {
-                    playerAttack();
-                    if (gameState.orientation === 'landscape') {
-                        _atkFeedbackTime = Date.now();
-                        _atkFeedbackX = x;
-                        _atkFeedbackY = y;
-                    }
+                } else if (!gameState.player.isRanged && _mobileAtkTouchId === null) {
+                    // 近戰（噪鵑）：touchstart 立即開始蓄力計時
+                    _mobileAtkTouchId = touch.identifier;
+                    gameState._mobileChargeStart = Date.now();
+                    gameState._mobileCharging    = true;
                 }
                 continue;
             }
@@ -457,6 +467,26 @@ function _attachJoystickListeners() {
                 gameState.mobileInput = { dx: 0, dy: 0 };
                 _renderMobileOverlay();
             }
+            // 近戰蓄力攻擊放開：依蓄力時間發動普通或蓄力攻擊
+            if (touch.identifier === _mobileAtkTouchId) {
+                _mobileAtkTouchId = null;
+                if (gameState._mobileCharging) {
+                    const chargeTime = Date.now() - (gameState._mobileChargeStart || Date.now());
+                    gameState._mobileCharging    = false;
+                    gameState._mobileChargeStart = null;
+                    // 蓄力時間 >= 500ms 視為蓄力攻擊，否則普通攻擊
+                    if (chargeTime >= 500) {
+                        gameState._mobileChargeAttack = true;
+                    }
+                    playerAttack();
+                    gameState._mobileChargeAttack = false;
+                    if (gameState.orientation === 'landscape') {
+                        _atkFeedbackTime = Date.now();
+                        _atkFeedbackX = touch.clientX;
+                        _atkFeedbackY = touch.clientY;
+                    }
+                }
+            }
             // 阿奇爾攻擊區放開：計算方向並發射
             if (touch.identifier === _archerDirTouchId) {
                 _archerDirTouchId = null;
@@ -502,24 +532,37 @@ function _attachJoystickListeners() {
         }
     };
 
-    document.addEventListener('touchstart',  onStart, { passive: false });
-    document.addEventListener('touchmove',   onMove,  { passive: false });
-    document.addEventListener('touchend',    onEnd,   { passive: false });
-    document.addEventListener('touchcancel', onEnd,   { passive: false });
-    _joyDocListeners = { onStart, onMove, onEnd };
+    const onCancel = (e) => {
+        for (const touch of e.changedTouches) {
+            // 近戰蓄力重置
+            if (touch.identifier === _mobileAtkTouchId) {
+                _mobileAtkTouchId            = null;
+                gameState._mobileCharging    = false;
+                gameState._mobileChargeStart = null;
+                gameState._mobileChargeAttack = false;
+            }
+        }
+        onEnd(e);
+    };
+
+    document.addEventListener('touchstart',  onStart,   { passive: false });
+    document.addEventListener('touchmove',   onMove,    { passive: false });
+    document.addEventListener('touchend',    onEnd,     { passive: false });
+    document.addEventListener('touchcancel', onCancel,  { passive: false });
+    _joyDocListeners = { onStart, onMove, onEnd, onCancel };
 }
 
-function _detachJoystickListeners() {
+export function _detachJoystickListeners() {
     if (!_joyDocListeners) return;
-    const { onStart, onMove, onEnd } = _joyDocListeners;
-    document.removeEventListener('touchstart',  onStart, { passive: false });
-    document.removeEventListener('touchmove',   onMove,  { passive: false });
-    document.removeEventListener('touchend',    onEnd,   { passive: false });
-    document.removeEventListener('touchcancel', onEnd,   { passive: false });
+    const { onStart, onMove, onEnd, onCancel } = _joyDocListeners;
+    document.removeEventListener('touchstart',  onStart,  { passive: false });
+    document.removeEventListener('touchmove',   onMove,   { passive: false });
+    document.removeEventListener('touchend',    onEnd,    { passive: false });
+    document.removeEventListener('touchcancel', onCancel, { passive: false });
     _joyDocListeners = null;
 }
 
-function _updateJoystickCanvas() {
+export function _updateJoystickCanvas() {
     const jc = document.getElementById('joystick-canvas');
     if (!jc) return;
     if (gameState.isMobile) {

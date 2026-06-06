@@ -1,7 +1,42 @@
 // =============================================================
-// 生物系統 - updateNeutralCreatures / drawNeutralCreatures
+// 生物系統 - drawCreatureShape
+//            updateNeutralCreatures / drawNeutralCreatures
 //            updateHostileCreatures / drawCorpses / drawHostileCreatures
 // =============================================================
+
+// ── 隊伍名稱池 ──────────────────────────────────────────────
+import { gameState, ctx } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
+import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
+import { FIXED_DELTA } from '../config/gameConfig.js';
+import { moveCreature } from './spawning.js';
+import { applyDamageToPlayer, handleKill, showFloatingText } from './combat.js';
+import { applyTenacity, getGameFont } from './utils.js';
+import { showAlphaAnnouncement } from './ui.js';
+import { t } from '../lang.js';
+
+const _PACK_NAMES = [
+    'SK-Tea','T-One','Fanatic','CloudNein','NaBee','Phase','Gee2','100Teas','TXM','Senn',
+    'Noisy','D-Rex','Zen.G','BurgerLG','WeeboG','NuJeans','AE-Spa','THRICE','Ivy',
+    'LES SERAPH','MamaMooMoo','DarkPink','Itz-G','Stacy','I-Lit','HypeUp'
+];
+export let _usedPackNames = [];
+
+export function resetPackNames() { _usedPackNames = []; }
+
+// ── 鬣狗隊伍名稱池（三國武將）──────────────────────────────
+const _HYENA_PACK_NAMES = [
+    '曹操','劉備','關羽','張飛','趙雲','諸葛亮','孫權','周瑜',
+    '呂布','黃忠','馬超','司馬懿','夏侯惇','典韋','魏延','姜維',
+    '陸遜','甘寧','太史慈','張遼'
+];
+export let _usedHyenaPackNames = [];
+export let _hyenaPackNameMap = {};
+
+export function resetHyenaPackNames() {
+    _usedHyenaPackNames = [];
+    _hyenaPackNameMap = {};
+}
 
 // ── 物種固定顏色常數 ──────────────────────────────────────────
 const CREATURE_COLORS = {
@@ -23,29 +58,30 @@ function _getCreatureColor(creature) {
 }
 
 // ── 嘴器減速：取生物有效速度（被減速中則乘以 _slowMult）────────
-function _effSpeed(c) {
+export function _effSpeed(c) {
     const now = Date.now();
     return (c._slowUntil && now < c._slowUntil) ? c.speed * (c._slowMult || 1.0) : c.speed;
 }
 
 // ── 特殊狀態光暈（不跟著旋轉，以世界座標繪製）───────────────
 function _drawCreatureGlow(ctx, creature, sx, sy) {
+    const zoom = gameState.cameraZoom || 1;
     let glowColor  = null;
-    let glowRadius = creature.radius + 4;
+    let glowRadius = creature.radius * zoom + 4;
 
     if (creature.isAlpha) {
         glowColor  = CREATURE_COLORS.alpha;
-        glowRadius = creature.radius + 6;
+        glowRadius = creature.radius * zoom + 6;
     } else if (creature.isGiantized) {
         glowColor  = CREATURE_COLORS.giantized;
-        glowRadius = creature.radius + 4;
+        glowRadius = creature.radius * zoom + 4;
     } else if (creature.isKiller) {
         const lv = creature.killerLevel || 0;
         const t  = Math.min(lv / 10, 1.0);
         const rv = Math.round(204 - t * 102);
         const gv = Math.round(34  - t * 34);
         glowColor  = `rgb(${rv},${gv},0)`;
-        glowRadius = creature.radius + 2;
+        glowRadius = creature.radius * zoom + 2;
     }
 
     if (!glowColor) return;
@@ -278,8 +314,8 @@ function _drawHyena(ctx, r) {
 // moose / beetle / croc：完整旋轉（跟 _moveAngle）
 // camel / lynx：只左右翻轉（cos 正朝右，cos 負朝左）
 // hyena：完全不旋轉（永遠朝上）
-function drawCreatureShape(ctx, creature, sx, sy) {
-    const r     = creature.radius;
+export function drawCreatureShape(ctx, creature, sx, sy) {
+    const r     = creature.radius * (gameState.cameraZoom || 1);
     const angle = creature._moveAngle || 0;
 
     ctx.save();
@@ -447,7 +483,7 @@ function _triggerGiantization(creature) {
     creature.hp               = creature.maxHp;
     creature.radius           = creature.radius * 1.5;
     creature.aggroRange       = 400;
-    creature.guardianRange    = 1000;
+    creature.guardianRange    = 500;
     creature.diet             = 'herbivore';
     creature.canFight         = true;
     creature.fruitsEaten      = 0;
@@ -455,6 +491,11 @@ function _triggerGiantization(creature) {
     creature.packLeader       = true;
     creature.packMembers      = [];
     creature.packLeaderRef    = null;
+    // 分配隊伍名稱
+    const _pnAvail = _PACK_NAMES.filter(n => !_usedPackNames.includes(n));
+    const _pnPool  = _pnAvail.length > 0 ? _pnAvail : _PACK_NAMES;
+    creature.packName = _pnPool[Math.floor(Math.random() * _pnPool.length)];
+    _usedPackNames.push(creature.packName);
     creature._packJoinTimer   = 0;
     creature._fruitTarget     = null;
     creature._fruitTargetTimer = 0;
@@ -484,6 +525,9 @@ function _triggerAlpha(creature) {
 
 // ── GuardianRange：巨人/Alpha 保護同族草食性 ──
 function _checkGuardianRange(giant) {
+    const now = Date.now();
+    if (now - (giant._guardianCheckTimer || 0) < 200) return;
+    giant._guardianCheckTimer = now;
     const range = giant.guardianRange || 1000;
     for (const neutral of gameState.neutralCreatures) {
         if (neutral.hp <= 0) continue;
@@ -495,6 +539,10 @@ function _checkGuardianRange(giant) {
         for (const hostile of gameState.hostileCreatures) {
             if (hostile.hp <= 0) continue;
             if (wrappedDistance(neutral.x, neutral.y, hostile.x, hostile.y) < 150) {
+                // 殺手在巨人 guardianRange 以外時，不觸發保護（悄悄獵殺機制）
+                if (hostile.isKiller && wrappedDistance(giant.x, giant.y, hostile.x, hostile.y) > (giant.guardianRange || 500)) {
+                    continue;
+                }
                 // 立刻把巨人的target設為這個肉食者，進入攻擊狀態
                 giant.guardianTarget = hostile;
                 giant.state = 'attacking';
@@ -581,7 +629,7 @@ function _updateGiantFlee(creature) {
 }
 
 // ── 取得生物顯示名稱（含殺手等級）──
-function _getCreatureDisplayName(creature) {
+export function _getCreatureDisplayName(creature) {
     if (!creature) return '';
     const baseName = creature.name || creature.speciesId || '未知';
     if (creature.isKiller) {
@@ -630,13 +678,13 @@ function _applyLynxBiomeBonus(lynx) {
         lynx._critMult    = 2.0;
         lynx._critSlowAmt = 0.3;
         lynx._critSlowDur = 3000;
-        lynx._critText    = '喵嗚咬死你！';
+        lynx._critText    = t('lynxCritText');
     } else {
         lynx._critChance  = 0.25;
         lynx._critMult    = 1.5;
         lynx._critSlowAmt = 0.15;
         lynx._critSlowDur = 1500;
-        lynx._critText    = '喵嗚咬死你！';
+        lynx._critText    = t('lynxCritText');
     }
 }
 
@@ -656,6 +704,15 @@ function _updateHyenaPack(hyena) {
     const now = Date.now();
     if (now - (hyena._packScanTimer || 0) < 2000) return;
     hyena._packScanTimer = now;
+    // 首次分配隊伍名稱
+    if (hyena.packGroup && !_hyenaPackNameMap[hyena.packGroup]) {
+        const available = _HYENA_PACK_NAMES.filter(n => !_usedHyenaPackNames.includes(n));
+        const pool = available.length > 0 ? available : _HYENA_PACK_NAMES;
+        const name = pool[Math.floor(Math.random() * pool.length)];
+        _usedHyenaPackNames.push(name);
+        _hyenaPackNameMap[hyena.packGroup] = name;
+    }
+    if (hyena.packGroup) hyena.packName = _hyenaPackNameMap[hyena.packGroup];
     hyena.packMates = [];
     for (const other of gameState.hostileCreatures) {
         if (other === hyena || other.hp <= 0) continue;
@@ -702,7 +759,7 @@ function _alertHyenaPack(hyena, target) {
     }
 }
 
-function updateNeutralCreatures() {
+export function updateNeutralCreatures() {
     const now = Date.now();
     const p   = gameState.player;
     const herbLv        = p.evolution.herbivore || 0;
@@ -874,10 +931,11 @@ function updateNeutralCreatures() {
                             for (const n of gameState.neutralCreatures) {
                                 if (creature.packMembers.length >= packLimit - 1) break;
                                 if (n === creature || n.hp <= 0 || n.packLeaderRef || n.isGiantized) continue;
-                                if (n.biome !== creature.biome || n.speciesId !== creature.speciesId) continue;
+                                if (n.diet !== 'herbivore' || creature.diet !== 'herbivore') continue;
                                 const d = wrappedDistance(creature.x, creature.y, n.x, n.y);
                                 if (d < followRange && Math.random() < 0.2) {
                                     n.packLeaderRef = creature;
+                                    n.packName = creature.packName;
                                     creature.packMembers.push(n);
                                 }
                             }
@@ -1106,7 +1164,7 @@ function updateNeutralCreatures() {
     }
 }
 
-function drawNeutralCreatures() {
+export function drawNeutralCreatures() {
     for (const creature of gameState.neutralCreatures) {
         if (creature.hp <= 0) continue;
         const s = worldToScreen(creature.x, creature.y);
@@ -1135,14 +1193,14 @@ function drawNeutralCreatures() {
             else if (creature.state === 'fighting')  color = fightC;
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
+            ctx.arc(s.x, s.y, creature.radius * (gameState.cameraZoom || 1), 0, Math.PI * 2);
             ctx.fill();
         }
 
         // ── 血條（名字在上、血條緊貼本體上緣）──
         const barW = 20, barH = 4;
         const barX = s.x - barW / 2;
-        const barY = s.y - creature.radius - 8;
+        const barY = s.y - creature.radius * (gameState.cameraZoom || 1) - 8;
         ctx.fillStyle = '#555';
         ctx.fillRect(barX, barY, barW, barH);
         ctx.fillStyle = '#00CC00';
@@ -1155,15 +1213,37 @@ function drawNeutralCreatures() {
             ctx.save();
             ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
             ctx.fillStyle = creature.isAlpha ? '#FFD700' : '#FFFFFF';
-            ctx.font = creature.isGiantized ? 'bold 13px Arial' : '12px Arial';
+            ctx.font = creature.isGiantized ? getGameFont(13, true) : getGameFont(12, false);
             ctx.textAlign = 'center';
-            ctx.fillText(displayName, s.x, s.y - creature.radius - 10);
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
+            ctx.fillText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
+            ctx.restore();
+        }
+        if (creature.packName) {
+            const leader = creature.packLeader ? creature : creature.packLeaderRef;
+            const memberCount = leader
+                ? 1 + (leader.packMembers ? leader.packMembers.filter(m => m.hp > 0).length : 0)
+                : 1;
+            const packLimit = leader ? _getPackLimit(leader) : 5;
+            ctx.save();
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 2;
+            ctx.font = getGameFont(10, false);
+            ctx.fillStyle = 'rgba(255,230,150,0.85)';
+            ctx.textAlign = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
+            ctx.fillText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
             ctx.restore();
         }
     }
 }
 
-function updateHostileCreatures() {
+export function updateHostileCreatures() {
     const now = Date.now();
     const p = gameState.player;
 
@@ -1197,8 +1277,8 @@ function updateHostileCreatures() {
                                   gameState.currentMap.features.hostileEatMeat);
         if (featureEatMeat && creature.diet === 'carnivore') {
             if (creature.state === 'eating') {
-                // 吃屍體期間 aggroRange×1.5，有生物進入則中斷
-                const tempAggro = (creature.eatBaseAggroRange || creature.aggroRange) * 1.5;
+                // 吃屍體期間 aggroRange×0.5，讓生物能順利進食觸發殺手化
+                const tempAggro = (creature.eatBaseAggroRange || creature.aggroRange) * 0.5;
                 let interrupted = false;
                 if (wrappedDistance(creature.x, creature.y, gameState.player.x, gameState.player.y) < tempAggro) interrupted = true;
                 if (!interrupted) {
@@ -1552,7 +1632,7 @@ function updateHostileCreatures() {
     }
 }
 
-function drawCorpses() {
+export function drawCorpses() {
     for (const corpse of gameState.corpses) {
         const s = worldToScreen(corpse.x, corpse.y);
         if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
@@ -1563,7 +1643,7 @@ function drawCorpses() {
     }
 }
 
-function drawHostileCreatures() {
+export function drawHostileCreatures() {
     for (const creature of gameState.hostileCreatures) {
         if (creature.hp <= 0) continue;
         const s = worldToScreen(creature.x, creature.y);
@@ -1580,14 +1660,14 @@ function drawHostileCreatures() {
             const hChasingC = hBiome === 'ocean' ? '#882244' : (hBiome === 'desert' ? '#885500' : '#8B0000');
             ctx.fillStyle   = creature.state === 'chasing' ? hChasingC : hNormalC;
             ctx.beginPath();
-            ctx.arc(s.x, s.y, creature.radius, 0, Math.PI * 2);
+            ctx.arc(s.x, s.y, creature.radius * (gameState.cameraZoom || 1), 0, Math.PI * 2);
             ctx.fill();
         }
 
         // ── 血條 ──
         const barW = 20, barH = 4;
         const barX = s.x - barW / 2;
-        const barY = s.y - creature.radius - 8;
+        const barY = s.y - creature.radius * (gameState.cameraZoom || 1) - 8;
         ctx.fillStyle = '#550000';
         ctx.fillRect(barX, barY, barW, barH);
         ctx.fillStyle = '#00CC00';
@@ -1598,9 +1678,38 @@ function drawHostileCreatures() {
             ctx.save();
             ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
             ctx.fillStyle   = creature.isKiller ? '#FF8800' : '#FFFFFF';
-            ctx.font        = creature.isKiller  ? 'bold 12px Arial' : '12px Arial';
+            ctx.font        = creature.isKiller  ? getGameFont(12, true) : getGameFont(12, false);
             ctx.textAlign   = 'center';
-            ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius - 10);
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
+            ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
+            ctx.restore();
+        }
+        // ── 鬣狗隊名標籤 ──
+        if (creature.speciesId === 'hyena' && creature.packName) {
+            const packCount = gameState.hostileCreatures.filter(
+                c => c.speciesId === 'hyena' && c.packGroup === creature.packGroup && c.hp > 0
+            ).length;
+            ctx.save();
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 2;
+            ctx.font = getGameFont(10, false);
+            ctx.fillStyle = 'rgba(255, 200, 100, 0.85)';
+            ctx.textAlign = 'center';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = (gameState.settings && gameState.settings.fontBoldLarge) ? 3.5 : 2.5;
+            ctx.strokeText(
+                creature.packName + '(' + packCount + '/3)',
+                s.x,
+                s.y - creature.radius * (gameState.cameraZoom || 1) - 22
+            );
+            ctx.fillText(
+                creature.packName + '(' + packCount + '/3)',
+                s.x,
+                s.y - creature.radius * (gameState.cameraZoom || 1) - 22
+            );
             ctx.restore();
         }
     }

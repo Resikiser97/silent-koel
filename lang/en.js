@@ -4,6 +4,7 @@
 //   translate only the string values, then add an entry to
 //   LANG_LIST in lang.js. Never rename keys or remove {tokens}.
 // =============================================================
+import { LANG } from '../lang.js';
 
 LANG['en'] = {
     ui: {
@@ -63,7 +64,18 @@ LANG['en'] = {
         autoAttack:      'Auto Attack',
         autoAttackHint:  'Z key to toggle',
         organTooltip:    'Organ Tooltip',
+        alwaysCenter:     'Center Camera',
+        alwaysCenterHint: '',
+        minimapFade:      'Map Fade',
+        fontBoldLarge:    'Big & Bold',
+        sectionMinimap:  'Minimap Settings',
+        sectionCamera:   'Camera Settings',
+        minimapSize:     'Minimap',
+        cameraMode:      'Camera',
+        cameraSmart:     'Smart',
+        cameraManual:    'Manual',
         patchNotes:       '📋 Patch Notes',
+        discordBtn:       '💬 Discord Community',
         patchNotesTitle:  '📋 Version Update Notes',
         patchAdded:       '✅ Added',
         patchFixed:       '🔧 Fixed',
@@ -129,6 +141,24 @@ LANG['en'] = {
         dashCooldownLabel: 'Cooldown',
         mutationExchange: '100 Skill Pts → 10 Mutation Pts',
         mutationExchangeHint: 'Current skill points: {n}',
+        poisonSacLevelUp: '✨ Poison Sac Level Up Lv{lv}!',
+        devModeWarning: '⚠️ Dev mode used — score not submitted to leaderboard',
+        autoAttackIndicator: '⚔️ Auto',
+        mutationOrgLabel: 'Mutation Organs ⚗️ Lv.{lv}',
+        tutorialLabel: 'Tutorial',
+        tutorialHint: 'When on, tutorial appears at the start of the next run',
+        btnStartAdventure: '⚔️  Start Adventure',
+        mutationPanelTitle: '⚗️ Mutation Organs',
+        mutationPointsLabel: 'Mutation Points: {n}',
+        mutationUpgradeBtn: 'Upgrade ({n} pts)',
+        mutationSkillTree:      'Mutation Skill Tree',
+        mutationSkillTreeBtn:   'Mutate',
+        mutationSkillPointsLabel: 'Skill Points: {n}',
+        mutationSkillUpgrade:   'Upgrade ({n} pts)',
+        mutationSkillMaxed:     'Maxed',
+        recallOrganSkillName:   'Recall Organ',
+        recallOrganSkillDesc:   'Increases the carry limit for powerful organs (+1 per level)',
+        lynxCritText: 'CRUNCH!',
         // ── Compendium
         compendiumTitle:      '📖 Compendium',
         compendiumTabGuide:   'Guide',
@@ -373,8 +403,8 @@ LANG['en'] = {
             'Can eat fruit, Max HP +30',
             'HP +10, Fruit XP +1, neutrals stop fleeing on bump',
             'HP +15, Fruit XP +2, neutrals don\'t flee even when attacked',
-            'HP +20, Fruit XP +3, Size +10%, neutrals fully friendly',
-            'HP +25, Fruit XP +4, Size +20%, neutrals fully friendly'
+            'HP +20, Fruit XP +3, Size +10%, neutrals fully friendly, Giant creatures deal 15% less damage to you',
+            'HP +25, Fruit XP +4, Size +20%, neutrals fully friendly, Giant creatures deal 30% less damage to you'
         ]},
         carnivore: { name: 'Carnivore', levels: [
             'Can eat corpses (5 XP, 3s), Atk +2',
@@ -406,3 +436,4 @@ LANG['en'] = {
         desert: { name: '🏜️ Desert Scorpion King', label: '🦂🏜️ Scorpion King' }
     }
 };
+export {};

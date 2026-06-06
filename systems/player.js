@@ -1,18 +1,36 @@
 // =============================================================
-// 玩家系統 - updatePlayerMovement / checkFruitCollision
+// 玩家系統 - updatePlayerMovement / playerDash / checkFruitCollision
 //            updateTreeFruitProduction / showXPPopup
 //            checkTreasureCollision / updatePassiveOrgans
 //            checkXPMilestone / addXP / checkLevelUp
-//            updateProjectiles / _checkProjectileHit（子彈系統）
+//            updateProjectiles / findBestPerceptionPath
+//            _checkProjectileHit（子彈系統）
 //            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
 // =============================================================
+import { gameState } from './gameState.js';
+import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
+import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
+import { FIXED_DELTA, ARCHER_BULLET_SPEED } from '../config/gameConfig.js';
+import { ORGANS } from '../config/organs.js';
+import { EVOLUTION_PATHS } from '../config/evolution.js';
+import { AudioManager } from './audio.js';
+import { applyTenacity } from './utils.js';
+import { t } from '../lang.js';
+import { applyDamageToPlayer, handleKill, handleGiantKill, showFloatingText } from './combat.js';
+import { handleEliteKill } from './organs.js';
+import { handleBossKill } from './boss.js';
+import { spawnFruitFromTree } from './spawning.js';
+import { getOrganLevel, getOrganCumulative, applyOrganEffects, showOrganSelection } from './organs.js';
+import { _joyPaused } from './mobile.js';
+import { handleTutorialStumpKill } from './tutorial.js';
 
 // =============================================================
 // 子彈系統（阿奇爾 Archerfish 射水）
 // =============================================================
 
-function updateProjectiles() {
+export function updateProjectiles() {
     const projs = gameState.projectiles;
+    const p = gameState.player;
     for (let i = projs.length - 1; i >= 0; i--) {
         const b = projs[i];
         b.x += b.vx;
@@ -21,6 +39,7 @@ function updateProjectiles() {
 
         // 超出射程消失
         if (b.distTraveled >= b.maxRange) {
+            if (b.owner === 'hunter') AudioManager.play('hunterBulletHit');
             projs.splice(i, 1);
             continue;
         }
@@ -29,17 +48,28 @@ function updateProjectiles() {
         b.x = ((b.x % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
         b.y = ((b.y % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
 
-        // 命中偵測
+        // 黑色獵人子彈：打玩家
+        if (b.owner === 'hunter') {
+            if (p && wrappedDistance(b.x, b.y, p.x, p.y) < b.radius + (p.radius || 0)) {
+                applyDamageToPlayer(b.damage, gameState.boss);
+                AudioManager.play('hunterBulletHit');
+                projs.splice(i, 1);
+            }
+            continue;
+        }
+
+        // 命中偵測（阿奇爾子彈打敵人）
         if (_checkProjectileHit(b, i)) continue;
     }
 }
 
-function _checkProjectileHit(b, idx) {
+export function _checkProjectileHit(b, idx) {
     const targets = [
         ...gameState.hostileCreatures,
         ...gameState.neutralCreatures,
         ...(gameState.boss && gameState.boss.hp > 0 ? [gameState.boss] : []),
         ...(gameState.eliteCreature && gameState.eliteCreature.hp > 0 ? [gameState.eliteCreature] : []),
+        ...(gameState.tutorialStump && gameState.tutorialStump.hp > 0 ? [gameState.tutorialStump] : []),
     ];
 
     for (const c of targets) {
@@ -82,7 +112,7 @@ function _checkProjectileHit(b, idx) {
         // 目標死亡路由
         if (c.hp <= 0) {
             if (c === gameState.boss) {
-                showVictory();
+                handleBossKill(c);
             } else if (c === gameState.eliteCreature) {
                 handleEliteKill(c);
             } else if (c.isGiantized) {
@@ -103,7 +133,7 @@ function _checkProjectileHit(b, idx) {
 // 阿奇爾攻擊系統
 // =============================================================
 
-function _getAllAttackTargets() {
+export function _getAllAttackTargets() {
     return [
         ...gameState.hostileCreatures.filter(c => c.hp > 0),
         ...gameState.neutralCreatures.filter(c => c.hp > 0),
@@ -121,7 +151,7 @@ function _getAllAttackTargets() {
  *
  * @returns {object|null}
  */
-function _findArcherAutoTarget() {
+export function _findArcherAutoTarget() {
     const p    = gameState.player;
     const tgts = _getAllAttackTargets();
     if (tgts.length === 0) return null;
@@ -153,7 +183,7 @@ function _findArcherAutoTarget() {
     return best;
 }
 
-function _getArcherShootDir() {
+export function _getArcherShootDir() {
     const p = gameState.player;
 
     if (gameState.settings.autoAttack) {
@@ -184,7 +214,7 @@ function _getArcherShootDir() {
     }
 }
 
-function _archerAttack() {
+export function _archerAttack() {
     const p = gameState.player;
     const now = Date.now();
 
@@ -219,7 +249,7 @@ function _archerAttack() {
     p.reloadTimer   = 0;
 
     // 建立子彈（單顆，方向由 _getArcherShootDir 決定：P1 正前方敵人 / P2 全場最近敵人）
-    const bulletSpeed = 9;
+    const bulletSpeed = ARCHER_BULLET_SPEED;
     gameState.projectiles.push({
         x: p.x, y: p.y,
         vx: dir.dx * bulletSpeed,
@@ -236,26 +266,38 @@ function _archerAttack() {
     AudioManager.play('attackNormal');
 }
 
+let _treeProductionTimer = 0;
+
 // 提取果子吸收邏輯，供 checkFruitCollision 和 playerDash 共用
 function _collectFruit(p, fruit) {
     const ev = p.evolution;
-    let herbBonus = 0;
-    for (let h = 1; h < ev.herbivore; h++) {
-        herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
+    let fruitXP;
+    if (ev.herbivore >= 1) {
+        // 有草食性 Lv1+：正常計算（基礎5 + forager + 草食bonus）
+        let herbBonus = 0;
+        for (let h = 1; h < ev.herbivore; h++) {
+            herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
+        }
+        fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
+    } else {
+        // 無草食性：只得 1 XP（可吃但效益極低，避免刷巨人時靠果子回血）
+        fruitXP = 1;
     }
-    const fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
     const actualFruitXP = addXP(fruitXP);
     AudioManager.play('eatFruit');
     showXPPopup(p.x, p.y, actualFruitXP);
+    if (gameState.sessionStats) {
+        gameState.sessionStats.fruitsEaten = (gameState.sessionStats.fruitsEaten || 0) + 1;
+    }
 }
 
-function playerDash() {
+export function playerDash() {
     const p = gameState.player;
     if (p.dashCooldown > 0) return;
     if (_joyPaused()) return;
 
     // ── 阿奇爾 F技：加速衝刺（持續 3 秒，陸地+3 水中+5）
-    if (gameState.selectedCharacter === 'archerfish') {
+    if (p.isRanged) {
         const now = Date.now();
         const inWater = getBiome(p.x, p.y) === 'ocean';
         const dashSpeedAdd = inWater ? 5 : 3;
@@ -335,7 +377,7 @@ function playerDash() {
     }
 }
 
-function updatePlayerMovement() {
+export function updatePlayerMovement() {
     const p = gameState.player;
     const now = Date.now();
 
@@ -423,7 +465,7 @@ function updatePlayerMovement() {
     }
 
     // ── 阿奇爾水中速度 +50%
-    if (gameState.selectedCharacter === 'archerfish') {
+    if (p.isRanged) {
         const biome = getBiome(p.x, p.y);
         if (biome === 'ocean') {
             dx *= 1.5;
@@ -455,7 +497,7 @@ function updatePlayerMovement() {
     p.y = ((p.y + dy) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT;
 }
 
-function checkFruitCollision() {
+export function checkFruitCollision() {
     const p = gameState.player;
     const bodyScale = p.radius / 10;
     const collisionRadius = (p.radius + 6 + p.pickupRange) * bodyScale;
@@ -471,7 +513,11 @@ function checkFruitCollision() {
     return false;
 }
 
-function updateTreeFruitProduction(deltaTime) {
+export function updateTreeFruitProduction(deltaTime) {
+    _treeProductionTimer += FIXED_DELTA;
+    if (_treeProductionTimer < 500) return;
+    const elapsed = _treeProductionTimer;
+    _treeProductionTimer = 0;
     for (const tree of gameState.trees) {
         const range     = tree.isLarge ? 80 : 60;
         const maxNearby = tree.isLarge ?  5 :  3;
@@ -482,7 +528,7 @@ function updateTreeFruitProduction(deltaTime) {
         }
         tree.fruitCount = nearby;
         if (nearby >= maxNearby) continue;
-        tree.fruitTimer += deltaTime;
+        tree.fruitTimer += elapsed;
         const interval = nearby === 0 ? 9000 : (nearby === 1 ? 19500 : 30000);
         if (tree.fruitTimer >= interval) {
             tree.fruitTimer = 0;
@@ -491,19 +537,12 @@ function updateTreeFruitProduction(deltaTime) {
     }
 }
 
-function showXPPopup(wx, wy, amount) {
-    const s = worldToScreen(wx, wy);
-    if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
-    const popup = document.createElement('div');
-    popup.id = 'xp-popup';
-    popup.innerText = `+${amount} XP`;
-    popup.style.left = `${s.x - 15}px`;
-    popup.style.top = `${s.y - 20}px`;
-    document.getElementById('ui-overlay').appendChild(popup);
-    setTimeout(() => { popup.remove(); }, 1000);
+export function showXPPopup(wx, wy, amount) {
+    if (!amount || amount <= 0) return;
+    showFloatingText(wx, wy, '+' + amount, '#FFD700', 13);
 }
 
-function checkTreasureCollision() {
+export function checkTreasureCollision() {
     const p = gameState.player;
     for (let i = gameState.treasures.length - 1; i >= 0; i--) {
         const t = gameState.treasures[i];
@@ -515,7 +554,7 @@ function checkTreasureCollision() {
     }
 }
 
-function updatePassiveOrgans() {
+export function updatePassiveOrgans() {
     const now = Date.now();
     const p = gameState.player;
 
@@ -559,14 +598,14 @@ function updatePassiveOrgans() {
     }
 }
 
-function checkXPMilestone() {
+export function checkXPMilestone() {
     if (gameState.organSelectionActive) return;
     if (gameState.stats.xpCurrent >= gameState.xpThreshold) {
         showOrganSelection();
     }
 }
 
-function addXP(amount) {
+export function addXP(amount) {
     const xpMult = (gameState.player.mutationXpBonus || 1);
     const finalAmount = xpMult !== 1 ? Math.round(amount * xpMult) : amount;
     gameState.stats.xpCurrent += finalAmount;
@@ -591,7 +630,7 @@ function checkLevelUp() {
 // 靈敏知覺算法 - 找出果子最多的高效率直線路徑
 // =============================================================
 
-function findBestPerceptionPath(player, fruits, detectionRange) {
+export function findBestPerceptionPath(player, fruits, detectionRange) {
     if (!fruits || fruits.length === 0) return null;
 
     // 篩選範圍內的果子
@@ -642,4 +681,8 @@ function findBestPerceptionPath(player, fruits, detectionRange) {
 
     if (!bestEndpoint) return null;
     return { endpoint: bestEndpoint, fruits: bestFruits, angle: bestAngle };
+}
+
+function resetTreeProductionTimer() {
+    _treeProductionTimer = 0;
 }

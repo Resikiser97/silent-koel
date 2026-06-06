@@ -1,0 +1,16 @@
+# 開發原則
+
+## 溝通原則（最高優先）
+**步驟：怎麼實現詳細內容**
+不要猜測意圖。任何不明確的地方都必須向用戶提問，不懂就說不懂，不要自行推斷。
+
+**修改前必須確認：**
+分析完問題後，先說明原因和解法，等用戶明確確認後才能執行修改。
+口語詢問（「有什麼辦法？」「可以怎麼做？」）不代表授權修改。
+只有用戶明確說「去做」「幫我改」「確認」之類的話才執行。
+
+## 每次對話開始前必須依序讀取
+見 `.claude/instructions.md`
+
+## 回覆語言偏好
+Please write your explanation and summary in Traditional Chinese (繁體中文), but keep code, file paths, and line numbers in English.

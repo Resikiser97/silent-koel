@@ -5,6 +5,7 @@
 //   - _lbDifficulty / _top10Difficulty：模組級難度狀態，兩個面板同步
 //   - showLeaderboard()：全屏排行榜面板，支援勝利/失敗切換、難度篩選、分頁
 //   - showScoreSubmitPopup()：遊戲結束前彈出名字輸入，提交或跳過後進入結算畫面
+//   - showFunLeaderboard()：趣味排行榜面板（各類特殊統計）
 //
 // 跨模組依賴：
 //   - config/supabase.js：fetchVictoryRecords / fetchDefeatRecords / submitScore
@@ -15,12 +16,36 @@
 // =============================================================
 
 // ── 排行榜難度狀態（模組級，跨面板同步）
-let _lbDifficulty   = 'easy'; // 全屏排行榜目前選擇的難度
-let _top10Difficulty = 'easy'; // TOP10 浮窗目前選擇的難度
-/** 難度 ID → 語言包 key，例如 'easy' → 'diffEasy' */
-function _diffKey(d) { return 'diff' + d.charAt(0).toUpperCase() + d.slice(1); }
+import { gameState } from './gameState.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import {
+    submitScore,
+    fetchVictoryRecords,
+    fetchDefeatRecords,
+    fetchTop10,
+    fetchFunSpeedVictory,
+    fetchFunSpeedDeath,
+    fetchFunGiantKills,
+    fetchFunKillerKills,
+    fetchFunKillerMaxLevel,
+    fetchFunBossKillSpeed,
+    fetchFunMaxLevel,
+    fetchFunHunterKill,
+    fetchFunFruitsEaten,
+    fetchFunNormalKills,
+    fetchAvailableDifficulties
+} from '../config/supabase.js';
+import { applyDeviceMode } from './mobile.js';
+import { showChat } from './chat.js';
+import { t } from '../lang.js';
+import { getRankIcon } from './utils.js';
 
-function showLeaderboard() {
+export let _lbDifficulty   = 'easy'; // 全屏排行榜目前選擇的難度
+export let _top10Difficulty = 'easy'; // TOP10 浮窗目前選擇的難度
+/** 難度 ID → 語言包 key，例如 'easy' → 'diffEasy' */
+export function _diffKey(d) { return 'diff' + d.charAt(0).toUpperCase() + d.slice(1); }
+
+export function showLeaderboard() {
     applyDeviceMode();
     let currentPage = 1;
     const PAGE_SIZE = 20;
@@ -175,6 +200,7 @@ function showLeaderboard() {
     function closeLb() {
         overlay.remove();
         document.removeEventListener('keydown', lbKeyHandler);
+        if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
     }
     closeBtn.onclick = closeLb;
     overlay.addEventListener('click', e => { if (e.target === overlay) closeLb(); });
@@ -204,7 +230,9 @@ function showLeaderboard() {
     // 先取得有資料的難度陣列，確保 _lbDifficulty 有效後再載入
     fetchAvailableDifficulties().then(function(diffs) {
         if (diffs && diffs.length > 0) {
-            _availDiffs = diffs;
+            const _diffOrder = ['easy', 'normal', 'hard'];
+            _availDiffs = _diffOrder.filter(d => diffs.includes(d));
+            diffs.forEach(d => { if (!_availDiffs.includes(d)) _availDiffs.push(d); });
         } else {
             _availDiffs = ['easy'];
         }
@@ -220,7 +248,7 @@ function showLeaderboard() {
     });
 }
 
-function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
+export function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
     const popup = document.createElement('div');
     popup.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:150;color:white;font-family:Arial,sans-serif;';
 
@@ -333,6 +361,27 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             myValue:  gameState.player ? (gameState.player.level || 1) : 1,
             ascending: false,
         },
+        {
+            label:    '🎯 獵人終結者',
+            fetchFn:  () => fetchFunHunterKill(difficulty),
+            colName:  'boss_kill_time',
+            myValue:  (isVictory && bossKillTime != null && difficulty === 'hard') ? Math.floor(bossKillTime) : null,
+            ascending: true,
+        },
+        {
+            label:    '🍎 最佳果王',
+            fetchFn:  () => fetchFunFruitsEaten(difficulty),
+            colName:  'fruits_eaten',
+            myValue:  gameState.sessionStats ? (gameState.sessionStats.fruitsEaten || 0) : 0,
+            ascending: false,
+        },
+        {
+            label:    '🏹 最強獵戶',
+            fetchFn:  () => fetchFunNormalKills(difficulty),
+            colName:  'normal_kills',
+            myValue:  gameState.sessionStats ? (gameState.sessionStats.normalKills || 0) : 0,
+            ascending: false,
+        },
     ];
 
     // 計算本局成績在一般榜的排名
@@ -414,7 +463,11 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             is_victory: isVictory,
             boss_kill_time: bossKillTime !== null && bossKillTime !== undefined ? Math.floor(bossKillTime) : null,
             version: GAME_INFO.version,
-            version_order: Math.floor(parseInt(GAME_INFO.version.replace(/\D/g, '').slice(0, 4))),
+            version_order: (function() {
+                const parts = GAME_INFO.version.replace('v', '').split('.');
+                if (parts.length <= 3) return 0;  // 三碼舊格式（v0.65.0），視為賽季 0
+                return parseInt(parts[1]) || 0;   // 四碼新格式，正常取第二段 x
+            })(),
             difficulty: gameState.lastDifficulty || 'easy',
             character: gameState.selectedCharacter || 'koel',
         };
@@ -486,7 +539,7 @@ function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
 // =============================================================
 // 趣味排行榜（九）
 // =============================================================
-function showFunLeaderboard(difficulty) {
+export function showFunLeaderboard(difficulty) {
     applyDeviceMode();
     difficulty = difficulty || 'easy';
     const overlay = document.createElement('div');
@@ -512,6 +565,10 @@ function showFunLeaderboard(difficulty) {
         { key: 'bosskill', label: '⚔️ 最快擊殺Boss', fetchFn: () => fetchFunBossKillSpeed(difficulty), colName: 'boss_kill_time', colLabel: 'Boss擊殺(秒)', format: v => String(v) + 's' },
         { key: 'maxlevel', label: '👑 最高等級', fetchFn: () => fetchFunMaxLevel(difficulty),
           colName: 'level', colLabel: '等級', format: v => 'Lv.' + String(v) },
+        { key: 'fruits',  label: '🍎 最佳果王',  fetchFn: () => fetchFunFruitsEaten(difficulty),
+          colName: 'fruits_eaten', colLabel: '果子數', format: v => String(v) },
+        { key: 'normkill', label: '🏹 最強獵戶', fetchFn: () => fetchFunNormalKills(difficulty),
+          colName: 'normal_kills', colLabel: '擊殺數', format: v => String(v) },
     ];
     let currentCat = categories[0];
 

@@ -2,16 +2,22 @@
 // 遊戲狀態 - DEFAULT_SETTINGS / gameState / Canvas / MAP 常數
 // =============================================================
 
-const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS = {
     language: 'zh-TW',
     volume: { master: 80, music: 70, sfx: 80, masterOn: true, musicOn: true, sfxOn: true },
     keys:   { up: 'w', down: 's', left: 'a', right: 'd', attack: ' ', dash: 'f' },
     deviceMode: null,
     autoAttack: false,
     showOrganTooltip: true,  // 手機版器官提示開關（桌機版不使用）
+    alwaysCenter: false,     // 角色永遠固定於畫面正中央（預設關閉）
+    minimapFade: false,      // 移動時小地圖漸漸淡化（預設關閉）
+    minimapSize: 10,         // 小地圖大小（0=關閉，1~10格）
+    fontBoldLarge: false,    // 字大又粗（canvas 字型 +7px + bold）
+    cameraMode: 'smart',     // 視野模式：'smart'（智能）/ 'manual'（手動）
+    cameraZoomLevel: 10,     // 視野縮放刻度（1~10，決定 baseZoom）
 };
 
-const gameState = {
+export const gameState = {
     canvasWidth: 1600,
     canvasHeight: 900,
 
@@ -95,10 +101,11 @@ const gameState = {
     boss: null,
     bossSpawned: false,
     bossBellPlayed: false,
-    sessionStats: { giantKills: 0, killerKills: 0, killerMaxLevel: 0 },
+    sessionStats: { giantKills: 0, killerKills: 0, killerMaxLevel: 0, fruitsEaten: 0, normalKills: 0 },
     sessionSkillPoints: { elite: 0, boss: 0 },
     eliteCreature: null,
     eliteJustKilled: false,
+    eliteOrder: [],
     alphaCreature: null,
     topBarTarget: null,
     topBarFadeTimer: 0,
@@ -120,12 +127,16 @@ const gameState = {
     _playTimerPaused: false,
     mutationData: null,         // 由 initMutationData() 初始化（跨局永久保存）
     mutationPanelOpen: false,   // 變異面板是否開啟
+    mutationSkillPoints: 0,     // 可用變異技能點（每 50 總變異等級 +1）
+    mutationSkills: null,       // 由 initMutationSkills() 初始化（跨局永久保存）
     tutorialOpen: false,        // 新手教學是否開啟（暫停遊戲邏輯）
     tutorialOrganPhase: false,  // 戰鬥教學：器官鎖定中（只能選攻擊器官）
     tutorialCombatActive: false,// 戰鬥教學：木樁存活中
     tutorialStump: null,        // 教學木樁物件
+    spawnProtectUntil: 0,       // 出生保護：此時間戳前不補充生成肉食怪
     dashEffect: null,           // 閃現特效狀態（{ ax,ay,bx,by,startTime,duration }）
     projectiles:  [],           // 子彈陣列（阿奇爾射水）
+    floatTexts:   [],           // Canvas 批次浮動文字陣列
     mouseWorld:   { x: 0, y: 0 }, // 滑鼠世界座標（保留相容性，勿刪）
     mouseScreen:  { sx: 0, sy: 0 }, // 滑鼠 canvas 螢幕座標（攻擊方向計算用，不受玩家移動影響）
     cameraZoom: 1.0,           // 手機視野縮放（體型增加時自動縮小；桌機固定1.0）
@@ -136,5 +147,5 @@ const gameState = {
 // =============================================================
 // 畫布
 // =============================================================
-const canvas = document.getElementById('gameCanvas');
-const ctx    = canvas.getContext('2d');
+export const canvas = document.getElementById('gameCanvas');
+export const ctx    = canvas.getContext('2d');

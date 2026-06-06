@@ -1,11 +1,41 @@
 // =============================================================
 // 進化與技能系統 - checkEvolutionUnlock / applyEvolutionLevelEffect
-//                 applyEvolutionEffects / applySkillBonuses
+//                 applyEvolutionEffects / loadSavedOrgans / applySkillBonuses
 //                 saveLastRunOrgans / showSkillTree
 //                 buildSkillTreeOverlay / upgradeSkill
 // =============================================================
+import { gameState } from './gameState.js';
+import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { ORGANS, HIDDEN_ORGANS } from '../config/organs.js';
+import { GAME_INFO } from '../config/gameConfig.js';
+import { t } from '../lang.js';
+import { addXP } from './player.js';
+import { applyOrganEffects, applyHiddenOrganEffects, showOrganSelection, showHiddenOrganSelection, getOrganSlotsUsed } from './organs.js';
+import { showFloatingText } from './combat.js';
+import { applyMutationEffects, saveMutationData, getMutationUpgradeCost, upgradeMutation, initMutationSkills, _syncMutationSkillPoints } from './mutation.js';
+import { showTooltip, hideTooltip, buildEndGameOverlay } from './ui.js';
+import { pausePlayTimer, resumePlayTimer } from '../main.js';
+import { showScoreSubmitPopup } from './leaderboard.js';
+import { AudioManager } from './audio.js';
+import { saveSettings } from './ui.js';
+import { applyDeviceMode } from './mobile.js';
+import { initializeGame } from '../main.js';
+import { showChat } from './chat.js';
+import {
+    STORAGE_KEYS,
+    storageGet,
+    storageSet,
+    storageRemove,
+    storageGetJSON,
+    storageSetJSON
+} from '../storage/index.js';
 
-function checkEvolutionUnlock() {
+// 模組內部狀態：記錄技能樹是否從首頁開啟
+// 僅供 evolution.js 內部使用，不對外暴露
+let _skillTreeFromHome = false;
+let _skillTreeMode     = null;
+
+export function checkEvolutionUnlock() {
     const ev = gameState.player.evolution;
     const opts = [];
     if (ev.herbivore < EVOLUTION_PATHS.herbivore.maxLevel) {
@@ -21,7 +51,7 @@ function checkEvolutionUnlock() {
     return opts;
 }
 
-function applyEvolutionLevelEffect(type, newLevel) {
+export function applyEvolutionLevelEffect(type, newLevel) {
     const p = gameState.player;
     const lvData = EVOLUTION_PATHS[type].levels[newLevel - 1];
     if (type === 'herbivore') {
@@ -32,6 +62,9 @@ function applyEvolutionLevelEffect(type, newLevel) {
             const rangeIncrease = Math.round(add / Math.max(p.radius, 1) * p.attackRange);
             p.radius = Math.max(5, p.radius + add);
             p.attackRange = Math.max(10, p.attackRange + rangeIncrease);
+        }
+        if (lvData.giantDamageReduction !== undefined) {
+            p.giantDamageReduction = lvData.giantDamageReduction;
         }
     } else if (type === 'carnivore') {
         // 固定值覆蓋：先扣掉上一級的值，再加新的值
@@ -66,7 +99,7 @@ function _grantPoisonSac(p) {
     p.organs.push({ id: 'poisonSac', name: ORGANS.poisonSac.name, type: 'special', level: 0, desc: '沒什麼囊用' });
 }
 
-function applyEvolutionEffects() {
+export function applyEvolutionEffects() {
     const ev = gameState.player.evolution;
     const p = gameState.player;
     for (let i = 0; i < ev.herbivore; i++) {
@@ -77,6 +110,9 @@ function applyEvolutionEffects() {
             const rangeIncrease = Math.round(add / Math.max(p.radius, 1) * p.attackRange);
             p.radius = Math.max(5, p.radius + add);
             p.attackRange = Math.max(10, p.attackRange + rangeIncrease);
+        }
+        if (lv.giantDamageReduction !== undefined) {
+            p.giantDamageReduction = lv.giantDamageReduction;
         }
     }
     // 肉食性為固定值：只套用最高等級的數值（非累加）
@@ -116,7 +152,37 @@ function _setFangLevel(targetLv) {
     }
 }
 
-function applySkillBonuses() {
+// 獨立函式：從 localStorage 載入已儲存的器官並套用效果
+// 供 initializeGame() 與 buildSkillTreeOverlay(fromHome) 共用
+// initializeGame() 在 applySkillBonuses() 之前呼叫，確保器官不因跳過技能樹而丟失
+// buildSkillTreeOverlay(fromHome) 路徑只讀取 skillPoints，不再重複呼叫此函式
+export function loadSavedOrgans() {
+    const p = gameState.player;
+    try {
+        const organs = storageGetJSON(STORAGE_KEYS.SAVED_ORGANS);
+        if (organs) {
+            p.organs = p.organs || [];
+            organs.forEach(organ => {
+                if (p.organs.find(o => o.id === organ.id)) return;
+                p.organs.push(Object.assign({}, organ));
+                applyOrganEffects(organ);
+            });
+        }
+    } catch(e) {}
+    try {
+        const hiddenOrgans = storageGetJSON(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
+        if (hiddenOrgans) {
+            p.hiddenOrgans = p.hiddenOrgans || [];
+            hiddenOrgans.forEach(organ => {
+                if (p.hiddenOrgans.find(h => h.id === organ.id)) return;
+                p.hiddenOrgans.push(Object.assign({}, organ));
+                applyHiddenOrganEffects(organ);
+            });
+        }
+    } catch(e) {}
+}
+
+export function applySkillBonuses() {
     const sk = gameState.playerSkills;
     const p = gameState.player;
     const hpBonus = (sk.vitality || 0) * 20;
@@ -133,46 +199,22 @@ function applySkillBonuses() {
     } else if (terribleFangLv >= 3) {
         _setFangLevel(1);
     }
-    // 記憶器官：載入玩家死亡時手動選擇保留的器官（只用一次）
-    const savedOrgans = localStorage.getItem('savedOrgans');
-    if (savedOrgans) {
-        try {
-            const organs = JSON.parse(savedOrgans);
-            organs.forEach(organ => {
-                if (p.organs.find(o => o.id === organ.id)) return;
-                const o = Object.assign({}, organ, { inherited: true, level: organ.level || 1 });
-                p.organs.push(o);
-                applyOrganEffects(o);
-            });
-        } catch(e) {}
-        localStorage.removeItem('savedOrgans');
-    }
-    // 隱藏器官繼承
-    const savedHiddenOrgans = localStorage.getItem('savedHiddenOrgans');
-    if (savedHiddenOrgans) {
-        try {
-            const hOrgans = JSON.parse(savedHiddenOrgans);
-            hOrgans.forEach(organ => {
-                if (p.hiddenOrgans.find(h => h.id === organ.id)) return;
-                p.hiddenOrgans.push(Object.assign({}, organ));
-                applyHiddenOrganEffects(organ);
-            });
-        } catch(e) {}
-        localStorage.removeItem('savedHiddenOrgans');
-    }
+    // 注意：器官載入已移至獨立函式 loadSavedOrgans()，由 initializeGame() 在此函式之前呼叫
 }
 
-function saveLastRunOrgans() {
+export function saveLastRunOrgans() {
     const p = gameState.player;
     const data = {
         organs: (p.organs || []).map(o => ({ id: o.id, name: o.name, type: o.type, level: o.level || 1, desc: o.desc })),
         hiddenOrgans: (p.hiddenOrgans || []).map(h => ({ id: h.id, name: h.name, desc: h.desc }))
     };
-    localStorage.setItem('lastRunOrgans', JSON.stringify(data));
+    storageSetJSON(STORAGE_KEYS.LAST_RUN_ORGANS, data);
 }
 
-function showSkillTree(cause) {
+export function showSkillTree(cause) {
     if (gameState.gameOver) return;
+    saveSettings();
+    if (!gameState.mutationSkills) initMutationSkills();
     pausePlayTimer();
     gameState.gameOver = true;
     gameState.skillTreeOpen = true;
@@ -183,75 +225,56 @@ function showSkillTree(cause) {
     const levelBonus = Math.floor(gameState.player.level / 6);
     const eliteBonus = (gameState.sessionSkillPoints && gameState.sessionSkillPoints.elite) || 0;
     gameState.skillPoints += timeBonus + levelBonus;
-    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
-    localStorage.removeItem('savedOrgans');
-    localStorage.removeItem('savedHiddenOrgans');
+    storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+    storageRemove(STORAGE_KEYS.SAVED_ORGANS);
+    storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
     const showDeathSettlement = () => {
-        const overlay = document.createElement('div');
-        overlay.id = 'death-settlement-overlay';
-        overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;font-family:Arial,sans-serif;';
-        const titleEl = document.createElement('div');
-        titleEl.style.cssText = 'font-size:52px;margin-bottom:16px;';
-        titleEl.textContent = cause === 'timeout' ? t('timeoutTitle') : t('youDied');
-        overlay.appendChild(titleEl);
-        const xpEl = document.createElement('div');
-        xpEl.style.cssText = 'font-size:18px;margin-bottom:10px;color:#FFD700;';
-        xpEl.textContent = t('finalXP', { xp: gameState.stats.xpCurrent });
-        overlay.appendChild(xpEl);
-        if (timeBonus > 0 || levelBonus > 0 || eliteBonus > 0) {
-            const spSection = document.createElement('div');
-            spSection.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:16px;text-align:center;line-height:1.8;';
-            const spLines = [];
-            if (eliteBonus > 0) spLines.push(t('skillPtElite', { n: eliteBonus }));
-            if (timeBonus > 0)  spLines.push(t('skillPtTime',  { n: timeBonus }));
-            if (levelBonus > 0) spLines.push(t('skillPtLevel', { n: levelBonus }));
-            spSection.innerHTML = spLines.join('<br>');
-            overlay.appendChild(spSection);
-        }
-        const goTreeBtn = document.createElement('button');
-        goTreeBtn.style.cssText = 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;';
-        goTreeBtn.textContent = t('goSkillTree');
-        goTreeBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'postGame'); };
-        overlay.appendChild(goTreeBtn);
-        const vBtnRow = document.createElement('div');
-        vBtnRow.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;';
-        const warnEl = document.createElement('div');
-        warnEl.style.cssText = 'display:none;font-size:13px;color:#f80;text-align:center;';
-        vBtnRow.appendChild(warnEl);
-        const vRowInner = document.createElement('div');
-        vRowInner.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
-        const homeBtn = document.createElement('button');
-        homeBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
-        homeBtn.textContent = t('backHome');
-        let homeWarned = false;
-        homeBtn.onclick = () => {
-            if (!homeWarned) {
-                homeWarned = true;
-                warnEl.textContent = t('warnNoOrganHome');
-                warnEl.style.display = 'block';
-                return;
-            }
-            location.reload();
-        };
-        vRowInner.appendChild(homeBtn);
-        const playAgainBtn = document.createElement('button');
-        playAgainBtn.style.cssText = 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;';
-        playAgainBtn.textContent = t('playAgain');
-        playAgainBtn.onclick = () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'forceStart'); };
-        vRowInner.appendChild(playAgainBtn);
-        vBtnRow.appendChild(vRowInner);
-        overlay.appendChild(vBtnRow);
-        const footer = document.createElement('div');
-        footer.style.cssText = 'font-size:12px;color:#555;margin-top:20px;';
-        footer.textContent = '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version;
-        overlay.appendChild(footer);
-        if (gameState.devModeUsed) {
-            const devWarn = document.createElement('div');
-            devWarn.style.cssText = 'font-size:12px;color:#f80;margin-top:12px;';
-            devWarn.textContent = '⚠️ 本局使用了開發者模式，分數不計入排行榜';
-            overlay.appendChild(devWarn);
-        }
+        const spLines = [];
+        if (eliteBonus > 0) spLines.push(t('skillPtElite', { n: eliteBonus }));
+        if (timeBonus > 0)  spLines.push(t('skillPtTime',  { n: timeBonus }));
+        if (levelBonus > 0) spLines.push(t('skillPtLevel', { n: levelBonus }));
+        const overlay = buildEndGameOverlay({
+            id: 'death-settlement-overlay',
+            overlayStyle: 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;pointer-events:all;color:white;font-family:Arial,sans-serif;',
+            titleStyle: 'font-size:52px;margin-bottom:16px;',
+            titleText: cause === 'timeout' ? t('timeoutTitle') : t('youDied'),
+            content: [
+                {
+                    style: 'font-size:18px;margin-bottom:10px;color:#FFD700;',
+                    text: t('finalXP', { xp: gameState.stats.xpCurrent })
+                },
+                ...(spLines.length > 0 ? [{
+                    style: 'font-size:14px;color:#aaa;margin-bottom:16px;text-align:center;line-height:1.8;',
+                    html: spLines.join('<br>')
+                }] : [])
+            ],
+            primaryButton: {
+                style: 'font-size:20px;padding:10px 28px;cursor:pointer;pointer-events:all;margin-bottom:12px;border:2px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;font-weight:bold;',
+                text: t('goSkillTree'),
+                onClick: () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'postGame'); }
+            },
+            buttonRowStyle: 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;',
+            warningStyle: 'display:none;font-size:13px;color:#f80;text-align:center;',
+            buttonInnerStyle: 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;',
+            secondaryButtons: [
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;',
+                    text: t('backHome'),
+                    warningText: t('warnNoOrganHome'),
+                    onClick: () => { location.reload(); }
+                },
+                {
+                    style: 'font-size:16px;padding:8px 20px;cursor:pointer;border:1px solid #FFD700;background:rgba(255,215,0,0.15);color:white;border-radius:5px;',
+                    text: t('playAgain'),
+                    onClick: () => { overlay.remove(); buildSkillTreeOverlay(cause, false, false, 'forceStart'); }
+                }
+            ],
+            footerStyle: 'font-size:12px;color:#555;margin-top:20px;',
+            footerText: '© ' + GAME_INFO.author + ' | ' + GAME_INFO.version,
+            devWarningStyle: 'font-size:12px;color:#f80;margin-top:12px;',
+            devWarningText: gameState.devModeUsed ? t('devModeWarning') : null
+        });
         document.getElementById('game-container').appendChild(overlay);
     };
     if (gameState.devModeUsed) {
@@ -261,22 +284,66 @@ function showSkillTree(cause) {
     }
 }
 
-function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
+export function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
+    const state = _resolveSkillTreeState(cause, fromHome, startAfter, mode);
+    if (!state) return;
+    const shell = _createSkillTreeShell(state.effectiveMode, state.fromHome, state.cause);
+    _buildOrganInheritanceSections(state.effectiveMode, shell.overlay);
+    _buildSkillTreeMainContent(state.effectiveMode, shell.overlay, shell.titleEl, shell.switchBtn);
+    if (state.fromHome || state.startAfter) {
+        document.getElementById('game-container').appendChild(shell.overlay);
+    } else {
+        document.getElementById('ui-overlay').appendChild(shell.overlay);
+    }
+}
+
+function _resolveSkillTreeState(cause, fromHome, startAfter, mode) {
     // B8 防呆：玩家或技能資料尚未初始化時直接返回
     if (!gameState.player || !gameState.playerSkills) return;
+    if (typeof _syncMutationSkillPoints === 'function') _syncMutationSkillPoints();
     const effectiveMode = (mode != null && mode !== '') ? mode
         : (fromHome ? 'fromHome' : (startAfter ? 'forceStart' : _skillTreeMode));
     _skillTreeMode = effectiveMode;
     _skillTreeFromHome = (effectiveMode === 'fromHome');
     if (effectiveMode === 'fromHome' || effectiveMode === 'forceStart') applyDeviceMode();
-    if (fromHome) {
+    if (fromHome || effectiveMode === 'forceStart') {
         try {
-            const ss = localStorage.getItem('playerSkills');
-            if (ss) gameState.playerSkills = JSON.parse(ss);
-            const sp = localStorage.getItem('skillPoints');
+            const ss = storageGetJSON(STORAGE_KEYS.PLAYER_SKILLS);
+            if (ss) gameState.playerSkills = ss;
+            const sp = storageGet(STORAGE_KEYS.SKILL_POINTS);
             if (sp) gameState.skillPoints = Math.max(0, parseInt(sp, 10) || 0);
+            const rawMd = storageGetJSON(STORAGE_KEYS.MUTATION_DATA);
+            if (rawMd && gameState.mutationData) Object.assign(gameState.mutationData, rawMd);
+            const rawMs = storageGetJSON(STORAGE_KEYS.MUTATION_SKILLS);
+            if (rawMs && gameState.mutationSkills) Object.assign(gameState.mutationSkills, rawMs);
         } catch(e) {}
     }
+    if (effectiveMode === 'postGame') {
+        // postGame：確保 mutationSkills 從 localStorage 最新資料載入
+        // （避免遊戲期間記憶體狀態與 localStorage 不同步）
+        const _parsedMS = storageGetJSON(STORAGE_KEYS.MUTATION_SKILLS);
+        if (_parsedMS) {
+            try {
+                if (_parsedMS && _parsedMS.skills) {
+                    gameState.mutationSkills = Object.assign(
+                        {},
+                        gameState.mutationSkills || {},
+                        _parsedMS,
+                        { skills: Object.assign({}, (gameState.mutationSkills && gameState.mutationSkills.skills) || {}, _parsedMS.skills) }
+                    );
+                }
+            } catch(e) {}
+        }
+    }
+    return {
+        cause,
+        effectiveMode,
+        fromHome: effectiveMode === 'fromHome',
+        startAfter: effectiveMode === 'forceStart',
+    };
+}
+
+function _createSkillTreeShell(effectiveMode, fromHome, cause) {
     const existing = document.getElementById('skill-tree-overlay');
     if (existing) existing.remove();
     const overlay = document.createElement('div');
@@ -286,13 +353,28 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);overflow-y:scroll;display:flex;flex-direction:column;align-items:center;padding:20px 0 30px;z-index:' + zIdx + ';pointer-events:all;color:white;font-family:Arial,sans-serif;box-sizing:border-box;';
     overlay.addEventListener('wheel', e => { e.stopPropagation(); }, { passive: true });
 
-    const title = document.createElement('div');
-    title.style.cssText = 'font-size:32px;margin-bottom:14px;flex-shrink:0;';
-    title.textContent = (effectiveMode === 'fromHome' || effectiveMode === 'postGame' || effectiveMode === 'forceStart')
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;flex-shrink:0;width:90%;max-width:660px;position:relative;';
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-size:32px;';
+    titleEl.textContent = (effectiveMode === 'fromHome' || effectiveMode === 'postGame' || effectiveMode === 'forceStart')
         ? t('skillTreeTitle')
         : (cause === 'timeout' ? t('timeoutTitle') : t('youDied'));
-    overlay.appendChild(title);
+    headerRow.appendChild(titleEl);
+    const switchBtn = document.createElement('button');
+    switchBtn.textContent = '⚗️ ' + t('mutationSkillTreeBtn');
+    switchBtn.style.cssText = 'padding:4px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid rgba(180,100,255,0.5);background:rgba(130,60,180,0.25);color:#CC88FF;transition:all 0.15s ease;white-space:nowrap;flex-shrink:0;';
+    headerRow.appendChild(switchBtn);
+    overlay.appendChild(headerRow);
 
+    const skillContent = document.createElement('div');
+    skillContent.style.cssText = 'display:flex;flex-direction:column;align-items:center;width:100%;';
+    overlay._skillContent = skillContent;
+    return { overlay, titleEl, switchBtn, skillContent };
+}
+
+function _buildOrganInheritanceSections(effectiveMode, overlay) {
+    const skillContent = overlay._skillContent;
     const organsToKeep = gameState.playerSkills.organMemory || 0;
     // 過濾掉 noInherit: true 的器官（如毒囊），不顯示在繼承選擇列表中
     const playerOrgans = gameState.player.organs.filter(o => {
@@ -348,30 +430,34 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                     card.style.borderColor = '#FFD700';
                     card.style.background = 'rgba(255,215,0,0.15)';
                 }
-                localStorage.setItem('savedOrgans', JSON.stringify(
+                storageSetJSON(
+                    STORAGE_KEYS.SAVED_ORGANS,
                     selectedOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, level: 1,
                         desc: ORGANS[o.id] ? ORGANS[o.id].levels[0].desc : o.desc }))
-                ));
+                );
             };
             cardMap.push(card);
             organGrid.appendChild(card);
         });
         organSection.appendChild(organGrid);
     }
-    if (effectiveMode !== 'fromHome' && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) overlay.appendChild(organSection);
+    if (effectiveMode === 'postGame' && (playerOrgans.length > 0 || hiddenOrgans.length > 0)) skillContent.appendChild(organSection);
 
-    if (effectiveMode !== 'fromHome' && hiddenOrgans.length > 0) {
+    if (effectiveMode === 'postGame' && hiddenOrgans.length > 0) {
+        const hiddenOrganLimit = 1 + ((gameState.mutationSkills && gameState.mutationSkills.skills && gameState.mutationSkills.skills.recallOrgan && gameState.mutationSkills.skills.recallOrgan.level) || 0);
         const hiddenSection = document.createElement('div');
         hiddenSection.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #887700;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const hiddenTitle = document.createElement('div');
         hiddenTitle.style.cssText = 'font-size:14px;color:#FFD700;margin-bottom:8px;';
-        hiddenTitle.textContent = t('keepHiddenOne');
+        hiddenTitle.textContent = hiddenOrganLimit > 1
+            ? '✨ 選擇保留最多 ' + hiddenOrganLimit + ' 個隱藏器官（可不選）'
+            : t('keepHiddenOne');
         hiddenSection.appendChild(hiddenTitle);
         const hiddenGrid = document.createElement('div');
         hiddenGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
-        let selectedHiddenOrgan = null;
+        const selectedHiddenOrgans = [];
         const hiddenCardMap = [];
-        hiddenOrgans.forEach((organ, idx) => {
+        hiddenOrgans.forEach((organ) => {
             const card = document.createElement('div');
             card.style.cssText = 'background:rgba(255,215,0,0.08);border:2px solid #887700;border-radius:6px;padding:8px 10px;width:150px;box-sizing:border-box;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;';
             card.onmouseenter = (e) => showTooltip({ name: organ.name, desc: (HIDDEN_ORGANS[organ.id] || {}).desc || organ.desc || '', isHidden: true }, e.clientX, e.clientY);
@@ -385,32 +471,43 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             descEl.textContent = (HIDDEN_ORGANS[organ.id] || {}).desc || organ.desc || '';
             card.appendChild(descEl);
             card.onclick = () => {
-                if (selectedHiddenOrgan && selectedHiddenOrgan.id === organ.id) {
-                    selectedHiddenOrgan = null;
+                const idx = selectedHiddenOrgans.findIndex(o => o.id === organ.id);
+                if (idx >= 0) {
+                    selectedHiddenOrgans.splice(idx, 1);
                     card.style.borderColor = '#887700';
                     card.style.background = 'rgba(255,215,0,0.08)';
-                    localStorage.removeItem('savedHiddenOrgans');
                 } else {
-                    if (selectedHiddenOrgan) {
-                        const prevIdx = hiddenOrgans.findIndex(o => o.id === selectedHiddenOrgan.id);
-                        if (prevIdx >= 0 && hiddenCardMap[prevIdx]) {
-                            hiddenCardMap[prevIdx].style.borderColor = '#887700';
-                            hiddenCardMap[prevIdx].style.background = 'rgba(255,215,0,0.08)';
+                    if (selectedHiddenOrgans.length >= hiddenOrganLimit) {
+                        const removed = selectedHiddenOrgans.shift();
+                        const ri = hiddenOrgans.findIndex(o => o.id === removed.id);
+                        if (ri >= 0 && hiddenCardMap[ri]) {
+                            hiddenCardMap[ri].style.borderColor = '#887700';
+                            hiddenCardMap[ri].style.background = 'rgba(255,215,0,0.08)';
                         }
                     }
-                    selectedHiddenOrgan = organ;
+                    selectedHiddenOrgans.push(organ);
                     card.style.borderColor = '#FFD700';
                     card.style.background = 'rgba(255,215,0,0.22)';
-                    localStorage.setItem('savedHiddenOrgans', JSON.stringify([{ id: organ.id, name: organ.name, type: organ.type, desc: organ.desc }]));
+                }
+                if (selectedHiddenOrgans.length > 0) {
+                    storageSetJSON(
+                        STORAGE_KEYS.SAVED_HIDDEN_ORGANS,
+                        selectedHiddenOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, desc: o.desc }))
+                    );
+                } else {
+                    storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
                 }
             };
             hiddenCardMap.push(card);
             hiddenGrid.appendChild(card);
         });
         hiddenSection.appendChild(hiddenGrid);
-        overlay.appendChild(hiddenSection);
+        skillContent.appendChild(hiddenSection);
     }
+}
 
+function _buildSkillTreeMainContent(effectiveMode, overlay, titleEl, switchBtn) {
+    const skillContent = overlay._skillContent;
     const ptsRow = document.createElement('div');
     ptsRow.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:14px;';
     const pts = document.createElement('div');
@@ -426,12 +523,12 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         for (const id in gameState.playerSkills) spent += gameState.playerSkills[id] || 0;
         for (const id in gameState.playerSkills) gameState.playerSkills[id] = 0;
         gameState.skillPoints += spent;
-        localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-        localStorage.setItem('skillPoints', String(gameState.skillPoints));
+        storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+        storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
         buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
     };
     ptsRow.appendChild(resetBtn);
-    overlay.appendChild(ptsRow);
+    skillContent.appendChild(ptsRow);
 
     const grid = document.createElement('div');
     grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;max-width:660px;width:90%;';
@@ -460,13 +557,11 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         card.appendChild(btn);
         grid.appendChild(card);
     });
-    overlay.appendChild(grid);
+    skillContent.appendChild(grid);
 
-    const _lrRaw = localStorage.getItem('lastRunOrgans');
-    let _lrData = null;
-    try { if (_lrRaw) _lrData = JSON.parse(_lrRaw); } catch(e) {}
+    const _lrData = storageGetJSON(STORAGE_KEYS.LAST_RUN_ORGANS);
 
-    if (effectiveMode === 'fromHome') {
+    if (effectiveMode === 'fromHome' || effectiveMode === 'forceStart') {
         const inheritSec = document.createElement('div');
         inheritSec.style.cssText = 'background:rgba(255,215,0,0.06);border:1px solid #665500;border-radius:8px;padding:12px 16px;margin-bottom:16px;max-width:660px;width:90%;box-sizing:border-box;';
         const homeOrgansToKeep = gameState.playerSkills.organMemory || 0;
@@ -518,9 +613,9 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                             card.style.background = 'rgba(255,215,0,0.15)';
                         }
                         if (homeSelOrgans.length > 0) {
-                            localStorage.setItem('savedOrgans', JSON.stringify(homeSelOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, level: 1, desc: ORGANS[o.id] ? ORGANS[o.id].levels[0].desc : o.desc }))));
+                            storageSetJSON(STORAGE_KEYS.SAVED_ORGANS, homeSelOrgans.map(o => ({ id: o.id, name: o.name, type: o.type, level: 1, desc: ORGANS[o.id] ? ORGANS[o.id].levels[0].desc : o.desc })));
                         } else {
-                            localStorage.removeItem('savedOrgans');
+                            storageRemove(STORAGE_KEYS.SAVED_ORGANS);
                         }
                     };
                     homeCardMap.push(card);
@@ -531,11 +626,18 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
             if (_lrHidden.length > 0) {
                 const hTitle = document.createElement('div');
                 hTitle.style.cssText = 'font-size:14px;color:#FFD700;margin-bottom:8px;margin-top:6px;';
-                hTitle.textContent = t('inheritHiddenHome');
+                // 讀取回憶器官等級決定繼承上限（與 postGame 路徑一致）
+                const homeHiddenLimit = 1 + ((gameState.mutationSkills &&
+                    gameState.mutationSkills.skills &&
+                    gameState.mutationSkills.skills.recallOrgan &&
+                    gameState.mutationSkills.skills.recallOrgan.level) || 0);
+                hTitle.textContent = homeHiddenLimit > 1
+                    ? '✨ 選擇繼承最多 ' + homeHiddenLimit + ' 個隱藏器官（可不選）'
+                    : t('inheritHiddenHome');
                 inheritSec.appendChild(hTitle);
                 const homeHidGrid = document.createElement('div');
                 homeHidGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
-                let homeSelHidden = null;
+                const homeSelHiddenArr = [];
                 const homeHidCardMap = [];
                 _lrHidden.forEach((organ) => {
                     const card = document.createElement('div');
@@ -551,20 +653,33 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                     dEl.textContent = organ.desc || '';
                     card.appendChild(dEl);
                     card.onclick = () => {
-                        if (homeSelHidden && homeSelHidden.id === organ.id) {
-                            homeSelHidden = null;
+                        const idx = homeSelHiddenArr.findIndex(o => o.id === organ.id);
+                        if (idx >= 0) {
+                            // 已選 → 取消選擇
+                            homeSelHiddenArr.splice(idx, 1);
                             card.style.borderColor = '#887700';
                             card.style.background = 'rgba(255,215,0,0.08)';
-                            localStorage.removeItem('savedHiddenOrgans');
                         } else {
-                            if (homeSelHidden) {
-                                const pi = _lrHidden.findIndex(o => o.id === homeSelHidden.id);
-                                if (pi >= 0 && homeHidCardMap[pi]) { homeHidCardMap[pi].style.borderColor = '#887700'; homeHidCardMap[pi].style.background = 'rgba(255,215,0,0.08)'; }
+                            // 未選 → 加入，超過上限時踢掉最舊的
+                            if (homeSelHiddenArr.length >= homeHiddenLimit) {
+                                const removed = homeSelHiddenArr.shift();
+                                const ri = _lrHidden.findIndex(o => o.id === removed.id);
+                                if (ri >= 0 && homeHidCardMap[ri]) {
+                                    homeHidCardMap[ri].style.borderColor = '#887700';
+                                    homeHidCardMap[ri].style.background = 'rgba(255,215,0,0.08)';
+                                }
                             }
-                            homeSelHidden = organ;
+                            homeSelHiddenArr.push(organ);
                             card.style.borderColor = '#FFD700';
                             card.style.background = 'rgba(255,215,0,0.22)';
-                            localStorage.setItem('savedHiddenOrgans', JSON.stringify([{ id: organ.id, name: organ.name, type: organ.type, desc: organ.desc }]));
+                        }
+                        if (homeSelHiddenArr.length > 0) {
+                            storageSetJSON(
+                                STORAGE_KEYS.SAVED_HIDDEN_ORGANS,
+                                homeSelHiddenArr.map(o => ({ id: o.id, name: o.name, type: o.type, desc: o.desc }))
+                            );
+                        } else {
+                            storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
                         }
                     };
                     homeHidCardMap.push(card);
@@ -573,7 +688,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                 inheritSec.appendChild(homeHidGrid);
             }
         }
-        overlay.appendChild(inheritSec);
+        skillContent.appendChild(inheritSec);
     } else {
         const lastRunSec = document.createElement('div');
         lastRunSec.style.cssText = 'max-width:660px;width:90%;margin-bottom:18px;border:1px solid #333;border-radius:6px;padding:12px 16px;';
@@ -595,7 +710,7 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
                 lastRunSec.appendChild(item);
             });
         }
-        overlay.appendChild(lastRunSec);
+        skillContent.appendChild(lastRunSec);
     }
 
     const btnRow = document.createElement('div');
@@ -610,7 +725,10 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         const closeBtn = document.createElement('button');
         closeBtn.style.cssText = 'font-size:16px;padding:10px 24px;cursor:pointer;border:1px solid #aaa;background:rgba(255,255,255,0.1);color:white;border-radius:5px;';
         closeBtn.textContent = t('close');
-        closeBtn.onclick = () => { hideTooltip(); overlay.remove(); };
+        closeBtn.onclick = () => {
+            hideTooltip(); overlay.remove();
+            if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
+        };
         btnRow.appendChild(closeBtn);
     } else {
         // mode === 'postGame'：從技能樹進入，直接執行，不再有警告
@@ -631,11 +749,72 @@ function buildSkillTreeOverlay(cause, fromHome, startAfter, mode) {
         };
         btnRow.appendChild(playAgainBtn);
     }
-    overlay.appendChild(btnRow);
-    (effectiveMode === 'fromHome' || effectiveMode === 'forceStart' ? document.getElementById('game-container') : document.getElementById('ui-overlay')).appendChild(overlay);
+    skillContent.appendChild(btnRow);
+
+    // ── 組合 overlay = header + skillContent / mutContent（切換）
+    overlay.appendChild(skillContent);
+    const mutContent = _buildMutationSkillContent(); // 內部已設 display:none
+    overlay.appendChild(mutContent);
+
+    // 變異面板專屬關閉按鈕列（與 mutContent 同步顯示/隱藏）
+    const mutCloseRow = document.createElement('div');
+    mutCloseRow.id = 'mut-close-row';
+    mutCloseRow.style.cssText = 'display:none;width:90%;max-width:660px;padding:8px 0 12px 0;justify-content:center;';
+    const mutCloseBtn = document.createElement('button');
+    mutCloseBtn.textContent = '關閉';
+    mutCloseBtn.style.cssText = [
+        'font-size:14px', 'padding:8px 40px', 'border-radius:6px',
+        'cursor:pointer', 'border:1px solid #555',
+        'background:rgba(255,255,255,0.08)', 'color:white',
+        'transition:background 0.15s ease',
+    ].join(';');
+    mutCloseBtn.onmouseenter = () => { mutCloseBtn.style.background = 'rgba(255,255,255,0.16)'; };
+    mutCloseBtn.onmouseleave = () => { mutCloseBtn.style.background = 'rgba(255,255,255,0.08)'; };
+    mutCloseBtn.onclick = () => {
+        if (_skillTreeMode === 'postGame') {
+            // postGame 模式：關閉變異面板，顯示技能樹主內容
+            // 不移除整個 overlay，只切換回 skillContent
+            _showingMut = false;
+            mutContent.style.display = 'none';
+            skillContent.style.display = 'flex';
+            titleEl.textContent = t('skillTreeTitle');
+            if (switchBtn) switchBtn.textContent = '⚗️ ' + t('mutationSkillTreeBtn');
+            mutCloseRow.style.display = 'none';
+        } else {
+            // 其他模式（fromHome / forceStart）：
+            // 關閉整個 overlay 是正確行為
+            const ov = document.getElementById('skill-tree-overlay');
+            if (ov) ov.remove();
+            gameState.skillTreeOpen = false;
+        }
+    };
+    mutCloseRow.appendChild(mutCloseBtn);
+    overlay.appendChild(mutCloseRow);
+
+    let _showingMut = false;
+    switchBtn.onclick = () => {
+        _showingMut = !_showingMut;
+        if (_showingMut) {
+            skillContent.style.display = 'none';
+            mutContent.style.display = 'flex';
+            mutCloseRow.style.display = 'flex';
+            _syncMutationSkillPoints();
+            _refreshMutContentLeft(mutContent);
+            _refreshMutContentRight(mutContent);
+            titleEl.textContent = '⚗️ ' + t('mutationSkillTree');
+            switchBtn.textContent = t('skillTreeTitle');
+        } else {
+            skillContent.style.display = 'flex';
+            mutContent.style.display = 'none';
+            mutCloseRow.style.display = 'none';
+            titleEl.textContent = t('skillTreeTitle');
+            switchBtn.textContent = '⚗️ ' + t('mutationSkillTreeBtn');
+        }
+    };
+
 }
 
-function upgradeSkill(id) {
+export function upgradeSkill(id) {
     const skill = SKILLS[id];
     if (!skill) return;
     const current = gameState.playerSkills[id] || 0;
@@ -644,7 +823,182 @@ function upgradeSkill(id) {
     if (gameState.skillPoints < cost) return;
     gameState.playerSkills[id] = current + 1;
     gameState.skillPoints -= cost;
-    localStorage.setItem('playerSkills', JSON.stringify(gameState.playerSkills));
-    localStorage.setItem('skillPoints', String(gameState.skillPoints));
+    storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
+    storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
 }
+
+// ── 左欄內容建立（可重複呼叫刷新）
+function _buildMutLeftColContent(leftCol) {
+    leftCol.innerHTML = '';
+    const mutData = gameState.mutationData;
+    const mutPts  = mutData ? (mutData.points || 0) : 0;
+
+    const ptsHeader = document.createElement('div');
+    ptsHeader.style.cssText = 'font-size:13px;color:#FFD700;text-align:center;margin-bottom:10px;font-weight:bold;';
+    ptsHeader.textContent = '可用變異點：' + mutPts;
+    leftCol.appendChild(ptsHeader);
+
+    const ORGAN_DEFS = [
+        { id: 'fang', icon: '🦷', name: '變異-憤怒的獠牙', desc: '每級 +1% 攻擊力' },
+        { id: 'tail', icon: '🐾', name: '變異-懦弱的尾巴', desc: '每級 +1% HP上限'  },
+        { id: 'wing', icon: '🪶', name: '變異-勇敢的翅膀', desc: '每級 +1% 移動速度' },
+        { id: 'eye',  icon: '👁️', name: '變異-好奇的眼睛', desc: '每級 +1% XP獲得'  },
+    ];
+    ORGAN_DEFS.forEach(def => {
+        const lv    = mutData ? (mutData.levels[def.id] || 0) : 0;
+        const cost  = getMutationUpgradeCost ? getMutationUpgradeCost(lv) : (lv + 1);
+        const canUp = mutPts >= cost;
+        const card  = document.createElement('div');
+        card.style.cssText = 'background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.25);border-radius:8px;padding:10px 12px;margin-bottom:10px;';
+        const ct = document.createElement('div');
+        ct.style.cssText = 'font-size:13px;font-weight:bold;color:#FFD700;margin-bottom:3px;';
+        ct.textContent = def.icon + ' ' + def.name + '  Lv.' + lv;
+        card.appendChild(ct);
+        const cd = document.createElement('div');
+        cd.style.cssText = 'font-size:11px;color:#aaa;margin-bottom:6px;';
+        cd.textContent = def.desc;
+        card.appendChild(cd);
+        const cb = document.createElement('button');
+        cb.style.cssText = 'padding:3px 12px;font-size:11px;border-radius:4px;border:1px solid ' + (canUp ? '#FFD700' : '#555') + ';background:' + (canUp ? 'rgba(255,215,0,0.15)' : 'transparent') + ';color:' + (canUp ? '#FFD700' : '#555') + ';cursor:' + (canUp ? 'pointer' : 'default') + ';';
+        cb.textContent = '升級（費 ' + cost + ' 點）';
+        cb.disabled = !canUp;
+        cb.onclick = () => {
+            if (typeof upgradeMutation === 'function') upgradeMutation(def.id);
+            _refreshMutContentLeft(document.getElementById('mut-skill-panel'));
+            _refreshMutContentRight(document.getElementById('mut-skill-panel'));
+        };
+        card.appendChild(cb);
+        leftCol.appendChild(card);
+    });
+
+    const curSkillPts = gameState.skillPoints || 0;
+    const exchangeHint = document.createElement('div');
+    exchangeHint.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-top:12px;';
+    exchangeHint.textContent = '目前技能點：' + curSkillPts;
+    leftCol.appendChild(exchangeHint);
+
+    const canExchange = curSkillPts >= 100;
+    const exchangeBtn = document.createElement('button');
+    exchangeBtn.style.cssText = [
+        'display:block', 'width:100%', 'margin-top:6px',
+        'font-size:13px', 'padding:7px', 'border-radius:6px',
+        'border:1px solid #8a6a2a', 'background:rgba(180,120,20,0.2)',
+        'color:#FFD700', 'cursor:' + (canExchange ? 'pointer' : 'default'),
+        'opacity:' + (canExchange ? '1' : '0.5'),
+    ].join(';');
+    exchangeBtn.disabled = !canExchange;
+    exchangeBtn.textContent = '100 技能點 → 10 變異點';
+    if (canExchange) {
+        exchangeBtn.onclick = () => {
+            if ((gameState.skillPoints || 0) < 100) return;
+            gameState.skillPoints -= 100;
+            gameState.mutationData.points += 10;
+            gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + 10;
+            storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+            saveMutationData();
+            _refreshMutContentLeft(document.getElementById('mut-skill-panel'));
+            _refreshMutContentRight(document.getElementById('mut-skill-panel'));
+        };
+    }
+    leftCol.appendChild(exchangeBtn);
+}
+
+function _refreshMutContentLeft(wrap) {
+    if (!wrap) return;
+    const leftCol = wrap.querySelector('#mut-left-col');
+    if (!leftCol) return;
+    _buildMutLeftColContent(leftCol);
+}
+
+// ── 建立變異面板（左欄：4 變異器官 / 右欄：技能點 + 技能卡）
+function _buildMutationSkillContent() {
+    const wrap = document.createElement('div');
+    wrap.id = 'mut-skill-panel';
+    wrap.style.cssText = 'display:none;width:90%;max-width:660px;flex:1;min-height:0;overflow:hidden;';
+
+    // 左欄
+    const leftCol = document.createElement('div');
+    leftCol.id = 'mut-left-col';
+    leftCol.style.cssText = 'flex:1;overflow-y:auto;padding:12px;';
+    _buildMutLeftColContent(leftCol);
+
+    const divider = document.createElement('div');
+    divider.style.cssText = 'width:1px;background:rgba(180,100,255,0.2);align-self:stretch;margin:0 8px;';
+
+    // 右欄
+    const rightCol = document.createElement('div');
+    rightCol.id = 'mut-right-col';
+    rightCol.style.cssText = 'flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;align-items:center;';
+    _buildMutRightCol(rightCol);
+
+    if (gameState.isMobile) {
+        wrap.style.flexDirection = 'column';
+        leftCol.style.cssText  = 'flex:none;width:100%;overflow-y:auto;padding:12px;border-bottom:1px solid rgba(180,100,255,0.2);';
+        divider.style.display  = 'none';
+        rightCol.style.cssText = 'flex:none;width:100%;overflow-y:auto;padding:12px;display:flex;flex-direction:column;align-items:center;';
+    }
+
+    wrap.appendChild(leftCol);
+    wrap.appendChild(divider);
+    wrap.appendChild(rightCol);
+    return wrap;
+}
+
+function _buildMutRightCol(rightCol) {
+    rightCol.innerHTML = '';
+    const skills = (gameState.mutationSkills && gameState.mutationSkills.skills) || {};
+    const pts    = gameState.mutationSkillPoints ?? 0;
+
+    const ptsLabel = document.createElement('div');
+    ptsLabel.style.cssText = 'font-size:13px;color:#CC88FF;text-align:center;margin-bottom:12px;font-weight:bold;';
+    ptsLabel.textContent = t('mutationSkillPointsLabel', { n: pts });
+    rightCol.appendChild(ptsLabel);
+
+    const sk    = skills.recallOrgan || { level: 0, maxLevel: 3 };
+    const currentLevel = gameState.mutationSkills?.skills?.recallOrgan?.level ?? 0;
+    const lv    = currentLevel;
+    const maxLv = sk.maxLevel || 3;
+    const cost  = currentLevel + 1;
+    const maxed = lv >= maxLv;
+    const canUp = !maxed && pts >= cost;
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:rgba(130,60,180,0.12);border:1px solid rgba(180,100,255,0.3);border-radius:8px;padding:14px 18px;width:100%;box-sizing:border-box;';
+    const cTitle = document.createElement('div');
+    cTitle.style.cssText = 'font-size:14px;font-weight:bold;color:#CC88FF;margin-bottom:4px;';
+    cTitle.textContent = t('recallOrganSkillName') + '  Lv.' + lv + '/' + maxLv;
+    card.appendChild(cTitle);
+    const cDesc = document.createElement('div');
+    cDesc.style.cssText = 'font-size:11px;color:#aaa;margin-bottom:4px;';
+    cDesc.textContent = t('recallOrganSkillDesc');
+    card.appendChild(cDesc);
+    const cExtra = document.createElement('div');
+    cExtra.style.cssText = 'font-size:11px;color:#CC88FF;margin-bottom:10px;';
+    cExtra.textContent = '當前保留上限：' + (1 + lv) + ' 個';
+    card.appendChild(cExtra);
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:5px 16px;font-size:12px;border-radius:4px;border:1px solid ' + (maxed ? '#555' : (canUp ? 'rgba(180,100,255,0.6)' : '#555')) + ';background:' + (canUp ? 'rgba(130,60,180,0.35)' : 'transparent') + ';color:' + (maxed || !canUp ? '#555' : '#CC88FF') + ';cursor:' + (canUp ? 'pointer' : 'default') + ';';
+    btn.textContent = maxed ? t('mutationSkillMaxed') : t('mutationSkillUpgrade', { n: cost });
+    btn.disabled    = !canUp;
+    btn.onclick     = () => { _upgradeMutationSkill('recallOrgan'); buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode); };
+    card.appendChild(btn);
+    rightCol.appendChild(card);
+}
+
+function _refreshMutContentRight(mutContent) {
+    const rc = mutContent.querySelector('#mut-right-col');
+    if (rc) _buildMutRightCol(rc);
+}
+
+function _upgradeMutationSkill(skillId) {
+    if (!gameState.mutationSkills || !gameState.mutationSkills.skills) return;
+    const skill = gameState.mutationSkills.skills[skillId];
+    if (!skill || skill.level >= skill.maxLevel) return;
+    const cost = skill.level + 1;
+    if (gameState.mutationSkillPoints < cost) return;
+    gameState.mutationSkillPoints -= cost;
+    skill.level++;
+    if (typeof _saveMutationSkills === 'function') _saveMutationSkills();
+}
+

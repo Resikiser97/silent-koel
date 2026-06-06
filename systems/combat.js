@@ -1,28 +1,75 @@
 // =============================================================
 // 戰鬥系統 - showFloatingText / applyDamageToPlayer / handleKill
+//            handleGiantKill / handleKillerKill / addMutationPoints
 //            playerAttack / updateStatusEffects
-//            updateCorpseEating / drawCorpseEatingBars
-//            updateBones / drawBones
+//            updateCorpseEating / updateBoneEating
+//            drawCorpseEatingBars / drawBones
 // =============================================================
+import { gameState, ctx } from './gameState.js';
+import { VIEW_W, VIEW_H } from './map.js';
+import { worldToScreen, wrappedDistance } from './camera.js';
+import { CORPSE_EAT_HP, CORPSE_BONE_EAT_TICK, CORPSE_EXPIRE_MS, BONE_EXPIRE_MS } from '../config/gameConfig.js';
+import { EVOLUTION_PATHS } from '../config/evolution.js';
+import { ORGANS } from '../config/organs.js';
+import { AudioManager } from './audio.js';
+import { getGameFont, spawnLootCircle, applyTenacity } from './utils.js';
+import { t } from '../lang.js';
+import { addXP, showXPPopup } from './player.js';
+import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
+import { handleBossKill } from './boss.js';
+import { showSkillTree } from './evolution.js';
+import { _archerAttack } from './player.js';
+import { handleTutorialStumpKill } from './tutorial.js';
 
-function showFloatingText(wx, wy, text, color, fontSize) {
+export function showFloatingText(wx, wy, text, color, fontSize) {
     const s = worldToScreen(wx, wy);
     if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
-    const el = document.createElement('div');
-    const fz = fontSize || 16;
-    el.style.cssText = 'position:absolute;pointer-events:none;font-size:' + fz + 'px;font-weight:bold;animation:fadeOutUp 0.8s forwards;text-shadow:1px 1px 2px black;';
-    el.style.left = (s.x - 20) + 'px';
-    el.style.top  = (s.y - 10) + 'px';
-    el.style.color = color || 'white';
-    el.innerText = text;
-    document.getElementById('ui-overlay').appendChild(el);
-    setTimeout(() => el.remove(), 800);
+
+    // 手機模式上限 12，桌機上限 20
+    const maxTexts = gameState.isMobile ? 12 : 20;
+    if (gameState.floatTexts.length >= maxTexts) return;
+
+    // 同幀同位置同類型合併（50px 範圍內、100ms 內、同顏色）
+    const now = Date.now();
+    const existing = gameState.floatTexts.find(ft =>
+        ft.color === color &&
+        Math.abs(ft.wx - wx) < 50 &&
+        Math.abs(ft.wy - wy) < 50 &&
+        now - ft.startTime < 100
+    );
+    if (existing) {
+        // 嘗試數字合併（如果兩個都是純數字或帶+/-符號的數字）
+        const existingNum = parseFloat(existing.text);
+        const newNum = parseFloat(text);
+        if (!isNaN(existingNum) && !isNaN(newNum)) {
+            const combined = existingNum + newNum;
+            existing.text = (combined > 0 ? '+' : '') + Math.round(combined);
+        }
+        // 非數字就跳過（不顯示重複）
+        return;
+    }
+
+    gameState.floatTexts.push({
+        wx, wy,
+        screenX: s.x,
+        screenY: s.y,
+        text: String(text),
+        color: color || 'white',
+        fontSize: fontSize || 16,
+        startTime: now,
+        duration: 700,    // 比原本 800ms 短一點，手機感覺更快
+    });
 }
 
-function applyDamageToPlayer(rawDamage, attacker) {
+export function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
     // 閃現無敵期間豁免所有外部傷害（毒傷tick/刺甲反傷不走此函式，不受影響）
     if (p.dashInvincible) return;
+    // 巨人/Alpha 傷害減免（草食性 Lv4/Lv5 效果）
+    if (attacker && (attacker.isGiantized || attacker.isAlpha)) {
+        const reduction = p.giantDamageReduction || 0;
+        if (reduction > 0) rawDamage = Math.round(rawDamage * (1 - reduction));
+    }
     const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
     gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
     AudioManager.play('hurt');
@@ -33,7 +80,7 @@ function applyDamageToPlayer(rawDamage, attacker) {
         attacker.hp -= thornTotal;
         if (attacker.hp <= 0) {
             if (attacker === gameState.boss) {
-                showVictory();
+                handleBossKill(attacker);
             } else if (attacker === gameState.eliteCreature) {
                 handleEliteKill(attacker);
             } else {
@@ -54,15 +101,17 @@ function applyDamageToPlayer(rawDamage, attacker) {
     }
 }
 
+// DUPLICATE - 待 Stage 3 清理
+// ESM note: duplicated with systems/mutation.js by design; do not merge during Stage 2.
 function addMutationPoints(amount) {
     // TODO: Phase 5 實作
     console.log('[Mutation] +' + amount + ' points (pending Phase 5)');
 }
 
-function handleGiantKill(c) {
+export function handleGiantKill(c) {
     const p = gameState.player;
-    // XP：巨人化 60，Alpha 200（+獵人本能加成）
-    const baseXP = c.isAlpha ? 200 : 60;
+    // XP：巨人化 100，Alpha 300（+獵人本能加成）
+    const baseXP = c.isAlpha ? 300 : 100;
     const xp = baseXP + (gameState.playerSkills.hunter || 0) * 10;
     const actualXP = addXP(xp);
     showXPPopup(p.x, p.y, actualXP);
@@ -78,14 +127,12 @@ function handleGiantKill(c) {
            { type: 'bone',   data: {} }];
     spawnLootCircle(c.x, c.y, items);
 
-    // 變異點掉落（100%掉1個；Alpha 20%/巨人化 10%機率額外掉）
-    addMutationPoints(1);
-    const extraChance = c.isAlpha ? 0.2 : 0.1;
-    if (Math.random() < extraChance) {
-        const extra = c.isAlpha
-            ? (1 + Math.floor(Math.random() * 6))
-            : (1 + Math.floor(Math.random() * 3));
-        addMutationPoints(extra);
+    // 變異點掉落
+    // 普通巨人：100% +1
+    // Alpha：100% +2；20% 機率額外 +2~6
+    addMutationPoints(c.isAlpha ? 2 : 1);
+    if (c.isAlpha && Math.random() < 0.2) {
+        addMutationPoints(2 + Math.floor(Math.random() * 5));
     }
 
     // 記錄巨人化擊殺數
@@ -136,18 +183,21 @@ function handleKillerKill(creature) {
     gameState.corpses.push({ x: creature.x, y: creature.y, radius: creature.radius, spawnTime: Date.now() });
 }
 
-function handleKill(c, isHostile) {
+export function handleKill(c, isHostile) {
     if (c.isKiller) { handleKillerKill(c); return; }
     const p = gameState.player;
     const now = Date.now();
     gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
-    const baseXP = isHostile ? Math.min(80, 30 + Math.round(((c.maxHp || 50) / 50) * 50)) : 20;
+    const baseXP = isHostile ? Math.min(80, 30 + Math.round((c.maxHp || 50) / 50 * 10)) : 20;
     const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * 10;
     const actualXP = addXP(rawXP);
     showXPPopup(p.x, p.y, actualXP);
+    if (gameState.sessionStats) {
+        gameState.sessionStats.normalKills = (gameState.sessionStats.normalKills || 0) + 1;
+    }
 }
 
-function playerAttack() {
+export function playerAttack() {
     const p = gameState.player;
     const now = Date.now();
 
@@ -174,6 +224,9 @@ function playerAttack() {
 
     p.attackVisual = now;
 
+    // 手機蓄力攻擊判斷（原有蓄力邏輯不變，只是觸發來源改為旗標）
+    const isChargeAttack = gameState._chargeAttack || gameState._mobileChargeAttack;
+
     const targets = [
         ...gameState.hostileCreatures.map(c => ({ c, hostile: true, isBoss: false, isElite: false })),
         ...gameState.neutralCreatures.map(c => ({ c, hostile: false, isBoss: false, isElite: false })),
@@ -193,6 +246,8 @@ function playerAttack() {
         if (wrappedDistance(p.x, p.y, c.x, c.y) >= p.attackRange + (c.radius || 0) * 0.5) continue;
 
         let dmg = p.attack;
+        // 蓄力攻擊：傷害 ×2（近戰手機持按 ≥500ms 觸發）
+        if (isChargeAttack) dmg = Math.round(dmg * 2);
         let isCrit = false;
         if (p.critChance > 0 && Math.random() < p.critChance) {
             dmg = Math.round(dmg * p.critMultiplier);
@@ -291,10 +346,10 @@ function playerAttack() {
     }
 
     if (anyHit) AudioManager.play(anyCrit ? 'attackCrit' : 'attackNormal');
-    if (bossDied) showVictory();
+    if (bossDied) handleBossKill(gameState.boss);
 }
 
-function updateStatusEffects() {
+export function updateStatusEffects() {
     const now = Date.now();
     const eliteArr = (gameState.eliteCreature && gameState.eliteCreature.hp > 0) ? [gameState.eliteCreature] : [];
     const bossArr  = (gameState.boss && gameState.boss.hp > 0) ? [gameState.boss] : [];
@@ -311,7 +366,7 @@ function updateStatusEffects() {
             c.lastBleedTick = now;
             showFloatingText(c.x, c.y - 18, t('bleedFloat', { n: bleedAmt }), '#880000', 11);
             if (hpBefore > 0 && c.hp <= 0) {
-                if (isBoss) showVictory();
+                if (isBoss) handleBossKill(c);
                 else if (isElite) handleEliteKill(c);
                 else if (c.isGiantized) handleGiantKill(c);
                 else handleKill(c, isHostile);
@@ -320,23 +375,35 @@ function updateStatusEffects() {
 
         if (c.poisonEndTime && now < c.poisonEndTime && now - c.lastPoisonTick >= 1000) {
             const poisonAmt = c.poisonDmg || 2;
-            // 毒傷減免：精英20%、Boss通用30%、沙漠蠍王50%
-            let poisonResist = 0;
-            if (isElite) poisonResist = 0.2;
-            if (isBoss)  poisonResist = 0.3;
-            if (isBoss && c.name && c.name.includes('蠍王')) poisonResist = 0.5;
+            const poisonResist = c.poisonResist || 0;
             const actualPoison = Math.round(poisonAmt * (1 - poisonResist));
             const hpBefore = c.hp;
             c.hp -= actualPoison;
             c.lastPoisonTick += 1000;
             showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: actualPoison }), '#8800CC', 11);
             if (hpBefore > 0 && c.hp <= 0) {
-                if (isBoss) showVictory();
+                if (isBoss) handleBossKill(c);
                 else if (isElite) handleEliteKill(c);
                 else if (c.isGiantized) handleGiantKill(c);
                 else handleKill(c, isHostile);
             }
         }
+    }
+
+    // ── 玩家毒傷 tick（毒霧犬咬中後）
+    const player = gameState.player;
+    if (player.poisonEndTime && now < player.poisonEndTime &&
+        now - (player.lastPoisonTick || 0) >= 1000) {
+        const dmg = Math.round((player.poisonDmg || 0) * (1 - (player.poisonResist || 0)));
+        if (dmg > 0) {
+            player.lastPoisonTick += 1000;
+            applyDamageToPlayer(dmg, null);
+            showFloatingText(player.x, player.y - 18, t('poisonFloat', { n: dmg }), '#8800CC', 11);
+        }
+    }
+    if (player.poisonEndTime && now >= player.poisonEndTime) {
+        player.poisonEndTime = 0;
+        player.poisonDmg = 0;
     }
 }
 
@@ -350,11 +417,11 @@ function _getTotalCorpseXP() {
     return total;
 }
 
-function _spawnBone(x, y, radius) {
+export function _spawnBone(x, y, radius) {
     gameState.bones.push({ x, y, radius: Math.max(4, (radius || 8) * 0.6), spawnTime: Date.now(), eatProgress: 0, lastEatTick: null });
 }
 
-function updateCorpseEating() {
+export function updateCorpseEating() {
     const p = gameState.player;
     const ev = p.evolution;
     if (ev.carnivore === 0) return;
@@ -362,8 +429,8 @@ function updateCorpseEating() {
     const lvData = EVOLUTION_PATHS.carnivore.levels[ev.carnivore - 1];
     const totalTime = lvData.eatTime;
     const totalXP = _getTotalCorpseXP();
-    const totalHp = 3.0;
-    const tickInterval = 500;
+    const totalHp = CORPSE_EAT_HP;
+    const tickInterval = CORPSE_BONE_EAT_TICK;
     const numTicks = Math.max(1, totalTime / tickInterval);
     const xpPerTick = totalXP / numTicks;
     const hpPerTick = totalHp / numTicks;
@@ -373,7 +440,7 @@ function updateCorpseEating() {
         const corpse = gameState.corpses[i];
 
         // 屍體60秒到期未被吃 → 轉換為白骨
-        if (now - corpse.spawnTime >= 60000) {
+        if (now - corpse.spawnTime >= CORPSE_EXPIRE_MS) {
             _spawnBone(corpse.x, corpse.y, corpse.radius);
             gameState.corpses.splice(i, 1);
             continue;
@@ -415,7 +482,7 @@ function updateCorpseEating() {
     }
 }
 
-function updateBoneEating() {
+export function updateBoneEating() {
     const p = gameState.player;
     const ev = p.evolution;
     if (ev.omnivore <= 0) return;
@@ -430,7 +497,7 @@ function updateBoneEating() {
         const bone = gameState.bones[i];
 
         // 白骨180秒後消失
-        if (now - bone.spawnTime >= 180000) {
+        if (now - bone.spawnTime >= BONE_EXPIRE_MS) {
             gameState.bones.splice(i, 1);
             continue;
         }
@@ -444,11 +511,11 @@ function updateBoneEating() {
         if (boneEatTime === 0) {
             // 立刻吞噬
             _addBoneMaterial(boneMaterialAdd);
-            showFloatingText(bone.x, bone.y - 15, '+' + boneMaterialAdd + ' 白骨素', '#CCCCFF', 11);
+            showFloatingText(bone.x, bone.y - 15, t('boneMaterialFloat', { n: boneMaterialAdd }), '#CCCCFF', 11);
             gameState.bones.splice(i, 1);
         } else {
             // 分段吞噬
-            const tickInterval = 500;
+            const tickInterval = CORPSE_BONE_EAT_TICK;
             const numTicks = Math.max(1, boneEatTime / tickInterval);
             if (!bone.lastEatTick) bone.lastEatTick = now;
             if (bone.eatProgress == null) bone.eatProgress = 0;
@@ -458,7 +525,7 @@ function updateBoneEating() {
                 bone.eatProgress = Math.min(1, bone.eatProgress + 1 / numTicks);
                 if (bone.eatProgress >= 1) {
                     _addBoneMaterial(boneMaterialAdd);
-                    showFloatingText(bone.x, bone.y - 15, '+' + boneMaterialAdd + ' 白骨素', '#CCCCFF', 11);
+                    showFloatingText(bone.x, bone.y - 15, t('boneMaterialFloat', { n: boneMaterialAdd }), '#CCCCFF', 11);
                     gameState.bones.splice(i, 1);
                 }
             }
@@ -485,13 +552,13 @@ function _checkPoisonSacUpgrade(p) {
         sacOrgan.level = currentLv + 1;
         sacOrgan.desc = ORGANS.poisonSac.levels[currentLv].desc;
         applyOrganEffects(sacOrgan); // 套用增量效果
-        showFloatingText(p.x, p.y - 50, '✨ 毒囊升級 Lv' + sacOrgan.level + '！', '#AA88FF');
+        showFloatingText(p.x, p.y - 50, t('poisonSacLevelUp', { lv: sacOrgan.level }), '#AA88FF');
         // 繼續檢查是否可再升
         _checkPoisonSacUpgrade(p);
     }
 }
 
-function drawCorpseEatingBars() {
+export function drawCorpseEatingBars() {
     for (const corpse of gameState.corpses) {
         if (corpse.eatProgress == null || corpse.eatProgress <= 0) continue;
         const s = worldToScreen(corpse.x, corpse.y);
@@ -509,7 +576,7 @@ function drawCorpseEatingBars() {
     }
 }
 
-function drawBones() {
+export function drawBones() {
     const now = Date.now();
     for (const bone of gameState.bones) {
         const s = worldToScreen(bone.x, bone.y);

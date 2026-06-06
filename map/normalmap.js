@@ -2,7 +2,7 @@
 // 普通難度地圖配置
 // =============================================================
 
-const NORMAL_MAP = {
+export const NORMAL_MAP = {
     name:   '普通',
     nameEn: 'Normal',
 
@@ -46,6 +46,9 @@ const NORMAL_MAP = {
         eliteRegen:     true,   // 精英回血（Phase 4）
         bossRegen:      true,   // Boss 回血（Phase 4）
         hostileEatMeat: true,   // 肉系吃屍體成長（Phase 4）
+        hardElites:     false,  // 三隼不啟用
+        dogElites:      true,   // 啟用三犬
+        hunterBoss:     false,
     },
 
     creatureAbilities: {

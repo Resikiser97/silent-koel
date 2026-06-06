@@ -1,17 +1,20 @@
 // =============================================================
 // 地圖系統 - MAP 常數 / Simplex Noise / getBiome / getBgColor
-//            generateTerrain / generateTrees
+//            labelBiomeRegions / mergeSmallRegions / ensureRequiredBiomes
+//            generateTerrain / buildTerrainCanvas / drawTerrain / generateTrees
 // =============================================================
+import { gameState, ctx } from './gameState.js';
 
-const MAP_WIDTH  = 8000;
-const MAP_HEIGHT = 8000;
-let VIEW_W     = 1600;
-let VIEW_H     = 900;
+export const MAP_WIDTH  = 8000;
+export const MAP_HEIGHT = 8000;
+export let VIEW_W     = 1600;
+export let VIEW_H     = 900;
+export function setViewSize(w, h) { VIEW_W = w; VIEW_H = h; }
 
-const TILE_SIZE   = 20;    // 地形格子大小，改這個數字可以調整解析度
-const NOISE_SCALE = 0.003; // Noise 縮放比例，影響地形大小
+export const TILE_SIZE   = 20;    // 地形格子大小，改這個數字可以調整解析度
+export const NOISE_SCALE = 0.003; // Noise 縮放比例，影響地形大小
 
-const MAP_RULES = {
+export const MAP_RULES = {
     MIN_BIOME_TILES: 250,
 };
 
@@ -144,12 +147,12 @@ const _SimplexNoise = (function() {
     return { buildPerm, noise2d, noise4d, tileableNoise };
 })();
 
-const BIOME_COLOR = { forest: '#549954', ocean: '#1a4a6b', desert: '#c4a35a' };
+export const BIOME_COLOR = { forest: '#549954', ocean: '#1a4a6b', desert: '#c4a35a' };
 
 let _terrainCanvas = null;
 
 // terrainMap 未就緒前 fallback 到舊公式，確保載入順序安全
-function getBiome(x, y) {
+export function getBiome(x, y) {
     if (!gameState.terrainMap) {
         const dist = Math.sqrt((x - 4000) * (x - 4000) + (y - 4000) * (y - 4000));
         if (dist < 2000) return 'forest';
@@ -163,7 +166,7 @@ function getBiome(x, y) {
     return gameState.terrainMap[gy][gx];
 }
 
-function getBgColor() {
+export function getBgColor() {
     const p = gameState.player;
     const night = gameState.isNight;
     const C = {
@@ -176,7 +179,7 @@ function getBgColor() {
 }
 
 // flood fill：回傳每格所屬 regionId 和 regions 陣列
-function labelBiomeRegions(terrainMap, gridW, gridH) {
+export function labelBiomeRegions(terrainMap, gridW, gridH) {
     const regionId = Array.from({length: gridH}, () => new Int32Array(gridW).fill(-1));
     const regions  = [];
     const DIRS     = [[-1,0],[1,0],[0,-1],[0,1]];
@@ -210,7 +213,7 @@ function labelBiomeRegions(terrainMap, gridW, gridH) {
 }
 
 // 同化所有 size < minTiles 的孤島
-function mergeSmallRegions(terrainMap, gridW, gridH, minTiles) {
+export function mergeSmallRegions(terrainMap, gridW, gridH, minTiles) {
     const {regionId, regions} = labelBiomeRegions(terrainMap, gridW, gridH);
 
     // 建立區塊鄰接圖（環形：四方向皆考慮邊界環繞）
@@ -289,7 +292,7 @@ function mergeSmallRegions(terrainMap, gridW, gridH, minTiles) {
 }
 
 // 確認所有 requiredBiomes 都存在於 terrainMap，回傳 true/false
-function ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes) {
+export function ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes) {
     if (requiredBiomes.length === 0) return true;
     const existing = new Set();
     for (let r = 0; r < gridH; r++) {
@@ -300,7 +303,7 @@ function ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes) {
     return requiredBiomes.every(b => existing.has(b));
 }
 
-function generateTerrain() {
+export function generateTerrain() {
     const cfg          = (gameState.currentMap && gameState.currentMap.terrain) || {};
     const centerRadius = cfg.forestCenterRadius  || 400;
     const forestThr    = cfg.forestThreshold     || 0.2;
@@ -356,7 +359,7 @@ function generateTerrain() {
 }
 
 // 將整張 terrainMap 預渲染到離屏 Canvas（8000x8000）
-function buildTerrainCanvas() {
+export function buildTerrainCanvas() {
     const tc = document.createElement('canvas');
     tc.width  = MAP_WIDTH;
     tc.height = MAP_HEIGHT;
@@ -392,8 +395,10 @@ function buildTerrainCanvas() {
     console.log("--- 地形預渲染完成（" + MAP_WIDTH + "x" + MAP_HEIGHT + " px）---");
 }
 
-// 把離屏 Canvas 對應視窗的區域貼到主 Canvas，支援地圖環繞
-function drawTerrain() {
+// 把離屏 Canvas 對應視窗的區域貼到主 Canvas，支援地圖環繞 + 手機視野縮放
+// 手機 cameraZoom < 1.0 時（玩家體型變大），需採樣更大的地形區域（VIEW_W/zoom × VIEW_H/zoom）
+// 並縮放貼到螢幕，確保地形與 worldToScreen() 的樹木/生物座標完全對齊
+export function drawTerrain() {
     if (!_terrainCanvas) {
         ctx.fillStyle = getBgColor();
         ctx.fillRect(0, 0, VIEW_W, VIEW_H);
@@ -401,28 +406,51 @@ function drawTerrain() {
     }
     const camX = gameState.camera.x;
     const camY = gameState.camera.y;
-    ctx.imageSmoothingEnabled = false;
 
-    const wrapX = camX + VIEW_W > MAP_WIDTH;
-    const wrapY = camY + VIEW_H > MAP_HEIGHT;
+    // 取得與 worldToScreen() 相同的縮放值
+    const zoom = (gameState.cameraZoom && gameState.cameraZoom !== 1.0)
+        ? gameState.cameraZoom : 1.0;
+
+    // zoom = 1.0：原本邏輯，1:1 貼圖，關閉平滑
+    // zoom < 1.0：採樣更大區域後縮小，開啟平滑避免鋸齒
+    ctx.imageSmoothingEnabled = (zoom !== 1.0);
+
+    // 採樣區域：以螢幕中心對應的世界點為中心，寬高 = VIEW / zoom
+    const srcW = Math.round(VIEW_W / zoom);
+    const srcH = Math.round(VIEW_H / zoom);
+    // 採樣原點（世界座標），正規化到地圖範圍內
+    let srcX = Math.round(camX + VIEW_W / 2 - srcW / 2);
+    let srcY = Math.round(camY + VIEW_H / 2 - srcH / 2);
+    srcX = ((srcX % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
+    srcY = ((srcY % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
+
+    // 依環繞情況拆成最多 4 段，各段按比例對應螢幕區域
+    const wrapX = srcX + srcW > MAP_WIDTH;
+    const wrapY = srcY + srcH > MAP_HEIGHT;
 
     if (!wrapX && !wrapY) {
-        ctx.drawImage(_terrainCanvas, camX, camY, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
+        ctx.drawImage(_terrainCanvas, srcX, srcY, srcW, srcH, 0, 0, VIEW_W, VIEW_H);
     } else if (wrapX && !wrapY) {
-        const w1 = MAP_WIDTH - camX;
-        ctx.drawImage(_terrainCanvas, camX, camY, w1,          VIEW_H, 0,  0, w1,          VIEW_H);
-        ctx.drawImage(_terrainCanvas, 0,    camY, VIEW_W - w1, VIEW_H, w1, 0, VIEW_W - w1, VIEW_H);
+        const w1s = MAP_WIDTH - srcX;
+        const w1d = Math.round(w1s / srcW * VIEW_W);
+        const w2s = srcW - w1s, w2d = VIEW_W - w1d;
+        ctx.drawImage(_terrainCanvas, srcX, srcY, w1s, srcH, 0,   0, w1d, VIEW_H);
+        ctx.drawImage(_terrainCanvas, 0,    srcY, w2s, srcH, w1d, 0, w2d, VIEW_H);
     } else if (!wrapX && wrapY) {
-        const h1 = MAP_HEIGHT - camY;
-        ctx.drawImage(_terrainCanvas, camX, camY, VIEW_W, h1,          0, 0,  VIEW_W, h1);
-        ctx.drawImage(_terrainCanvas, camX, 0,    VIEW_W, VIEW_H - h1, 0, h1, VIEW_W, VIEW_H - h1);
+        const h1s = MAP_HEIGHT - srcY;
+        const h1d = Math.round(h1s / srcH * VIEW_H);
+        const h2s = srcH - h1s, h2d = VIEW_H - h1d;
+        ctx.drawImage(_terrainCanvas, srcX, srcY, srcW, h1s, 0, 0,   VIEW_W, h1d);
+        ctx.drawImage(_terrainCanvas, srcX, 0,    srcW, h2s, 0, h1d, VIEW_W, h2d);
     } else {
-        const w1 = MAP_WIDTH  - camX, w2 = VIEW_W  - w1;
-        const h1 = MAP_HEIGHT - camY, h2 = VIEW_H - h1;
-        ctx.drawImage(_terrainCanvas, camX, camY, w1, h1, 0,  0,  w1, h1);
-        ctx.drawImage(_terrainCanvas, 0,    camY, w2, h1, w1, 0,  w2, h1);
-        ctx.drawImage(_terrainCanvas, camX, 0,    w1, h2, 0,  h1, w1, h2);
-        ctx.drawImage(_terrainCanvas, 0,    0,    w2, h2, w1, h1, w2, h2);
+        const w1s = MAP_WIDTH  - srcX, w2s = srcW - w1s;
+        const h1s = MAP_HEIGHT - srcY, h2s = srcH - h1s;
+        const w1d = Math.round(w1s / srcW * VIEW_W), w2d = VIEW_W - w1d;
+        const h1d = Math.round(h1s / srcH * VIEW_H), h2d = VIEW_H - h1d;
+        ctx.drawImage(_terrainCanvas, srcX, srcY, w1s, h1s, 0,   0,   w1d, h1d);
+        ctx.drawImage(_terrainCanvas, 0,    srcY, w2s, h1s, w1d, 0,   w2d, h1d);
+        ctx.drawImage(_terrainCanvas, srcX, 0,    w1s, h2s, 0,   h1d, w1d, h2d);
+        ctx.drawImage(_terrainCanvas, 0,    0,    w2s, h2s, w1d, h1d, w2d, h2d);
     }
 
     // 夜晚遮罩
@@ -432,7 +460,7 @@ function drawTerrain() {
     }
 }
 
-function generateTrees(count) {
+export function generateTrees(count) {
     const trees = [];
     for (let i = 0; i < count; i++) {
         const x = Math.floor(Math.random() * (MAP_WIDTH  - 100)) + 50;
