@@ -71,3 +71,13 @@ export function storageSetJSON(key, value) {
 export function storageRemoveMany(keys) {
     for (const key of keys) storageRemove(key);
 }
+
+// 讀取 settings（從 localStorage，失敗回傳 null）
+export function getSettings() {
+    return storageGetJSON(STORAGE_KEYS.GAME_SETTINGS);
+}
+
+// 儲存 settings（存入 localStorage）
+export function saveSettingsToStorage(settings) {
+    storageSetJSON(STORAGE_KEYS.GAME_SETTINGS, settings);
+}

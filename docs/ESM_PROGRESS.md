@@ -12,10 +12,10 @@
 
 ```
 所在 Stage   : Stage 3 — 架構重構（Phase 3 進行中）
-目前批次     : TODO-02 結算畫面統一完成
+目前批次     : TODO-07 gameState 存取控制（Stage 3 範圍）完成
 分支狀態     : esm-refactor（已建立）
-最後更新     : 2026-06-05
-最後操作者   : Codex（TODO-02 結算畫面統一）
+最後更新     : 2026-06-06
+最後操作者   : Codex（TODO-07 settings helper + 音樂播放時自動存檔）
 ```
 
 ---
@@ -60,7 +60,7 @@
 - [x] Phase 2：TODO-03 變異技能面板統一
 - [x] Phase 3：TODO-02 結算畫面統一
 - [x] Phase 3：TODO-05 設定面板 fromHome 移除
-- [ ] Phase 3：TODO-07 gameState 存取控制
+- [x] Phase 3：TODO-07 gameState 存取控制（Stage 3 範圍：settings helper）
 - [ ] Phase 4：TODO-08/09/10 收尾清理
 
 ### Stage 4 — Branch 對調
@@ -71,6 +71,17 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-06（Stage 3 TODO-07 gameState 存取控制 Stage 3 範圍完成）
+- 狀態：Stage 3 Phase 3 TODO-07（settings helper）完成
+- 操作者：Codex
+- 完成項目：
+  - `storage/index.js` 新增 `getSettings()` 與 `saveSettingsToStorage(settings)`，集中 `gameSettings` 的 localStorage 讀寫入口
+  - `systems/ui.js` 的 `loadSettings()` / `saveSettings()` 改用 settings helper
+  - `systems/audio.js` 的 `AudioManager.playMusic()` 在音樂開始播放時自動儲存目前 settings，避免音量調整因重新整理遺失
+  - `docs/ESM_TODO.md` 記錄 TODO-07 Stage 3 完成範圍，並將 `mutationSkills` / `sessionStats` 存取控制列為 v0.2.x 待辦
+- 發現問題：無
+- 下一步：Phase 4 TODO-08/09/10 收尾清理
 
 ### 2026-06-05（Stage 3 TODO-05 設定面板 fromHome 移除完成）
 - 狀態：Stage 3 Phase 3 TODO-05 完成

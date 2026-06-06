@@ -4,6 +4,7 @@
 // =============================================================
 import { AUDIO_FILES } from '../config/gameConfig.js';
 import { gameState } from './gameState.js';
+import { getSettings, saveSettingsToStorage } from '../storage/index.js';
 
 let _introThemeAudio = null;
 
@@ -158,6 +159,19 @@ export const AudioManager = {
             try { newAudio.volume = fv; } catch(e) {}
             if (fv >= target) clearInterval(fadeIn);
         }, 50);
+
+        // 音樂開始播放時自動儲存設定（確保音量設定不會因重整而遺失）
+        try {
+            if (gameState && gameState.settings) {
+                saveSettingsToStorage(
+                    Object.assign({}, gameState.settings, {
+                        volume: this.serializeVolume()
+                    })
+                );
+            }
+        } catch(e) {
+            // 靜默失敗，不影響音樂播放
+        }
     },
 
     stopMusic() {

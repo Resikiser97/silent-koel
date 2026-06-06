@@ -179,6 +179,12 @@ storage/
 2. `gameState.mutationSkills` → 只透過 `mutation/index.js` 讀寫
 3. `gameState.sessionStats` → 只透過 `stats/index.js` 讀寫
 
+**Stage 3 完成範圍：** 目標 1（settings helper）
+**下階段待辦（v0.2.x）：**
+- 目標 2：gameState.mutationSkills → 只透過 mutation/index.js 讀寫
+- 目標 3：gameState.sessionStats → 只透過 stats/index.js 讀寫
+（與 settings/index.js 重構一起執行）
+
 ---
 
 ## 五、已知技術債（較低優先）

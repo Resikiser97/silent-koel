@@ -46,7 +46,8 @@ import {
     storageSet,
     storageRemove,
     storageGetJSON,
-    storageSetJSON
+    getSettings,
+    saveSettingsToStorage
 } from '../storage/index.js';
 
 let _organHitRegions = [];
@@ -133,7 +134,7 @@ export function showAlphaAnnouncement(name) {
 
 export function loadSettings() {
     try {
-        const parsed = storageGetJSON(STORAGE_KEYS.GAME_SETTINGS);
+        const parsed = getSettings();
         if (parsed) {
             // volume 深度合併，確保子欄位不被 DEFAULT_SETTINGS 整個覆蓋
             if (parsed.volume && typeof parsed.volume === 'object') {
@@ -239,7 +240,7 @@ export function saveSettings() {
     const settingsToSave = Object.assign({}, gameState.settings, {
         volume: AudioManager.serializeVolume()
     });
-    storageSetJSON(STORAGE_KEYS.GAME_SETTINGS, settingsToSave);
+    saveSettingsToStorage(settingsToSave);
 }
 
 function _keyDisplay(k) {
