@@ -1,6 +1,18 @@
-## v0.1.6.1
+## v0.1.6.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.6.3 - 2026-06-07
+
+### 重構
+- Web Audio API 遷移（方案二，audio-refactor 分支）：
+  - Part A：建立 AudioContext + masterGain / musicGain / sfxGain
+  - Part B：音樂系統接 GainNode（introTheme + playMusic）
+  - Part C：音效改用 AudioBuffer + AudioBufferSourceNode
+  - iOS unlock：user gesture 時呼叫 audioContext.resume()
+  - 保留 HTMLAudio pool 作為 AudioBuffer 未就緒時的 fallback
 
 ---
 
