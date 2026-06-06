@@ -218,7 +218,9 @@ export function showSkillTree(cause) {
     pausePlayTimer();
     gameState.gameOver = true;
     gameState.skillTreeOpen = true;
-    AudioManager.play('death');
+    const deathKey = gameState.selectedCharacter === 'archerfish'
+        ? 'archerDeath' : 'death';
+    AudioManager.play(deathKey);
     AudioManager.stopMusic();
     saveLastRunOrgans();
     const timeBonus = Math.floor((600 - gameState.timeRemaining) / 180);

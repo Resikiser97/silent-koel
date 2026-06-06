@@ -453,9 +453,13 @@ export function initializeGame() {
                     hasCrit:      false,
                 });
                 p.attackVisual = Date.now();
-                const normalKey = gameState.selectedCharacter === 'archerfish'
-                    ? 'archerAttackNormal' : 'attackNormal';
-                AudioManager.play(normalKey);
+                if (gameState.selectedCharacter === 'archerfish') {
+                    const chargeLevel = p.chargeConsumed || 0;
+                    const archerKey = chargeLevel >= 3 ? 'archerAttackCrit' : 'archerAttackNormal';
+                    AudioManager.play(archerKey);
+                } else {
+                    AudioManager.play('attackNormal');
+                }
             }
         }
         p.chargeConsumed = 0;
@@ -559,6 +563,7 @@ window.onload = () => {
 
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
+        gameState.selectedCharacter = storageGet(STORAGE_KEYS.LAST_CHARACTER) || 'koel';
         initializeGame();
         return;
     }

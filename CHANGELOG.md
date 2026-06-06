@@ -1,6 +1,15 @@
-## v0.1.5.1
+## v0.1.5.2
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.5.2 - 2026-06-06
+
+### 修復
+- **阿奇爾 Charge Attack 音效**：第三格充能（chargeConsumed >= 3）播放 `archerAttackCrit`，其他充能階段播放 `archerAttackNormal`（`main.js` mouseup 事件）
+- **阿奇爾死亡音效**：死亡時播放 `archerDeath` 而非通用 `death`（`systems/evolution.js` showSkillTree）
+- **再來一局角色重置**：autostart 路徑補上從 localStorage 還原 `lastCharacter`，修復再來一局後角色永遠顯示噪鵑的問題（`main.js` window.onload）
 
 ---
 
