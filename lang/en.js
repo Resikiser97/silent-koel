@@ -435,3 +435,4 @@ LANG['en'] = {
         desert: { name: '🏜️ Desert Scorpion King', label: '🦂🏜️ Scorpion King' }
     }
 };
+export {};

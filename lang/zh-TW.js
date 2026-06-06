@@ -444,3 +444,4 @@ LANG['zh-TW'] = {
         desert: { name: '🏜️ 沙漠蠍王', label: '🦂🏜️蠍王' }
     }
 };
+export {};
