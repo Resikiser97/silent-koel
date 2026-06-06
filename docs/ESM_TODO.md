@@ -189,7 +189,7 @@ storage/
 
 ## 五、已知技術債（較低優先）
 
-### TODO-08：`_checkAndRepairMutationSkills` 的侵入性
+### TODO-08 ✅（2026-06-06 完成）：`_checkAndRepairMutationSkills` 的侵入性
 
 **問題：**
 此函式在偵測到異常時會重置所有技能等級，行為太激進。
@@ -199,9 +199,13 @@ storage/
 TODO-03 完成後，確認 `mutationSkills` 讀寫路徑統一且可靠，
 然後移除 `_checkAndRepairMutationSkills`，改為更溫和的 log + 警告。
 
+**完成紀錄：**
+- `systems/mutation.js` 已移除 `_checkAndRepairMutationSkills()`、`initMutationSkills()` 呼叫點與 `window._checkAndRepairMutationSkills` 掛載
+- `systems/evolution.js` 已移除無 dispatch 來源的 `mutationRepaired` event listener
+
 ---
 
-### TODO-09：`buildSkillTreeOverlay` 函式長度
+### TODO-09 ✅（2026-06-06 完成）：`buildSkillTreeOverlay` 函式長度
 
 **問題：**
 目前是整個代碼庫最長的函式（估計 400+ 行），包含 UI 建立、資料讀取、事件處理全部混在一起。
@@ -209,9 +213,12 @@ TODO-03 完成後，確認 `mutationSkills` 讀寫路徑統一且可靠，
 **解法：**
 TODO-01 完成後自然解決，不需要單獨處理。
 
+**完成紀錄：**
+- 已由 TODO-01 將 `buildSkillTreeOverlay()` 拆成 coordinator 與 private helper，自然完成
+
 ---
 
-### TODO-10：`effectiveMode` 參數傳遞鏈
+### TODO-10 ✅（2026-06-06 完成）：`effectiveMode` 參數傳遞鏈
 
 **問題：**
 `mode` 參數在 `buildSkillTreeOverlay` → `upgradeSkill` → `buildSkillTreeOverlay` 之間傳遞，
@@ -219,6 +226,10 @@ TODO-01 完成後自然解決，不需要單獨處理。
 
 **解法：**
 TODO-01 拆模組後，mode 狀態由模組內部管理，不需要全域變數。
+
+**完成紀錄：**
+- `systems/evolution.js` 已將 `_skillTreeMode` 改為模組私有狀態並補上用途註解
+- `_skillTreeFromHome` 因 `systems/ui.js` 仍需 import 以恢復技能樹 overlay 來源狀態，依安全規則暫時保留 export
 
 ---
 

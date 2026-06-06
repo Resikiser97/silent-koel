@@ -11,11 +11,11 @@
 ## 當前狀態快照
 
 ```
-所在 Stage   : Stage 3 — 架構重構（Phase 3 進行中）
-目前批次     : TODO-07 gameState 存取控制（Stage 3 範圍）完成
+所在 Stage   : Stage 3 — 架構重構（Phase 4 完成）
+目前批次     : TODO-08/09/10 收尾清理完成
 分支狀態     : esm-refactor（已建立）
 最後更新     : 2026-06-06
-最後操作者   : Codex（TODO-07 settings helper + 音樂播放時自動存檔）
+最後操作者   : Codex（TODO-08 repair 移除 + TODO-10 模組狀態清理）
 ```
 
 ---
@@ -61,7 +61,7 @@
 - [x] Phase 3：TODO-02 結算畫面統一
 - [x] Phase 3：TODO-05 設定面板 fromHome 移除
 - [x] Phase 3：TODO-07 gameState 存取控制（Stage 3 範圍：settings helper）
-- [ ] Phase 4：TODO-08/09/10 收尾清理
+- [x] Phase 4：TODO-08/09/10 收尾清理
 
 ### Stage 4 — Branch 對調
 - [ ] esm-refactor merge 進 master
@@ -71,6 +71,17 @@
 ---
 
 ## 事件紀錄（最新在最上方）
+
+### 2026-06-06（Stage 3 Phase 4 TODO-08/09/10 收尾清理完成）
+- 狀態：Stage 3 Phase 4 TODO-08/09/10 完成
+- 操作者：Codex
+- 完成項目：
+  - `systems/mutation.js` 移除 `_checkAndRepairMutationSkills()`、`initMutationSkills()` 呼叫點與 `window._checkAndRepairMutationSkills` 掛載
+  - `systems/evolution.js` 移除無 dispatch 來源的 `mutationRepaired` event listener
+  - `systems/evolution.js` 將 `_skillTreeMode` 改為模組私有狀態，並補上模組內部狀態註解
+  - TODO-09 已由 TODO-01 的 `buildSkillTreeOverlay()` coordinator 拆分自然完成
+- 發現問題：`systems/ui.js` 仍 import `_skillTreeFromHome`，因此本次依 TODO-10 安全規則保留 `_skillTreeFromHome` export，僅清理 `_skillTreeMode` export
+- 下一步：Stage 4 branch 對調準備
 
 ### 2026-06-06（Stage 3 TODO-07 gameState 存取控制 Stage 3 範圍完成）
 - 狀態：Stage 3 Phase 3 TODO-07（settings helper）完成

@@ -30,9 +30,10 @@ import {
     storageSetJSON
 } from '../storage/index.js';
 
-// 技能樹模式狀態（供 buildSkillTreeOverlay 跨呼叫保存）
+// 模組內部狀態：記錄技能樹當前模式與來源
+// 僅供 evolution.js 內部使用；_skillTreeFromHome 仍暫時 export 給 ui.js 恢復 overlay 狀態
 export let _skillTreeFromHome = false;
-export let _skillTreeMode     = '';
+let _skillTreeMode     = null;
 
 export function checkEvolutionUnlock() {
     const ev = gameState.player.evolution;
@@ -1001,10 +1002,3 @@ function _upgradeMutationSkill(skillId) {
     if (typeof _saveMutationSkills === 'function') _saveMutationSkills();
 }
 
-// 監聽變異資料修復事件，重建技能樹 overlay
-document.addEventListener('mutationRepaired', () => {
-    // 只在技能樹 overlay 存在時重建
-    if (document.getElementById('skill-tree-overlay')) {
-        buildSkillTreeOverlay(null, false, false, 'postGame');
-    }
-});
