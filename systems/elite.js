@@ -474,8 +474,9 @@ function _drawHunterElite(sx, sy, r, t2, elite) {
 
     // 幽靈隼：瞄準線 + 目標準心（與 Boss 雷射同等視覺強度）
     if (elite.eliteType === 'specterFalcon' && elite._aimTarget) {
-        const tsx = worldToScreen(elite._aimTarget.x, elite._aimTarget.y).x;
-        const tsy = _screenPos.y;
+        const ts  = worldToScreen(elite._aimTarget.x, elite._aimTarget.y);
+        const tsx = ts.x;
+        const tsy = ts.y;
         const pulse = Math.abs(Math.sin(Date.now() / 90));
         ctx.save();
         ctx.strokeStyle = `rgba(255, 80, 80, ${(pulse * 0.45 + 0.45).toFixed(2)})`;

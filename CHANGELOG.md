@@ -1,6 +1,22 @@
-## v0.1.6.3
+## v0.1.7.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.7.0 - 2026-06-07
+
+### 重構
+- Web Audio API 完整遷移（audio-refactor 分支）：
+  - AudioContext + masterGain / musicGain / sfxGain 架構
+  - 音樂系統接 GainNode（introTheme + playMusic）
+  - 音效改用 AudioBuffer + AudioBufferSourceNode
+  - iOS unlock：user gesture 時 audioContext.resume()
+  - 保留 HTMLAudio pool 作為 fallback
+
+### 修復
+- elite.js `_screenPos is not defined`：
+  `_drawHunterElite()` 改用 `worldToScreen()` 取得螢幕座標
 
 ---
 
