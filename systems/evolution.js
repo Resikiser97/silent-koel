@@ -758,9 +758,8 @@ function _buildSkillTreeMainContent(effectiveMode, overlay, titleEl, switchBtn) 
     mutCloseBtn.onmouseenter = () => { mutCloseBtn.style.background = 'rgba(255,255,255,0.16)'; };
     mutCloseBtn.onmouseleave = () => { mutCloseBtn.style.background = 'rgba(255,255,255,0.08)'; };
     mutCloseBtn.onclick = () => {
-        if (_skillTreeMode === 'postGame') {
-            // postGame 模式：關閉變異面板，顯示技能樹主內容
-            // 不移除整個 overlay，只切換回 skillContent
+        if (_skillTreeMode === 'postGame' || _skillTreeMode === 'forceStart') {
+            // forceStart 也切回主技能樹，讓玩家從「開始遊戲」按鈕正常進入
             _showingMut = false;
             mutContent.style.display = 'none';
             skillContent.style.display = 'flex';
@@ -768,8 +767,7 @@ function _buildSkillTreeMainContent(effectiveMode, overlay, titleEl, switchBtn) 
             if (switchBtn) switchBtn.textContent = '⚗️ ' + t('mutationSkillTreeBtn');
             mutCloseRow.style.display = 'none';
         } else {
-            // 其他模式（fromHome / forceStart）：
-            // 關閉整個 overlay 是正確行為
+            // fromHome：關閉整個 overlay
             const ov = document.getElementById('skill-tree-overlay');
             if (ov) ov.remove();
             gameState.skillTreeOpen = false;
@@ -968,7 +966,13 @@ function _buildMutRightCol(rightCol) {
     btn.style.cssText = 'padding:5px 16px;font-size:12px;border-radius:4px;border:1px solid ' + (maxed ? '#555' : (canUp ? 'rgba(180,100,255,0.6)' : '#555')) + ';background:' + (canUp ? 'rgba(130,60,180,0.35)' : 'transparent') + ';color:' + (maxed || !canUp ? '#555' : '#CC88FF') + ';cursor:' + (canUp ? 'pointer' : 'default') + ';';
     btn.textContent = maxed ? t('mutationSkillMaxed') : t('mutationSkillUpgrade', { n: cost });
     btn.disabled    = !canUp;
-    btn.onclick     = () => { _upgradeMutationSkill('recallOrgan'); buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode); };
+    const _doUpgradeRecallOrgan = () => {
+        _upgradeMutationSkill('recallOrgan');
+        const panel = document.getElementById('mut-skill-panel');
+        if (panel) { _refreshMutContentLeft(panel); _refreshMutContentRight(panel); }
+    };
+    btn.onclick = _doUpgradeRecallOrgan;
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); _doUpgradeRecallOrgan(); }, { passive: false });
     card.appendChild(btn);
     rightCol.appendChild(card);
 }

@@ -1,6 +1,15 @@
-## v0.1.13.1
+## v0.1.13.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.13.3 - 2026-06-07
+
+### 修復
+- systems/evolution.js：升級回憶器官後不再重建整個 overlay 跳回主技能樹，改為只刷新變異面板左右欄
+- systems/evolution.js：forceStart 路徑關閉變異技能樹後不再移除 overlay（改為切回主技能樹，讓玩家從「開始遊戲」按鈕正常進入，解決卡死問題）
+- systems/evolution.js：變異技能升級按鈕加入 touchstart 事件，修復手機版觸控升級無效
 
 ---
 
