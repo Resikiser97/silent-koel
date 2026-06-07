@@ -39,6 +39,7 @@ import {
     storageGetJSON,
     storageSetJSON
 } from '../storage/index.js';
+import { _letterboxScale } from './mobile.js';
 
 // ─────────────────────────────────────────────
 // SHA-256 工具（帳號密碼雜湊用）
@@ -617,9 +618,8 @@ function _makeDraggable(handle, panels) {
         startX = clientX;
         startY = clientY;
         startPositions = panels.map(p => ({
-            left:   parseFloat(p.style.left)   || p.getBoundingClientRect().left,
-            bottom: parseFloat(p.style.bottom) ||
-                    (window.innerHeight - p.getBoundingClientRect().bottom)
+            left:   parseFloat(p.style.left)   || p.offsetLeft,
+            bottom: parseFloat(p.style.bottom) || (900 - p.offsetTop - p.offsetHeight)
         }));
     };
 
@@ -629,12 +629,12 @@ function _makeDraggable(handle, panels) {
         if (!isDragging && Math.abs(dx) + Math.abs(dy) > 5) isDragging = true;
         if (!isDragging) return;
 
+        const scale = _letterboxScale || 1;
         panels.forEach((p, i) => {
-            let newLeft   = startPositions[i].left + dx;
-            let newBottom = startPositions[i].bottom - dy;
-            const rect    = p.getBoundingClientRect();
-            newLeft   = Math.max(0, Math.min(newLeft,   window.innerWidth  - rect.width));
-            newBottom = Math.max(0, Math.min(newBottom, window.innerHeight - rect.height));
+            let newLeft   = startPositions[i].left   + dx / scale;
+            let newBottom = startPositions[i].bottom - dy / scale;
+            newLeft   = Math.max(0, Math.min(newLeft,   1600 - p.offsetWidth));
+            newBottom = Math.max(0, Math.min(newBottom, 900  - p.offsetHeight));
             p.style.left   = newLeft + 'px';
             p.style.right  = 'auto';
             p.style.bottom = newBottom + 'px';
@@ -681,9 +681,8 @@ window.addEventListener('resize', () => {
         .map(id => document.getElementById(id))
         .filter(Boolean)
         .forEach(p => {
-            const rect = p.getBoundingClientRect();
-            let left   = Math.max(0, Math.min(parseFloat(p.style.left)   || 0, window.innerWidth  - rect.width));
-            let bottom = Math.max(0, Math.min(parseFloat(p.style.bottom) || 0, window.innerHeight - rect.height));
+            let left   = Math.max(0, Math.min(parseFloat(p.style.left)   || 0, 1600 - p.offsetWidth));
+            let bottom = Math.max(0, Math.min(parseFloat(p.style.bottom) || 0, 900  - p.offsetHeight));
             p.style.left   = left   + 'px';
             p.style.bottom = bottom + 'px';
         });
@@ -727,7 +726,8 @@ function _onViewportResize() {
     if (!_chatExpanded) return;
     const vv = window.visualViewport;
     if (!vv) return;
-    const keyboardH = window.innerHeight - vv.height - (vv.offsetTop || 0);
+    const scale = _letterboxScale || 1;
+    const keyboardH = (window.innerHeight - (vv.height + (vv.offsetTop || 0))) / scale;
     const ep = document.getElementById('chat-expanded-panel');
     if (ep) ep.style.bottom = Math.max(0, keyboardH) + 'px';
 }
@@ -900,6 +900,8 @@ function _renderChatSettingsPanel(panel) {
 }
 
 export function buildChatUI() {
+    const gc = document.getElementById('game-container');
+
     // 清除所有舊元素
     ['chat-collapsed-panel', 'chat-fake-input', 'chat-expanded-panel',
      'chat-overlay-backdrop', 'chat-settings-panel',
@@ -917,13 +919,13 @@ export function buildChatUI() {
     const settingsPanel = document.createElement('div');
     settingsPanel.id = 'chat-settings-panel';
     settingsPanel.style.cssText = [
-        'display:none', 'position:fixed',
+        'display:none', 'position:absolute',
         'background:#1c1c1c', 'border:1px solid #444', 'border-radius:6px',
         'padding:10px 12px', 'width:210px', 'z-index:9999', 'font-size:12px',
         'font-family:Arial,sans-serif', 'color:white'
     ].join(';');
     _renderChatSettingsPanel(settingsPanel);
-    document.body.appendChild(settingsPanel);
+    gc.appendChild(settingsPanel);
 
     // 齒輪按鈕共用點擊邏輯
     const _openSettings = (e, refEl) => {
@@ -933,12 +935,10 @@ export function buildChatUI() {
         if (!sp) return;
         if (sp.style.display !== 'none') { sp.style.display = 'none'; return; }
         _renderChatSettingsPanel(sp);
-        const rect = refEl.getBoundingClientRect();
         const spW  = 214;
-        let spLeft = rect.left;
-        if (spLeft + spW > window.innerWidth - 4) spLeft = window.innerWidth - spW - 4;
-        sp.style.left   = Math.max(4, spLeft) + 'px';
-        sp.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+        const spLeft = refEl.offsetLeft;
+        sp.style.left   = Math.max(4, Math.min(spLeft, 1600 - spW - 4)) + 'px';
+        sp.style.bottom = (900 - refEl.offsetTop + 4) + 'px';
         sp.style.top    = 'auto';
         sp.style.right  = 'auto';
         sp.style.display = 'block';
@@ -950,12 +950,12 @@ export function buildChatUI() {
     const backdrop = document.createElement('div');
     backdrop.id = 'chat-overlay-backdrop';
     backdrop.style.cssText = [
-        'display:none', 'position:fixed',
+        'display:none', 'position:absolute',
         'top:0', 'left:0', 'right:0', 'bottom:0',
         'z-index:8999', 'background:transparent'
     ].join(';');
     backdrop.addEventListener('click', () => _collapseChat());
-    document.body.appendChild(backdrop);
+    gc.appendChild(backdrop);
 
     // ════════════════════════════════════════════════════════
     // 收合面板（訊息預覽）
@@ -963,8 +963,8 @@ export function buildChatUI() {
     const collapsedPanel = document.createElement('div');
     collapsedPanel.id = 'chat-collapsed-panel';
     collapsedPanel.style.cssText = isMob ? [
-        'position:fixed', 'left:5%', 'right:5%',
-        'bottom:calc(5vh + 44px)',
+        'position:absolute', 'left:80px', 'right:80px',
+        'bottom:89px',
         'max-height:120px',
         'z-index:9000',
         'background:rgba(0,0,0,0.60)',
@@ -975,7 +975,7 @@ export function buildChatUI() {
         'box-sizing:border-box', 'padding:4px 28px 4px 8px',
         'pointer-events:all'
     ].join(';') : [
-        'position:fixed', 'left:10px', 'bottom:44px',
+        'position:absolute', 'left:10px', 'bottom:44px',
         'width:320px', 'max-height:160px',
         'z-index:9000',
         'background:rgba(0,0,0,0.60)',
@@ -1024,7 +1024,7 @@ export function buildChatUI() {
         if (e.target === gearBtn || gearBtn.contains(e.target)) return;
         _expandChat();
     });
-    document.body.appendChild(collapsedPanel);
+    gc.appendChild(collapsedPanel);
 
     // ════════════════════════════════════════════════════════
     // 假輸入列（點擊展開）
@@ -1032,7 +1032,7 @@ export function buildChatUI() {
     const fakeInput = document.createElement('div');
     fakeInput.id = 'chat-fake-input';
     fakeInput.style.cssText = isMob ? [
-        'position:fixed', 'left:5%', 'right:5%', 'bottom:5vh',
+        'position:absolute', 'left:80px', 'right:80px', 'bottom:45px',
         'height:36px', 'z-index:9000',
         'background:rgba(0,0,0,0.70)',
         'border:1px solid rgba(255,255,255,0.15)',
@@ -1041,7 +1041,7 @@ export function buildChatUI() {
         'padding:0 10px', 'box-sizing:border-box',
         'cursor:text', 'pointer-events:all'
     ].join(';') : [
-        'position:fixed', 'left:10px', 'bottom:10px',
+        'position:absolute', 'left:10px', 'bottom:10px',
         'width:320px', 'height:36px', 'z-index:9000',
         'background:rgba(0,0,0,0.70)',
         'border:1px solid rgba(255,255,255,0.15)',
@@ -1055,7 +1055,7 @@ export function buildChatUI() {
     fakePlaceholder.textContent = '點此輸入訊息...';
     fakeInput.appendChild(fakePlaceholder);
     fakeInput.addEventListener('click', () => _expandChat());
-    document.body.appendChild(fakeInput);
+    gc.appendChild(fakeInput);
 
     // ════════════════════════════════════════════════════════
     // 展開面板（完整聊天室）
@@ -1063,8 +1063,8 @@ export function buildChatUI() {
     const expandedPanel = document.createElement('div');
     expandedPanel.id = 'chat-expanded-panel';
     expandedPanel.style.cssText = isMob ? [
-        'display:none', 'position:fixed', 'left:0', 'bottom:0',
-        'width:100%', 'height:55vh', 'z-index:9001',
+        'display:none', 'position:absolute', 'left:0', 'bottom:0',
+        'width:1600px', 'height:495px', 'z-index:9001',
         'background:rgba(15,15,15,0.97)',
         'border-radius:12px 12px 0 0',
         'border:1px solid rgba(255,255,255,0.15)', 'border-bottom:none',
@@ -1072,7 +1072,7 @@ export function buildChatUI() {
         'color:white', 'font-family:Arial,sans-serif', 'font-size:12px',
         'box-sizing:border-box', 'overflow:hidden'
     ].join(';') : [
-        'display:none', 'position:fixed', 'left:10px', 'bottom:10px',
+        'display:none', 'position:absolute', 'left:10px', 'bottom:10px',
         'width:360px', 'height:480px', 'z-index:9001',
         'background:rgba(15,15,15,0.97)',
         'border-radius:8px',
@@ -1271,7 +1271,7 @@ export function buildChatUI() {
     expandedPanel.appendChild(scrollBtn);
     expandedPanel.appendChild(colorPanel);
     expandedPanel.appendChild(inputRow);
-    document.body.appendChild(expandedPanel);
+    gc.appendChild(expandedPanel);
 
     // 拖拽（桌機版，以 gearBtn 為 handle，移動 collapsedPanel + fakeInput）
     if (!isMob) {

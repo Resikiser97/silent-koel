@@ -3,15 +3,18 @@
 //
 // 模組職責：
 //   - detectMobile() / getOrientation()：裝置與方向偵測
-//   - applyDeviceMode()：依裝置套用 canvas 縮放（MOBILE_GAME_SCALE = 0.6）
+//   - applyDeviceMode()：套用統一 Letterbox 縮放（電腦版 + 手機版共用）
 //   - _attachJoystickListeners()：手機觸控事件綁定（搖桿 + 攻擊區）
 //   - _renderMobileOverlay()：每幀繪製手機觸控層（攻擊回饋動畫、搖桿視覺）
 //   - _getAttackBtnPos()：回傳攻擊區矩形中心座標
+//   - _letterboxScale：當前縮放比例（export，供 chat.js 等使用）
 //
 // 重要規則：
-//   - MOBILE_GAME_SCALE = 0.6，不要寫死數值，統一在此修改
+//   - 縮放公式：scale = Math.min(vw/1600, vh/900)，邏輯解析度永遠 1600×900
 //   - 自動攻擊開啟時整個螢幕都是移動區，攻擊區不再偵測 tap
 //   - onStart handler 用 elementFromPoint 偵測非 canvas 元素時直接 continue
+//   - 觸控座標為 viewport 座標，搖桿只輸出正規化方向向量，不需額外換算
+//   - 器官 hit test 已透過 getBoundingClientRect() 比例換算，縮放後正確
 //
 // 跨模組依賴：
 //   - systems/gameState.js：gameState.isMobile / gameState.orientation
@@ -66,48 +69,30 @@ function _setViewSize(w, h) {
     if (co) { co.style.width = w + 'px'; co.style.height = h + 'px'; }
 }
 
+// TODO: MOBILE_GAME_SCALE 已被統一 Letterbox 縮放取代，保留以防外部引用
 export const MOBILE_GAME_SCALE = 0.6;
+
+// 當前 Letterbox 縮放比例，供其他模組（如 chat.js）使用
+export let _letterboxScale = 1;
 
 function _applyMobileScale() {
     const container = document.getElementById('game-container');
     if (!container) return;
 
-    if (!gameState.isMobile) {
-        _setViewSize(1600, 900);
-        container.style.transform       = '';
-        container.style.transformOrigin = '';
-        container.style.position        = '';
-        container.style.left            = '';
-        container.style.top             = '';
-        document.body.style.display  = '';
-        document.body.style.height   = '';
-        document.body.style.width    = '';
-        document.body.style.overflow = '';
-        return;
-    }
-
     const { width: vw, height: vh } = _getViewportSize();
-    document.body.style.display  = 'block';
-    document.body.style.width    = vw + 'px';
-    document.body.style.height   = vh + 'px';
-    document.body.style.overflow = 'hidden';
+    const scale = Math.min(vw / 1600, vh / 900);
+    _letterboxScale = scale;
+    const left = (vw - 1600 * scale) / 2;
+    const top  = (vh - 900  * scale) / 2;
 
-    let logicW, logicH, scale;
-    if (gameState.orientation === 'landscape') {
-        logicW = Math.round(1600 * MOBILE_GAME_SCALE);
-        logicH = Math.round(900  * MOBILE_GAME_SCALE);
-        scale  = vw / logicW;
-    } else {
-        logicW = Math.round(900  * MOBILE_GAME_SCALE);
-        logicH = Math.round(1600 * MOBILE_GAME_SCALE);
-        scale  = vw / logicW;
-    }
-    _setViewSize(logicW, logicH);
     container.style.position        = 'absolute';
-    container.style.left            = '0px';
-    container.style.top             = '0px';
+    container.style.width           = '1600px';
+    container.style.height          = '900px';
+    container.style.left            = left + 'px';
+    container.style.top             = top  + 'px';
     container.style.transformOrigin = 'top left';
     container.style.transform       = 'scale(' + scale + ')';
+    document.body.style.overflow    = 'hidden';
 }
 
 export function applyDeviceMode() {

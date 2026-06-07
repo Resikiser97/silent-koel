@@ -1,6 +1,14 @@
-## v0.1.13.7
+## v0.1.14.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.14.0 - 2026-06-07
+
+### 新增
+- systems/mobile.js：統一 Letterbox 縮放（電腦版 + 手機版共用），scale = Math.min(vw/1600, vh/900)；移除 isMobile 分支，不再呼叫 _setViewSize 改變邏輯解析度；export _letterboxScale 供其他模組使用；MOBILE_GAME_SCALE 標記為 deprecated 保留
+- systems/chat.js：所有 chat panels 從 document.body 移入 #game-container，position:fixed 改為 position:absolute，座標以 1600×900 邏輯空間為基準；drag bounds 改用 1600/900；settings panel 定位改用 offsetLeft/offsetTop；手機版百分比 layout 改為邏輯像素（left:80px, right:80px, bottom:45/89px）；鍵盤高度偵測除以 _letterboxScale
 
 ---
 

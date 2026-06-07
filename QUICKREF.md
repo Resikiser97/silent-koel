@@ -1,4 +1,4 @@
-## v0.1.13.7
+## v0.1.14.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.13.7**
+- 版本：**v0.1.14.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -19,14 +19,12 @@
 渲染：HTML5 Canvas 2D（遊戲世界）+ HTML div overlay（UI）
 FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 
-邏輯解析度：
-  桌機：1600×900
-  手機橫向：960×540
-  手機直向：540×960
+邏輯解析度：永遠 1600×900（VIEW_W/VIEW_H 不可改動）
 
-手機縮放：CSS transform: scale()
-  MOBILE_GAME_SCALE = 0.6（定義在 _applyMobileScale() 上方）
-  調整此值可統一縮放，不需改其他系統
+縮放：CSS transform: scale()，統一 Letterbox，電腦版 + 手機版共用
+  scale = Math.min(vw/1600, vh/900)
+  _letterboxScale（mobile.js export）供其他模組讀取當前縮放比例
+  MOBILE_GAME_SCALE = 0.6（deprecated，保留以防外部引用）
 
 模組載入：ES Modules，main.js 為 <script type="module"> 唯一入口
 手機判斷：gameState.isMobile / gameState.orientation
@@ -141,7 +139,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 ## 關鍵技術陷阱
 | 陷阱 | 規則 |
 |------|------|
-| `MOBILE_GAME_SCALE` | 固定為 0.6，不要寫死數值 |
+| `MOBILE_GAME_SCALE` | deprecated（Letterbox 取代），保留以防外部引用，值仍為 0.6 |
 | `realPlayTime` | 單位是毫秒，上傳排行榜用 `Math.floor(realPlayTime / 1000)` 轉秒 |
 | `resumePlayTimer()` | 無條件啟動 |
 | `pausePlayTimer()` | 有檢查 `_playTimerStart !== null` 才暫停 |
