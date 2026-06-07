@@ -1,6 +1,15 @@
-## v0.1.13.0
+## v0.1.13.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.13.1 - 2026-06-07
+
+### 調整
+- 刪除根目錄 SKILL_FILEHEADER.md、SKILL_MAGICCODE.md（內容已移至 .claude/skills/）
+- 新建 .claude/skills/ 下五個 Skill 檔案：doc-audit、file-header、magic-code、patchnote、compendium
+- .claude/instructions.md：sync-docs 新增 Step 1.2（Patchnote 判斷）、圖鑑維護 SOP 精簡為 3 行、讀取清單加入第 7 條（確認可用 Skill）
 
 ---
 

@@ -1,11 +1,15 @@
-## v0.0.66.0
-
 # SKILL — Magic Code 掃描與修正 SOP
 
 > 呼叫方式：
 > - 「執行 magic-code 全部」→ 掃描所有 systems/ 檔案
 > - 「執行 magic-code systems/」→ 只掃 systems/ 資料夾
 > - 「執行 magic-code [檔名]」→ 只掃單一檔案
+
+---
+
+## 執行前必讀
+1. DOC_INTEGRITY.md（了解文件規範）
+2. ARCH.md（了解模組結構與 config 位置）
 
 ---
 
@@ -29,7 +33,6 @@ systems/ 裡出現的裸數值，且該數值屬於遊戲邏輯（不是 CSS 樣
 ```javascript
 // ❌ 問題
 if (Date.now() - p.attackVisual < 200) { ... }
-ctx.fillStyle = 'rgba(255,255,255,' + (alpha * 0.12) + ')';
 
 // ✅ 正確做法
 // config/ 定義：ATTACK_VISUAL_DURATION = 200
@@ -45,8 +48,6 @@ if (c.name.includes('蠍王')) poisonResist = 0.5;
 if (gameState.player.characterId === 'koel') { ... }
 
 // ✅ 正確做法
-// config/ 定義：boss.poisonResist = 0.5
-// config/ 定義：char.specialType = 'ranged'
 if (c.poisonResist) poisonResist = c.poisonResist;
 if (char.isRanged) { ... }
 ```
@@ -57,7 +58,6 @@ UI 文字沒有使用 t('key')。
 ```javascript
 // ❌ 問題
 btn.textContent = '開始遊戲';
-el.innerText = 'Back';
 
 // ✅ 正確做法
 btn.textContent = t('btnStart');
@@ -79,18 +79,20 @@ btn.textContent = t('btnStart');
 
 ### Step 3 — 輸出報告，等待確認
 
-輸出以下格式，不要自動修改：
 ```
 ── Magic Code 掃描報告 ──
 掃描範圍：[X 個檔案]
+
 ✅ 無問題：[檔案列表]
+
 ⚠️ 需要修正：
 [檔名] — X 個問題
-[行號] 類型A：200 → 建議定義 ATTACK_VISUAL_DURATION = 200 在 config/gameConfig.js
-[行號] 類型B：name.includes('蠍王') → 建議在 BOSS_CONFIG 加 poisonResist 欄位
-[行號] 類型C：'開始遊戲' → 建議改為 t('btnStart')
+  [行號] 類型A：200 → 建議定義 ATTACK_VISUAL_DURATION = 200 在 config/gameConfig.js
+  [行號] 類型B：name.includes('蠍王') → 建議在 BOSS_CONFIG 加 poisonResist 欄位
+  [行號] 類型C：'開始遊戲' → 建議改為 t('btnStart')
+
 待修正共 X 個問題，涉及 X 個檔案
-────────────────────────────────
+────────────────────
 是否要我現在修正？（請回覆「確認修正」才執行）
 ```
 
@@ -109,4 +111,4 @@ btn.textContent = t('btnStart');
 - 新增功能完成後
 - 新增角色或 Boss 後
 - 大型重構完成後
-- 定期維護（每 5 個版本一次）
+- 定期維護（每 5 個 y 版本一次）

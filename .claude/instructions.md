@@ -36,6 +36,7 @@ AI 只能改 y 和 z，不得碰 v0 和 x。
 4. `CHANGELOG.md` ← 最新版本與近期變更（每次必讀）
 5. `VERSION_RULES.md` ← 版本號規則（每次必讀）
 6. `MAIN.md` ← 只在需要查詢特定函式或系統細節時才讀取
+7. 確認 `.claude/skills/` 下有哪些 Skill 可用
 
 ---
 
@@ -86,6 +87,11 @@ gameConfig.js       ← version 欄位
 
 ### Step 1 — 讀取本次變更範圍
 讀取 `CHANGELOG.md` 最上方最新一條 entry，確認本次 commit 涉及哪些檔案和系統。
+
+### Step 1.2 — Patchnote 判斷
+執行「執行 patchnote」（見 `.claude/skills/patchnote.md`）。
+判斷本次變更是否影響玩家，若是則生成草稿等待確認後寫入。
+寫入後自動觸發「執行 compendium 檢查」。
 
 ### Step 1.5 — 強制檢查 JS 檔案結構變動
 讀取本次 commit 的異動清單。
@@ -210,50 +216,6 @@ gameConfig      ：[已更新｜無需變動] → （一句話說明）
 
 ---
 
-## 圖鑑維護 SOP
-
-### 指令一：「更新圖鑑」
-
-當用戶說「更新圖鑑」時，執行以下步驟：
-
-1. 讀取以下檔案取得最新資料：
-   - `config/patchnotes.js`（找出上次圖鑑更新後的新版本條目）
-   - `config/organs.js`、`config/creatures.js`、`config/evolution.js`（取得最新數值）
-   - `config/compendium_data.js`（取得現有內容）
-
-2. 比對新 patchnotes 的 `added[]` 和 `changed[]` 欄位，判斷哪些變動需要反映在圖鑑中。
-   判斷標準：會影響玩家理解遊戲的功能、數值、機制變動才需要更新。純技術修復（fix）不需要。
-
-3. 針對需要更新的條目，修改 `config/compendium_data.js` 對應 entry 的 content（繁中和英文都更新）。
-   若是全新功能，判斷應歸屬哪個 section，新增對應 entry。
-
-4. 完成後報告：更新了哪些條目、新增了哪些條目，並列出內容摘要讓用戶確認。
-
-5. 用戶確認無誤後才寫入檔案。
-
----
-
-### 指令二：「檢查圖鑑」
-
-當用戶說「檢查圖鑑」時，執行以下步驟：
-
-1. 讀取以下檔案：
-   - `config/compendium_data.js`（現有圖鑑內容）
-   - `config/organs.js`、`config/creatures.js`、`config/evolution.js`、`config/patchnotes.js`（最新資料）
-   - `project_summary.md`（設計說明）
-
-2. 逐一比對，找出以下問題：
-   - A. **遺漏條目**：config 裡有資料但圖鑑完全沒提到的功能或生物
-   - B. **數值過時**：圖鑑內文提到的數值與 config 現有數值不符
-   - C. **描述過時**：patchnotes 有 `changed[]` 記錄但圖鑑內文未反映
-   - D. **建議新增**：根據玩家理解需求，判斷應該補充說明但目前缺少的主題
-
-3. 輸出一份清單，格式如下：
-   ```
-   【遺漏】條目名稱 — 說明為何需要新增
-   【數值過時】條目名稱 — 舊數值 vs 新數值
-   【描述過時】條目名稱 — 說明哪裡需要更新
-   【建議新增】主題名稱 — 說明對新玩家的幫助
-   ```
-
-4. 詢問用戶：「是否要我現在執行更新？」，等待用戶確認後才進行修改。
+## 圖鑑維護
+執行「執行 compendium 檢查」或「執行 compendium 更新」。
+詳細步驟見 `.claude/skills/compendium.md`。
