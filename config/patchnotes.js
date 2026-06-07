@@ -7,6 +7,13 @@
 
 export const PATCH_NOTES = [
     {
+        version: 'v0.1.14.1',
+        date: '2026-06-08',
+        fixed: [
+            '從首頁打開技能樹並切到變異頁後，關閉時聊天室現在會正確恢復顯示',
+        ],
+    },
+    {
         version: 'v0.1.14.0',
         date: '2026-06-07',
         changed: [

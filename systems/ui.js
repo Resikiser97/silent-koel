@@ -28,7 +28,7 @@ import { HARD_MAP } from '../map/hardmap.js';
 import { COMPENDIUM_DATA } from '../config/compendium_data.js';
 import { LANG, LANG_LIST, t, applyLanguage } from '../lang.js';
 import { AudioManager, playIntroTheme } from './audio.js';
-import { applyDeviceMode, _effectiveMobile } from './mobile.js';
+import { applyDeviceMode, _effectiveMobile, _letterboxScale } from './mobile.js';
 import { addXP } from './player.js';
 import { spawnFruit } from './spawning.js';
 import { getDayNightPhaseIndex } from './daynight.js';
@@ -841,11 +841,96 @@ export function updateTimer() {
 // 開發者模式 (Developer Mode)
 // =============================================================
 
+let _devPanelDragReady = false;
+
+function _clampDevPanel(panel, left, top) {
+    const maxLeft = Math.max(0, 1600 - panel.offsetWidth);
+    const maxTop  = Math.max(0, 900 - panel.offsetHeight);
+    return {
+        left: Math.max(0, Math.min(left, maxLeft)),
+        top:  Math.max(0, Math.min(top, maxTop)),
+    };
+}
+
+function _placeDevPanelBelowMapInfo() {
+    const panel = document.getElementById('dev-panel');
+    if (!panel) return;
+    const minimap = document.getElementById('minimap-container');
+    const left = minimap ? minimap.offsetLeft : 1450;
+    const top = minimap ? minimap.offsetTop + minimap.offsetHeight + 8 : 80;
+    const pos = _clampDevPanel(panel, left, top);
+    panel.style.left = pos.left + 'px';
+    panel.style.top = pos.top + 'px';
+    panel.style.right = 'auto';
+}
+
+function _initDevPanelDrag() {
+    if (_devPanelDragReady) return;
+    const panel = document.getElementById('dev-panel');
+    const title = document.getElementById('dev-panel-title');
+    if (!panel || !title) return;
+    _devPanelDragReady = true;
+
+    let dragging = false;
+    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+    const begin = (clientX, clientY) => {
+        dragging = true;
+        startX = clientX;
+        startY = clientY;
+        startLeft = parseFloat(panel.style.left) || panel.offsetLeft || 0;
+        startTop = parseFloat(panel.style.top) || panel.offsetTop || 0;
+    };
+    const move = (clientX, clientY) => {
+        if (!dragging) return;
+        const scale = _letterboxScale || 1;
+        const pos = _clampDevPanel(
+            panel,
+            startLeft + (clientX - startX) / scale,
+            startTop + (clientY - startY) / scale
+        );
+        panel.style.left = pos.left + 'px';
+        panel.style.top = pos.top + 'px';
+        panel.style.right = 'auto';
+    };
+    const end = () => { dragging = false; };
+
+    title.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        begin(e.clientX, e.clientY);
+        const onMove = (ev) => move(ev.clientX, ev.clientY);
+        const onEnd = () => {
+            end();
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+    });
+    title.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        if (!t) return;
+        begin(t.clientX, t.clientY);
+    }, { passive: true });
+    title.addEventListener('touchmove', (e) => {
+        const t = e.touches[0];
+        if (!t) return;
+        move(t.clientX, t.clientY);
+        e.preventDefault();
+    }, { passive: false });
+    title.addEventListener('touchend', end);
+    title.addEventListener('touchcancel', end);
+}
+
 export function toggleDevMode() {
     gameState.devMode = !gameState.devMode;
     if (gameState.devMode) gameState.devModeUsed = true;
     document.getElementById('dev-panel').style.display    = gameState.devMode ? 'block' : 'none';
     document.getElementById('dev-indicator').style.display = gameState.devMode ? 'block' : 'none';
+    if (gameState.devMode) {
+        _placeDevPanelBelowMapInfo();
+        _initDevPanelDrag();
+    }
 }
 
 export function devAddXP() {

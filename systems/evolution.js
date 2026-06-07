@@ -771,6 +771,7 @@ function _buildSkillTreeMainContent(effectiveMode, overlay, titleEl, switchBtn) 
             const ov = document.getElementById('skill-tree-overlay');
             if (ov) ov.remove();
             gameState.skillTreeOpen = false;
+            if (document.getElementById('start-screen') && typeof showChat === 'function') showChat();
         }
     };
     mutCloseRow.appendChild(mutCloseBtn);
