@@ -18,12 +18,14 @@ AI 沒有記憶，每次工作只能依賴文件理解專案。
 
 **文件錯誤 = 對未來所有 AI 工作下毒。**
 
+---
+
 ## 文件優先級規則（Source of Truth）
 
 | 文件 | 類型 | 優先級 | 說明 |
 |------|------|--------|------|
 | `.claude/instructions.md` | 開發規範 | 文件優先 | SOP、版本規則、架構決策 |
-| `Version_rules.md` | 版本規範 | 文件優先 | 版本號格式，人工維護 |
+| `VERSION_RULES.md` | 版本規範 | 文件優先 | 版本號格式，人工維護 |
 | `DOC_INTEGRITY.md` | 完整性規範 | 文件優先 | 本文件，人工維護 |
 | `ARCH.md` | 架構說明 | 代碼優先 | 描述遊戲實際運作，跟著代碼走 |
 | `MAIN.md` | 運作說明 | 代碼優先 | 給 AI/開發者看遊戲怎麼運作 |
@@ -33,6 +35,8 @@ AI 沒有記憶，每次工作只能依賴文件理解專案。
 
 **代碼優先** = 文件描述有誤時，以實際代碼為準，修正文件。
 **文件優先** = 代碼行為有誤時，以文件規範為準，修正代碼。
+
+---
 
 ## 強制規則
 
@@ -44,6 +48,8 @@ AI 沒有記憶，每次工作只能依賴文件理解專案。
 
 違反以上規則 = 這次任務未完成。
 
+---
+
 ## doc-audit 執行規則
 
 發現文件與代碼衝突時：
@@ -52,48 +58,56 @@ AI 沒有記憶，每次工作只能依賴文件理解專案。
 - 任何衝突都必須回報，不能假裝沒看到
 - 不確定的地方說不確定，不要猜
 
+---
+
 ## 版本號規則
 
-詳細規則見 Version_rules.md，摘要如下：
+詳細規則見 VERSION_RULES.md，摘要如下：
 
+```
 格式：v0.x.y.z
 
 v0 = 開發階段，由 Goblinnest 決定
 x  = 賽季版本，由 Goblinnest 決定，升級後排行榜重置競爭
 y  = 功能版本，AI 可進位（新功能 / 重構）
 z  = 修復版本，AI 可進位（bug fix）
+```
 
-以 v0.1.11.0 為例：
+以 v0.1.13.1 為例：
 - v0 = 開發中
 - x=1 = 第一賽季
-- y=11 = 第 11 個功能版本
-- z=0 = 無修復
+- y=13 = 第 13 個功能版本
+- z=1 = 第 1 個修復版本
 
 **AI 只能改 y 和 z，不得碰 v0 和 x。**
+
+---
 
 ## 當前文件整備進度
 
 ### ✅ 已完成
 - ESM 全模組化（v0.1.5.0）
 - CHANGELOG.md 格式規範
-- file-header Skill 建立
-- Version_rules.md 建立
+- VERSION_RULES.md 建立
 - Codex 架構掃描報告（v0.1.11.0 基準）
-
-### 🔄 進行中
-- ARCH.md 新建（基於 Codex 掃描報告）
-- .claude/instructions.md 更新（加入 Priority Table + SOP）
-- MAIN.md 清理過期內容
-- doc-audit Skill 建立
+- ARCH.md 新建（v0.1.12.0）
+- DOC_INTEGRITY.md 建立（v0.1.12.0）
+- doc-audit Skill 建立（v0.1.12.0）
+- instructions.md 修正（ESM、版本號規則、讀取清單）（v0.1.12.0）
+- MAIN.md 過期 ESM 描述清理（v0.1.12.0）
+- QUICKREF.md 過期內容全面清理（v0.1.13.0）
+- Dead code 清理（combat.js、hud.js、creatures.js）（v0.1.13.0）
+- Skill 統一整理至 .claude/skills/（v0.1.13.1）
+- patchnote / compendium / file-header / magic-code Skill 建立（v0.1.13.1）
+- project_summary.md 更新：毒傷疊加、精英怪雙技能、巨人/Alpha、鬣狗車輪戰系統描述（v0.1.13.2）
 
 ### ⏳ 待處理
-- QUICKREF.md 過期內容清理
-- Dead code 清理（combat.js、hud.js、creatures.js）
-- Stage F：核心循環依賴打破
+- Stage D：中層系統重構
+- Stage F：核心循環依賴打破（已知 12+ 循環依賴，見 ARCH.md）
 
-### ❌ 已知嚴重過期（不要相信這些描述）
-- MAIN.md Line 1014：「不使用 ESM」→ 實際已全面 ESM
-- QUICKREF.md：ESM 相關描述 → 全部過期
-- .claude/instructions.md：ESM 規則 → 過期
+### ❌ 已知問題（需要注意）
+- ARCH.md「當前文件整備進度」章節可能與本文件不同步，以本文件為準
 
-*最後更新：v0.1.11.0 / Goblinnest*
+---
+
+*最後更新：v0.1.13.2 / Goblinnest*
