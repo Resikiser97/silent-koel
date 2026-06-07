@@ -1704,12 +1704,12 @@ export function drawHostileCreatures() {
                 ctx.strokeText(
                     creature.packName + '(' + packCount + '/3)',
                     s.x,
-                    s.y - creature.radius * (gameState.cameraZoom || 1) - 22
+                    s.y + creature.radius * (gameState.cameraZoom || 1) + 14
                 );
                 ctx.fillText(
                     creature.packName + '(' + packCount + '/3)',
                     s.x,
-                    s.y - creature.radius * (gameState.cameraZoom || 1) - 22
+                    s.y + creature.radius * (gameState.cameraZoom || 1) + 14
                 );
                 ctx.restore();
             }
