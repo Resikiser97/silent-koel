@@ -39,7 +39,16 @@ export function detectMobile() {
 }
 
 export function getOrientation() {
-    return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+    const viewport = _getViewportSize();
+    return viewport.height > viewport.width ? 'portrait' : 'landscape';
+}
+
+function _getViewportSize() {
+    const viewport = window.visualViewport;
+    return {
+        width: Math.round(viewport ? viewport.width : window.innerWidth),
+        height: Math.round(viewport ? viewport.height : window.innerHeight),
+    };
 }
 
 export function _effectiveMobile() {
@@ -77,8 +86,7 @@ function _applyMobileScale() {
         return;
     }
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const { width: vw, height: vh } = _getViewportSize();
     document.body.style.display  = 'block';
     document.body.style.width    = vw + 'px';
     document.body.style.height   = vh + 'px';
@@ -129,6 +137,9 @@ function _updateOrientationBar() {
     }
     window.addEventListener('resize', onOrientationChange);
     window.addEventListener('orientationchange', onOrientationChange);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', onOrientationChange);
+    }
 }());
 
 // =============================================================
@@ -164,7 +175,7 @@ function _joyZone(x, y) {
 }
 
 function _getAttackBtnPos() {
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const { width: vw, height: vh } = _getViewportSize();
     if (gameState.orientation === 'landscape') {
         return { x: vw * 0.875, y: vh * 0.75 };
     }
@@ -173,7 +184,7 @@ function _getAttackBtnPos() {
 
 function _attackZone(x, y) {
     if (gameState.settings.autoAttack) return false;
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const { width: vw, height: vh } = _getViewportSize();
     if (gameState.orientation === 'landscape') {
         return x >= vw * 0.75 && y >= vh * 0.5;
     }
@@ -182,7 +193,7 @@ function _attackZone(x, y) {
 
 // 閃現區：攻擊區正上方，尺寸縮小為攻擊區的 50%（中心點對齊）
 function _dashZone(x, y) {
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const { width: vw, height: vh } = _getViewportSize();
     if (gameState.orientation === 'landscape') {
         const atkW = vw * 0.25, atkH = vh * 0.5;
         const dashW = atkW * 0.5, dashH = atkH * 0.5;
@@ -205,7 +216,7 @@ export function _renderMobileOverlay() {
     if (!jc) return;
     const jctx = jc.getContext('2d');
     jctx.clearRect(0, 0, jc.width, jc.height);
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const { width: vw, height: vh } = _getViewportSize();
     const autoAtk = gameState.settings.autoAttack;
 
     if (gameState.orientation === 'landscape') {
@@ -568,8 +579,9 @@ export function _updateJoystickCanvas() {
     if (gameState.isMobile) {
         jc.style.display       = 'block';
         jc.style.pointerEvents = 'none';
-        jc.width  = window.innerWidth;
-        jc.height = window.innerHeight;
+        const { width: vw, height: vh } = _getViewportSize();
+        jc.width  = vw;
+        jc.height = vh;
         _attachJoystickListeners();
         _renderMobileOverlay();
     } else {

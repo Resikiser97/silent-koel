@@ -1,6 +1,14 @@
-## v0.1.13.6
+## v0.1.13.7
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.13.7 - 2026-06-07
+
+### 修復
+- index.html：補上 mobile viewport 縮放限制與 viewport-fit=cover，並加入 100dvh fallback、Safe Area padding、touch-action:none、overflow:hidden，避免手機瀏覽器工具列與系統安全區遮擋遊戲畫面
+- systems/mobile.js：手機縮放、攻擊區、閃現區與搖桿 canvas 改用 visualViewport 動態尺寸，並監聽 visualViewport resize，讓瀏覽器工具列收合時觸控區域保持對齊
 
 ---
 

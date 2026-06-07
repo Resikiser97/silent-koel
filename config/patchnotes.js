@@ -7,6 +7,15 @@
 
 export const PATCH_NOTES = [
     {
+        version: 'v0.1.13.7',
+        date: '2026-06-07',
+        fixed: [
+            '修復手機版瀏覽器工具列、iOS Safe Area、Android 虛擬按鍵遮擋遊戲畫面的問題',
+            '防止雙擊縮放造成畫面跑版',
+            '手機搖桿與攻擊區現在會隨動態可視畫面自動重新對齊',
+        ],
+    },
+    {
         version: 'v0.1.13.6',
         date: '2026-06-07',
         fixed: [
