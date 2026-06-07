@@ -36,7 +36,7 @@ import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans } from './evolu
 import { buildChatUI, initChat, showChat, hideChat, _esc } from './chat.js';
 import { showLeaderboard, _diffKey } from './leaderboard.js';
 import { fetchTop10 } from '../config/supabase.js';
-import { initializeGame } from '../main.js';
+import { startGameWithLoading } from '../main.js';
 import { getRankIcon } from './utils.js';
 import { MAP_WIDTH, MAP_HEIGHT } from './map.js';
 import { _updateCameraZoom } from './camera.js';
@@ -1901,7 +1901,7 @@ export function showMapSelect() {
             hasOrgans = !!so && so.length > 0;
         } catch(e) {}
         if (hasOrgans) {
-            initializeGame();
+            startGameWithLoading();
         } else {
             buildSkillTreeOverlay(null, false, true);
         }
@@ -1922,7 +1922,7 @@ export function showStartScreen() {
         gameState.currentMap        = _diffMapTable[lastDiff] || EASY_MAP;
         gameState.lastDifficulty    = lastDiff;
         gameState.selectedCharacter = storageGet(STORAGE_KEYS.LAST_CHARACTER) || 'koel';
-        initializeGame();
+        startGameWithLoading();
         return;
     }
     const overlay = document.createElement('div');
@@ -2726,11 +2726,12 @@ export function showGuideStory() {
             currentPage++;
             renderPage(currentPage);
         } else {
+            AudioManager.unlock().catch(() => {});
             overlay.remove();
             storageSet(STORAGE_KEYS.HAS_PLAYED_BEFORE, 'true');
             const startScreen = document.getElementById('start-screen');
             if (startScreen) startScreen.remove();
-            initializeGame();
+            startGameWithLoading();
         }
     };
 

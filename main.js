@@ -63,6 +63,7 @@ const FIXED_DELTA = 1000 / FIXED_FPS;
 let accumulator = 0;
 let lastTimestamp = 0;
 let _wasPaused = false;
+let _loadingStartPromise = null;
 
 window.devAddXP = devAddXP;
 window.devAddHP = devAddHP;
@@ -192,6 +193,96 @@ export function gameLoop(timestamp) {
         updateUI();
     }
     requestAnimationFrame(gameLoop);
+}
+
+function _createLoadingScreen() {
+    const container = document.getElementById('game-container');
+    if (!container) return null;
+    const old = document.getElementById('loading-screen');
+    if (old) old.remove();
+
+    const el = document.createElement('div');
+    el.id = 'loading-screen';
+    el.style.cssText = [
+        'position:absolute', 'top:0', 'left:0', 'width:100%', 'height:100%',
+        'z-index:999', 'background:#000', 'color:#fff', 'pointer-events:all',
+        'font-family:Arial,sans-serif', 'opacity:1', 'transition:opacity 0.4s'
+    ].join(';');
+
+    const title = document.createElement('div');
+    title.textContent = '載入中...';
+    title.style.cssText = [
+        'position:absolute', 'top:50%', 'left:50%', 'transform:translate(-50%,-50%)',
+        'font-size:24px', 'color:#fff'
+    ].join(';');
+    el.appendChild(title);
+
+    const barOuter = document.createElement('div');
+    barOuter.style.cssText = [
+        'position:absolute', 'top:80%', 'left:10%', 'width:80%', 'height:6px',
+        'background:#333', 'border-radius:3px', 'overflow:hidden'
+    ].join(';');
+    const barFill = document.createElement('div');
+    barFill.style.cssText = 'width:0%;height:100%;background:#00CC44;border-radius:3px;';
+    barOuter.appendChild(barFill);
+    el.appendChild(barOuter);
+
+    const percent = document.createElement('div');
+    percent.textContent = '0%';
+    percent.style.cssText = [
+        'position:absolute', 'top:calc(80% + 14px)', 'left:0', 'width:100%',
+        'text-align:center', 'font-size:14px', 'color:#00CC44'
+    ].join(';');
+    el.appendChild(percent);
+
+    const version = document.createElement('div');
+    version.textContent = GAME_INFO.version;
+    version.style.cssText = 'position:absolute;left:12px;bottom:10px;font-size:12px;color:#888;';
+    el.appendChild(version);
+
+    const author = document.createElement('div');
+    author.textContent = 'Goblinnest';
+    author.style.cssText = 'position:absolute;right:12px;bottom:10px;font-size:12px;color:#888;';
+    el.appendChild(author);
+
+    container.appendChild(el);
+    return { el, barFill, percent };
+}
+
+function _fadeOutLoadingScreen(loading) {
+    if (!loading || !loading.el) return Promise.resolve();
+    return new Promise(resolve => {
+        const el = loading.el;
+        const done = () => {
+            el.removeEventListener('transitionend', done);
+            el.remove();
+            resolve();
+        };
+        el.addEventListener('transitionend', done);
+        requestAnimationFrame(() => { el.style.opacity = '0'; });
+        setTimeout(done, 500);
+    });
+}
+
+export async function startGameWithLoading() {
+    if (_loadingStartPromise) return _loadingStartPromise;
+    _loadingStartPromise = (async () => {
+        const loading = _createLoadingScreen();
+        const updateProgress = (completed, total) => {
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 100;
+            if (loading && loading.barFill) loading.barFill.style.width = pct + '%';
+            if (loading && loading.percent) loading.percent.textContent = pct + '%';
+        };
+
+        updateProgress(0, 1);
+        await AudioManager.preloadAllSfxBuffers(updateProgress);
+        updateProgress(1, 1);
+        await _fadeOutLoadingScreen(loading);
+        initializeGame();
+    })().finally(() => {
+        _loadingStartPromise = null;
+    });
+    return _loadingStartPromise;
 }
 
 // =============================================================
@@ -565,7 +656,7 @@ window.onload = () => {
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
         gameState.selectedCharacter = storageGet(STORAGE_KEYS.LAST_CHARACTER) || 'koel';
-        initializeGame();
+        startGameWithLoading();
         return;
     }
     if (!storageGet(STORAGE_KEYS.HAS_PLAYED_BEFORE)) {

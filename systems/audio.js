@@ -48,6 +48,7 @@ export const AudioManager = {
     },
 
     init() {
+        if (this._ready) return;
         Object.entries(AUDIO_FILES).forEach(([key, src]) => {
             if (Array.isArray(src)) {
                 this._sounds[key] = src.map(s => { const a = new Audio(s); a.preload = 'auto'; return a; });
@@ -58,12 +59,45 @@ export const AudioManager = {
         });
         this._ready = true;
         // 預熱常用音效（async，不阻塞）
-        ['eatFruit', 'levelUp', 'hurt', 'attackNormal',
-         'archerAttackNormal', 'archerHurt'].forEach(key => {
-            this._loadSfxBuffer(key).catch(() => {});
-        });
+        if (this._audioCtx) {
+            ['eatFruit', 'levelUp', 'hurt', 'attackNormal',
+             'archerAttackNormal', 'archerHurt'].forEach(key => {
+                this._loadSfxBuffer(key).catch(() => {});
+            });
+        }
         // Attempt early unlock (may fail without user gesture, that's ok)
         this.unlock().catch(() => {});
+    },
+
+    async preloadAllSfxBuffers(onProgress) {
+        const canPreloadBuffers = !!this._audioCtx;
+        this.init();
+        const musicKeys = new Set([
+            'introTheme', 'morningTheme', 'nightTheme', 'hunterTheme',
+            'bossTheme', 'superBossTheme'
+        ]);
+        const keys = Object.keys(AUDIO_FILES).filter(key => !musicKeys.has(key));
+        const total = keys.length;
+        let completed = 0;
+        const report = () => {
+            if (typeof onProgress === 'function') onProgress(completed, total);
+        };
+
+        if (!canPreloadBuffers || !this._audioCtx || total === 0) {
+            completed = total;
+            report();
+            return;
+        }
+
+        report();
+        await Promise.all(keys.map(key =>
+            this._loadSfxBuffer(key)
+                .catch(() => null)
+                .finally(() => {
+                    completed++;
+                    report();
+                })
+        ));
     },
 
     // Stubs：由 Part A 覆寫；若 Codex 尚未完成則回傳 null
@@ -363,4 +397,8 @@ export const AudioManager = {
 export function initAudio() {
     AudioManager.init();
     AudioManager.playMusic('morningTheme');
+}
+
+export function preloadAllSfxBuffers(onProgress) {
+    return AudioManager.preloadAllSfxBuffers(onProgress);
 }

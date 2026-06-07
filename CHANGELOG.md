@@ -1,6 +1,15 @@
-## v0.1.8.2
+## v0.1.9.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.9.0 - 2026-06-07
+
+### 新增
+- main.js 新增 Loading 畫面啟動流程，遊戲正式初始化前顯示全黑載入畫面、版本號、作者與音效預載進度條
+- systems/audio.js 新增 `preloadAllSfxBuffers(onProgress)`，在 AudioContext 可用時預載所有非音樂音效 AudioBuffer，完成後才淡出 Loading 並啟動遊戲
+- systems/ui.js / systems/evolution.js 的開始遊戲入口改走 `startGameWithLoading()`，確保首頁、故事導引、技能樹開始都會先顯示 Loading
 
 ---
 

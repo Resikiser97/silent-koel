@@ -19,7 +19,7 @@ import { showScoreSubmitPopup } from './leaderboard.js';
 import { AudioManager } from './audio.js';
 import { saveSettings } from './ui.js';
 import { applyDeviceMode } from './mobile.js';
-import { initializeGame } from '../main.js';
+import { startGameWithLoading } from '../main.js';
 import { showChat } from './chat.js';
 import {
     STORAGE_KEYS,
@@ -706,7 +706,7 @@ function _buildSkillTreeMainContent(effectiveMode, overlay, titleEl, switchBtn) 
         const goBtn = document.createElement('button');
         goBtn.style.cssText = 'font-size:16px;padding:10px 28px;cursor:pointer;border:2px solid #FFD700;background:#2a5a2a;color:white;font-weight:bold;border-radius:5px;';
         goBtn.textContent = t('btnStartGame');
-        goBtn.onclick = () => { hideTooltip(); overlay.remove(); initializeGame(); };
+        goBtn.onclick = () => { AudioManager.unlock().catch(() => {}); hideTooltip(); overlay.remove(); startGameWithLoading(); };
         btnRow.appendChild(goBtn);
     } else if (effectiveMode === 'fromHome') {
         const closeBtn = document.createElement('button');
