@@ -1,4 +1,4 @@
-## v0.2.0.0
+## v0.1.10.0
 
 # The Silent Koel — 模組架構說明
 
@@ -463,7 +463,7 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 
 ---
 
-## 巨人化系統（v0.37.0 / v0.2.0.0 重寫，僅普通地圖）
+## 巨人化系統（v0.37.0 / v0.1.10.0 重寫，僅普通地圖）
 
 ### 觸發
 - 草系生物 `_seekingFruit` 吃滿5顆果子且 `features.giantization === true`
@@ -474,15 +474,15 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 - guardianRange 500（守護範圍）
 - 每秒回復 1% maxHP（`giantRegenTimer` 計時）
 - HP ≤ 30% 時：中斷追擊，逃往最近果子方向；每吃1顆果子回復 +10% maxHP（`_updateGiantFlee`）
-- 巨人化後為「無隊伍獨立巨人」，不強制成為隊長（v0.2.0.0 重寫）
-- _seekingFruit 超時保護：開始計時 5 秒強制退出；吃果子後 hp > maxHp * 0.5 立刻退出（v0.2.0.0）
+- 巨人化後為「無隊伍獨立巨人」，不強制成為隊長（v0.1.10.0 重寫）
+- _seekingFruit 超時保護：開始計時 5 秒強制退出；吃果子後 hp > maxHp * 0.5 立刻退出（v0.1.10.0）
 
 ### 組隊（同族同生態，Alpha 誕生後才有隊伍）
-- 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px → HP 較高者升格 Alpha，另一隻成為 packMember（每3秒掃描，v0.2.0.0）
+- 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px → HP 較高者升格 Alpha，另一隻成為 packMember（每3秒掃描，v0.1.10.0）
 - 升格 Alpha 後成為隊長，每3秒嘗試招募 800px 內同族草食性，20% 成功率
 - 隊伍上限動態計算：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（含隊長）
 - 超出 800px 自動掉隊，隊員距離 >600px 時巨人化暫停移動等待
-- 不同隊伍巨人距離過近時互相推開（距離 < radius + 對方radius + 20 → 推開 2px，v0.2.0.0）
+- 不同隊伍巨人距離過近時互相推開（距離 < radius + 對方radius + 20 → 推開 2px，v0.1.10.0）
 
 ### 行為
 - 優先攻擊：guardianRange 內威脅組員的敵意生物（最優先）→ aggroRange 內的敵意生物 / 玩家（草食性Lv4+除外）
@@ -495,15 +495,15 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 
 ---
 
-## Alpha系統（v0.37.0 / v0.2.0.0 重寫，僅普通地圖）
+## Alpha系統（v0.37.0 / v0.1.10.0 重寫，僅普通地圖）
 
 ### 觸發
-- 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px 相遇 → HP 較高者升格 Alpha（v0.2.0.0）
+- 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px 相遇 → HP 較高者升格 Alpha（v0.1.10.0）
 - `gameState.alphaCreature`：全圖只有1隻 Alpha 的引用
 - 已有 Alpha 時不再觸發新的
-- 單人隊伍（隊長無 packMembers）不能升格 Alpha（v0.2.0.0）
+- 單人隊伍（隊長無 packMembers）不能升格 Alpha（v0.1.10.0）
 
-### Alpha 死後繼承（v0.2.0.0）
+### Alpha 死後繼承（v0.1.10.0）
 - Alpha 死亡時：`gameState._pendingAlphaInherit = true`
 - 下一幀 `updateNeutralCreatures` 掃描全圖，找出 `packMembers >= 1` 的巨人隊長（隊伍 ≥ 2 隻）
 - 從中選 HP 最高者升格為新 Alpha；無符合條件者不產生新 Alpha
