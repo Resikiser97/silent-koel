@@ -1,4 +1,4 @@
-## v0.1.9.0
+## v0.2.0.0
 
 # The Silent Koel — 模組架構說明
 
@@ -84,7 +84,7 @@ systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, apply
 systems/creatures.js      _PACK_NAMES / _usedPackNames / resetPackNames()（草食巨人隊伍名稱池，v0.0.66.2；v0.0.68.0 改仿製詞）
                           _HYENA_PACK_NAMES / _usedHyenaPackNames / _hyenaPackNameMap（鬣狗三國武將名稱池，v0.0.68.0）
                           drawCreatureShape（物種形狀主分派，含旋轉/翻轉邏輯）
-                          updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯）
+                          updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯；含Alpha繼承掃描C、巨人推開力G）
                           drawNeutralCreatures
                           updateHostileCreatures（三態移動 + hostileEatMeat 門控）
                           drawCorpses, drawHostileCreatures
@@ -463,7 +463,7 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 
 ---
 
-## 巨人化系統（v0.37.0，僅普通地圖）
+## 巨人化系統（v0.37.0 / v0.2.0.0 重寫，僅普通地圖）
 
 ### 觸發
 - 草系生物 `_seekingFruit` 吃滿5顆果子且 `features.giantization === true`
@@ -471,35 +471,42 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 
 ### 巨人化數值（在原本數值基礎上修改）
 - 攻擊力 +20，血量 ×10，體積 ×1.5，aggroRange 400（v0.46.0 由 150 調整）
-- guardianRange 1000：偵測到 guardianRange 內的組員被敵意生物鎖定時，優先以該敵意生物為攻擊目標（v0.46.0）
+- guardianRange 500（守護範圍）
 - 每秒回復 1% maxHP（`giantRegenTimer` 計時）
 - HP ≤ 30% 時：中斷追擊，逃往最近果子方向；每吃1顆果子回復 +10% maxHP（`_updateGiantFlee`）
-- 不再吃果子（低血量逃跑除外）
+- 巨人化後為「無隊伍獨立巨人」，不強制成為隊長（v0.2.0.0 重寫）
+- _seekingFruit 超時保護：開始計時 5 秒強制退出；吃果子後 hp > maxHp * 0.5 立刻退出（v0.2.0.0）
 
-### 組隊（同族同生態限定）
-- 巨人化後自動成為隊長（`packLeader = true`）
-- 每3秒嘗試招募 800px 內同族草食性，20% 成功率
-- 隊伍上限動態計算（v0.46.0）：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（含隊長）
+### 組隊（同族同生態，Alpha 誕生後才有隊伍）
+- 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px → HP 較高者升格 Alpha，另一隻成為 packMember（每3秒掃描，v0.2.0.0）
+- 升格 Alpha 後成為隊長，每3秒嘗試招募 800px 內同族草食性，20% 成功率
+- 隊伍上限動態計算：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（含隊長）
 - 超出 800px 自動掉隊，隊員距離 >600px 時巨人化暫停移動等待
-- 隊員超過 200px 時跟隨隊長
+- 不同隊伍巨人距離過近時互相推開（距離 < radius + 對方radius + 20 → 推開 2px，v0.2.0.0）
 
 ### 行為
 - 優先攻擊：guardianRange 內威脅組員的敵意生物（最優先）→ aggroRange 內的敵意生物 / 玩家（草食性Lv4+除外）
 - 無目標時：每3~5秒選最近果子作為移動目標，帶領隊伍前進
 
 ### 擊殺獎勵（`handleGiantKill`，`systems/combat.js`）
-- XP：60（+獵人本能加成）
+- XP：100（+獵人本能加成）
 - `spawnLootCircle`：1個2倍屍體 + 1具白骨
 - 100% 掉落1個變異點；額外10%機率掉 1~3個
 
 ---
 
-## Alpha系統（v0.37.0，僅普通地圖）
+## Alpha系統（v0.37.0 / v0.2.0.0 重寫，僅普通地圖）
 
 ### 觸發
-- 某巨人化隊長的 `packMembers` 中出現第2隻巨人化時，隊長升格 Alpha
+- 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px 相遇 → HP 較高者升格 Alpha（v0.2.0.0）
 - `gameState.alphaCreature`：全圖只有1隻 Alpha 的引用
 - 已有 Alpha 時不再觸發新的
+- 單人隊伍（隊長無 packMembers）不能升格 Alpha（v0.2.0.0）
+
+### Alpha 死後繼承（v0.2.0.0）
+- Alpha 死亡時：`gameState._pendingAlphaInherit = true`
+- 下一幀 `updateNeutralCreatures` 掃描全圖，找出 `packMembers >= 1` 的巨人隊長（隊伍 ≥ 2 隻）
+- 從中選 HP 最高者升格為新 Alpha；無符合條件者不產生新 Alpha
 
 ### Alpha數值（巨人化基礎上再計算）
 - 攻擊力 ×2，血量 ×3，體積 ×1.5，aggroRange 600（v0.46.0 由 300 調整）

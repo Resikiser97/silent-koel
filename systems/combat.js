@@ -142,7 +142,10 @@ export function handleGiantKill(c) {
     incrementStat('giantKills');
 
     // 清理隊伍與UI追蹤狀態
-    if (c.isAlpha && gameState.alphaCreature === c) gameState.alphaCreature = null;
+    if (c.isAlpha && gameState.alphaCreature === c) {
+        gameState.alphaCreature = null;
+        gameState._pendingAlphaInherit = true; // 通知 creatures.js 執行繼承掃描
+    }
     if (c.packMembers) {
         for (const m of c.packMembers) m.packLeaderRef = null;
         c.packMembers = [];

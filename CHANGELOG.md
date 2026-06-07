@@ -1,6 +1,21 @@
-## v0.1.9.0
+## v0.2.0.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.2.0.0 - 2026-06-07
+
+### 新增/重寫
+- systems/creatures.js 巨人/Alpha 系統完整重寫：
+  - 巨人化後不再強制成為隊長，改為「無隊伍獨立巨人」
+  - 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px 相遇 → HP 較高者升格 Alpha（每3秒掃描）
+  - Alpha 死後掃描全圖：隊伍 ≥ 2 隻的巨人隊長中 HP 最高者繼承為新 Alpha
+  - 只有「隊伍 ≥ 2 隻（含隊長）的巨人隊長」才能被選為 Alpha（單人隊伍不觸發）
+- systems/creatures.js 巨人卡死修復：
+  - _seekingFruit 吃到果子後若 hp > maxHp * 0.5 立刻退出，不繼續找果子
+  - _seekingFruit 開始計時 _seekingFruitStart，超過 5 秒強制退出
+  - 不同隊伍巨人距離 < (radius + 對方radius + 20) 時施加推開力 2px
 
 ---
 

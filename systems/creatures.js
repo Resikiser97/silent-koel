@@ -475,7 +475,6 @@ function _triggerKiller(creature) {
 
 function _triggerGiantization(creature) {
     const prevMaxHp = creature.maxHp || 30;
-    const oldLeader = creature.packLeaderRef; // 保存舊隊長引用
 
     creature.isGiantized      = true;
     creature.damage           = (creature.damage || 0) + 20;
@@ -488,25 +487,10 @@ function _triggerGiantization(creature) {
     creature.canFight         = true;
     creature.fruitsEaten      = 0;
     creature.giantRegenTimer  = 0;
-    creature.packLeader       = true;
-    creature.packMembers      = [];
     creature.packLeaderRef    = null;
-    // 分配隊伍名稱
-    const _pnAvail = _PACK_NAMES.filter(n => !_usedPackNames.includes(n));
-    const _pnPool  = _pnAvail.length > 0 ? _pnAvail : _PACK_NAMES;
-    creature.packName = _pnPool[Math.floor(Math.random() * _pnPool.length)];
-    _usedPackNames.push(creature.packName);
-    creature._packJoinTimer   = 0;
     creature._fruitTarget     = null;
     creature._fruitTargetTimer = 0;
     creature._seekingFruit    = false;
-
-    // 若原本在隊伍中，且隊長尚未Alpha → 觸發Alpha升格
-    if (oldLeader && oldLeader.hp > 0 && oldLeader.isGiantized && !oldLeader.isAlpha && !gameState.alphaCreature) {
-        const idx = oldLeader.packMembers.indexOf(creature);
-        if (idx !== -1) oldLeader.packMembers.splice(idx, 1);
-        _triggerAlpha(oldLeader);
-    }
 }
 
 function _triggerAlpha(creature) {
@@ -761,6 +745,19 @@ function _alertHyenaPack(hyena, target) {
 
 export function updateNeutralCreatures() {
     const now = Date.now();
+
+    // C. Alpha 死後繼承（combat.js 透過 _pendingAlphaInherit 旗標通知）
+    if (gameState._pendingAlphaInherit) {
+        gameState._pendingAlphaInherit = false;
+        let nextAlpha = null, nextAlphaHp = -1;
+        for (const n of gameState.neutralCreatures) {
+            if (n.hp <= 0 || !n.isGiantized || !n.packLeader) continue;
+            if (!n.packMembers || n.packMembers.filter(m => m.hp > 0).length < 1) continue;
+            if (n.hp > nextAlphaHp) { nextAlphaHp = n.hp; nextAlpha = n; }
+        }
+        if (nextAlpha) _triggerAlpha(nextAlpha);
+    }
+
     const p   = gameState.player;
     const herbLv        = p.evolution.herbivore || 0;
     const isCalm        = herbLv >= 2; // Lv2：撞到不逃
@@ -863,6 +860,33 @@ export function updateNeutralCreatures() {
                     if (now - (creature.giantRegenTimer || 0) >= 1000) {
                         creature.giantRegenTimer = now;
                         creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * 0.01);
+                    }
+                }
+
+                // B. 兩隻無隊伍獨立巨人相遇 → 升 Alpha（每3秒掃描）
+                if (!creature.packLeader && !creature.packLeaderRef && !creature.isAlpha && !gameState.alphaCreature) {
+                    if (now - (creature._alphaCheckTimer || 0) >= 3000) {
+                        creature._alphaCheckTimer = now;
+                        for (const other of gameState.neutralCreatures) {
+                            if (other === creature || other.hp <= 0) continue;
+                            if (!other.isGiantized || other.packLeader || other.packLeaderRef || other.isAlpha) continue;
+                            if (other.speciesId !== creature.speciesId || other.biome !== creature.biome) continue;
+                            if (wrappedDistance(creature.x, creature.y, other.x, other.y) <= 300) {
+                                const leader = creature.hp >= other.hp ? creature : other;
+                                const member  = creature.hp >= other.hp ? other : creature;
+                                const _pnAvail = _PACK_NAMES.filter(n => !_usedPackNames.includes(n));
+                                const _pnPool  = _pnAvail.length > 0 ? _pnAvail : _PACK_NAMES;
+                                leader.packName    = _pnPool[Math.floor(Math.random() * _pnPool.length)];
+                                _usedPackNames.push(leader.packName);
+                                leader.packLeader  = true;
+                                leader.packMembers = [member];
+                                leader._packJoinTimer = 0;
+                                member.packLeaderRef  = leader;
+                                member.packName       = leader.packName;
+                                _triggerAlpha(leader);
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -1040,45 +1064,47 @@ export function updateNeutralCreatures() {
                 } else if (roll < 0.8) {
                     // 探索果子（60%，原 30%）
                     creature._seekingFruit = true;
+                    creature._seekingFruitStart = now; // F: 超時保護起始時間
                 }
                 // 剩餘 20% 繼續漫遊（原 40%）
             }
 
             // 探索最近果子（範圍 800px）
             if (creature._seekingFruit) {
-                let closest = null, closestDist = Infinity;
-                for (const f of gameState.fruits) {
-                    const d = wrappedDistance(creature.x, creature.y, f.x, f.y);
-                    if (d < closestDist) { closestDist = d; closest = f; }
-                }
-                if (closest && closestDist < 800) {
-                    const { dx: fdx, dy: fdy } = wrappedDelta(creature.x, creature.y, closest.x, closest.y);
-                    creature._moveAngle = Math.atan2(fdy, fdx);
-                    if (closestDist < creature.radius + 6) {
-                        const idx = gameState.fruits.indexOf(closest);
-                        if (idx !== -1) gameState.fruits.splice(idx, 1);
-                        creature.fruitsEaten = (creature.fruitsEaten || 0) + 1;
-                        creature.hp += 3; creature.maxHp += 3; creature.speed += 0.05;
-                        // 吃滿5顆且地圖開啟巨人化特性 → 觸發巨人化（移除舊激進化邏輯）
-                        const featureGiant = !!(gameState.currentMap && gameState.currentMap.features &&
-                                                gameState.currentMap.features.giantization);
-                        if (creature.fruitsEaten >= 5 && featureGiant) {
-                            _triggerGiantization(creature);
-                        }
-                        // 吃到果子後的連吃機率：70%繼續找下一顆
-                        // 附近500px有同族巨人化 → 提升到90%
-                        let continueChance = 0.7;
-                        if (_hasGiantizedNearby(creature, 500)) {
-                            continueChance = 0.9;
-                        }
-                        if (Math.random() < continueChance) {
-                            creature._fruitTarget = null; // 清空目標讓他找新的，_seekingFruit保持true
-                        } else {
-                            creature._seekingFruit = false;
-                        }
-                    }
-                } else {
+                // F. 5秒超時強制退出
+                if (now - (creature._seekingFruitStart || 0) > 5000) {
                     creature._seekingFruit = false;
+                } else {
+                    let closest = null, closestDist = Infinity;
+                    for (const f of gameState.fruits) {
+                        const d = wrappedDistance(creature.x, creature.y, f.x, f.y);
+                        if (d < closestDist) { closestDist = d; closest = f; }
+                    }
+                    if (closest && closestDist < 800) {
+                        const { dx: fdx, dy: fdy } = wrappedDelta(creature.x, creature.y, closest.x, closest.y);
+                        creature._moveAngle = Math.atan2(fdy, fdx);
+                        if (closestDist < creature.radius + 6) {
+                            const idx = gameState.fruits.indexOf(closest);
+                            if (idx !== -1) gameState.fruits.splice(idx, 1);
+                            creature.fruitsEaten = (creature.fruitsEaten || 0) + 1;
+                            creature.hp += 3; creature.maxHp += 3; creature.speed += 0.05;
+                            const featureGiant = !!(gameState.currentMap && gameState.currentMap.features &&
+                                                    gameState.currentMap.features.giantization);
+                            if (creature.fruitsEaten >= 5 && featureGiant) {
+                                _triggerGiantization(creature);
+                            }
+                            // E. hp > maxHp * 0.5 → 立刻停止找果子
+                            if (creature.hp > creature.maxHp * 0.5) {
+                                creature._seekingFruit = false;
+                            } else {
+                                let continueChance = 0.7;
+                                if (_hasGiantizedNearby(creature, 500)) continueChance = 0.9;
+                                if (Math.random() >= continueChance) creature._seekingFruit = false;
+                            }
+                        }
+                    } else {
+                        creature._seekingFruit = false;
+                    }
                 }
             }
 
@@ -1160,6 +1186,25 @@ export function updateNeutralCreatures() {
             const dist = Math.sqrt(wdx * wdx + wdy * wdy);
             if (dist < 2) { creature.wanderTarget = null; creature.state = 'idle'; }
             else { moveCreature(creature, creature.x + Math.cos(Math.atan2(wdy, wdx)) * _effSpeed(creature), creature.y + Math.sin(Math.atan2(wdy, wdx)) * _effSpeed(creature)); }
+        }
+    }
+
+    // G. 不同隊伍巨人間安全距離（施加推開力）
+    for (const gc of gameState.neutralCreatures) {
+        if (gc.hp <= 0 || !gc.isGiantized) continue;
+        for (const go of gameState.neutralCreatures) {
+            if (go === gc || go.hp <= 0 || !go.isGiantized) continue;
+            const samePack = (gc.packLeader && go.packLeaderRef === gc) ||
+                             (go.packLeader && gc.packLeaderRef === go) ||
+                             (gc.packLeaderRef && gc.packLeaderRef === go.packLeaderRef);
+            if (samePack) continue;
+            const safeDist = gc.radius + go.radius + 20;
+            const d = wrappedDistance(gc.x, gc.y, go.x, go.y);
+            if (d > 0 && d < safeDist) {
+                const { dx, dy } = wrappedDelta(go.x, go.y, gc.x, gc.y);
+                const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                moveCreature(gc, gc.x + dx / len * 2, gc.y + dy / len * 2);
+            }
         }
     }
 }
