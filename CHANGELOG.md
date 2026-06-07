@@ -7,6 +7,7 @@
 ## v0.1.14.1 - 2026-06-08
 
 ### 修復
+- systems/mobile.js：修復手機版 Letterbox 縮放導致畫面過小的問題；恢復 isMobile 分支——手機版仍使用填滿螢幕邏輯（MOBILE_GAME_SCALE × viewport），電腦版保留 Letterbox（Math.min）
 - systems/evolution.js：修復從首頁進入技能樹、切到變異頁後按關閉，聊天室沒有恢復顯示的問題
 - index.html / systems/ui.js：開發者工具面板改為遊戲容器內可拖拽面板，預設顯示在小地圖資訊下方，並限制不超出 1600×900 遊戲容器
 

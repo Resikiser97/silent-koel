@@ -587,11 +587,10 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 - `detectMobile()` — `ontouchstart in window` 或 `innerWidth <= 768` 視為手機
 - `getOrientation()` — `innerHeight > innerWidth` 為豎向，否則橫向
 - `applyDeviceMode()` — 同步 `gameState.forceMode/isMobile/orientation`，呼叫 `_applyMobileScale()` + `_updateJoystickCanvas()` + `_updateOrientationBar()`
-- `_applyMobileScale()` — 統一 Letterbox 縮放（v0.1.14.0 重寫），電腦版與手機版共用同一套邏輯
-  - `scale = Math.min(vw / 1600, vh / 900)`，邏輯解析度永遠 1600×900，不呼叫 `_setViewSize()`
-  - `#game-container` 設為 1600×900 並以 `transform:scale(scale) / top-left origin` 置中
-  - `_letterboxScale`（export let）隨每次 resize 更新，供 chat.js 等模組讀取當前縮放比例
-  - `MOBILE_GAME_SCALE = 0.6` 標記 deprecated，保留以防外部引用
+- `_applyMobileScale()` — 依裝置分支縮放（v0.1.14.1 修正）
+  - **手機版**：填滿螢幕，`scale = vw / logicW`；呼叫 `_setViewSize()` 依方向調整邏輯解析度（MOBILE_GAME_SCALE = 0.6）；container 定位 `left:0, top:0`
+  - **電腦版**：Letterbox，`scale = Math.min(vw/1600, vh/900)`；VIEW_W/VIEW_H 固定 1600×900，不呼叫 `_setViewSize()`；container 置中留黑框
+  - `_letterboxScale`（export let）兩個分支最後都更新，供 chat.js 等模組讀取當前縮放比例
 
 ### 設定介面「裝置模式」區塊
 

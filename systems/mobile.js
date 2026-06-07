@@ -10,7 +10,8 @@
 //   - _letterboxScale：當前縮放比例（export，供 chat.js 等使用）
 //
 // 重要規則：
-//   - 縮放公式：scale = Math.min(vw/1600, vh/900)，邏輯解析度永遠 1600×900
+//   - 電腦版：Letterbox，scale = Math.min(vw/1600, vh/900)，VIEW_W/VIEW_H 永遠 1600×900
+//   - 手機版：填滿螢幕，scale = vw/logicW，邏輯解析度依方向調整（MOBILE_GAME_SCALE = 0.6）
 //   - 自動攻擊開啟時整個螢幕都是移動區，攻擊區不再偵測 tap
 //   - onStart handler 用 elementFromPoint 偵測非 canvas 元素時直接 continue
 //   - 觸控座標為 viewport 座標，搖桿只輸出正規化方向向量，不需額外換算
@@ -69,10 +70,10 @@ function _setViewSize(w, h) {
     if (co) { co.style.width = w + 'px'; co.style.height = h + 'px'; }
 }
 
-// TODO: MOBILE_GAME_SCALE 已被統一 Letterbox 縮放取代，保留以防外部引用
+// TODO: MOBILE_GAME_SCALE 僅手機版仍在使用，電腦版已改為 Letterbox，未來可統一
 export const MOBILE_GAME_SCALE = 0.6;
 
-// 當前 Letterbox 縮放比例，供其他模組（如 chat.js）使用
+// 當前縮放比例，供其他模組（如 chat.js）使用
 export let _letterboxScale = 1;
 
 function _applyMobileScale() {
@@ -80,19 +81,43 @@ function _applyMobileScale() {
     if (!container) return;
 
     const { width: vw, height: vh } = _getViewportSize();
-    const scale = Math.min(vw / 1600, vh / 900);
-    _letterboxScale = scale;
-    const left = (vw - 1600 * scale) / 2;
-    const top  = (vh - 900  * scale) / 2;
+    let scale;
 
-    container.style.position        = 'absolute';
-    container.style.width           = '1600px';
-    container.style.height          = '900px';
-    container.style.left            = left + 'px';
-    container.style.top             = top  + 'px';
-    container.style.transformOrigin = 'top left';
-    container.style.transform       = 'scale(' + scale + ')';
-    document.body.style.overflow    = 'hidden';
+    if (gameState.isMobile) {
+        // 手機版：填滿螢幕寬度，依方向調整邏輯解析度
+        let logicW, logicH;
+        if (gameState.orientation === 'landscape') {
+            logicW = Math.round(1600 * MOBILE_GAME_SCALE);
+            logicH = Math.round(900  * MOBILE_GAME_SCALE);
+        } else {
+            logicW = Math.round(900  * MOBILE_GAME_SCALE);
+            logicH = Math.round(1600 * MOBILE_GAME_SCALE);
+        }
+        scale = vw / logicW;
+        _setViewSize(logicW, logicH);
+        container.style.position        = 'absolute';
+        container.style.width           = logicW + 'px';
+        container.style.height          = logicH + 'px';
+        container.style.left            = '0px';
+        container.style.top             = '0px';
+        container.style.transformOrigin = 'top left';
+        container.style.transform       = 'scale(' + scale + ')';
+    } else {
+        // 電腦版：Letterbox，維持 1600×900，置中，黑框填補
+        scale = Math.min(vw / 1600, vh / 900);
+        const left = (vw - 1600 * scale) / 2;
+        const top  = (vh - 900  * scale) / 2;
+        container.style.position        = 'absolute';
+        container.style.width           = '1600px';
+        container.style.height          = '900px';
+        container.style.left            = left + 'px';
+        container.style.top             = top  + 'px';
+        container.style.transformOrigin = 'top left';
+        container.style.transform       = 'scale(' + scale + ')';
+    }
+
+    _letterboxScale = scale;
+    document.body.style.overflow = 'hidden';
 }
 
 export function applyDeviceMode() {

@@ -21,10 +21,10 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 
 邏輯解析度：永遠 1600×900（VIEW_W/VIEW_H 不可改動）
 
-縮放：CSS transform: scale()，統一 Letterbox，電腦版 + 手機版共用
-  scale = Math.min(vw/1600, vh/900)
-  _letterboxScale（mobile.js export）供其他模組讀取當前縮放比例
-  MOBILE_GAME_SCALE = 0.6（deprecated，保留以防外部引用）
+縮放：CSS transform: scale()，依裝置分支
+  電腦版：Letterbox — scale = Math.min(vw/1600, vh/900)，VIEW_W/VIEW_H 固定 1600×900
+  手機版：填滿螢幕 — scale = vw/logicW，_setViewSize() 依方向調整（MOBILE_GAME_SCALE = 0.6）
+  _letterboxScale（mobile.js export）兩個分支都更新，供其他模組讀取
 
 模組載入：ES Modules，main.js 為 <script type="module"> 唯一入口
 手機判斷：gameState.isMobile / gameState.orientation
