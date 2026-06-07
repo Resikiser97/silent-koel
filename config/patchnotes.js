@@ -7,6 +7,13 @@
 
 export const PATCH_NOTES = [
     {
+        version: 'v0.1.13.6',
+        date: '2026-06-07',
+        fixed: [
+            '升級變異技能後，技能等級與點數消耗現在可以正確儲存，重新進入遊戲後不再還原',
+        ],
+    },
+    {
         version: 'v0.1.13.3',
         date: '2026-06-07',
         fixed: [

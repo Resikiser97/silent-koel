@@ -12,7 +12,7 @@ import { t } from '../lang.js';
 import { addXP } from './player.js';
 import { applyOrganEffects, applyHiddenOrganEffects, showOrganSelection, showHiddenOrganSelection, getOrganSlotsUsed } from './organs.js';
 import { showFloatingText } from './combat.js';
-import { applyMutationEffects, saveMutationData, getMutationUpgradeCost, upgradeMutation, initMutationSkills, _syncMutationSkillPoints } from './mutation.js';
+import { applyMutationEffects, saveMutationData, getMutationUpgradeCost, upgradeMutation, initMutationSkills, _syncMutationSkillPoints, _saveMutationSkills } from './mutation.js';
 import { showTooltip, hideTooltip, buildEndGameOverlay } from './ui.js';
 import { pausePlayTimer, resumePlayTimer } from '../main.js';
 import { showScoreSubmitPopup } from './leaderboard.js';
@@ -990,6 +990,6 @@ function _upgradeMutationSkill(skillId) {
     if (gameState.mutationSkillPoints < cost) return;
     gameState.mutationSkillPoints -= cost;
     skill.level++;
-    if (typeof _saveMutationSkills === 'function') _saveMutationSkills();
+    _saveMutationSkills();
 }
 

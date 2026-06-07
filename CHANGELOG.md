@@ -1,6 +1,14 @@
-## v0.1.13.5
+## v0.1.13.6
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.13.6 - 2026-06-07
+
+### 修復
+- systems/evolution.js：補上遺漏的 _saveMutationSkills import，修復變異技能升級後未寫入 localStorage 的問題
+- systems/evolution.js：移除 typeof _saveMutationSkills 守衛，改為直接呼叫
 
 ---
 
