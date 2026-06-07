@@ -131,7 +131,7 @@ function _makeCarnCreature(x, y, biome, spec, strength, mapConfig) {
         _nextBehaviorTime: now + 5000 + Math.random() * 10000,
         _seekingPrey: false,
         // 鬣狗：初始化組隊資料（packGroup 1~3，同組共享仇恨）
-        ...(spec.id === 'hyena' ? { packGroup: Math.ceil(Math.random() * 3), packMates: [] } : {}),
+        ...(spec.id === 'hyena' ? { packGroup: Math.ceil(Math.random() * 2), packMates: [], packName: null } : {}),
     };
 }
 

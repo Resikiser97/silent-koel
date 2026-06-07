@@ -6,7 +6,7 @@ export const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
-    version:      'v0.1.10.0',
+    version:      'v0.1.11.0',
     SAVE_VERSION: '1.1'
 };
 
@@ -30,7 +30,12 @@ export const HARD_ELITE_CONFIG = {
     venomDog:     { hp: 1500, damage: 45, attackCooldown: 1500, radius: 14, type: 'melee', poisonDps: 8, poisonDuration: 3000 },
     specterFalcon: { hp: 336,  damage: 26, attackCooldown: 3000, radius: 16, type: 'ranged', range:  900, bulletSpeed: 14, maxRange: 1000, aimDuration:  300 },
     shadowFalcon:  { hp: 630,  damage: 39, attackCooldown: 2000, radius: 16, type: 'ranged', range:  600, bulletSpeed: 10, maxRange:  650, aimDuration:    0, pellets: 4, spreadAngle: 60 },
-    venomFalcon:   { hp: 1050, damage: 58, attackCooldown: 4000, radius: 16, type: 'ranged', range:  700, poisonDps: 8, puddleRadius: 80, puddleDuration: 6000, maxPuddles: 3 },
+    venomFalcon:   { hp: 1050, damage: 58, attackCooldown: 3000, radius: 16, type: 'ranged', range:  700,
+                     poisonDps: 8, puddleRadius: 80, puddleDuration: 4000, maxPuddles: 6,
+                     puddleCenterOffset: 150, puddleSideRadius: 200, puddlePoisonDuration: 3000,
+                     fangCooldown: 2500, fangSpeed: 14, fangSpreadDeg: 25,
+                     fangPoisonDmg: 8, fangPoisonDuration: 3000,
+                     selfCdBonus: 500, sharedCdBonus: 200 },
 };
 
 export const AUDIO_FILES = {
@@ -76,6 +81,7 @@ export const AUDIO_FILES = {
     shadowFalconFire:    'Sound MP3/New sound/shadow_falcon_fire.mp3',
     shadowFalconHurt:    'Sound MP3/New sound/shadow_falcon_hurt.mp3',
     shadowFalconDeath:   'Sound MP3/New sound/shadow_falcon_death.mp3',
+    venomFangFly:        'Sound MP3/New sound/hunter_bullet_fly.mp3',
     venomFalconAppear:   'Sound MP3/New sound/venom_falcon_appear.mp3',
     venomFalconLaunch:   'Sound MP3/New sound/venom_falcon_launch.mp3',
     venomFalconLand:     'Sound MP3/New sound/venom_falcon_land.mp3',

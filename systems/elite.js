@@ -139,10 +139,10 @@ function _spawnHunterElite(nightNum, eliteType) {
         _aimUntil: 0,
         _ringAngle: 0,
         _venomPuddleCount: 0,
-        _venomFireAt: 0,
-        _venomFirePos: null,
-        _venomLandAt: 0,
-        _venomLandPos: null,
+        _venomSalvo: [],
+        _wallCooldown: 0,
+        _fangCooldown: 0,
+        _wallUsed: false,
         diet: 'carnivore',
     };
     gameState.eliteJustKilled = false;
@@ -216,8 +216,9 @@ export function _handleHunterEliteKill(elite) {
 }
 
 // ── 射程精英怪發射子彈（幽靈隼 / 暗影隼）
-function _fireEliteFalconProjectile(elite, p, pellets, maxRange, speed) {
-    const baseAngle = Math.atan2(p.y - elite.y, p.x - elite.x);
+function _fireEliteFalconProjectile(elite, target, pellets, maxRange, speed) {
+    const { dx, dy } = wrappedDelta(elite.x, elite.y, target.x, target.y);
+    const baseAngle = Math.atan2(dy, dx);
     pellets = pellets || 1;
     for (let i = 0; i < pellets; i++) {
         const spreadDeg = pellets > 1 ? (Math.random() * 60 - 30) : 0;
@@ -234,50 +235,102 @@ function _fireEliteFalconProjectile(elite, p, pellets, maxRange, speed) {
     elite._postShotTimer  = Date.now() + 300;
 }
 
-// ── 毒霧隼發射毒霧彈
+// ── 毒霧隼發射毒牆三連炮
 function _fireVenomFalconShot(elite, p) {
-    if (elite._venomPuddleCount >= 3) {
-        // 已達上限：重置 cooldown 防止每幀觸發、保留 postShot 停頓避免無休止後退
-        elite.attackCooldown = Date.now();
+    const cfg = HARD_ELITE_CONFIG.venomFalcon;
+    if (elite._venomPuddleCount >= (cfg.maxPuddles || 6)) {
+        elite._wallCooldown  = Date.now() + (cfg.selfCdBonus || 500);
         elite._postShotTimer = Date.now() + 500;
         return;
     }
-    const targetX = p.x, targetY = p.y;
     const now = Date.now();
-    elite.attackCooldown  = now;
-    elite._postShotTimer  = now + 500;
+    const { dx, dy } = wrappedDelta(elite.x, elite.y, p.x, p.y);
+    const baseAngle = Math.atan2(dy, dx);
+    const offset    = cfg.puddleCenterOffset || 150;
+    const sideR     = cfg.puddleSideRadius   || 200;
+    const perpAngle = baseAngle + Math.PI / 2;
+
+    // 三炮落點：以玩家為中心，垂直於隼→玩家方向的封路牆
+    const midX  = p.x + Math.cos(baseAngle) * offset;
+    const midY  = p.y + Math.sin(baseAngle) * offset;
+    const leftX = p.x + Math.cos(perpAngle) * sideR;
+    const leftY = p.y + Math.sin(perpAngle) * sideR;
+    const rightX= p.x - Math.cos(perpAngle) * sideR;
+    const rightY= p.y - Math.sin(perpAngle) * sideR;
+
+    const landAt  = now + 800;
+    const firePos = { x: elite.x, y: elite.y };
+    if (!elite._venomSalvo) elite._venomSalvo = [];
+    elite._venomSalvo.push(
+        { fireAt: now, firePos, landAt, landPos: { x: midX,  y: midY  } },
+        { fireAt: now, firePos, landAt, landPos: { x: leftX, y: leftY } },
+        { fireAt: now, firePos, landAt, landPos: { x: rightX,y: rightY} }
+    );
+
+    // 自身 CD + 500ms 自懲罰；另一技能 +200ms 共用懲罰
+    elite._wallCooldown  = now + (cfg.selfCdBonus || 500);
+    elite._fangCooldown  = Math.max(elite._fangCooldown || 0, now + (cfg.sharedCdBonus || 200));
+    elite._postShotTimer = now + 500;
     AudioManager.play('venomFalconLaunch');
-    elite._venomFireAt  = now;
-    elite._venomFirePos = { x: elite.x, y: elite.y };
-    // 0.8 秒後落地
-    elite._venomLandAt  = now + 800;
-    elite._venomLandPos = { x: targetX, y: targetY };
+}
+
+// ── 毒霧隼發射毒牙（三根回旋鏢）
+function _fireVenomFangShot(elite, p) {
+    const cfg = HARD_ELITE_CONFIG.venomFalcon;
+    const { dx, dy } = wrappedDelta(elite.x, elite.y, p.x, p.y);
+    const baseAngle = Math.atan2(dy, dx);
+    const spreadRad = (cfg.fangSpreadDeg || 25) * Math.PI / 180;
+    const speed     = cfg.fangSpeed || 14;
+    const maxDist   = elite.attackRange * 2;
+    const angles    = [baseAngle, baseAngle - spreadRad, baseAngle + spreadRad];
+    for (const angle of angles) {
+        gameState.projectiles.push({
+            x: elite.x, y: elite.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            speed, damage: 0,
+            maxRange: 99999, distTraveled: 0,
+            radius: 6, owner: 'venomFang', type: 'venomFang',
+            _returning: false,
+            _originX: elite.x, _originY: elite.y,
+            _maxDist: maxDist, _distTraveled: 0,
+            _poisonDmg: cfg.fangPoisonDmg || 8,
+            _poisonDuration: cfg.fangPoisonDuration || 3000,
+        });
+    }
+    const now = Date.now();
+    // 自身 CD + 500ms 自懲罰；另一技能 +200ms 共用懲罰
+    elite._fangCooldown  = now + (cfg.selfCdBonus || 500);
+    elite._wallCooldown  = Math.max(elite._wallCooldown || 0, now + (cfg.sharedCdBonus || 200));
+    elite._postShotTimer = now + 300;
+    AudioManager.play('venomFangFly');
 }
 
 function _updateEliteVenomPuddle(elite) {
-    if (!elite._venomLandPos || elite._venomLandAt <= 0) return;
-    if (Date.now() < elite._venomLandAt) return;
-    const pos = elite._venomLandPos;
-    const cfg  = HARD_ELITE_CONFIG.venomFalcon;
+    if (!elite._venomSalvo || elite._venomSalvo.length === 0) return;
+    const now = Date.now();
+    const cfg = HARD_ELITE_CONFIG.venomFalcon;
     if (!gameState.venomPuddles) gameState.venomPuddles = [];
-    if (elite._venomPuddleCount < (cfg.maxPuddles || 3)) {
-        gameState.venomPuddles.push({
-            x: pos.x, y: pos.y,
-            radius: cfg.puddleRadius || 80,
-            startTime: Date.now(),
-            duration: cfg.puddleDuration || 6000,
-            dmgPerSec: cfg.poisonDps || 8,
-            lastTick: Date.now(),
-            owner: 'venomFalcon',
-        });
-        elite._venomPuddleCount++;
-        AudioManager.play('venomFalconLand');
-        AudioManager.play('venomFalconSpread');
+    for (let si = elite._venomSalvo.length - 1; si >= 0; si--) {
+        const shot = elite._venomSalvo[si];
+        if (now < shot.landAt) continue;
+        if (elite._venomPuddleCount < (cfg.maxPuddles || 6)) {
+            gameState.venomPuddles.push({
+                x: shot.landPos.x, y: shot.landPos.y,
+                radius: cfg.puddleRadius || 80,
+                startTime: now,
+                duration: cfg.puddleDuration || 4000,
+                dmgPerSec: cfg.poisonDps || 8,
+                poisonDuration: cfg.puddlePoisonDuration || 3000,
+                lastTick: now,
+                owner: 'venomFalcon',
+            });
+            elite._venomPuddleCount++;
+            AudioManager.play('venomFalconLand');
+            AudioManager.play('venomFalconSpread');
+        }
+        elite._venomSalvo.splice(si, 1);
     }
-    elite._venomFireAt  = 0;
-    elite._venomFirePos = null;
-    elite._venomLandAt  = 0;
-    elite._venomLandPos = null;
 }
 
 export function updateEliteCreature() {
@@ -307,8 +360,8 @@ export function updateEliteCreature() {
                         Math.pow(p.y - puddle.y, 2)
                     );
                     if (dist2 < puddle.radius + (p.radius || 10)) {
-                        applyDamageToPlayer(puddle.dmgPerSec || 8, null);
-                        showFloatingText(p.x, p.y - 20, '-' + (puddle.dmgPerSec || 8), '#50C878');
+                        if (!p.poisonStacks) p.poisonStacks = [];
+                        p.poisonStacks.push({ dmg: puddle.dmgPerSec || 8, endTime: now + (puddle.poisonDuration || 3000) });
                     }
                 }
             }
@@ -386,13 +439,12 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
                 applyDamageToPlayer(cfg.damage, elite);
                 elite.attackCooldown = now;
                 AudioManager.play('dogAttack');
-                // 毒霧犬附帶毒效果
+                // 毒霧犬附帶毒效果（poisonStacks 疊加）
                 if (elite.eliteType === 'venomDog') {
                     AudioManager.play('venomDogBite');
                     const player = gameState.player;
-                    player.poisonEndTime   = now + cfg.poisonDuration;
-                    player.poisonDmg       = (player.poisonDmg || 0) + cfg.poisonDps;
-                    player.lastPoisonTick  = now;
+                    if (!player.poisonStacks) player.poisonStacks = [];
+                    player.poisonStacks.push({ dmg: cfg.poisonDps || 8, endTime: now + (cfg.poisonDuration || 3000) });
                 }
             }
         } else {
@@ -405,25 +457,44 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
     // ── 隼族（遠程）
     // 已在蓄力中（_aimTarget 存在）時允許跨越 attackRange 完成射擊，避免 falcon 凍結
     if (dist < elite.attackRange || elite._aimTarget) {
-        if (now - elite.attackCooldown >= cfg.attackCooldown) {
-            if (elite.eliteType === 'specterFalcon') {
-                // 蓄力 0.3 秒（只在射程內才開始新的瞄準）
+        if (elite.eliteType === 'specterFalcon') {
+            if (now - elite.attackCooldown >= cfg.attackCooldown) {
                 if (!elite._aimTarget && dist < elite.attackRange) {
                     elite._aimTarget = { x: p.x, y: p.y };
                     elite._aimUntil  = now + (cfg.aimDuration || 300);
                     AudioManager.play('specterFalconAim');
                 }
-                if (elite._aimTarget && now >= elite._aimUntil) {
-                    _fireEliteFalconProjectile(elite, p, 1, elite.attackRange * 2, cfg.bulletSpeed || 14);
-                    AudioManager.play('specterFalconFire');
-                    elite._aimTarget = null;
-                }
-            } else if (elite.eliteType === 'shadowFalcon') {
-                // 無蓄力，直接散彈
+            }
+            // 蓄力期間每幀追蹤玩家即時位置
+            if (elite._aimTarget && now < elite._aimUntil) {
+                elite._aimTarget.x = p.x;
+                elite._aimTarget.y = p.y;
+            }
+            if (elite._aimTarget && now >= elite._aimUntil) {
+                _fireEliteFalconProjectile(elite, elite._aimTarget, 1, elite.attackRange * 2, cfg.bulletSpeed || 14);
+                AudioManager.play('specterFalconFire');
+                elite._aimTarget = null;
+                elite.attackCooldown = now;
+            }
+        } else if (elite.eliteType === 'shadowFalcon') {
+            if (now - elite.attackCooldown >= cfg.attackCooldown) {
                 _fireEliteFalconProjectile(elite, p, cfg.pellets || 4, cfg.maxRange || 650, cfg.bulletSpeed || 10);
                 AudioManager.play('shadowFalconFire');
-            } else if (elite.eliteType === 'venomFalcon') {
+            }
+        } else if (elite.eliteType === 'venomFalcon') {
+            // 雙 CD 系統：毒牆 3000+500ms / 毒牙 2500+500ms；同時 ready 毒牆優先
+            const wallReady = now - (elite._wallCooldown || 0) >= cfg.attackCooldown;
+            const fangReady = now - (elite._fangCooldown || 0) >= (cfg.fangCooldown || 2500);
+            if (!elite._wallUsed) {
+                if (wallReady) {
+                    _fireVenomFalconShot(elite, p);
+                    elite._wallUsed = true;
+                }
+            } else if (wallReady) {
+                // 毒牆優先（含兩技同時 ready 的情況）
                 _fireVenomFalconShot(elite, p);
+            } else if (fangReady) {
+                _fireVenomFangShot(elite, p);
             }
         }
     }

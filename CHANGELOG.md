@@ -1,6 +1,31 @@
-## v0.1.10.0
+## v0.1.11.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.11.0 - 2026-06-07
+
+### 新增
+- systems/elite.js 毒霧隼新增雙技能系統：
+  - 攻擊一（毒牆三連炮）：同時發射 3 顆毒霧彈，落點形成垂直封路牆（玩家正後方 + 左右各 200px）
+  - 攻擊二（毒牙回旋）：發射 3 根回旋毒牙（中±25°），到最大射程後折返，命中施毒疊層
+  - 雙 CD 系統：毒牆 3000+500ms、毒牙 2500+500ms；同時 ready 毒牆優先；共用懲罰 +200ms；起手必發毒牆
+- systems/combat.js 毒傷改為 poisonStacks 疊加系統：每層獨立計時、每秒獨立顯示 -N 浮動文字；新毒不覆蓋舊毒
+- systems/elite.js 毒霧犬咬傷、毒霧落地均改用 poisonStacks 疊加施毒
+
+### 修復
+- systems/elite.js 幽靈隼蓄力期間每幀追蹤玩家即時位置，紅線準心跟著移動
+- systems/elite.js 幽靈隼角度計算改用 wrappedDelta，修正跑出邊界時方向偏移
+- systems/elite.js 毒牆三炮落點修正：以玩家為圓心展開，不再以隼為圓心
+
+### 其他改動（鬣狗車輪戰、BossUI重寫、迷霧修復、音爆修復、變異器官存檔修復）
+- systems/creatures.js 鬣狗車輪戰 AI 調整
+- systems/hud.js Boss 血條 UI 重寫
+- systems/spawning.js 迷霧生成修復
+- systems/audio.js 音爆修復
+- systems/mutation.js 變異器官存檔修復
+- systems/ui.js 設定輔助功能移除新手教學 Hint 說明文字
 
 ---
 

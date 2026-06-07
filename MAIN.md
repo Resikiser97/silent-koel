@@ -1,4 +1,4 @@
-## v0.1.10.0
+## v0.1.11.0
 
 # The Silent Koel — 模組架構說明
 
@@ -416,10 +416,12 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 - `_applyCrocBiomeBonus` 同時設定 `_biomeAtkMult`、`_biomeSpeedMult`、`_deathRollChance`
 
 ### 鬣狗（hyena）— 沙漠生態區
-- 生成時隨機分配 `packGroup`（1~3），同組鬣狗為 `packMates`
-- `_updateHyenaPack`：每 2 秒掃描 600px 內同 biome 同 packGroup 存活成員，更新 `packMates` 陣列
+- 生成時隨機分配 `packGroup`（1~2），`packMates = []`、`packName = null`，不出生即自動分配隊名
+- `_updateHyenaPack`：每幀掃描 300px 內同 biome 同 packGroup 鬣狗，物理碰面後合併隊名，上限 20 隻
+- `_nearestHyenaPackMate` / `_moveHyenaTowardPack`：隊員超出 800px 後先以歸隊為優先行動，3 秒內沒回到 800px 才離隊
 - 攻擊加成：每多一隻存活 packMate → 攻擊 +20%，速度 +5%
-- `_alertHyenaPack`：鬣狗鎖定目標瞬間，通知 600px 內所有 packMates 切換為 chasing 同一目標
+- `_alertHyenaPack`：鬣狗鎖定目標瞬間，通知 800px 內同 biome、同 packGroup 成員切換為 chasing 同一目標
+- `_getHyenaAttackPack` / `_syncHyenaAttackTurn` / `_hyenaWheelPosition`：攻擊玩家時同隊鬣狗採車輪戰，同時只有 1 隻進入 attacking，輪替 CD 600ms
 
 | 狀態 | 基礎攻擊 | 基礎速度 |
 |------|----------|----------|
@@ -532,6 +534,13 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 ---
 
 ## 上方血條UI（v0.37.0）
+
+### Boss HP UI 維護規則
+
+「Boss HP UI」是上方大型目標血條系統的統稱，包含 Boss、精英怪、巨人化、Alpha。之後修改位置、尺寸、字體時，四者必須走同一套 `drawTopBarUI()` 規則，不可只改 Boss 特例。
+
+- 桌面版：一律固定畫面正上方中央，寬 400px，`topBarY = 10`。
+- 手機版：一律放在 `#top-left` UI 正下方，寬度使用 `#top-left.offsetWidth / scale`，血條高度 6px，名稱 11px，血量數字 10px。
 
 - **函式**：`drawTopBarUI()`，在 `drawGame()` 最末尾呼叫
 - **顯示條件**：玩家2000px內存在精英/Boss/巨人化/Alpha

@@ -658,10 +658,6 @@ export function showSettings() {
     tutRow.appendChild(tutTog);
     tutRow.appendChild(tutLbl);
     accSec.appendChild(tutRow);
-    const tutHint = document.createElement('div');
-    tutHint.style.cssText = 'font-size:11px;color:#888;margin-top:2px;margin-bottom:4px;';
-    tutHint.textContent = t('tutorialHint');
-    accSec.appendChild(tutHint);
 
     // ── 永遠居中 Toggle
     const centerRow = document.createElement('div');

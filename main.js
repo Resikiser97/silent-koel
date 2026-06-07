@@ -425,7 +425,9 @@ export function initializeGame() {
         dashCooldown: 0,
         dashInvincible: false,
         dashInvincibleEnd: 0,
-        lastMoveDir: { dx: 0, dy: -1 }
+        lastMoveDir: { dx: 0, dy: -1 },
+        poisonStacks: [],
+        poisonLastTick: 0,
     });
     gameState.cameraZoom = 1.0;
     gameState.stats = { hpMax: 50, hpCurrent: 50, xpCurrent: 0, timeStatus: '20:00', dayCycle: '白天' };

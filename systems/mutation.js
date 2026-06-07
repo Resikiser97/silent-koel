@@ -419,7 +419,8 @@ export const DEFAULT_MUTATION_SKILLS = {
     version: '1.0',
     skills: {
         recallOrgan: { level: 0, maxLevel: 3 }
-    }
+    },
+    _points: 0
 };
 
 export function initMutationSkills() {
@@ -437,6 +438,7 @@ export function initMutationSkills() {
                 // 還原已存的點數快照，避免重算導致點數異常
                 if (typeof saved._points === 'number' && saved._points >= 0) {
                     gameState.mutationSkillPoints = saved._points;
+                    gameState.mutationSkills._points = saved._points;
                 }
             }
         } else {
@@ -474,5 +476,7 @@ export function _syncMutationSkillPoints() {
     if (calculated < 0) {
         return;
     }
-    gameState.mutationSkillPoints = calculated;
+    const savedPoints = (typeof gameState.mutationSkills._points === 'number' && gameState.mutationSkills._points >= 0)
+        ? gameState.mutationSkills._points : 0;
+    gameState.mutationSkillPoints = Math.max(calculated, savedPoints);
 }

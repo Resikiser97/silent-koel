@@ -49,6 +49,28 @@ export function updateProjectiles() {
         b.x = ((b.x % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
         b.y = ((b.y % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
 
+        // 毒牙回旋鏢：追蹤 _distTraveled，到頂折返，命中玩家施毒
+        if (b.owner === 'venomFang') {
+            b._distTraveled = (b._distTraveled || 0) + Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+            if (!b._returning && b._distTraveled >= b._maxDist) {
+                b._returning = true;
+                b.vx *= -2;
+                b.vy *= -2;
+            }
+            if (b._returning && wrappedDistance(b.x, b.y, b._originX, b._originY) < 10) {
+                projs.splice(i, 1);
+                continue;
+            }
+            if (p && wrappedDistance(b.x, b.y, p.x, p.y) < b.radius + (p.radius || 0)) {
+                const nh = Date.now();
+                if (!p.poisonStacks) p.poisonStacks = [];
+                p.poisonStacks.push({ dmg: b._poisonDmg || 8, endTime: nh + (b._poisonDuration || 3000) });
+                projs.splice(i, 1);
+                continue;
+            }
+            continue;
+        }
+
         // 黑色獵人子彈：打玩家
         if (b.owner === 'hunter') {
             if (p && wrappedDistance(b.x, b.y, p.x, p.y) < b.radius + (p.radius || 0)) {

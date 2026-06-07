@@ -395,20 +395,22 @@ export function updateStatusEffects() {
         }
     }
 
-    // ── 玩家毒傷 tick（毒霧犬咬中後）
+    // ── 玩家毒傷 tick（poisonStacks 疊加系統）
     const player = gameState.player;
-    if (player.poisonEndTime && now < player.poisonEndTime &&
-        now - (player.lastPoisonTick || 0) >= 1000) {
-        const dmg = Math.round((player.poisonDmg || 0) * (1 - (player.poisonResist || 0)));
-        if (dmg > 0) {
-            player.lastPoisonTick += 1000;
-            applyDamageToPlayer(dmg, null);
-            showFloatingText(player.x, player.y - 18, t('poisonFloat', { n: dmg }), '#8800CC', 11);
-        }
+    if (!player.poisonStacks) player.poisonStacks = [];
+    const stacks = player.poisonStacks;
+    for (let si = stacks.length - 1; si >= 0; si--) {
+        if (now >= stacks[si].endTime) stacks.splice(si, 1);
     }
-    if (player.poisonEndTime && now >= player.poisonEndTime) {
-        player.poisonEndTime = 0;
-        player.poisonDmg = 0;
+    if (stacks.length > 0 && now - (player.poisonLastTick || 0) >= 1000) {
+        player.poisonLastTick = now;
+        for (const stack of stacks) {
+            const dmg = Math.round(stack.dmg * (1 - (player.poisonResist || 0)));
+            if (dmg > 0) {
+                applyDamageToPlayer(dmg, null);
+                showFloatingText(player.x, player.y - 18, '-' + dmg, '#33FF66', 11);
+            }
+        }
     }
 }
 

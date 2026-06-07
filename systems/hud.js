@@ -64,12 +64,10 @@ let _minimapFogImageData   = null;
 let _minimapFogRenderCanvas = null;
 let _minimapFogRenderCtx    = null;
 let _fogCache               = null;
-let _fogFrameCounter        = 0;
 let _fogCloudCanvas         = null;
 let _minimapAlpha           = 1.0;
 let _minimapFadeTimer       = 0;
 let _minimapStopTimer       = 0;
-let _fogFrameCount          = 0;
 
 // ── 靈敏知覺快取（每局開始由 resetPerceptionCache() 重置）
 let _perceptionCache = {
@@ -185,24 +183,24 @@ function _drawArcherfish(ctx, sx, sy, r, p) {
 // ── 毒霧隼飛行毒球 + 地面腐蝕液體（地形之上、生物之下）
 function _drawVenomFalconEffects() {
     const now = Date.now();
-    // A. 飛行中毒球（從發射位置到落點的固定插值圓形）
+    // A. 飛行中毒球（salvo 陣列，每顆獨立插值）
     const elite = gameState.eliteCreature;
-    if (elite && elite._venomFireAt > 0 && elite._venomLandPos && elite._venomLandAt > now) {
-        const progress = (now - elite._venomFireAt) / (elite._venomLandAt - elite._venomFireAt);
-        const fp = elite._venomFirePos || elite;
-        const cx = fp.x + (elite._venomLandPos.x - fp.x) * progress;
-        const cy = fp.y + (elite._venomLandPos.y - fp.y) * progress;
-        const s = worldToScreen(cx, cy);
-        if (s.x >= -20 && s.x <= VIEW_W + 20 && s.y >= -20 && s.y <= VIEW_H + 20) {
+    if (elite && elite._venomSalvo && elite._venomSalvo.length > 0) {
+        for (const shot of elite._venomSalvo) {
+            if (shot.fireAt <= 0 || !shot.landPos || shot.landAt <= now) continue;
+            const progress = (now - shot.fireAt) / (shot.landAt - shot.fireAt);
+            const fp = shot.firePos || elite;
+            const cx = fp.x + (shot.landPos.x - fp.x) * progress;
+            const cy = fp.y + (shot.landPos.y - fp.y) * progress;
+            const s = worldToScreen(cx, cy);
+            if (s.x < -20 || s.x > VIEW_W + 20 || s.y < -20 || s.y > VIEW_H + 20) continue;
             ctx.save();
-            // 外層綠色光暈
             ctx.shadowColor = '#00FF66';
             ctx.shadowBlur  = 18;
             ctx.fillStyle   = 'rgba(30, 160, 80, 0.6)';
             ctx.beginPath();
             ctx.arc(s.x, s.y, 14, 0, Math.PI * 2);
             ctx.fill();
-            // 內核亮綠
             ctx.shadowBlur = 8;
             ctx.fillStyle  = '#66FF88';
             ctx.beginPath();
@@ -414,20 +412,25 @@ function _drawArcherLockOn() {
 }
 
 export function updateMinimapFog() {
-    _fogFrameCount++;
-    if (_fogFrameCount % 3 !== 0) return;
     if (!gameState.fogMap) return;
     const COLS = MAP_WIDTH  / TILE_SIZE; // 400
     const ROWS = MAP_HEIGHT / TILE_SIZE; // 400
-    const cam  = gameState.camera;
-    const gx0  = Math.floor(cam.x / TILE_SIZE);
-    const gy0  = Math.floor(cam.y / TILE_SIZE);
-    const gxW  = Math.ceil(VIEW_W / TILE_SIZE) + 1; // 81
-    const gyW  = Math.ceil(VIEW_H / TILE_SIZE) + 1; // 46
-    for (let dy = 0; dy < gyW; dy++) {
-        for (let dx = 0; dx < gxW; dx++) {
-            const gx = ((gx0 + dx) % COLS + COLS) % COLS;
-            const gy = ((gy0 + dy) % ROWS + ROWS) % ROWS;
+    const p    = gameState.player;
+    const cx   = p.x / TILE_SIZE;
+    const cy   = p.y / TILE_SIZE;
+    const r    = (VIEW_W / 2) / TILE_SIZE;
+    const r2   = r * r;
+    const minX = Math.floor(cx - r);
+    const maxX = Math.ceil(cx + r);
+    const minY = Math.floor(cy - r);
+    const maxY = Math.ceil(cy + r);
+    for (let gyRaw = minY; gyRaw <= maxY; gyRaw++) {
+        for (let gxRaw = minX; gxRaw <= maxX; gxRaw++) {
+            const dx = gxRaw - cx;
+            const dy = gyRaw - cy;
+            if (dx * dx + dy * dy > r2) continue;
+            const gx = ((gxRaw % COLS) + COLS) % COLS;
+            const gy = ((gyRaw % ROWS) + ROWS) % ROWS;
             gameState.fogMap[gy][gx] = false;
         }
     }
@@ -465,41 +468,38 @@ function _drawMinimapFog(mctx) {
     }
     if (!_fogCloudCanvas) _fogCloudCanvas = _buildFogCloudTexture();
 
-    _fogFrameCounter++;
-    if (_fogFrameCounter % 3 === 0 || !_fogCache._ready) {
-        // 寫入硬邊迷霧像素（白天白色 / 夜晚黑色）
-        const d      = _minimapFogImageData.data;
-        const fogMap = gameState.fogMap;
-        const v      = gameState.isNight ? 0 : 255;
-        for (let gy = 0; gy < 400; gy++) {
-            const row = fogMap[gy];
-            for (let gx = 0; gx < 400; gx++) {
-                const i = (gy * 400 + gx) * 4;
-                if (row[gx]) { d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255; }
-                else          { d[i + 3] = 0; }
-            }
+    // 寫入硬邊迷霧像素（白天白色 / 夜晚黑色）
+    const d      = _minimapFogImageData.data;
+    const fogMap = gameState.fogMap;
+    const v      = gameState.isNight ? 0 : 255;
+    for (let gy = 0; gy < 400; gy++) {
+        const row = fogMap[gy];
+        for (let gx = 0; gx < 400; gx++) {
+            const i = (gy * 400 + gx) * 4;
+            if (row[gx]) { d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255; }
+            else          { d[i + 3] = 0; }
         }
-        _minimapFogCtx.putImageData(_minimapFogImageData, 0, 0);
-
-        // 渲染到 330×330 暫存畫布，使 blur kernel 在可視邊緣（距邊 15px）有足夠霧像素可採樣
-        const rc = _minimapFogRenderCtx;
-        rc.clearRect(0, 0, RC, RC);
-        rc.filter = 'blur(8px)';
-        rc.drawImage(_minimapFogCanvas, 0, 0, 400, 400, 0, 0, RC, RC);
-        rc.filter = 'none';
-
-        // 白天：用 source-atop 把雲霧材質貼在迷霧形狀內
-        if (!gameState.isNight) {
-            rc.globalCompositeOperation = 'source-atop';
-            rc.drawImage(_fogCloudCanvas, 0, 0, 300, 300, 0, 0, RC, RC);
-            rc.globalCompositeOperation = 'source-over';
-        }
-
-        const fc = _fogCache.getContext('2d');
-        fc.clearRect(0, 0, mm, mm);
-        fc.drawImage(_minimapFogRenderCanvas, MARGIN, MARGIN, mm, mm, 0, 0, mm, mm);
-        _fogCache._ready = true;
     }
+    _minimapFogCtx.putImageData(_minimapFogImageData, 0, 0);
+
+    // 渲染到暫存畫布，使 blur kernel 在可視邊緣（距邊 15px）有足夠霧像素可採樣
+    const rc = _minimapFogRenderCtx;
+    rc.clearRect(0, 0, RC, RC);
+    rc.filter = 'blur(8px)';
+    rc.drawImage(_minimapFogCanvas, 0, 0, 400, 400, 0, 0, RC, RC);
+    rc.filter = 'none';
+
+    // 白天：用 source-atop 把雲霧材質貼在迷霧形狀內
+    if (!gameState.isNight) {
+        rc.globalCompositeOperation = 'source-atop';
+        rc.drawImage(_fogCloudCanvas, 0, 0, 300, 300, 0, 0, RC, RC);
+        rc.globalCompositeOperation = 'source-over';
+    }
+
+    const fc = _fogCache.getContext('2d');
+    fc.clearRect(0, 0, mm, mm);
+    fc.drawImage(_minimapFogRenderCanvas, MARGIN, MARGIN, mm, mm, 0, 0, mm, mm);
+    _fogCache._ready = true;
 
     mctx.drawImage(_fogCache, 0, 0);
 }
@@ -785,23 +785,19 @@ function drawTopBarUI() {
     ];
     _debuffDefs.forEach(d => { if (d.endTime && now < d.endTime) _activeDebuffs.push(d); });
 
-    // 繪製 UI（頂部中央，寬400，有 Debuff 時高68，無時高50）
-    const barW  = 400;
-    const barH  = _activeDebuffs.length > 0 ? 68 : 50;
-    const x     = (VIEW_W - barW) / 2;
-
-    // 動態偵測頂部 UI 高度，換算為 Canvas 邏輯座標
-    let topBarY = 10;
+    const isMobileTopBar = gameState.isMobile;
     const topLeftEl = document.getElementById('top-left');
     const minimapEl = document.getElementById('minimap-container');
-    if (topLeftEl || minimapEl) {
-        const gc = document.getElementById('game-container');
-        const scaleMatch = gc ? gc.style.transform.match(/scale\(([^)]+)\)/) : null;
-        const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-        const topLeftBottom = topLeftEl ? topLeftEl.offsetHeight / scale : 0;
-        const minimapBottom = minimapEl ? minimapEl.offsetHeight / scale : 0;
-        topBarY = Math.max(topLeftBottom, minimapBottom) + 8;
-    }
+    const gc = document.getElementById('game-container');
+    const scaleMatch = gc ? gc.style.transform.match(/scale\(([^)]+)\)/) : null;
+    const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
+
+    // Boss HP UI：Boss、精英、巨人、Alpha 共用同一套上方大型目標血條
+    // 桌面固定正上方中央；手機固定在 #top-left 正下方 slim bar
+    let barW  = isMobileTopBar && topLeftEl ? topLeftEl.offsetWidth / scale : 400;
+    let barH  = isMobileTopBar ? (_activeDebuffs.length > 0 ? 44 : 34) : (_activeDebuffs.length > 0 ? 68 : 50);
+    let x     = isMobileTopBar && topLeftEl ? topLeftEl.offsetLeft / scale : (VIEW_W - barW) / 2;
+    let topBarY = isMobileTopBar && topLeftEl ? (topLeftEl.offsetTop + topLeftEl.offsetHeight) / scale + 8 : 10;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -816,7 +812,7 @@ function drawTopBarUI() {
 
     // 目標名稱
     ctx.fillStyle = target.isAlpha ? '#FFD700' : '#FFFFFF';
-    ctx.font = getGameFont(13, true);
+    ctx.font = getGameFont(isMobileTopBar ? 11 : 13, true);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.lineJoin = 'round';
@@ -826,7 +822,7 @@ function drawTopBarUI() {
     ctx.fillText(displayName, x + barW / 2, topBarY + 5);
 
     // 血條底色
-    const hpBarX = x + 10, hpBarY = topBarY + 24, hpBarW = barW - 20, hpBarH = 10;
+    const hpBarX = x + 10, hpBarY = topBarY + (isMobileTopBar ? 20 : 24), hpBarW = barW - 20, hpBarH = isMobileTopBar ? 6 : 10;
     ctx.fillStyle = '#333';
     ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
@@ -837,21 +833,21 @@ function drawTopBarUI() {
 
     // HP 數值
     ctx.fillStyle = '#CCC';
-    ctx.font = getGameFont(11, false);
+    ctx.font = getGameFont(isMobileTopBar ? 10 : 11, false);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(
         Math.max(0, Math.ceil(target.hp)) + ' / ' + (target.maxHp || 100),
-        x + barW / 2, topBarY + 37
+        x + barW / 2, topBarY + (isMobileTopBar ? 28 : 37)
     );
 
     // Debuff 圖示列（有 Debuff 時在 HP 數字下方顯示）
     if (_activeDebuffs.length > 0) {
-        const iconSize = 14;
-        const iconGap  = 4;
+        const iconSize = isMobileTopBar ? 10 : 14;
+        const iconGap  = isMobileTopBar ? 3 : 4;
         const totalW   = _activeDebuffs.length * (iconSize + iconGap) - iconGap;
         let ix = x + (barW - totalW) / 2;
-        const iconY = topBarY + 51;
+        const iconY = topBarY + (isMobileTopBar ? 32 : 51);
 
         ctx.textBaseline = 'middle';
         for (const d of _activeDebuffs) {
@@ -1751,8 +1747,6 @@ function resetPerceptionCache() {
 }
 
 function resetFogFrameCount() {
-    _fogFrameCount = 0;
-    _fogFrameCounter = 0;
     _fogCache = null;
 }
 

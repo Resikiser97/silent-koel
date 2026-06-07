@@ -41,6 +41,9 @@ export const AudioManager = {
     _musicGain: null,
     _sfxGain: null,
     _unlocked: false,
+    _mobileMasterFadeDone: false,
+    _mobileMasterFadeStartMs: 0,
+    _mobileMasterFadeEndMs: 0,
     _mediaSourceMap: new Map(),
     _vol: {
         master: 80, music: 70, sfx: 80,
@@ -124,7 +127,24 @@ export const AudioManager = {
 
             return this._audioCtx.resume().then(() => {
                 this._unlocked = true;
-                this._applyGainVolumes();
+                if (gameState.isMobile && !this._mobileMasterFadeDone) {
+                    this._mobileMasterFadeDone = true;
+                    this._mobileMasterFadeStartMs = Date.now();
+                    this._mobileMasterFadeEndMs = this._mobileMasterFadeStartMs + 300;
+                    this._applyGainVolumes(true);
+                    const master = this._vol.masterOn ? this._vol.master / 100 : 0;
+                    const g = this._masterGain.gain;
+                    const t = this._audioCtx.currentTime;
+                    try {
+                        g.cancelScheduledValues(t);
+                        g.setValueAtTime(0, t);
+                        g.linearRampToValueAtTime(master, t + 0.3);
+                    } catch(e) {
+                        g.value = master;
+                    }
+                } else {
+                    this._applyGainVolumes();
+                }
             }).catch(() => {});
         } catch(e) {
             return Promise.resolve();
@@ -139,12 +159,12 @@ export const AudioManager = {
         return this._sfxGain;
     },
 
-    _applyGainVolumes() {
+    _applyGainVolumes(keepMasterRamp = false) {
         if (!this._audioCtx || !this._unlocked) return;
         const master = this._vol.masterOn ? this._vol.master / 100 : 0;
         const music  = this._vol.musicOn  ? this._vol.music  / 100 : 0;
         const sfx    = this._vol.sfxOn    ? this._vol.sfx    / 100 : 0;
-        this._masterGain.gain.value = master;
+        if (!keepMasterRamp) this._masterGain.gain.value = master;
         this._musicGain.gain.value  = music;
         this._sfxGain.gain.value    = sfx;
     },
@@ -238,13 +258,21 @@ export const AudioManager = {
     _sfxVol() {
         const v = this._vol;
         if (!v || !v.masterOn || !v.sfxOn) return 0;
-        return (v.master / 100) * (v.sfx / 100);
+        return (v.master / 100) * (v.sfx / 100) * this._mobileFadeScale();
     },
 
     _musicVol() {
         const v = this._vol;
         if (!v || !v.masterOn || !v.musicOn) return 0;
         return (v.master / 100) * (v.music / 100);
+    },
+
+    _mobileFadeScale() {
+        if (!gameState.isMobile || !this._mobileMasterFadeEndMs) return 1;
+        const now = Date.now();
+        if (now >= this._mobileMasterFadeEndMs) return 1;
+        if (now <= this._mobileMasterFadeStartMs) return 0;
+        return Math.max(0, Math.min(1, (now - this._mobileMasterFadeStartMs) / 300));
     },
 
     _getPooledAudio(key) {

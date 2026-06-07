@@ -38,6 +38,14 @@ export function resetHyenaPackNames() {
     _hyenaPackNameMap = {};
 }
 
+const HYENA_PACK_MERGE_RANGE = 300;
+const HYENA_PACK_KEEP_RANGE = 800;
+const HYENA_PACK_LEAVE_GRACE = 3000;
+const HYENA_PACK_LIMIT = 20;
+const HYENA_ATTACK_TURN_CD = 600;
+const CREATURE_NAME_FONT_SIZE = 12;
+const CREATURE_TEAM_FONT_SIZE = 6;
+
 // ── 物種固定顏色常數 ──────────────────────────────────────────
 const CREATURE_COLORS = {
     moose:      '#8B4513',   // 深棕
@@ -55,6 +63,22 @@ const CREATURE_COLORS = {
 // ── 取得物種固定顏色（不跟地形走）────────────────────────────
 function _getCreatureColor(creature) {
     return CREATURE_COLORS[creature.speciesId] || '#888888';
+}
+
+function _drawCenteredCreatureText(text, x, y, font, fillStyle, lineWidth) {
+    ctx.save();
+    if (ctx.setTransform) ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.font = font;
+    ctx.fillStyle = fillStyle;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.direction = 'ltr';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = lineWidth;
+    ctx.strokeText(text, x, y);
+    ctx.fillText(text, x, y);
+    ctx.restore();
 }
 
 // ── 嘴器減速：取生物有效速度（被減速中則乘以 _slowMult）────────
@@ -684,7 +708,7 @@ function _applyCrocBiomeBonus(croc) {
 }
 
 // ── 鬣狗組隊掃描（每2秒）──
-function _updateHyenaPack(hyena) {
+function _updateHyenaPackLegacy(hyena) {
     const now = Date.now();
     if (now - (hyena._packScanTimer || 0) < 2000) return;
     hyena._packScanTimer = now;
@@ -706,6 +730,139 @@ function _updateHyenaPack(hyena) {
         if (wrappedDistance(hyena.x, hyena.y, other.x, other.y) > 600) continue;
         hyena.packMates.push(other);
     }
+}
+
+function _assignHyenaPackName() {
+    const available = _HYENA_PACK_NAMES.filter(n => !_usedHyenaPackNames.includes(n));
+    const pool = available.length > 0 ? available : _HYENA_PACK_NAMES;
+    const name = pool[Math.floor(Math.random() * pool.length)];
+    _usedHyenaPackNames.push(name);
+    _hyenaPackNameMap[name] = true;
+    return name;
+}
+
+function _hyenaPackMembers(hyena) {
+    if (!hyena.packName) return [hyena];
+    return gameState.hostileCreatures.filter(c =>
+        c.speciesId === 'hyena' &&
+        c.hp > 0 &&
+        c.packGroup === hyena.packGroup &&
+        c.biome === hyena.biome &&
+        c.packName === hyena.packName
+    );
+}
+
+function _trimHyenaPack(pack) {
+    if (pack.length <= HYENA_PACK_LIMIT) return;
+    const anchor = pack[0];
+    pack.sort((a, b) => wrappedDistance(anchor.x, anchor.y, a.x, a.y) - wrappedDistance(anchor.x, anchor.y, b.x, b.y));
+    for (let i = HYENA_PACK_LIMIT; i < pack.length; i++) {
+        pack[i].packName = null;
+        pack[i].packMates = [];
+        pack[i]._attackTurn = false;
+        pack[i]._packOutOfRangeSince = null;
+        pack[i]._returnToPackTarget = null;
+    }
+}
+
+function _nearestHyenaPackMate(hyena) {
+    if (!hyena.packName) return null;
+    let nearest = null;
+    let nearestDist = Infinity;
+    for (const mate of _hyenaPackMembers(hyena)) {
+        if (mate === hyena || mate.hp <= 0) continue;
+        const d = wrappedDistance(hyena.x, hyena.y, mate.x, mate.y);
+        if (d < nearestDist) {
+            nearest = mate;
+            nearestDist = d;
+        }
+    }
+    return nearest ? { mate: nearest, dist: nearestDist } : null;
+}
+
+// 鬣狗組隊掃描：出生只帶 packGroup，實際碰面才合併成隊
+function _updateHyenaPack(hyena) {
+    if (!hyena.packGroup) return;
+
+    let closeMate = null;
+    for (const other of gameState.hostileCreatures) {
+        if (other === hyena || other.hp <= 0) continue;
+        if (other.speciesId !== 'hyena') continue;
+        if (other.packGroup !== hyena.packGroup) continue;
+        if (other.biome !== hyena.biome) continue;
+        if (wrappedDistance(hyena.x, hyena.y, other.x, other.y) <= HYENA_PACK_MERGE_RANGE) {
+            closeMate = other;
+            break;
+        }
+    }
+
+    if (closeMate) {
+        const sharedName = hyena.packName || closeMate.packName || _assignHyenaPackName();
+        const mergePack = gameState.hostileCreatures.filter(c =>
+            c.speciesId === 'hyena' &&
+            c.hp > 0 &&
+            c.packGroup === hyena.packGroup &&
+            c.biome === hyena.biome &&
+            (c === hyena || c === closeMate || c.packName === hyena.packName || c.packName === closeMate.packName)
+        );
+        _trimHyenaPack(mergePack);
+        for (const member of mergePack.slice(0, HYENA_PACK_LIMIT)) member.packName = sharedName;
+    }
+
+    if (!hyena.packName) {
+        hyena.packMates = [];
+        hyena._packOutOfRangeSince = null;
+        hyena._returnToPackTarget = null;
+        return;
+    }
+
+    const samePack = _hyenaPackMembers(hyena);
+    const nearestMate = _nearestHyenaPackMate(hyena);
+    const hasNearbyMate = nearestMate && nearestMate.dist <= HYENA_PACK_KEEP_RANGE;
+    if (!hasNearbyMate) {
+        hyena.packMates = [];
+        hyena._returnToPackTarget = nearestMate ? nearestMate.mate : null;
+        if (!hyena._packOutOfRangeSince) hyena._packOutOfRangeSince = Date.now();
+        if (Date.now() - hyena._packOutOfRangeSince >= HYENA_PACK_LEAVE_GRACE) {
+            hyena.packName = null;
+            hyena._attackTurn = false;
+            hyena._packOutOfRangeSince = null;
+            hyena._returnToPackTarget = null;
+        }
+        return;
+    }
+
+    hyena._packOutOfRangeSince = null;
+    hyena._returnToPackTarget = null;
+    _trimHyenaPack(samePack);
+    hyena.packMates = _hyenaPackMembers(hyena).filter(m =>
+        m !== hyena && wrappedDistance(hyena.x, hyena.y, m.x, m.y) <= HYENA_PACK_KEEP_RANGE
+    );
+}
+
+function _moveHyenaTowardPack(hyena, now) {
+    if (hyena.speciesId !== 'hyena' || !hyena.packName || !hyena._returnToPackTarget) return false;
+    const target = hyena._returnToPackTarget;
+    if (target.hp <= 0 || target.packName !== hyena.packName || target.packGroup !== hyena.packGroup) {
+        hyena._returnToPackTarget = null;
+        return false;
+    }
+
+    const { dx, dy } = wrappedDelta(hyena.x, hyena.y, target.x, target.y);
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist <= HYENA_PACK_KEEP_RANGE) {
+        hyena._packOutOfRangeSince = null;
+        hyena._returnToPackTarget = null;
+        return false;
+    }
+
+    const angle = Math.atan2(dy, dx);
+    hyena._moveAngle = angle;
+    _applyHyenaBiomeBonus(hyena);
+    let speed = hyena.speed * (hyena._finalSpeedMult || 1.0);
+    if (hyena._slowUntil && now < hyena._slowUntil) speed *= (hyena._slowMult || 1.0);
+    moveCreature(hyena, hyena.x + Math.cos(angle) * speed, hyena.y + Math.sin(angle) * speed);
+    return true;
 }
 
 // ── 鬣狗組隊加成 ──
@@ -732,15 +889,63 @@ function _applyHyenaBiomeBonus(hyena) {
 
 // ── 鬣狗警報：通知600px內同組成員 ──
 function _alertHyenaPack(hyena, target) {
-    for (const mate of (hyena.packMates || [])) {
+    const members = gameState.hostileCreatures.filter(c =>
+        c !== hyena &&
+        c.speciesId === 'hyena' &&
+        c.hp > 0 &&
+        c.packGroup === hyena.packGroup &&
+        c.biome === hyena.biome &&
+        wrappedDistance(hyena.x, hyena.y, c.x, c.y) <= HYENA_PACK_KEEP_RANGE
+    );
+    for (const mate of members) {
         if (mate.hp <= 0) continue;
-        if (wrappedDistance(hyena.x, hyena.y, mate.x, mate.y) > 600) continue;
         if (!mate.target || mate.target.hp <= 0) {
             mate.target     = target;
             mate.state      = 'chasing';
             mate.targetType = (target === gameState.player) ? 'player' : 'neutral';
         }
     }
+}
+
+function _getHyenaAttackPack(hyena) {
+    if (!hyena.packName) return [hyena];
+    return _hyenaPackMembers(hyena)
+        .filter(m => wrappedDistance(hyena.x, hyena.y, m.x, m.y) <= HYENA_PACK_KEEP_RANGE)
+        .slice(0, HYENA_PACK_LIMIT);
+}
+
+function _syncHyenaAttackTurn(hyena, pack, now) {
+    if (pack.length <= 1) {
+        hyena._attackTurn = true;
+        hyena._attackState = 'attacking';
+        return hyena;
+    }
+    let attacker = pack.find(m => m._attackTurn);
+    if (attacker && attacker.hp > 0 && attacker._attackState === 'retreating' && now < (attacker._attackTurnUntil || 0)) {
+        return attacker;
+    }
+    if (!attacker || attacker.hp <= 0 || attacker._attackState !== 'attacking' || now >= (attacker._attackTurnUntil || 0)) {
+        const lastIndex = pack.indexOf(attacker);
+        const nextIndex = lastIndex >= 0 ? (lastIndex + 1) % pack.length : 0;
+        attacker = pack[nextIndex];
+        for (const member of pack) {
+            member._attackTurn = member === attacker;
+            member._attackState = member === attacker ? 'attacking' : 'waiting';
+        }
+        attacker._attackTurnUntil = now + HYENA_ATTACK_TURN_CD;
+    }
+    return attacker;
+}
+
+function _hyenaWheelPosition(hyena, pack, target) {
+    const index = Math.max(0, pack.indexOf(hyena));
+    const spacing = hyena.radius * 2 + 15;
+    const orbit = Math.max(target.radius + hyena.attackRange + spacing, spacing * pack.length / Math.PI);
+    const angle = (Math.PI * 2 / Math.max(1, pack.length)) * index + (Date.now() / 900);
+    return {
+        x: target.x + Math.cos(angle) * orbit,
+        y: target.y + Math.sin(angle) * orbit,
+    };
 }
 
 export function updateNeutralCreatures() {
@@ -1257,16 +1462,14 @@ export function drawNeutralCreatures() {
                               : creature.isGiantized ? (creature.name || '') + '（巨人化）'
                               : (creature.name || '');
             if (displayName) {
-                ctx.save();
-                ctx.fillStyle = creature.isAlpha ? '#FFD700' : '#FFFFFF';
-                ctx.font = creature.isGiantized ? getGameFont(13, true) : getGameFont(12, false);
-                ctx.textAlign = 'center';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-                ctx.lineWidth = 3.5;
-                ctx.strokeText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
-                ctx.fillText(displayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
-                ctx.restore();
+                _drawCenteredCreatureText(
+                    displayName,
+                    s.x,
+                    s.y - creature.radius * (gameState.cameraZoom || 1) - 10,
+                    creature.isGiantized ? getGameFont(CREATURE_NAME_FONT_SIZE + 1, true) : getGameFont(CREATURE_NAME_FONT_SIZE, false),
+                    creature.isAlpha ? '#FFD700' : '#FFFFFF',
+                    3.5
+                );
             }
             if (creature.packName) {
                 const leader = creature.packLeader ? creature : creature.packLeaderRef;
@@ -1274,16 +1477,14 @@ export function drawNeutralCreatures() {
                     ? 1 + (leader.packMembers ? leader.packMembers.filter(m => m.hp > 0).length : 0)
                     : 1;
                 const packLimit = leader ? _getPackLimit(leader) : 5;
-                ctx.save();
-                ctx.font = getGameFont(10, false);
-                ctx.fillStyle = 'rgba(255,230,150,0.85)';
-                ctx.textAlign = 'center';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-                ctx.lineWidth = 3.5;
-                ctx.strokeText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
-                ctx.fillText(creature.packName + '(' + memberCount + '/' + packLimit + ')', s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 22);
-                ctx.restore();
+                _drawCenteredCreatureText(
+                    creature.packName + '(' + memberCount + '/' + packLimit + ')',
+                    s.x,
+                    s.y + creature.radius * (gameState.cameraZoom || 1) + 14,
+                    getGameFont(CREATURE_TEAM_FONT_SIZE, false),
+                    'rgba(255,230,150,0.85)',
+                    3
+                );
             }
         }
     }
@@ -1319,6 +1520,8 @@ export function updateHostileCreatures() {
         }
 
         // ── 肉系吃屍體（僅普通地圖 hostileEatMeat 開啟）──────────
+        if (creature.speciesId === 'hyena' && _moveHyenaTowardPack(creature, now)) continue;
+
         const featureEatMeat = !!(gameState.currentMap && gameState.currentMap.features &&
                                   gameState.currentMap.features.hostileEatMeat);
         if (featureEatMeat && creature.diet === 'carnivore') {
@@ -1493,6 +1696,25 @@ export function updateHostileCreatures() {
             const { dx, dy } = wrappedDelta(creature.x, creature.y, t.x, t.y);
             const dist = Math.sqrt(dx * dx + dy * dy);
 
+            if (creature.speciesId === 'hyena' && creature.targetType === 'player') {
+                const pack = _getHyenaAttackPack(creature);
+                const attacker = _syncHyenaAttackTurn(creature, pack, now);
+                if (creature !== attacker || creature._attackState === 'retreating') {
+                    const wheelPos = _hyenaWheelPosition(creature, pack, t);
+                    const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, wheelPos.x, wheelPos.y);
+                    const wheelDist = Math.sqrt(wdx * wdx + wdy * wdy);
+                    if (wheelDist > 4) {
+                        const wAngle = Math.atan2(wdy, wdx);
+                        creature._moveAngle = wAngle;
+                        _applyHyenaBiomeBonus(creature);
+                        let wheelSpeed = creature.speed * (creature._finalSpeedMult || 1.0);
+                        if (creature._slowUntil && now < creature._slowUntil) wheelSpeed *= (creature._slowMult || 1.0);
+                        moveCreature(creature, creature.x + Math.cos(wAngle) * wheelSpeed, creature.y + Math.sin(wAngle) * wheelSpeed);
+                    }
+                    continue;
+                }
+            }
+
             if (dist <= creature.attackRange) {
                 if (now - creature.attackCooldown >= 1000) {
                     if (creature.targetType === 'player') {
@@ -1519,6 +1741,10 @@ export function updateHostileCreatures() {
                             dmg = creature.damage * (creature._finalAtkMult || 1.0);
                         }
                         applyDamageToPlayer(dmg, creature);
+                        if (creature.speciesId === 'hyena') {
+                            creature._attackState = 'retreating';
+                            creature._attackTurnUntil = now + HYENA_ATTACK_TURN_CD;
+                        }
                     } else if (creature.targetType === 'neutral') {
                         creature.target.hp -= creature.damage;
                         if (creature.target.hp <= 0) {
@@ -1723,40 +1949,28 @@ export function drawHostileCreatures() {
         if (!greekMode) {
             const hostileDisplayName = _getCreatureDisplayName(creature);
             if (hostileDisplayName) {
-                ctx.save();
-                ctx.fillStyle   = creature.isKiller ? '#FF8800' : '#FFFFFF';
-                ctx.font        = creature.isKiller  ? getGameFont(12, true) : getGameFont(12, false);
-                ctx.textAlign   = 'center';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-                ctx.lineWidth = 3.5;
-                ctx.strokeText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
-                ctx.fillText(hostileDisplayName, s.x, s.y - creature.radius * (gameState.cameraZoom || 1) - 10);
-                ctx.restore();
+                _drawCenteredCreatureText(
+                    hostileDisplayName,
+                    s.x,
+                    s.y - creature.radius * (gameState.cameraZoom || 1) - 10,
+                    creature.isKiller ? getGameFont(CREATURE_NAME_FONT_SIZE, true) : getGameFont(CREATURE_NAME_FONT_SIZE, false),
+                    creature.isKiller ? '#FF8800' : '#FFFFFF',
+                    3.5
+                );
             }
             // ── 鬣狗隊名標籤 ──
             if (creature.speciesId === 'hyena' && creature.packName) {
                 const packCount = gameState.hostileCreatures.filter(
-                    c => c.speciesId === 'hyena' && c.packGroup === creature.packGroup && c.hp > 0
+                    c => c.speciesId === 'hyena' && c.packGroup === creature.packGroup && c.packName === creature.packName && c.hp > 0
                 ).length;
-                ctx.save();
-                ctx.font = getGameFont(10, false);
-                ctx.fillStyle = 'rgba(255, 200, 100, 0.85)';
-                ctx.textAlign = 'center';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-                ctx.lineWidth = 3.5;
-                ctx.strokeText(
-                    creature.packName + '(' + packCount + '/3)',
+                _drawCenteredCreatureText(
+                    creature.packName + '(' + Math.min(packCount, HYENA_PACK_LIMIT) + '/' + HYENA_PACK_LIMIT + ')',
                     s.x,
-                    s.y + creature.radius * (gameState.cameraZoom || 1) + 14
+                    s.y + creature.radius * (gameState.cameraZoom || 1) + 14,
+                    getGameFont(CREATURE_TEAM_FONT_SIZE, false),
+                    'rgba(255, 200, 100, 0.85)',
+                    3
                 );
-                ctx.fillText(
-                    creature.packName + '(' + packCount + '/3)',
-                    s.x,
-                    s.y + creature.radius * (gameState.cameraZoom || 1) + 14
-                );
-                ctx.restore();
             }
         }
     }
