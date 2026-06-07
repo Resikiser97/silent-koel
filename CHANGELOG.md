@@ -1,6 +1,18 @@
-## v0.1.12.0
+## v0.1.13.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.13.0 - 2026-06-07
+
+### 新增/修復
+- systems/combat.js `addMutationPoints` 改為正式呼叫 mutation.js 實作，移除 stub；巨人化/Alpha/殺手化擊殺現在才真正給予變異點
+
+### 調整
+- QUICKREF.md：修正 11 處過期描述（ESM 載入、localStorage key 補齊）
+- systems/hud.js：移除 `console.log && false` dead code
+- systems/creatures.js：移除無呼叫端的 `_drawDirectionArrow()` 測試函式
 
 ---
 

@@ -1,4 +1,4 @@
-## v0.1.12.0
+## v0.1.13.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.12.0**
+- 版本：**v0.1.13.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -28,7 +28,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
   MOBILE_GAME_SCALE = 0.6（定義在 _applyMobileScale() 上方）
   調整此值可統一縮放，不需改其他系統
 
-模組載入：傳統 <script src> 標籤，不使用 ES Modules
+模組載入：ES Modules，main.js 為 <script type="module"> 唯一入口
 手機判斷：gameState.isMobile / gameState.orientation
 ```
 
@@ -49,8 +49,8 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 ### 根目錄
 | 檔案 | 職責 |
 |------|------|
-| `index.html` | HTML 結構 + CSS + script 載入順序 |
-| `main.js` | isGamePaused / gameLoop / initializeGame / window.onload |
+| `index.html` | HTML 結構 + CSS + 唯一 `<script type="module" src="./main.js">` 入口 |
+| `main.js` | ESM 入口 / isGamePaused / gameLoop / initializeGame / startGameWithLoading / window.onload |
 | `lang.js` | LANG_LIST、LANG 字典、applyLanguage()、t(key, params?) |
 | `MAIN.md` | 完整模組架構、函式列表、跨模組依賴 |
 | `CHANGELOG.md` | 所有版本紀錄（最新在最上方） |
@@ -60,7 +60,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 ### config/
 | 檔案 | 職責 |
 |------|------|
-| `gameConfig.js` | GAME_INFO（版本號、SAVE_VERSION）、AUDIO_FILES |
+| `gameConfig.js` | GAME_INFO（版本號、SAVE_VERSION）、GAME_TIMING、AUDIO_FILES、FIXED_DELTA |
 | `characters.js` | CHARACTERS（角色定義常數） |
 | `organs.js` | ORGANS（15種普通）+ HIDDEN_ORGANS（4種）+ poisonSac |
 | `creatures.js` | CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG |
@@ -77,12 +77,12 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 ### systems/
 | 檔案 | 職責 |
 |------|------|
-| `gameState.js` | DEFAULT_SETTINGS、gameState 物件、canvas/ctx、MAP 常數 |
+| `gameState.js` | DEFAULT_SETTINGS、gameState 物件、canvas/ctx |
 | `utils.js` | drawArrow / drawHealthBar / drawNameTag / drawGlowEffect / applyTenacity |
-| `audio.js` | AudioManager（playMusic / playSfx / refreshMusicVolume） |
-| `camera.js` | updateCamera / worldToScreen / _updateMobileCameraZoom |
+| `audio.js` | AudioManager（play / playMusic / refreshMusicVolume）/ preloadAllSfxBuffers |
+| `camera.js` | updateCamera / worldToScreen / wrappedDistance / wrappedDelta / _updateCameraZoom |
 | `input.js` | handleKeyDown / handleKeyUp（含 Z 鍵自動攻擊 toggle） |
-| `map.js` | generateTerrain / buildTerrainCanvas / drawTerrain |
+| `map.js` | MAP_WIDTH / MAP_HEIGHT / generateTerrain / buildTerrainCanvas / drawTerrain |
 | `spawning.js` | 生物／果子／樹木生成 |
 | `player.js` | updatePlayerMovement / checkFruitCollision / 靈敏知覺算法 |
 | `tutorial.js` | showTutorial / spawnTutorialStump / handleTutorialStumpKill |
@@ -118,9 +118,10 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `savedOrgans` | 死後保留的普通器官 |
 | `savedHiddenOrgans` | 死後保留的隱藏器官 |
 | `lastRunOrgans` | 上局所有器官記錄（首頁補選用） |
-| `gameSettings` | `{ language, volume, keys, deviceMode, autoAttack }` |
-| `SAVE_VERSION` | 目前 `"1.1"`（不一致時清除技能/器官存檔） |
-| `mutationData` | 突變器官等級和點數（永久保留，不受 SAVE_VERSION 清除） |
+| `gameSettings` | `{ language, volume, keys, deviceMode, autoAttack, showOrganTooltip, alwaysCenter, minimapFade, minimapSize, fontBoldLarge, cameraMode, cameraZoomLevel }` |
+| `saveVersion` | 目前 `"1.1"`（不一致時清除技能/器官存檔） |
+| `lastCharacter` | 上一局選擇角色 ID |
+| `mutationData` | 突變器官等級和點數（永久保留，不受 `saveVersion` 清除） |
 | `lastDifficulty` | 上一局難度（`'easy'`/`'normal'`） |
 | `tutorialCompleted` | 移動教學是否完成 |
 | `tutorialCombatDone` | 戰鬥教學是否完成 |
@@ -131,6 +132,9 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `clearCount_char_*` | 各角色通關次數（v0.0.69.0） |
 | `killCount_bear` / `killCount_shark` / `killCount_scorpion` / `killCount_hunter` | Boss 擊殺次數 |
 | `hunterSlayerUnlocked` | 是否曾擊殺黑色獵人（`'true'`，v0.1.0.0） |
+| `zoomResetVersion` | 鏡頭縮放預設值重置版本 |
+| `lastSeenPatchVersion` | 已讀取的最新版本公告 |
+| `chatPosition` / `chatSettings` | 聊天室位置與設定 |
 
 ---
 
@@ -141,7 +145,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `realPlayTime` | 單位是毫秒，上傳排行榜用 `Math.floor(realPlayTime / 1000)` 轉秒 |
 | `resumePlayTimer()` | 無條件啟動 |
 | `pausePlayTimer()` | 有檢查 `_playTimerStart !== null` 才暫停 |
-| `autoAttack` | 任何版本更新都不重置，不受 `SAVE_VERSION` 控制 |
+| `autoAttack` | 任何版本更新都不重置，不受 `saveVersion` 控制 |
 | 毒傷 tick | 用 `c.lastPoisonTick += 1000`，不是 `= now`，避免累積誤差 |
 | 器官選擇順序 | `showHiddenOrganSelection()` 必須在 `addXP()` 之前呼叫，否則界面疊層 |
 | organSelectionActive | `gameState.organSelectionActive = false` 必須在 `showOrganSelection()` 之前設定 |

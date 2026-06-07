@@ -1725,7 +1725,6 @@ export function updateUI() {
             ? (gameState.currentMap.name === '普通' ? '⚔️ 普通' : '🌿 簡單')
             : '🌿 簡單';
     }
-    console.log && false; // [v0.47.0] 七+八+十: HUD 更新完成
 }
 
 function resetUICache() {

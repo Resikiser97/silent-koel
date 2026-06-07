@@ -402,28 +402,6 @@ export function drawCreatureShape(ctx, creature, sx, sy) {
     _drawCreatureGlow(ctx, creature, sx, sy);
 }
 
-// ── 測試用：方向指示三角形（確認無誤後移除）────────────────────
-function _drawDirectionArrow(ctx, creature, sx, sy) {
-    const r     = creature.radius;
-    const angle = creature._moveAngle || 0;
-    const tip   = r + 8;   // 三角形尖端距中心
-
-    ctx.save();
-    ctx.translate(sx, sy);
-    ctx.rotate(angle);
-
-    ctx.beginPath();
-    ctx.moveTo(tip + 6, 0);   // 尖端（朝前）
-    ctx.lineTo(tip,    -4);   // 左翼
-    ctx.lineTo(tip,     4);   // 右翼
-    ctx.closePath();
-    ctx.fillStyle   = '#FFFFFF';
-    ctx.globalAlpha = 0.9;
-    ctx.fill();
-
-    ctx.restore();
-}
-
 // ── 草食性連吃：附近500px是否有同族巨人化 ──
 function _hasGiantizedNearby(creature, range) {
     for (const c of gameState.neutralCreatures) {

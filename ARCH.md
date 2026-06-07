@@ -1,4 +1,4 @@
-## v0.1.12.0
+## v0.1.13.0
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -226,9 +226,9 @@ organs.js  ──imports──▶  main.js
 - `hud.js` 同時負責 Canvas 渲染（`drawGame`）和 HTML overlay 更新（`updateUI`），職責混合
 - `combat.js` 的 `showFloatingText` 與 canvas batch 系統耦合，需要 hud.js 才能完整運作
 
-### Dead code（待清理）
-- `systems/combat.js`：部分舊版傷害計算路徑（非 poisonStacks 路徑殘留）
-- `systems/hud.js`：舊版 Boss UI 代碼（重寫後殘留，v0.1.11.0）
-- `systems/creatures.js`：舊版非 biome 移動邏輯（三態移動重構後殘留）
+### Dead code（已清理 v0.1.13.0）
+- `systems/combat.js`：`addMutationPoints` stub 已移除，改為正式呼叫 mutation.js
+- `systems/hud.js`：`console.log && false` dead code 已移除
+- `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
 *最後更新：v0.1.11.0，由 CC 代碼掃描產出*

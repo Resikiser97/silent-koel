@@ -21,6 +21,7 @@ import { showSkillTree } from './evolution.js';
 import { incrementStat, updateStatMax } from '../stats/index.js';
 import { _archerAttack } from './player.js';
 import { handleTutorialStumpKill } from './tutorial.js';
+import { addMutationPoints } from './mutation.js';
 
 export function showFloatingText(wx, wy, text, color, fontSize) {
     const s = worldToScreen(wx, wy);
@@ -102,13 +103,6 @@ export function applyDamageToPlayer(rawDamage, attacker) {
         }
         showSkillTree();
     }
-}
-
-// DUPLICATE - 待 Stage 3 清理
-// ESM note: duplicated with systems/mutation.js by design; do not merge during Stage 2.
-function addMutationPoints(amount) {
-    // TODO: Phase 5 實作
-    console.log('[Mutation] +' + amount + ' points (pending Phase 5)');
 }
 
 export function handleGiantKill(c) {
