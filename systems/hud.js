@@ -757,7 +757,7 @@ function drawTopBarUI() {
     }
 
     // 決定顯示名稱與血條顏色
-    let displayName = _getCreatureDisplayName(target) || '目標';
+    let displayName = target.label || _getCreatureDisplayName(target) || '目標';
     let barColor    = '#AA22CC'; // 預設：精英紫色
     if (target === gameState.boss) {
         displayName = target.name || 'Boss';
@@ -790,14 +790,17 @@ function drawTopBarUI() {
     const barH  = _activeDebuffs.length > 0 ? 68 : 50;
     const x     = (VIEW_W - barW) / 2;
 
-    // 動態偵測左上角 UI 高度，換算為 Canvas 邏輯座標
+    // 動態偵測頂部 UI 高度，換算為 Canvas 邏輯座標
     let topBarY = 10;
-    const tlEl = document.getElementById('top-left');
-    if (tlEl) {
+    const topLeftEl = document.getElementById('top-left');
+    const minimapEl = document.getElementById('minimap-container');
+    if (topLeftEl || minimapEl) {
         const gc = document.getElementById('game-container');
         const scaleMatch = gc ? gc.style.transform.match(/scale\(([^)]+)\)/) : null;
         const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-        topBarY = (tlEl.offsetHeight / scale) + 8;
+        const topLeftBottom = topLeftEl ? topLeftEl.offsetHeight / scale : 0;
+        const minimapBottom = minimapEl ? minimapEl.offsetHeight / scale : 0;
+        topBarY = Math.max(topLeftBottom, minimapBottom) + 8;
     }
 
     ctx.save();

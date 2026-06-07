@@ -36,6 +36,8 @@ export function applyDayTransition() {
     gameState.isNight = false;
     if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) {
         gameState.eliteCreature = null;
+        gameState.topBarTarget    = null;
+        gameState.topBarFadeTimer = 0;
         gameState.dayNightMessage.text = t('morningEliteGone');
     } else {
         gameState.dayNightMessage.text = t('morningCome');
