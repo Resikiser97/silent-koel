@@ -1,4 +1,4 @@
-## v0.1.13.7
+## v0.1.14.0
 
 # The Silent Koel — 模組架構說明
 
@@ -125,6 +125,7 @@ systems/chat.js           _sha256, loadChatSettings, saveChatSettings
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
                           _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）
+                          _letterboxScale（當前縮放比例 export，v0.1.14.0）
 systems/hud.js            drawGame, updateUI, resetUICache, resetPerceptionCache, drawTopBarUI
                           drawMinimap（含所有 _minimap 變數 + _minimapAlpha/FadeTimer/StopTimer 透明度計時器，v0.0.66.1）, drawTreasures
                           drawProjectiles（子彈繪製）, updateMinimapFog（小地圖霧效更新）
@@ -586,11 +587,11 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 - `detectMobile()` — `ontouchstart in window` 或 `innerWidth <= 768` 視為手機
 - `getOrientation()` — `innerHeight > innerWidth` 為豎向，否則橫向
 - `applyDeviceMode()` — 同步 `gameState.forceMode/isMobile/orientation`，呼叫 `_applyMobileScale()` + `_updateJoystickCanvas()` + `_updateOrientationBar()`
-- `_applyMobileScale()` — 用 `CSS transform: scale()` 縮放 `#game-container`，**不改變內部遊戲座標**
-  - 縮放比例由 `MOBILE_GAME_SCALE`（預設 0.6）控制，定義在 `_applyMobileScale()` 上方
-  - 橫向：`logicW = round(1600 × MOBILE_GAME_SCALE)`，`logicH = round(900 × MOBILE_GAME_SCALE)`，`scale = vw / logicW`
-  - 直向：`logicW = round(900 × MOBILE_GAME_SCALE)`，`logicH = round(1600 × MOBILE_GAME_SCALE)`，`scale = vw / logicW`
-  - 調整手機畫面大小只需修改 `MOBILE_GAME_SCALE` 這一個變數，其餘系統（攝影機、生物生成、UI）自動跟著 `VIEW_W/VIEW_H` 更新
+- `_applyMobileScale()` — 統一 Letterbox 縮放（v0.1.14.0 重寫），電腦版與手機版共用同一套邏輯
+  - `scale = Math.min(vw / 1600, vh / 900)`，邏輯解析度永遠 1600×900，不呼叫 `_setViewSize()`
+  - `#game-container` 設為 1600×900 並以 `transform:scale(scale) / top-left origin` 置中
+  - `_letterboxScale`（export let）隨每次 resize 更新，供 chat.js 等模組讀取當前縮放比例
+  - `MOBILE_GAME_SCALE = 0.6` 標記 deprecated，保留以防外部引用
 
 ### 設定介面「裝置模式」區塊
 
