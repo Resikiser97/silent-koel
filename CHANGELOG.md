@@ -6,6 +6,9 @@
 
 ## v0.1.14.1 - 2026-06-08
 
+### 文件
+- config/compendium_data.js：補上草食性 Lv4/5 巨人化傷害 -15%/-30% 提示，並補充 Lv2 起果子 XP 增加說明
+
 ### 修復
 - systems/mobile.js：修復手機版 Letterbox 縮放導致畫面過小的問題；恢復 isMobile 分支——手機版仍使用填滿螢幕邏輯（MOBILE_GAME_SCALE × viewport），電腦版保留 Letterbox（Math.min）
 - systems/evolution.js：修復從首頁進入技能樹、切到變異頁後按關閉，聊天室沒有恢復顯示的問題

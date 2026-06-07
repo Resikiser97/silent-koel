@@ -83,8 +83,8 @@ export const COMPENDIUM_DATA = (function () {
                         id: 'evolution_paths',
                         title: { 'zh-TW': '進化路線', 'en': 'Evolution Paths' },
                         content: {
-                            'zh-TW': '器官槽位滿時觸發進化路線選擇，每條路線最高 ' + evMaxLv + ' 級，每局重置不繼承。\n🌿 草食性：提升 HP 與體型，高等級後中立生物對你完全友善，可安全穿越敵意地帶。\n🥩 肉食性：解鎖吃屍體獲得 XP，大幅強化攻擊力與攻速（Lv3 起）。\n⚖️ 雜食性：需草食性 Lv1 + 肉食性 Lv1 才能解鎖，提升速度；Lv1 自動獲得毒囊，可吞噬白骨累積白骨素強化毒囊。',
-                            'en': 'When organ slots are full an evolution selection triggers. Each path goes up to Lv' + evMaxLv + ' and resets every run.\n🌿 Herbivore: boosts HP and size; at higher levels neutral creatures become fully friendly.\n🥩 Carnivore: unlocks corpse eating for XP and greatly boosts attack power and attack speed (Lv3+).\n⚖️ Omnivore: requires Herbivore Lv1 + Carnivore Lv1; boosts speed and grants a Poison Sac at Lv1 — devour bones to keep upgrading it.'
+                            'zh-TW': '器官槽位滿時觸發進化路線選擇，每條路線最高 ' + evMaxLv + ' 級，每局重置不繼承。\n🌿 草食性：提升 HP 與體型，Lv2 起果子 XP 增加，Lv4 後中立生物完全友善；Lv4 巨人化傷害 -15%，Lv5 再降至 -30%。\n🥩 肉食性：解鎖吃屍體獲得 XP，大幅強化攻擊力與攻速（Lv3 起）。\n⚖️ 雜食性：需草食性 Lv1 + 肉食性 Lv1 才能解鎖，提升速度；Lv1 自動獲得毒囊，可吞噬白骨累積白骨素強化毒囊。',
+                            'en': 'When organ slots are full an evolution selection triggers. Each path goes up to Lv' + evMaxLv + ' and resets every run.\n🌿 Herbivore: boosts HP and size; fruit XP increases from Lv2; neutral creatures become fully friendly at Lv4; Lv4 reduces Giantized damage by 15%, Lv5 by 30%.\n🥩 Carnivore: unlocks corpse eating for XP and greatly boosts attack power and attack speed (Lv3+).\n⚖️ Omnivore: requires Herbivore Lv1 + Carnivore Lv1; boosts speed and grants a Poison Sac at Lv1 — devour bones to keep upgrading it.'
                         }
                     },
                     {
