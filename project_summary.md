@@ -1,4 +1,4 @@
-## v0.1.13.4
+## v0.1.13.5
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,7 +12,7 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本：** v0.1.13.3
+**現在版本：** v0.1.13.5
 
 **當前狀態：** 功能開發中，文件架構建立完成，變異技能樹 bug 修復完成，準備進入系統重構階段。
 
@@ -118,11 +118,11 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.13.5：修正 Patchnote 觸發時機，確保 Patchnote 與代碼同一 commit（instructions.md、patchnote.md）
+- v0.1.13.4：寫入 v0.1.13.3 Patchnote 公告條目（patchnotes.js）
 - v0.1.13.3：變異技能樹升級卡死、forceStart 路徑關閉卡死、手機版觸控升級修復
 - v0.1.13.2：DOC_INTEGRITY、project_summary 文件更新
 - v0.1.13.1：Skill 統一整理至 .claude/skills/，patchnote/compendium/file-header/magic-code Skill 建立
-- v0.1.13.0：QUICKREF.md 全面清理，addMutationPoints 修復，dead code 清除
-- v0.1.12.0：文件架構建立（DOC_INTEGRITY、ARCH、doc-audit Skill、instructions 修正）
 
 ### 已知問題（待修）
 - 🟡 v0.1.11.0 新功能未完整測試（毒霧隼雙技能、鬣狗車輪戰）

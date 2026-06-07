@@ -4,6 +4,8 @@
 3. 讀取 CHANGELOG.md — 確認當前版本號
 4. 讀取 QUICKREF.md — 版本號、檔案地圖、技術陷阱
 5. 讀取 VERSION_RULES.md — 版本號規則
+6. 讀取 MAIN.md — 只在需要查詢特定函式或系統細節時才讀取
+7. 確認 .claude/skills/ 下有哪些 Skill 可用
 
 ## 文件同步強制規則
 每次任務完成後必須：
@@ -22,7 +24,7 @@ AI 只能改 y 和 z，不得碰 v0 和 x。
 
 ---
 
-## v0.1.11.0
+## v0.1.13.4
 
 # Claude Code 自動讀取指引
 
@@ -47,7 +49,7 @@ AI 只能改 y 和 z，不得碰 v0 和 x。
 - 專案使用 ES Modules，main.js 為 `<script type="module">` 唯一入口，其餘檔案透過 ESM import 引入，不使用獨立 `<script src>` 標籤
 - 新增任何函式或功能必須更新 `MAIN.md` 對應模組說明
 - 函式如果已被移除或合併，必須從 `MAIN.md` 對應區塊刪除
-- 新增任何 JS 檔案時，必須同時在該檔案加上 File Header（格式見 SKILL_FILEHEADER.md）
+- 新增任何 JS 檔案時，必須同時在該檔案加上 File Header（格式見 `.claude/skills/file-header.md`）
 
 ---
 
@@ -87,11 +89,6 @@ gameConfig.js       ← version 欄位
 
 ### Step 1 — 讀取本次變更範圍
 讀取 `CHANGELOG.md` 最上方最新一條 entry，確認本次 commit 涉及哪些檔案和系統。
-
-### Step 1.2 — Patchnote 判斷
-執行「執行 patchnote」（見 `.claude/skills/patchnote.md`）。
-判斷本次變更是否影響玩家，若是則生成草稿等待確認後寫入。
-寫入後自動觸發「執行 compendium 檢查」。
 
 ### Step 1.5 — 強制檢查 JS 檔案結構變動
 讀取本次 commit 的異動清單。
@@ -154,19 +151,44 @@ gameConfig.js       ← version 欄位
 - 當前狀態：一句話描述現在的開發重點
 - 下一步：最多 4 條，按優先順序
 
-### Step 6 — 輸出 sync 報告
+### Step 6 — Patchnote 判斷（commit 前最後一步）
 
-每次執行完畢，輸出以下格式：
+**重要：Patchnote 必須在 commit 前確認，不能分開兩次 commit。**
+
+依照 `.claude/skills/patchnote.md` 判斷本次變更是否影響玩家：
+
+**需要 Patchnote（影響玩家）：**
+- 新增功能、攻擊、技能、生物行為
+- 數值調整（傷害、CD、速度、HP）
+- UI 變更
+- Bug 修復（玩家可感知的）
+
+**不需要 Patchnote（不影響玩家）：**
+- 純架構重組、文件更新、dead code 清理
+- 版本號同步、file header 更新
+- 內部重構（玩家感知不到的）
+
+若需要 Patchnote：
+1. 生成草稿，輸出給開發者確認
+2. **停止，等待開發者回覆「寫入 Patchnote」**
+3. 收到確認後：寫入 config/patchnotes.js → 執行 compendium 檢查 → commit + push
+4. 整個流程在同一個版本號完成，不分兩次 commit
+
+若不需要 Patchnote：
+→ 直接進入 Step 7
+
+### Step 7 — 輸出 sync 報告 + commit + push
 
 ```
 ── sync-docs 完成 ──
 版本：v0.x.y.z
-CHANGELOG.md    ：[已更新｜無需變動] → （一句話說明）
-QUICKREF.md     ：[已更新｜無需變動] → （一句話說明）
-MAIN.md         ：[已更新｜無需變動] → （一句話說明）
-project_summary ：[已更新｜無需變動] → （一句話說明）
-gameConfig      ：[已更新｜無需變動] → （一句話說明）
-版本號同步       ：✅ 5 個檔案頂部一致
+Patchnote     ：[已寫入 | 不影響玩家，跳過]
+CHANGELOG.md  ：[已更新｜無需變動] → （一句話說明）
+QUICKREF.md   ：[已更新｜無需變動] → （一句話說明）
+MAIN.md       ：[已更新｜無需變動] → （一句話說明）
+project_summary：[已更新｜無需變動] → （一句話說明）
+gameConfig    ：[已更新｜無需變動] → （一句話說明）
+版本號同步     ：✅ 5 個檔案頂部一致
 ────────────────────
 ```
 
@@ -174,16 +196,18 @@ gameConfig      ：[已更新｜無需變動] → （一句話說明）
 
 ## 手動觸發 sync-docs
 
-用戶輸入「sync-docs」時，執行相同的 Step 1～6。
+用戶輸入「sync-docs」時，執行相同的 Step 1～7。
 
 ---
 
 ## 修改完成後的固定順序
 
-1. sync-docs（Step 1～6）
-2. `git commit`
-3. `git push`（指令見下方）
-4. 回覆確認「已推送到 GitHub」
+1. sync-docs Step 1～5（文件更新）
+2. sync-docs Step 6（Patchnote 判斷，若需要則等開發者確認）
+3. sync-docs Step 7（輸出報告）
+4. `git commit`
+5. `git push`（指令見下方）
+6. 回覆確認「已推送到 GitHub」
 
 ---
 

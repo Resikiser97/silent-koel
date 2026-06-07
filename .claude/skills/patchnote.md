@@ -1,8 +1,10 @@
 # SKILL — Patchnote 生成 SOP
 
 > 呼叫方式：
-> - sync-docs 流程自動觸發（每次 commit 前）
+> - sync-docs Step 6 自動觸發（每次 commit 前）
 > - 「執行 patchnote」→ 手動觸發
+
+**重要原則：Patchnote 必須與代碼修改在同一個 commit，不能分開兩次 push。**
 
 ---
 
@@ -15,7 +17,7 @@
 
 ## 觸發條件
 
-sync-docs Step 1 完成後，判斷本次變更是否影響玩家：
+判斷本次變更是否影響玩家：
 
 **需要生成 Patchnote（影響玩家）：**
 - 新增功能、攻擊、技能、生物行為
@@ -63,8 +65,9 @@ sync-docs Step 1 完成後，判斷本次變更是否影響玩家：
 - 繁體中文
 - 每條一句話，簡潔
 - 純技術修復不列入
+- 空的陣列（added/changed/fixed）可省略
 
-### Step 4 — 輸出草稿，等待確認
+### Step 4 — 輸出草稿，停止等待確認
 
 ```
 ── Patchnote 草稿 v0.x.y.z ──
@@ -79,15 +82,21 @@ fixed:
   - [修復內容描述]
 
 ────────────────────
-確認後回覆「寫入 Patchnote」才執行寫入。
+⚠️ 確認後回覆「寫入 Patchnote」才執行寫入與 commit。
+在此之前不執行任何 commit 或 push。
 ```
 
-### Step 5 — 等用戶回覆「寫入 Patchnote」後才寫入 config/patchnotes.js
+### Step 5 — 等開發者回覆「寫入 Patchnote」後才執行
 
-寫入後自動觸發「執行 compendium 檢查」（見 compendium.md Skill）。
+收到確認後，依序執行：
+1. 寫入 config/patchnotes.js（插入陣列頂部）
+2. 執行「執行 compendium 檢查」（見 compendium.md）
+3. 繼續 sync-docs Step 7（輸出報告 + commit + push）
+
+整個流程在**同一個版本號**完成。
 
 ---
 
 ## 觸發時機
-- sync-docs 流程的 Step 1 之後自動判斷
+- sync-docs Step 6（每次 commit 前自動判斷）
 - 手動輸入「執行 patchnote」

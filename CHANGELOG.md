@@ -1,6 +1,14 @@
-## v0.1.13.4
+## v0.1.13.5
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.13.5 - 2026-06-07
+
+### 調整
+- .claude/instructions.md：Patchnote 判斷移至 Step 6，修正 commit 前必須等確認的流程
+- .claude/skills/patchnote.md：Step 4 加入明確停止等待規則，確保 Patchnote 與代碼同一 commit
 
 ---
 
