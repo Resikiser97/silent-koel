@@ -1,6 +1,19 @@
-## v0.1.11.0
+## v0.1.12.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.12.0 - 2026-06-07
+
+### 新增
+- 新建 DOC_INTEGRITY.md：文件完整性規範與進度，含優先級表、強制規則、已知過期清單
+- 新建 ARCH.md：架構說明（代碼優先），含模組清單、ESM 結構、gameState 欄位表、循環依賴清單
+- 新建 .claude/skills/doc-audit.md：doc-audit Skill，含執行步驟與輸出格式
+
+### 調整
+- .claude/instructions.md：加入開始任務前必讀區塊、文件同步強制規則、版本號規則；ESM 規則修正（移除「不使用 ES Modules」舊描述）；讀取清單更新加入 DOC_INTEGRITY.md 和 ARCH.md
+- MAIN.md：修正 6 處過期 ESM 描述（「全域作用域」→ ESM import/export；「傳統 script 標籤」→ type="module"；「全域常數」→ ESM 匯出常數）
 
 ---
 

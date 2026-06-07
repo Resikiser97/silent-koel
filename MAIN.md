@@ -1,8 +1,8 @@
-## v0.1.11.0
+## v0.1.12.0
 
 # The Silent Koel — 模組架構說明
 
-## 載入順序（index.html `<body>` 末端）
+## 模組依賴順序（ESM import 鏈，入口為 main.js）
 
 ```
 config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES, HARD_ELITE_CONFIG
@@ -562,7 +562,7 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 
 ## map/ 資料夾
 
-難度地圖配置資料，各檔案定義一個全域常數（如 `EASY_MAP`），在 `config/evolution.js` 之後、`lang.js` 之前載入。
+難度地圖配置資料，各檔案定義並匯出一個 ESM 常數（如 `export const EASY_MAP`），由 `main.js` 透過 ESM `import` 引入。
 
 | 檔案 | 說明 |
 |------|------|
@@ -575,7 +575,7 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 
 地形生成流程：4D Tileable Noise → 保護區強制森林 → `mergeSmallRegions`（同化小於 `minBiomeTiles` 的孤島）→ `ensureRequiredBiomes`（最多 10 次重試，超過則 minBiomeTiles 減半）→ `buildTerrainCanvas`。
 
-全域預設值 `MAP_RULES.MIN_BIOME_TILES = 250`；各地圖可在 `terrain.minBiomeTiles` 覆蓋。
+模組層級預設值 `MAP_RULES.MIN_BIOME_TILES = 250`（定義於 `map.js`）；各地圖可在 `terrain.minBiomeTiles` 覆蓋。
 
 ---
 
@@ -838,7 +838,7 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 
 ### buildEvoLevelDesc(pathId, upToLevel)（v0.47.1）
 
-- **位置**：`systems/ui.js`，全域函式，定義於 `showCompendium()` 之前
+- **位置**：`systems/ui.js`，由 ui.js 匯出的函式，定義於 `showCompendium()` 之前
 - 從 `EVOLUTION_PATHS[pathId].levels` 動態計算，`config/evolution.js` 改數值後自動同步
 - **草食性**：HP / 果子XP 累計，體型取最新值，行為說明依等級固定文字（撞到不逃跑/被攻擊不逃跑）
 - **肉食性**：攻擊/屍體XP/吞噬時間/攻速 取當級固定值（非累計）
@@ -848,7 +848,7 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 
 ## 版本更新公告系統（v0.42.0）
 
-- **資料檔**：`config/patchnotes.js`，定義全域常數 `PATCH_NOTES`（陣列），最新版本置頂（index 0）
+- **資料檔**：`config/patchnotes.js`，定義並匯出 ESM 常數 `PATCH_NOTES`（陣列），最新版本置頂（index 0）
 - **欄位格式**：`{ version, date, added[], fixed[], changed[] }`，沒有內容的欄位可省略
 - **`showPatchNotes()`**（`systems/ui.js`）：彈出公告面板（z-index 210），左側垂直 Tab 切換版本，右側顯示分類內容；建立 `readInSession` Set 追蹤已讀 Tab，所有未讀版本都點開後才更新 `lastSeenPatchVersion` 並消除紅點（v0.47.1 修復）
 - **`checkPatchNotesPopup()`**（`systems/ui.js`）：在 `showStartScreen()` 末尾呼叫；新玩家（無 `hasPlayedBefore`）跳過；有未讀版本（`lastSeenPatchVersion !== PATCH_NOTES[0].version`）時自動 setTimeout 400ms 彈出
@@ -1011,8 +1011,10 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 `gameState.organSelectionActive = false` **必須在** `showOrganSelection()` 之前設定，
 否則選擇隱藏器官後關閉 overlay 時遊戲會短暫恢復。
 
-### 全域函式作用域
-本專案**不使用 ES Modules**，所有函式皆為全域作用域，可跨檔案直接呼叫。
+### 模組載入方式
+專案使用 **ES Modules**，所有檔案透過 `import`/`export` 互相依賴，`main.js` 為主要入口。
+跨檔案呼叫必須透過 `import` 明確引入，不存在全域作用域自動共享。
 
 ### script 標籤位置
-所有 `<script src>` 標籤置於 `<body>` **末端**（非 `<head>`），確保 canvas/DOM 已就緒。
+`main.js` 以 `<script type="module" src="./main.js">` 單一標籤載入（位於 `index.html` body 末端）。
+其餘所有檔案透過 ESM `import` 引入，不使用獨立 `<script src>` 標籤。

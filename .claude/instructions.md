@@ -1,4 +1,28 @@
-## v0.0.65.0
+## ⚠️ 開始任何任務前必讀
+1. 讀取 DOC_INTEGRITY.md — 了解文件規範與進度
+2. 讀取 ARCH.md — 了解實際架構
+3. 讀取 CHANGELOG.md — 確認當前版本號
+4. 讀取 QUICKREF.md — 版本號、檔案地圖、技術陷阱
+5. 讀取 VERSION_RULES.md — 版本號規則
+
+## 文件同步強制規則
+每次任務完成後必須：
+- 同步修改的檔案 file header
+- 如有新增/修改函式，更新 QUICKREF.md
+- 更新 CHANGELOG.md 版本條目
+- 如架構改變，更新 ARCH.md
+
+## 版本號規則
+見 VERSION_RULES.md。完整格式：v0.x.y.z
+- v0 = 開發階段，由 Goblinnest 決定
+- x  = 賽季版本，由 Goblinnest 決定，升級後排行榜重置
+- y  = 功能版本，AI 可進位（新功能 / 重構）
+- z  = 修復版本，AI 可進位（bug fix）
+AI 只能改 y 和 z，不得碰 v0 和 x。
+
+---
+
+## v0.1.11.0
 
 # Claude Code 自動讀取指引
 
@@ -6,10 +30,12 @@
 
 ## 每次對話開始前必須依序讀取
 
-1. `QUICKREF.md` ← 版本號、檔案地圖、技術陷阱（每次必讀）
-2. `CHANGELOG.md` ← 最新版本與近期變更（每次必讀）
-3. `VERSION_RULES.md` ← 版本號規則（每次必讀）
-4. `MAIN.md` ← 只在需要查詢特定函式或系統細節時才讀取
+1. `DOC_INTEGRITY.md` ← 文件規範與進度（每次必讀）
+2. `ARCH.md` ← 實際架構說明（每次必讀）
+3. `QUICKREF.md` ← 版本號、檔案地圖、技術陷阱（每次必讀）
+4. `CHANGELOG.md` ← 最新版本與近期變更（每次必讀）
+5. `VERSION_RULES.md` ← 版本號規則（每次必讀）
+6. `MAIN.md` ← 只在需要查詢特定函式或系統細節時才讀取
 
 ---
 
@@ -17,7 +43,7 @@
 
 - `gameLoop` 裡絕對不能出現字面上的 `\n` 字符
 - 數值只能在 `config/` 資料夾修改，不在 `systems/` 寫死數值
-- 不使用 ES Modules，全部用傳統 `<script>` 標籤
+- 專案使用 ES Modules，main.js 為 `<script type="module">` 唯一入口，其餘檔案透過 ESM import 引入，不使用獨立 `<script src>` 標籤
 - 新增任何函式或功能必須更新 `MAIN.md` 對應模組說明
 - 函式如果已被移除或合併，必須從 `MAIN.md` 對應區塊刪除
 - 新增任何 JS 檔案時，必須同時在該檔案加上 File Header（格式見 SKILL_FILEHEADER.md）
@@ -44,12 +70,12 @@ CHANGELOG.md        ← 第一行
 MAIN.md             ← 第一行
 project_summary.md  ← 第一行
 QUICKREF.md         ← 第一行 + 第十一行
-gameConfig.js       ← 第九行
+gameConfig.js       ← version 欄位
 ```
 
 格式統一為：
 ```markdown
-## v0.0.X.0
+## v0.x.y.z
 ```
 
 **若有任何一個檔案頂部版本號落後，視為 sync-docs 未完成。**
@@ -70,8 +96,8 @@ gameConfig.js       ← 第九行
 ### Step 2 — 更新 CHANGELOG.md 頂部版本號
 將 `CHANGELOG.md` 第一行改為當前版本號。
 
-### Step 2.5 — 更新 CHANGELOG.md 頂部版本號
-將 `gameConfig.js` version 改為當前版本號。
+### Step 2.5 — 更新 gameConfig.js 版本號
+將 `gameConfig.js` version 欄位改為當前版本號。
 
 ### Step 3 — 檢查並更新 QUICKREF.md
 比對本次變更，逐一確認以下觸發條件：
@@ -113,7 +139,7 @@ gameConfig.js       ← 第九行
 
 ```
 ── sync-docs 完成 ──
-版本：v0.0.X.0
+版本：v0.x.y.z
 CHANGELOG.md    ：[已更新｜無需變動] → （一句話說明）
 QUICKREF.md     ：[已更新｜無需變動] → （一句話說明）
 MAIN.md         ：[已更新｜無需變動] → （一句話說明）
@@ -166,7 +192,7 @@ gameConfig      ：[已更新｜無需變動] → （一句話說明）
 3. `git merge master`
 4. `git push origin stable`
 5. `git checkout master`
-6. 回報確認「stable 已同步至 v0.0.X.0」
+6. 回報確認「stable 已同步至 v0.x.y.z」
 
 ### 重要規則
 - 不要自動執行 stable 同步，必須等開發者說「請同步 stable」才執行
