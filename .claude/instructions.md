@@ -56,7 +56,6 @@ AI 只能改 y 和 z，不得碰 v0 和 x。
 **難度保留規則（必讀）：**
 - 任何「再來一次」或「重開局」的流程，結束遊戲後必須把 lastDifficulty（`'easy'` / `'normal'` / `'hard'`）寫入 localStorage `LAST_DIFFICULTY` key
 - `main.js` 的難度恢復邏輯必須同時處理三種難度，缺少任何一個分支都算 bug
-- **新增地圖難度時，必須同步在 `main.js` 頂部 import 對應的 MAP 常數；`typeof X !== 'undefined'` 守衛無法替代 import，未 import 的變數永遠是 undefined**
 
 ---
 

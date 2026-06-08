@@ -10,7 +10,6 @@ import { CHARACTERS } from './config/characters.js';
 import { ORGANS } from './config/organs.js';
 import { EASY_MAP } from './map/easymap.js';
 import { NORMAL_MAP } from './map/normalmap.js';
-import { HARD_MAP }   from './map/hardmap.js';
 import { gameState, canvas } from './systems/gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, generateTerrain, generateTrees } from './systems/map.js';
 import { updateCamera, _updateCameraZoom } from './systems/camera.js';
@@ -441,8 +440,14 @@ export function initializeGame() {
     if (!gameState.currentMap) {
         const savedDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
         gameState.lastDifficulty = savedDiff;
-        const _restoreMap = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
-        gameState.currentMap = _restoreMap[savedDiff] || EASY_MAP;
+        if (savedDiff === 'hard' && typeof HARD_MAP !== 'undefined') {
+            gameState.currentMap = HARD_MAP;
+        } else if (savedDiff === 'normal' && typeof NORMAL_MAP !== 'undefined') {
+            gameState.currentMap = NORMAL_MAP;
+        } else {
+            gameState.currentMap = typeof EASY_MAP !== 'undefined' ? EASY_MAP : null;
+        }
+        console.log('[v0.47.0 B1] currentMap restored:', gameState.currentMap ? gameState.currentMap.name : 'null');
     }
     gameState.mapSeed = Math.random() * 65536;
     if (typeof initEliteOrder === 'function') initEliteOrder();
@@ -656,10 +661,6 @@ window.onload = () => {
 
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
-        const _lastDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
-        const _diffMapTable = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
-        gameState.currentMap        = _diffMapTable[_lastDiff] || EASY_MAP;
-        gameState.lastDifficulty    = _lastDiff;
         gameState.selectedCharacter = storageGet(STORAGE_KEYS.LAST_CHARACTER) || 'koel';
         startGameWithLoading();
         return;

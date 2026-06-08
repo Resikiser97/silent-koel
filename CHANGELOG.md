@@ -1,21 +1,6 @@
-## v0.1.14.5
+## v0.1.14.3
 
 # CHANGELOG — 只吃不叫的噪鵑
-
----
-
-## v0.1.14.5 - 2026-06-08
-
-### 修復
-- main.js：修復 window.onload 的 autostart 路徑未設 currentMap/lastDifficulty 的根本原因——補上與 ui.js showStartScreen 一致的難度恢復邏輯，Hard 模式再來一場現在可以正確使用 HARD_MAP
-- main.js：簡化 initializeGame() 的 currentMap restore block，改用查表取代多重 typeof 判斷
-
----
-
-## v0.1.14.4 - 2026-06-08
-
-### 修復
-- main.js：補上遺漏的 `HARD_MAP` import；之前 `typeof HARD_MAP !== 'undefined'` 永遠為 false，困難模式再來一場實際上走的是 easy 分支
 
 ---
 
