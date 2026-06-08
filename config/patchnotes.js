@@ -7,6 +7,13 @@
 
 export const PATCH_NOTES = [
     {
+        version: 'v0.1.14.4',
+        date: '2026-06-08',
+        fixed: [
+            '修復困難模式「再來一場」仍會切回簡單難度的根本原因（缺少 HARD_MAP 模組載入）',
+        ],
+    },
+    {
         version: 'v0.1.14.3',
         date: '2026-06-08',
         fixed: [

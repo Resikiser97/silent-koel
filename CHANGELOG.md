@@ -1,6 +1,13 @@
-## v0.1.14.3
+## v0.1.14.4
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.14.4 - 2026-06-08
+
+### 修復
+- main.js：補上遺漏的 `HARD_MAP` import；之前 `typeof HARD_MAP !== 'undefined'` 永遠為 false，困難模式再來一場實際上走的是 easy 分支
 
 ---
 
