@@ -7,6 +7,13 @@
 
 export const PATCH_NOTES = [
     {
+        version: 'v0.1.14.5',
+        date: '2026-06-08',
+        fixed: [
+            '完整修復困難模式「再來一場」後仍回到簡單難度的問題',
+        ],
+    },
+    {
         version: 'v0.1.14.4',
         date: '2026-06-08',
         fixed: [

@@ -441,14 +441,8 @@ export function initializeGame() {
     if (!gameState.currentMap) {
         const savedDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
         gameState.lastDifficulty = savedDiff;
-        if (savedDiff === 'hard' && typeof HARD_MAP !== 'undefined') {
-            gameState.currentMap = HARD_MAP;
-        } else if (savedDiff === 'normal' && typeof NORMAL_MAP !== 'undefined') {
-            gameState.currentMap = NORMAL_MAP;
-        } else {
-            gameState.currentMap = typeof EASY_MAP !== 'undefined' ? EASY_MAP : null;
-        }
-        console.log('[v0.47.0 B1] currentMap restored:', gameState.currentMap ? gameState.currentMap.name : 'null');
+        const _restoreMap = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
+        gameState.currentMap = _restoreMap[savedDiff] || EASY_MAP;
     }
     gameState.mapSeed = Math.random() * 65536;
     if (typeof initEliteOrder === 'function') initEliteOrder();
@@ -662,6 +656,10 @@ window.onload = () => {
 
     if (sessionStorage.getItem('autostart')) {
         sessionStorage.removeItem('autostart');
+        const _lastDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
+        const _diffMapTable = { easy: EASY_MAP, normal: NORMAL_MAP, hard: HARD_MAP };
+        gameState.currentMap        = _diffMapTable[_lastDiff] || EASY_MAP;
+        gameState.lastDifficulty    = _lastDiff;
         gameState.selectedCharacter = storageGet(STORAGE_KEYS.LAST_CHARACTER) || 'koel';
         startGameWithLoading();
         return;
