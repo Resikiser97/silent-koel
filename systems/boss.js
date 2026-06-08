@@ -7,7 +7,7 @@
 import { gameState, ctx } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
 import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
-import { GAME_INFO } from '../config/gameConfig.js';
+import { GAME_INFO, GAME_TIMING } from '../config/gameConfig.js';
 import { BOSS_CONFIG } from '../config/creatures.js';
 import { AudioManager } from './audio.js';
 import { moveCreature } from './spawning.js';
@@ -1058,8 +1058,9 @@ export function handleBossKill(boss) {
             _triggerHunterPhaseCheck(boss);
             addXP(300);
             gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + 1;
-            // 每管擊破加30秒（最多4管×30s = +120s）
-            gameState.timeRemaining += 30;
+            // 每管擊破加30秒；上限夾在 phase 7 天花板，防止 phaseIndex 退回觸發日夜切換
+            const _phase7Ceiling = GAME_TIMING.totalTime - 7 * GAME_TIMING.phaseLength;
+            gameState.timeRemaining = Math.min(gameState.timeRemaining + 30, _phase7Ceiling);
             showFloatingText(boss.x, boss.y - 40, '💠 血管擊破！+300XP  +30秒', '#4FC3F7', 16);
         }
         return;

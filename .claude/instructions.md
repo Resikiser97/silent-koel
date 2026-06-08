@@ -53,6 +53,12 @@ AI 只能改 y 和 z，不得碰 v0 和 x。
 
 ---
 
+**難度保留規則（必讀）：**
+- 任何「再來一次」或「重開局」的流程，結束遊戲後必須把 lastDifficulty（`'easy'` / `'normal'` / `'hard'`）寫入 localStorage `LAST_DIFFICULTY` key
+- `main.js` 的難度恢復邏輯必須同時處理三種難度，缺少任何一個分支都算 bug
+
+---
+
 **Magic Code / Magic Number 禁止規則：**
 - 禁止在 systems/ 寫死數值，所有遊戲數值必須定義在 config/ 的常數後引用
 - 禁止用名稱字串做邏輯判斷（如 name.includes('蠍王')），

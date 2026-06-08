@@ -1,6 +1,25 @@
-## v0.1.14.1
+## v0.1.14.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.14.3 - 2026-06-08
+
+### 修復
+- systems/boss.js：修復黑色獵人每管擊破後 +30 秒導致 phaseIndex 退回偶數、觸發日夜切換的問題；加時後的 timeRemaining 上限夾在 phase 7 天花板（75 秒）
+- systems/hud.js：補上黑色獵人頂部 HUD 血條的 Hunter 專屬顯示——依 barsRemaining 顯示對應階段顏色、下一管預覽（20% 透明）、剩餘管數 xN 標籤
+
+---
+
+## v0.1.14.2 - 2026-06-08
+
+### 修復
+- systems/creatures.js：移除草食性 Lv4/Lv5 巨人不攻擊玩家的錯誤條件（giantHerbLv < 4），巨人永遠將玩家列為可選目標
+- systems/creatures.js：修復巨人到達果子旁後卡死震動的問題；補上吃果子碰撞判斷，到達後立刻移除果子並清除目標
+- systems/utils.js：drawArrow() 加上黑色反色 outline（stroke 在 fill 前），避免箭頭在相似地形顏色下隱沒
+- main.js：修復「再來一次」難度恢復邏輯缺少 hard 分支的問題；補上三種難度完整判斷
+- .claude/instructions.md：加入難度保留規則，要求再來一次流程必須寫入 LAST_DIFFICULTY，且難度恢復必須覆蓋三個分支
 
 ---
 

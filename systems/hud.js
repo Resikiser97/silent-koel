@@ -828,8 +828,43 @@ function drawTopBarUI() {
 
     // 血條（彩色）
     const hpRatio = Math.max(0, Math.min(1, target.hp / (target.maxHp || 100)));
-    ctx.fillStyle = barColor;
-    ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
+    if (target === gameState.boss && target.biome === 'hunter') {
+        const hunterBarColors  = { 5:'#4FC3F7', 4:'#1976D2', 3:'#FF9800', 2:'#E64A19', 1:'#FF1744' };
+        const hunterNextColors = { 5:'#1976D2', 4:'#FF9800', 3:'#E64A19', 2:'#FF1744', 1: null };
+        const hBars  = target.barsRemaining || 1;
+        const hColor = hunterBarColors[hBars]  || '#FF1744';
+        const hNext  = hunterNextColors[hBars];
+        if (hBars === 1) {
+            ctx.save();
+            ctx.shadowBlur  = 15;
+            ctx.shadowColor = '#FF1744';
+        }
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle   = hColor;
+        ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
+        if (hBars === 1) ctx.restore();
+        ctx.globalAlpha = 1;
+        if (hNext) {
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle   = hNext;
+            ctx.fillRect(hpBarX + hpBarW * hpRatio, hpBarY, hpBarW * (1 - hpRatio), hpBarH);
+            ctx.globalAlpha = 1;
+        }
+        if (hBars > 1) {
+            ctx.save();
+            ctx.fillStyle    = '#fff';
+            ctx.font         = getGameFont(isMobileTopBar ? 9 : 11, true);
+            ctx.textAlign    = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor  = '#000';
+            ctx.shadowBlur   = 3;
+            ctx.fillText('x' + hBars, hpBarX + hpBarW + 6, hpBarY + hpBarH / 2);
+            ctx.restore();
+        }
+    } else {
+        ctx.fillStyle = barColor;
+        ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
+    }
 
     // HP 數值
     ctx.fillStyle = '#CCC';

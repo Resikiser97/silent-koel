@@ -440,9 +440,13 @@ export function initializeGame() {
     if (!gameState.currentMap) {
         const savedDiff = storageGet(STORAGE_KEYS.LAST_DIFFICULTY) || 'easy';
         gameState.lastDifficulty = savedDiff;
-        gameState.currentMap = (savedDiff === 'normal' && typeof NORMAL_MAP !== 'undefined')
-            ? NORMAL_MAP
-            : (typeof EASY_MAP !== 'undefined' ? EASY_MAP : null);
+        if (savedDiff === 'hard' && typeof HARD_MAP !== 'undefined') {
+            gameState.currentMap = HARD_MAP;
+        } else if (savedDiff === 'normal' && typeof NORMAL_MAP !== 'undefined') {
+            gameState.currentMap = NORMAL_MAP;
+        } else {
+            gameState.currentMap = typeof EASY_MAP !== 'undefined' ? EASY_MAP : null;
+        }
         console.log('[v0.47.0 B1] currentMap restored:', gameState.currentMap ? gameState.currentMap.name : 'null');
     }
     gameState.mapSeed = Math.random() * 65536;

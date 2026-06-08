@@ -43,6 +43,9 @@ export function drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadiu
     ctx.lineTo(ax - cx * 10 - cy * 3, ay - cy * 10 + cx * 3);
     ctx.lineTo(ax - cx * 10 + cy * 3, ay - cy * 10 - cx * 3);
     ctx.closePath();
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
     ctx.fill();
     ctx.restore();
 }

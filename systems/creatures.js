@@ -1083,11 +1083,8 @@ export function updateNeutralCreatures() {
                     giantTarget = creature.guardianTarget;
                 } else {
                     creature.guardianTarget = null;
-                    const giantHerbLv = p.evolution.herbivore || 0;
-                    if (giantHerbLv < 4) {
-                        const dp = wrappedDistance(creature.x, creature.y, p.x, p.y);
-                        if (dp < giantTargetDist) { giantTarget = p; giantTargetDist = dp; }
-                    }
+                    const dp = wrappedDistance(creature.x, creature.y, p.x, p.y);
+                    if (dp < giantTargetDist) { giantTarget = p; giantTargetDist = dp; }
                     for (const h of gameState.hostileCreatures) {
                         if (h.hp <= 0) continue;
                         const d = wrappedDistance(creature.x, creature.y, h.x, h.y);
@@ -1173,9 +1170,18 @@ export function updateNeutralCreatures() {
                     creature._fruitTarget = gfClosest;
                 }
                 if (creature._fruitTarget) {
-                    const { dx: ftdx, dy: ftdy } = wrappedDelta(creature.x, creature.y,
+                    const ftDist = wrappedDistance(creature.x, creature.y,
                         creature._fruitTarget.x, creature._fruitTarget.y);
-                    creature._moveAngle = Math.atan2(ftdy, ftdx);
+                    if (ftDist < creature.radius + 6) {
+                        const idx = gameState.fruits.indexOf(creature._fruitTarget);
+                        if (idx !== -1) gameState.fruits.splice(idx, 1);
+                        creature._fruitTarget = null;
+                        creature._fruitTargetTimer = 0;
+                    } else {
+                        const { dx: ftdx, dy: ftdy } = wrappedDelta(creature.x, creature.y,
+                            creature._fruitTarget.x, creature._fruitTarget.y);
+                        creature._moveAngle = Math.atan2(ftdy, ftdx);
+                    }
                 } else {
                     creature._moveAngle = (creature._moveAngle || 0) + (Math.random() - 0.5) * 0.12;
                 }
