@@ -7,6 +7,13 @@
 
 export const PATCH_NOTES = [
     {
+        version: 'v0.1.14.4',
+        date: '2026-06-08',
+        fixed: [
+            '困難模式小地圖難度標籤現在正確顯示「💀 困難」（之前一律顯示「🌿 簡單」）',
+        ],
+    },
+    {
         version: 'v0.1.14.3',
         date: '2026-06-08',
         fixed: [

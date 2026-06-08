@@ -10,6 +10,7 @@ import { CHARACTERS } from './config/characters.js';
 import { ORGANS } from './config/organs.js';
 import { EASY_MAP } from './map/easymap.js';
 import { NORMAL_MAP } from './map/normalmap.js';
+import { HARD_MAP } from './map/hardmap.js';
 import { gameState, canvas } from './systems/gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, generateTerrain, generateTrees } from './systems/map.js';
 import { updateCamera, _updateCameraZoom } from './systems/camera.js';

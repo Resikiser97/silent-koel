@@ -1757,7 +1757,7 @@ export function updateUI() {
     const diffEl = document.getElementById('minimap-difficulty');
     if (diffEl) {
         diffEl.textContent = gameState.currentMap
-            ? (gameState.currentMap.name === '普通' ? '⚔️ 普通' : '🌿 簡單')
+            ? (gameState.currentMap.name === '困難' ? '💀 困難' : gameState.currentMap.name === '普通' ? '⚔️ 普通' : '🌿 簡單')
             : '🌿 簡單';
     }
 }
