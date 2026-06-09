@@ -51,4 +51,6 @@ export const EASY_MAP = {
     // 生物技能（預留，之後填入）
     creatureAbilities: {
         neutral: [],
- 
+        hostile: [],
+    },
+};

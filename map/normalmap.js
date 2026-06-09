@@ -53,4 +53,7 @@ export const NORMAL_MAP = {
     },
 
     creatureAbilities: {
-        neutral: [],
+        neutral: [],
+        hostile: [],
+    },
+};

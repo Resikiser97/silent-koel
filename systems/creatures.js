@@ -1950,4 +1950,18 @@ export function drawHostileCreatures() {
             }
             // ── 鬣狗隊名標籤 ──
             if (creature.speciesId === 'hyena' && creature.packName) {
-                const packCount = gameState.hostileCreatur
+                const packCount = gameState.hostileCreatures.filter(
+                    c => c.speciesId === 'hyena' && c.packGroup === creature.packGroup && c.packName === creature.packName && c.hp > 0
+                ).length;
+                _drawCenteredCreatureText(
+                    creature.packName + '(' + Math.min(packCount, HYENA_PACK_LIMIT) + '/' + HYENA_PACK_LIMIT + ')',
+                    s.x,
+                    s.y + creature.radius * (gameState.cameraZoom || 1) + 14,
+                    getGameFont(CREATURE_TEAM_FONT_SIZE, false),
+                    'rgba(255, 200, 100, 0.85)',
+                    3
+                );
+            }
+        }
+    }
+}

@@ -50,4 +50,6 @@ export const HARD_MAP = {
 
     creatureAbilities: {
         neutral: [],
- 
+        hostile: [],
+    },
+};

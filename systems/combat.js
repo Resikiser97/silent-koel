@@ -602,4 +602,14 @@ export function drawBones() {
         // 骨頭吞噬進度條
         if (bone.eatProgress > 0) {
             const barW = r * 2, barH = 3;
- 
+            const barX = s.x - barW / 2;
+            const barY = s.y - r - 7;
+            ctx.globalAlpha = 0.85;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(barX, barY, barW, barH);
+            ctx.fillStyle = '#AADDFF';
+            ctx.fillRect(barX, barY, barW * bone.eatProgress, barH);
+        }
+        ctx.restore();
+    }
+}
