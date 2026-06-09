@@ -125,9 +125,14 @@ export function handleGiantKill(c) {
     spawnLootCircle(c.x, c.y, items);
 
     // 變異點掉落
-    // 普通巨人：100% +1
-    // Alpha：100% +2；20% 機率額外 +2~6
-    addMutationPoints(c.isAlpha ? 2 : 1);
+    // 普通：普通巨人+1，Alpha+2（20%機率額外+2~6）
+    // 困難：普通巨人+3，Alpha+5（20%機率額外+2~6）
+    const isHard = !!(gameState.currentMap && gameState.currentMap.difficulty === 'hard');
+    if (isHard) {
+        addMutationPoints(c.isAlpha ? 5 : 3);
+    } else {
+        addMutationPoints(c.isAlpha ? 2 : 1);
+    }
     if (c.isAlpha && Math.random() < 0.2) {
         addMutationPoints(2 + Math.floor(Math.random() * 5));
     }
@@ -160,8 +165,9 @@ function handleKillerKill(creature) {
         { type: 'corpse', data: { multiplier: 1 } },
     ]);
 
-    // 變異點：100%掉落1個
-    addMutationPoints(1);
+    // 變異點：普通+1，困難+2
+    const isHardMap = !!(gameState.currentMap && gameState.currentMap.difficulty === 'hard');
+    addMutationPoints(isHardMap ? 2 : 1);
     // 殺手化後每吃1具N%機率額外掉落1~N個（N=killerCorpseEaten）
     const killerEaten = creature.killerCorpseEaten || 0;
     if (killerEaten > 0) {
@@ -596,14 +602,4 @@ export function drawBones() {
         // 骨頭吞噬進度條
         if (bone.eatProgress > 0) {
             const barW = r * 2, barH = 3;
-            const barX = s.x - barW / 2;
-            const barY = s.y - r - 7;
-            ctx.globalAlpha = 0.85;
-            ctx.fillStyle = '#333';
-            ctx.fillRect(barX, barY, barW, barH);
-            ctx.fillStyle = '#AADDFF';
-            ctx.fillRect(barX, barY, barW * bone.eatProgress, barH);
-        }
-        ctx.restore();
-    }
-}
+ 

@@ -3,8 +3,9 @@
 // =============================================================
 
 export const HARD_MAP = {
-    name:   '困難',
-    nameEn: 'Hard',
+    name:       '困難',
+    nameEn:     'Hard',
+    difficulty: 'hard',
 
     terrain: {
         noiseScale:          0.003,
@@ -49,6 +50,4 @@ export const HARD_MAP = {
 
     creatureAbilities: {
         neutral: [],
-        hostile: [],
-    },
-};
+ 

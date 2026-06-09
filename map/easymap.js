@@ -3,8 +3,9 @@
 // =============================================================
 
 export const EASY_MAP = {
-    name:   '簡單',
-    nameEn: 'Easy',
+    name:       '簡單',
+    nameEn:     'Easy',
+    difficulty: 'easy',
 
     // Noise 地形參數
     terrain: {
@@ -50,6 +51,4 @@ export const EASY_MAP = {
     // 生物技能（預留，之後填入）
     creatureAbilities: {
         neutral: [],
-        hostile: [],
-    },
-};
+ 

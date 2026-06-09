@@ -429,13 +429,15 @@ function _carnivoreEatCorpse(creature, corpse) {
     creature.radius  = creature.baseRadius * (1 + bonus);
 
     if (creature.isKiller) {
-        // 殺手化後繼續吃：killerCorpseEaten 計數，再疊加+10%基礎值
+        // 殺手化後繼續吃：killerCorpseEaten 計數，再疊加+10%基礎值（帶難度倍率）
+        const kStr = (gameState.currentMap && gameState.currentMap.creatureStrength && gameState.currentMap.creatureStrength.hostile)
+            || { hpMultiplier: 1, damageMultiplier: 1, speedMultiplier: 1 };
         creature.killerLevel = (creature.killerLevel || 0) + 1;
         creature.killerCorpseEaten++;
         const kBonus = creature.killerCorpseEaten * 0.1;
-        creature.damage  += creature.baseDamage * kBonus;
-        creature.speed   += creature.baseSpeed  * kBonus;
-        creature.maxHp   += creature.baseHp     * kBonus;
+        creature.damage  += creature.baseDamage * kStr.damageMultiplier * kBonus;
+        creature.speed   += creature.baseSpeed  * kStr.speedMultiplier  * kBonus;
+        creature.maxHp   += creature.baseHp     * kStr.hpMultiplier     * kBonus;
         creature.hp       = Math.min(creature.maxHp, creature.hp);
         creature.radius  += creature.baseRadius * kBonus;
     } else if (creature.corpseEaten >= 5 &&
@@ -466,13 +468,17 @@ function _carnivoreEatCorpse(creature, corpse) {
 
 // ── 殺手化觸發（吃滿5具）──
 function _triggerKiller(creature) {
+    const str = (gameState.currentMap && gameState.currentMap.creatureStrength && gameState.currentMap.creatureStrength.hostile)
+        || { hpMultiplier: 1, damageMultiplier: 1 };
     creature.isKiller          = true;
     creature.killerLevel       = 0;
     creature.killerCorpseEaten = 0;
-    creature.aggroRange       = creature.aggroRange * 2;
-    creature.damage           = creature.baseDamage * (1 + 0.5 + 0.1 * creature.corpseEaten);
-    creature.speed            = creature.baseSpeed  * (1 + 0.3 + 0.1 * creature.corpseEaten);
-    creature.killerRegenTimer = 0;
+    creature.aggroRange        = creature.aggroRange * 2;
+    // 血量×難度倍率×2，攻擊×難度倍率×1.5，速度維持生成時的難度速度
+    creature.maxHp             = creature.baseHp     * str.hpMultiplier * 2;
+    creature.hp                = Math.min(creature.maxHp, creature.hp);
+    creature.damage            = creature.baseDamage * str.damageMultiplier * 1.5;
+    creature.killerRegenTimer  = 0;
 }
 
 function _triggerGiantization(creature) {
@@ -1944,18 +1950,4 @@ export function drawHostileCreatures() {
             }
             // ── 鬣狗隊名標籤 ──
             if (creature.speciesId === 'hyena' && creature.packName) {
-                const packCount = gameState.hostileCreatures.filter(
-                    c => c.speciesId === 'hyena' && c.packGroup === creature.packGroup && c.packName === creature.packName && c.hp > 0
-                ).length;
-                _drawCenteredCreatureText(
-                    creature.packName + '(' + Math.min(packCount, HYENA_PACK_LIMIT) + '/' + HYENA_PACK_LIMIT + ')',
-                    s.x,
-                    s.y + creature.radius * (gameState.cameraZoom || 1) + 14,
-                    getGameFont(CREATURE_TEAM_FONT_SIZE, false),
-                    'rgba(255, 200, 100, 0.85)',
-                    3
-                );
-            }
-        }
-    }
-}
+                const packCount = gameState.hostileCreatur

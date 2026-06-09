@@ -3,8 +3,9 @@
 // =============================================================
 
 export const NORMAL_MAP = {
-    name:   '普通',
-    nameEn: 'Normal',
+    name:       '普通',
+    nameEn:     'Normal',
+    difficulty: 'normal',
 
     terrain: {
         noiseScale:          0.003,
@@ -52,7 +53,4 @@ export const NORMAL_MAP = {
     },
 
     creatureAbilities: {
-        neutral: [],
-        hostile: [],
-    },
-};
+        neutral: [],
