@@ -66,6 +66,13 @@ export function initMutationData() {
             levels: { fang: 0, tail: 0, wing: 0, eye: 0 }
         });
     }
+    // 修正從 localStorage 載入的 hasNewPoints（可能殘留舊值）
+    if (gameState.mutationData.hasNewPoints) {
+        const pts = gameState.mutationData.points;
+        const lv  = gameState.mutationData.levels;
+        const canAffordAny = lv && Object.values(lv).some(l => pts >= getMutationUpgradeCost(l || 0));
+        if (!canAffordAny) gameState.mutationData.hasNewPoints = false;
+    }
     applyMutationEffects();       // 設定初始倍率
     checkMutationCompensation();  // 執行補償（若需要）
     initMutationSkills();         // 載入變異技能樹資料

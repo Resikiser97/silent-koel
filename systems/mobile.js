@@ -385,6 +385,7 @@ export function _attachJoystickListeners() {
     if (_joyDocListeners) return;
 
     const onStart = (e) => {
+        AudioManager.unlock().catch(() => {});
         if (_joyPaused()) return;
         let handled = false;
         for (const touch of e.changedTouches) {

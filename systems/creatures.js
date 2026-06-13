@@ -1716,12 +1716,16 @@ export function updateHostileCreatures() {
                     const wheelPos = _hyenaWheelPosition(creature, pack, t);
                     const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, wheelPos.x, wheelPos.y);
                     const wheelDist = Math.sqrt(wdx * wdx + wdy * wdy);
-                    const wAngle = Math.atan2(wdy, wdx);
-                    creature._moveAngle = wAngle;
                     _applyHyenaBiomeBonus(creature);
                     let wheelSpeed = creature.speed * (creature._finalSpeedMult || 1.0);
                     if (creature._slowUntil && now < creature._slowUntil) wheelSpeed *= (creature._slowMult || 1.0);
-                    moveCreature(creature, creature.x + Math.cos(wAngle) * wheelSpeed, creature.y + Math.sin(wAngle) * wheelSpeed);
+                    if (wheelDist > 60) {
+                        creature._moveAngle = Math.atan2(wdy, wdx);
+                    } else {
+                        const toHyenaAngle = Math.atan2(creature.y - t.y, creature.x - t.x);
+                        creature._moveAngle = toHyenaAngle + Math.PI / 2;
+                    }
+                    moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * wheelSpeed, creature.y + Math.sin(creature._moveAngle) * wheelSpeed);
                     continue;
                 }
             }

@@ -1,6 +1,19 @@
-## v0.1.16.0
+## v0.1.16.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.16.1 - 2026-06-14
+
+### 修復
+- systems/mobile.js：修復 iOS 手機版完全無音效問題，touchstart handler 頂部補上 AudioManager.unlock()
+- systems/hud.js：修復 Boss 上方血條的 debuff 圖示靠左對齊（ix 改為固定 x+8）
+- systems/mutation.js：修復變異器官紅點在從 localStorage 載入舊存檔後仍殘留顯示的問題
+- systems/creatures.js：修復鬣狗圍圈抖動，改為距離遠時衝向目標點、距離近時沿切線繞圈
+- systems/hud.js：修復手機版公告位置（改為 VIEW_H * 0.45）
+- systems/hud.js：手機版 GameInfo 強制兩行顯示（行1：生態+時間，行2：難度+日夜）
+- systems/hud.js：手機版 Boss HP Bar 最寬限制為畫面寬度 55%
 
 ---
 

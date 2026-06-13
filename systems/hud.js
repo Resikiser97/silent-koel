@@ -676,6 +676,25 @@ function drawMinimap() {
         _infoEl.style.maxWidth  = mm + 'px';
         _infoEl.style.whiteSpace = 'normal';
         _infoEl.style.wordBreak  = 'break-all';
+        if (gameState.isMobile && !_infoEl._mobileLayout) {
+            _infoEl._mobileLayout = true;
+            const biomeEl = document.getElementById('minimap-biome');
+            const playtimeEl = document.getElementById('minimap-playtime');
+            const diffEl2 = document.getElementById('minimap-difficulty');
+            const smSpan = _infoEl.lastElementChild;
+            const r1 = document.createElement('div');
+            r1.style.cssText = 'display:flex;align-items:center;gap:3px;';
+            const r2 = document.createElement('div');
+            r2.style.cssText = 'display:flex;align-items:center;gap:3px;';
+            if (biomeEl)    { biomeEl.style.marginLeft    = '0'; r1.appendChild(biomeEl); }
+            if (playtimeEl) { playtimeEl.style.marginLeft = '0'; r1.appendChild(playtimeEl); }
+            if (diffEl2)    { diffEl2.style.marginLeft    = '0'; r2.appendChild(diffEl2); }
+            if (smSpan)     { smSpan.style.marginLeft     = '0'; r2.appendChild(smSpan); }
+            _infoEl.style.flexDirection = 'column';
+            _infoEl.style.fontSize = '10px';
+            _infoEl.appendChild(r1);
+            _infoEl.appendChild(r2);
+        }
     }
     if (!gameState.terrainMap) {
         _minimapCtx.fillStyle = '#222';
@@ -814,7 +833,9 @@ function drawTopBarUI() {
 
     // Boss HP UI：Boss、精英、巨人、Alpha 共用同一套上方大型目標血條
     // 桌面固定正上方中央；手機固定在 #top-left 正下方 slim bar
-    let barW  = isMobileTopBar && topLeftEl ? topLeftEl.offsetWidth / scale : 400;
+    let barW  = isMobileTopBar && topLeftEl
+        ? Math.min(topLeftEl.offsetWidth / scale, VIEW_W * 0.55)
+        : 400;
     let barH  = isMobileTopBar ? (_activeDebuffs.length > 0 ? 44 : 34) : (_activeDebuffs.length > 0 ? 68 : 50);
     let x     = isMobileTopBar && topLeftEl ? topLeftEl.offsetLeft / scale : (VIEW_W - barW) / 2;
     let topBarY = isMobileTopBar && topLeftEl ? (topLeftEl.offsetTop + topLeftEl.offsetHeight) / scale + 8 : 10;
@@ -901,7 +922,7 @@ function drawTopBarUI() {
         const iconSize = isMobileTopBar ? 10 : 14;
         const iconGap  = isMobileTopBar ? 3 : 4;
         const totalW   = _activeDebuffs.length * (iconSize + iconGap) - iconGap;
-        let ix = x + (barW - totalW) / 2;
+        let ix = x + 8;
         const iconY = topBarY + (isMobileTopBar ? 32 : 51);
 
         ctx.textBaseline = 'middle';
@@ -1361,7 +1382,7 @@ export function drawGame() {
         const isMobileView     = VIEW_W < 700;
         const announceFontSize = isMobileView ? 22 : 36;
         const announceMaxWidth = VIEW_W * 0.85;
-        const announceY        = gameState.isMobile ? VIEW_H * 0.15 : VIEW_H / 2;
+        const announceY        = gameState.isMobile ? VIEW_H * 0.45 : VIEW_H * 0.5;
         const lineH            = announceFontSize * 1.3;
         ctx.font = getGameFont(announceFontSize, true);
         ctx.textBaseline = 'middle';
