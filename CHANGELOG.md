@@ -4,6 +4,21 @@
 
 ---
 
+## v0.1.15.1 - 2026-06-13
+
+### 新增
+- Vite 打包 pipeline：`npm run build:itch` 產出 `silent-koel-itch.zip` 供 itch.io 上傳
+- `vite.config.js`：`base: './'`，bundle 輸出到根目錄 `index.js`（非 `assets/` 子目錄）
+- `scripts/pack-itch.js`：複製音效資料夾 + 用 archiver 產生 zip
+- `itch.md`：itch.io 部署 SOP 與 CDN 踩坑紀錄（供 Claude Chat 參考）
+
+### 調整
+- 音效資料夾 `Sound MP3/` 改名為 `sounds/`，子目錄 `New sound/` 改名為 `new/`
+- `config/gameConfig.js` 的 `AUDIO_FILES` 所有路徑同步更新（`Sound MP3/New sound/` → `sounds/new/`）
+- 刪除舊的 `Sound MP3/` 資料夾（itch.io CDN 對含空格目錄名回傳 403）
+
+---
+
 ## v0.1.15.0 - 2026-06-09
 
 ### 新增

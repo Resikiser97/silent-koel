@@ -1,4 +1,4 @@
-## v0.1.14.4
+## v0.1.15.1
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.14.4**
+- 版本：**v0.1.15.1**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -33,12 +33,18 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 ---
 
 ## 部署資訊
-| 環境 | 網址 |
-|------|------|
+| 環境 | 網址 / 指令 |
+|------|-------------|
 | GitHub | https://github.com/Resikiser97/silent-koel |
 | Vercel Master（測試） | silent-koel.vercel.app |
 | Vercel Stable（穩定） | silent-koel-git-stable-goblinnest-s-projects.vercel.app |
 | CC 推送指令（Windows） | `"C:\AI\Git\bin\git.exe" -C "c:\AI\VS CODE" push origin master` |
+| itch.io 打包 | `npm run build:itch` → 產出 `silent-koel-itch.zip` 上傳 |
+
+### itch.io 注意事項（詳見 `itch.md`）
+- ESM 子目錄 import 在 itch.io CDN 全部 403 → 必須用 Vite 打包成單一 `index.js`
+- 路徑不能有空格：音效目錄已改為 `sounds/`（非 `Sound MP3/`），子目錄 `sounds/new/`
+- itch.io 上傳設定：勾選「This file will be played in the browser」，Frame size 1600×900
 
 ---
 
@@ -50,10 +56,23 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `index.html` | HTML 結構 + CSS + 唯一 `<script type="module" src="./main.js">` 入口 |
 | `main.js` | ESM 入口 / isGamePaused / gameLoop / initializeGame / startGameWithLoading / window.onload |
 | `lang.js` | LANG_LIST、LANG 字典、applyLanguage()、t(key, params?) |
+| `vite.config.js` | Vite 打包設定（itch.io 用，`base: './'`，輸出 `index.js` 到根目錄）|
+| `itch.md` | itch.io 部署 SOP 與踩坑紀錄（給 Claude Chat 參考） |
 | `MAIN.md` | 完整模組架構、函式列表、跨模組依賴 |
 | `CHANGELOG.md` | 所有版本紀錄（最新在最上方） |
 | `VERSION_RULES.md` | 版本號更新規則 |
 | `.claude/instructions.md` | Claude Code 行為規則與 SOP |
+
+### scripts/
+| 檔案 | 職責 |
+|------|------|
+| `scripts/pack-itch.js` | 複製 `sounds/` → `dist/sounds/`，用 archiver 打包成 `silent-koel-itch.zip` |
+
+### sounds/
+| 路徑 | 說明 |
+|------|------|
+| `sounds/*.mp3` | 主要音效（無空格名稱，對應 `AUDIO_FILES` 路徑）|
+| `sounds/new/*.mp3` | 新增音效（精英怪、Boss、阿奇爾等）|
 
 ### config/
 | 檔案 | 職責 |

@@ -7,6 +7,9 @@
     "doc": "docs"
   },
   "scripts": {
+    "build": "vite build",
+    "build:itch": "vite build && node scripts/pack-itch.js",
+    "preview": "vite preview",
     "test": "vitest run --pool=threads",
     "test:watch": "vitest --pool=threads"
   },
@@ -24,10 +27,14 @@
   "homepage": "https://github.com/Resikiser97/silent-koel#readme",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "archiver": "^8.0.0",
+    "vite": "^8.0.16",
     "vitest": "^4.1.8"
   },
   "vitest": {
     "environment": "node",
-    "include": ["tests/**/*.test.js"]
+    "include": [
+      "tests/**/*.test.js"
+    ]
   }
 }
