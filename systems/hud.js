@@ -4,6 +4,7 @@ import { gameState, ctx, canvas } from './gameState.js';
 import { VIEW_W, VIEW_H, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, BIOME_COLOR, getBiome, drawTerrain } from './map.js';
 import { worldToScreen, wrappedDistance } from './camera.js';
 import { FIXED_DELTA, GAME_INFO } from '../config/gameConfig.js';
+import { BOSS_BAR_COLORS, BOSS_BAR_NEXT_COLORS } from '../config/creatures.js';
 import { getGameFont, drawArrow } from './utils.js';
 import { t } from '../lang.js';
 import { drawCorpses, drawNeutralCreatures, drawHostileCreatures, _getCreatureDisplayName } from './creatures.js';
@@ -178,6 +179,19 @@ function _drawArcherfish(ctx, sx, sy, r, p) {
     ctx.stroke();
 
     ctx.restore();
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+    if (ctx.measureText(text).width <= maxWidth) return [text];
+    let line = '';
+    for (let i = 0; i < text.length; i++) {
+        const test = line + text[i];
+        if (ctx.measureText(test).width > maxWidth) {
+            return [line, text.slice(i)];
+        }
+        line = test;
+    }
+    return [text];
 }
 
 // ── 毒霧隼飛行毒球 + 地面腐蝕液體（地形之上、生物之下）
@@ -657,6 +671,12 @@ function drawMinimap() {
         _minimapCanvas.width  = mm;
         _minimapCanvas.height = mm;
     }
+    const _infoEl = document.getElementById('minimap-info');
+    if (_infoEl) {
+        _infoEl.style.maxWidth  = mm + 'px';
+        _infoEl.style.whiteSpace = 'normal';
+        _infoEl.style.wordBreak  = 'break-all';
+    }
     if (!gameState.terrainMap) {
         _minimapCtx.fillStyle = '#222';
         _minimapCtx.fillRect(0, 0, mm, mm);
@@ -829,8 +849,8 @@ function drawTopBarUI() {
     // 血條（彩色）
     const hpRatio = Math.max(0, Math.min(1, target.hp / (target.maxHp || 100)));
     if (target === gameState.boss && target.biome === 'hunter') {
-        const hunterBarColors  = { 5:'#4FC3F7', 4:'#1976D2', 3:'#FF9800', 2:'#E64A19', 1:'#FF1744' };
-        const hunterNextColors = { 5:'#1976D2', 4:'#FF9800', 3:'#E64A19', 2:'#FF1744', 1: null };
+        const hunterBarColors  = BOSS_BAR_COLORS.hunter;
+        const hunterNextColors = BOSS_BAR_NEXT_COLORS.hunter;
         const hBars  = target.barsRemaining || 1;
         const hColor = hunterBarColors[hBars]  || '#FF1744';
         const hNext  = hunterNextColors[hBars];
@@ -1338,14 +1358,43 @@ export function drawGame() {
         const alpha = Math.max(0, 1 - (Date.now() - msg.timer) / 2000);
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = 'white';
-        const isMobileView      = VIEW_W < 700;
-        const announceFontSize  = isMobileView ? 22 : 36;
-        const announceMaxWidth  = VIEW_W * 0.9;
+        const isMobileView     = VIEW_W < 700;
+        const announceFontSize = isMobileView ? 22 : 36;
+        const announceMaxWidth = VIEW_W * 0.85;
+        const announceY        = gameState.isMobile ? VIEW_H * 0.15 : VIEW_H / 2;
+        const lineH            = announceFontSize * 1.3;
         ctx.font = getGameFont(announceFontSize, true);
-        ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(msg.text, VIEW_W / 2, VIEW_H / 2, announceMaxWidth);
+        if (msg.speciesText && msg.prefixText) {
+            const fullText  = msg.prefixText + msg.speciesText;
+            const lines     = wrapCanvasText(ctx, fullText, announceMaxWidth);
+            if (lines.length === 1) {
+                const prefixW = ctx.measureText(msg.prefixText).width;
+                const totalW  = ctx.measureText(fullText).width;
+                const startX  = VIEW_W / 2 - totalW / 2;
+                ctx.textAlign = 'left';
+                ctx.fillStyle = 'white';
+                ctx.fillText(msg.prefixText, startX, announceY);
+                ctx.fillStyle = msg.speciesColor || 'white';
+                ctx.fillText(msg.speciesText, startX + prefixW, announceY);
+            } else {
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'white';
+                ctx.fillText(msg.prefixText, VIEW_W / 2, announceY - lineH / 2);
+                ctx.fillStyle = msg.speciesColor || 'white';
+                ctx.fillText(msg.speciesText, VIEW_W / 2, announceY + lineH / 2);
+            }
+        } else {
+            const plainLines = wrapCanvasText(ctx, msg.text, announceMaxWidth);
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            if (plainLines.length === 1) {
+                ctx.fillText(plainLines[0], VIEW_W / 2, announceY);
+            } else {
+                ctx.fillText(plainLines[0], VIEW_W / 2, announceY - lineH / 2);
+                ctx.fillText(plainLines[1], VIEW_W / 2, announceY + lineH / 2);
+            }
+        }
         ctx.restore();
     }
 

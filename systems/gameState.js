@@ -11,7 +11,7 @@ export const DEFAULT_SETTINGS = {
     showOrganTooltip: true,  // 手機版器官提示開關（桌機版不使用）
     alwaysCenter: false,     // 角色永遠固定於畫面正中央（預設關閉）
     minimapFade: false,      // 移動時小地圖漸漸淡化（預設關閉）
-    minimapSize: 10,         // 小地圖大小（0=關閉，1~10格）
+    minimapSize: 8,          // 小地圖大小（0=關閉，1~10格）
     fontBoldLarge: false,    // 字大又粗（canvas 字型 +7px + bold）
     cameraMode: 'smart',     // 視野模式：'smart'（智能）/ 'manual'（手動）
     cameraZoomLevel: 10,     // 視野縮放刻度（1~10，決定 baseZoom）
@@ -90,7 +90,7 @@ export const gameState = {
     creatureStrengthMultiplier: 0,
     isNight: false,
     currentPhaseIndex: 0,
-    dayNightMessage: { text: '', timer: 0 },
+    dayNightMessage: { text: '', timer: 0, prefixText: null, speciesText: null, speciesColor: null },
     levelUpMessage: { text: '', timer: 0 },
     skillPoints: 0,
     playerSkills: { vitality: 0, agility: 0, forager: 0, hunter: 0, tenacity: 0, organMemory: 0, luckyReroll: 0, collectionAddiction: 0, terribleFang: 0 },

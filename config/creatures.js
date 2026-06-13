@@ -94,3 +94,11 @@ export const BOSS_CONFIG = {
         phase3AimDuration: 500,
     }
 };
+
+// ── Boss 血條顏色常數（hunter 多管血條，其他 biome 預留預設紅色）
+export const BOSS_BAR_COLORS = {
+    hunter: { 5: '#4FC3F7', 4: '#1976D2', 3: '#FF9800', 2: '#E64A19', 1: '#FF1744' },
+};
+export const BOSS_BAR_NEXT_COLORS = {
+    hunter: { 5: '#1976D2', 4: '#FF9800', 3: '#E64A19', 2: '#FF1744', 1: null },
+};

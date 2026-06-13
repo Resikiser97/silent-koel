@@ -147,8 +147,14 @@ function _spawnHunterElite(nightNum, eliteType) {
     };
     gameState.eliteJustKilled = false;
 
-    // 出場廣播
-    gameState.dayNightMessage.text  = '⚠️ 靜音獵隊成員出現：' + meta.label;
+    // 出場廣播（含物種顏色）
+    const _sColor = eliteType.includes('specter') ? '#6677FF' :
+                    eliteType.includes('shadow')  ? '#FF8844' :
+                    eliteType.includes('venom')   ? '#44CC77' : 'white';
+    gameState.dayNightMessage.text        = '⚠️ 靜音獵隊成員出現：' + meta.label;
+    gameState.dayNightMessage.prefixText  = '靜音獵隊成員出現：';
+    gameState.dayNightMessage.speciesText = '⚠️ ' + meta.label;
+    gameState.dayNightMessage.speciesColor = _sColor;
     gameState.dayNightMessage.timer = Date.now();
     const appearKey = eliteType + 'Appear';
     AudioManager.play(appearKey);
@@ -192,7 +198,10 @@ export function spawnEliteCreature(nightNum) {
         tierIndex
     };
     gameState.eliteJustKilled = false;
-    gameState.dayNightMessage.text  = t('eliteAppeared');
+    gameState.dayNightMessage.text        = t('eliteAppeared');
+    gameState.dayNightMessage.prefixText  = null;
+    gameState.dayNightMessage.speciesText = null;
+    gameState.dayNightMessage.speciesColor = null;
     gameState.dayNightMessage.timer = Date.now();
 }
 

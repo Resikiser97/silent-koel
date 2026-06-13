@@ -8,7 +8,7 @@ import { gameState, ctx } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
 import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
 import { GAME_INFO, GAME_TIMING } from '../config/gameConfig.js';
-import { BOSS_CONFIG } from '../config/creatures.js';
+import { BOSS_CONFIG, BOSS_BAR_COLORS, BOSS_BAR_NEXT_COLORS } from '../config/creatures.js';
 import { AudioManager } from './audio.js';
 import { moveCreature } from './spawning.js';
 import { applyDamageToPlayer, showFloatingText } from './combat.js';
@@ -768,22 +768,10 @@ export function drawBoss() {
     ctx.fillStyle = '#550000';
     ctx.fillRect(bBarX, bBarY, bBarW, bBarH);
     if (boss.biome === 'hunter') {
-        const barColors = {
-            5: '#4FC3F7',
-            4: '#1976D2',
-            3: '#FF9800',
-            2: '#E64A19',
-            1: '#FF1744'
-        };
+        const barColors = BOSS_BAR_COLORS.hunter;
         const remaining = boss.barsRemaining || 1;
         const currentColor = barColors[remaining] || '#FF1744';
-        const nextBarColors = {
-            5: '#1976D2',
-            4: '#FF9800',
-            3: '#E64A19',
-            2: '#FF1744',
-            1: null
-        };
+        const nextBarColors = BOSS_BAR_NEXT_COLORS.hunter;
         const nextColor = nextBarColors[remaining];
         const hpRatio = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
 
@@ -823,7 +811,8 @@ export function drawBoss() {
         }
         ctx.restore();
     } else {
-        ctx.fillStyle = '#FF4400';
+        const bodyBarColor = BOSS_BAR_COLORS[boss.biome]?.[1] || '#FF4400';
+        ctx.fillStyle = bodyBarColor;
         ctx.fillRect(bBarX, bBarY, bBarW * (boss.hp / boss.maxHp), bBarH);
     }
 
@@ -848,8 +837,7 @@ function _drawBossDebuffIcons(boss, barX, barY, barW) {
     const active = debuffs.filter(d => d.endTime && now < d.endTime);
     if (active.length === 0) return;
 
-    const totalW = active.length * (iconSize + iconGap) - iconGap;
-    let ix = barX + (barW - totalW) / 2;
+    let ix = barX + 8;
 
     ctx.save();
     ctx.textAlign = 'center';
@@ -929,7 +917,10 @@ export function spawnBoss() {
     };
     gameState.bossSpawned = true;
     gameState.bossSpawnTime = Date.now();
-    gameState.dayNightMessage.text = t('bossAppeared', { name: cfg.name });
+    gameState.dayNightMessage.text        = t('bossAppeared', { name: cfg.name });
+    gameState.dayNightMessage.prefixText  = null;
+    gameState.dayNightMessage.speciesText = null;
+    gameState.dayNightMessage.speciesColor = null;
     gameState.dayNightMessage.timer = Date.now();
     AudioManager.playMusic('bossTheme');
 }
@@ -951,9 +942,10 @@ function _showHunterDialogue(text, duration) {
     if (prev) prev.remove();
     const el = document.createElement('div');
     el.id = 'hunter-dialogue';
-    el.style.cssText = 'position:absolute;bottom:80px;left:24px;background:rgba(0,0,0,0.78);color:#fff;' +
+    el.style.cssText = 'position:absolute;bottom:30%;left:50%;transform:translateX(-50%);' +
+        'background:rgba(0,0,0,0.78);color:#fff;' +
         'padding:8px 16px;border-radius:6px;font-size:15px;font-family:Arial,sans-serif;' +
-        'border-left:3px solid #1565C0;z-index:60;pointer-events:none;max-width:320px;';
+        'border-left:3px solid #1565C0;z-index:60;pointer-events:none;max-width:80%;text-align:center;';
     el.textContent = '🎯 「' + text + '」';
     const gc = document.getElementById('game-container');
     if (gc) gc.appendChild(el);
@@ -1000,7 +992,10 @@ function _spawnHunterBoss() {
     };
     gameState.bossSpawned   = true;
     gameState.bossSpawnTime = Date.now();
-    gameState.dayNightMessage.text  = t('bossAppeared', { name: cfg.name });
+    gameState.dayNightMessage.text        = t('bossAppeared', { name: cfg.name });
+    gameState.dayNightMessage.prefixText  = null;
+    gameState.dayNightMessage.speciesText = null;
+    gameState.dayNightMessage.speciesColor = null;
     gameState.dayNightMessage.timer = Date.now();
     AudioManager.playMusic('superBossTheme');
     AudioManager.play('hunterVoiceIntro');
@@ -1352,6 +1347,10 @@ export function updateBoss() {
             for (let _vi = gameState.venomPuddles.length - 1; _vi >= 0; _vi--) {
                 const puddle = gameState.venomPuddles[_vi];
                 if (now - puddle.startTime >= puddle.duration) {
+                    if (puddle.owner === 'venomFalcon') {
+                        const _elite = gameState.eliteCreature;
+                        if (_elite && _elite._venomPuddleCount > 0) _elite._venomPuddleCount--;
+                    }
                     gameState.venomPuddles.splice(_vi, 1);
                     continue;
                 }

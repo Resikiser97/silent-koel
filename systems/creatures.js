@@ -509,7 +509,7 @@ function _triggerAlpha(creature) {
     creature.radius           = creature.radius * 1.5;
     creature.aggroRange       = 600;
     creature.guardianRange    = 1500;
-    creature.packFollowRange  = 1000;
+    creature.packFollowRange  = 1500;
     creature.giantRegenRate   = 0.02;
     gameState.alphaCreature   = creature;
     showAlphaAnnouncement(creature.name);
@@ -925,7 +925,7 @@ function _hyenaWheelPosition(hyena, pack, target) {
     const index = Math.max(0, pack.indexOf(hyena));
     const spacing = hyena.radius * 2 + 15;
     const orbit = Math.max(target.radius + hyena.attackRange + spacing, spacing * pack.length / Math.PI);
-    const angle = (Math.PI * 2 / Math.max(1, pack.length)) * index + (Date.now() / 900);
+    const angle = (Math.PI * 2 / Math.max(1, pack.length)) * index + (Date.now() / ((hyena.hyenaAttackInterval || 1000) * 0.9));
     return {
         x: target.x + Math.cos(angle) * orbit,
         y: target.y + Math.sin(angle) * orbit,
@@ -1010,6 +1010,28 @@ export function updateNeutralCreatures() {
             if (creature.isGiantized) {
                 // 低血量逃跑條件檢查（每秒評估）
                 _checkGiantFleeCondition(creature);
+
+                // 卡住偵測：連續1秒位移 < 0.5 → 強制切回漫遊並設新方向
+                {
+                    const prevX = creature._lastX !== undefined ? creature._lastX : creature.x;
+                    const prevY = creature._lastY !== undefined ? creature._lastY : creature.y;
+                    const moved = Math.abs(creature.x - prevX) + Math.abs(creature.y - prevY);
+                    creature._lastX = creature.x;
+                    creature._lastY = creature.y;
+                    if (moved < 0.5) {
+                        creature._stuckTimer = (creature._stuckTimer || 0) + FIXED_DELTA;
+                    } else {
+                        creature._stuckTimer = 0;
+                    }
+                    if (creature._stuckTimer >= 1000) {
+                        creature._stuckTimer = 0;
+                        creature.state = 'wandering';
+                        creature._fruitTarget = null;
+                        creature._seekingFruit = false;
+                        creature._moveAngle = Math.random() * Math.PI * 2;
+                    }
+                }
+
                 if (creature.isFleeing) {
                     _updateGiantFlee(creature);
                     continue;
@@ -1145,20 +1167,14 @@ export function updateNeutralCreatures() {
                                 const d = wrappedDistance(creature.x, creature.y, n.x, n.y);
                                 if (d < followRange && Math.random() < 0.2) {
                                     n.packLeaderRef = creature;
+                                    n._packOffsetX = (Math.random() - 0.5) * 160;
+                                    n._packOffsetY = (Math.random() - 0.5) * 160;
                                     n.packName = creature.packName;
                                     creature.packMembers.push(n);
                                 }
                             }
                         }
                     }
-                    // 等待隊員：有隊員距離 > 跟隨範圍75% 時暫停移動
-                    const waitThreshold = followRange * 0.75;
-                    let waitingForMember = false;
-                    for (const m of creature.packMembers) {
-                        if (m.hp <= 0) continue;
-                        if (wrappedDistance(creature.x, creature.y, m.x, m.y) > waitThreshold) { waitingForMember = true; break; }
-                    }
-                    if (waitingForMember) continue;
                 }
 
                 // 帶領隊伍向最近果子移動（每3~5秒切換目標）
@@ -1308,15 +1324,19 @@ export function updateNeutralCreatures() {
                 if (creature.packLeaderRef.hp <= 0) {
                     creature.packLeaderRef = null; // 隊長死亡：脫隊
                 } else {
-                    const leader   = creature.packLeaderRef;
-                    const dLeader  = wrappedDistance(creature.x, creature.y, leader.x, leader.y);
-                    if (dLeader > 200) { // 超過200px才追隨
-                        const { dx: ldx, dy: ldy } = wrappedDelta(creature.x, creature.y, leader.x, leader.y);
+                    const leader = creature.packLeaderRef;
+                    const dLeader = wrappedDistance(creature.x, creature.y, leader.x, leader.y);
+                    const followThreshold = (leader.packFollowRange || 800) * 0.75;
+                    if (dLeader > followThreshold) {
+                        const targetX = leader.x + (creature._packOffsetX || 0);
+                        const targetY = leader.y + (creature._packOffsetY || 0);
+                        const { dx: ldx, dy: ldy } = wrappedDelta(creature.x, creature.y, targetX, targetY);
                         creature._moveAngle = Math.atan2(ldy, ldx);
                         moveCreature(creature, creature.x + Math.cos(creature._moveAngle) * _effSpeed(creature),
                                                creature.y + Math.sin(creature._moveAngle) * _effSpeed(creature));
+                        continue;
                     }
-                    continue;
+                    // 在閾值以內：fall through 到下方漫遊邏輯，實現自由漫遊
                 }
             }
 
@@ -1499,6 +1519,9 @@ export function updateHostileCreatures() {
                 if (!creature._leftBiomeTime) creature._leftBiomeTime = now;
             }
             if (creature.speciesId === 'hyena') _updateHyenaPack(creature);
+            if (creature.speciesId === 'hyena' && creature.hyenaAttackInterval == null) {
+                creature.hyenaAttackInterval = Math.round(1000 / ((gameState.currentMap?.creatureStrength?.hostile?.speedMultiplier) || 1));
+            }
         }
 
         // ── 殺手化：每5秒回復1% maxHP ──────────────────────────────
@@ -1693,20 +1716,18 @@ export function updateHostileCreatures() {
                     const wheelPos = _hyenaWheelPosition(creature, pack, t);
                     const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, wheelPos.x, wheelPos.y);
                     const wheelDist = Math.sqrt(wdx * wdx + wdy * wdy);
-                    if (wheelDist > 4) {
-                        const wAngle = Math.atan2(wdy, wdx);
-                        creature._moveAngle = wAngle;
-                        _applyHyenaBiomeBonus(creature);
-                        let wheelSpeed = creature.speed * (creature._finalSpeedMult || 1.0);
-                        if (creature._slowUntil && now < creature._slowUntil) wheelSpeed *= (creature._slowMult || 1.0);
-                        moveCreature(creature, creature.x + Math.cos(wAngle) * wheelSpeed, creature.y + Math.sin(wAngle) * wheelSpeed);
-                    }
+                    const wAngle = Math.atan2(wdy, wdx);
+                    creature._moveAngle = wAngle;
+                    _applyHyenaBiomeBonus(creature);
+                    let wheelSpeed = creature.speed * (creature._finalSpeedMult || 1.0);
+                    if (creature._slowUntil && now < creature._slowUntil) wheelSpeed *= (creature._slowMult || 1.0);
+                    moveCreature(creature, creature.x + Math.cos(wAngle) * wheelSpeed, creature.y + Math.sin(wAngle) * wheelSpeed);
                     continue;
                 }
             }
 
             if (dist <= creature.attackRange) {
-                if (now - creature.attackCooldown >= 1000) {
+                if (now - creature.attackCooldown >= (creature.hyenaAttackInterval || 1000)) {
                     if (creature.targetType === 'player') {
                         let dmg = creature.damage;
                         if (creature.speciesId === 'lynx') {

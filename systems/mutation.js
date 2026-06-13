@@ -88,7 +88,14 @@ export function addMutationPoints(amount) {
     if (!gameState.mutationData) return;
     gameState.mutationData.points += amount;
     gameState.mutationData.totalPointsEarned += amount;
-    gameState.mutationData.hasNewPoints = true;  // 觸發紅點提示
+
+    // 只有點數夠升至少一個器官才顯示紅點
+    const _pts = gameState.mutationData.points;
+    const _lv  = gameState.mutationData.levels;
+    if (_lv) {
+        const canAffordAny = Object.values(_lv).some(lv => _pts >= getMutationUpgradeCost(lv || 0));
+        if (canAffordAny) gameState.mutationData.hasNewPoints = true;
+    }
     saveMutationData();
     // 顯示浮動文字
     const p = gameState.player;

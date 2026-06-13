@@ -1,6 +1,26 @@
-## v0.1.15.0
+## v0.1.16.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.16.0 - 2026-06-13
+
+### 修復
+- systems/elite.js (A1)：修復毒霧隼 puddle 計數不同步問題，達上限後毒霧炮現在能正常發射
+- systems/mutation.js (A3)：變異器官紅點提示改為點數足夠升級至少一個技能時才顯示
+
+### 調整
+- systems/creatures.js (A4)：鬣狗圍攻移除 `wheelDist > 4` 停止條件，持續繞圈移動
+- systems/creatures.js (A4)：鬣狗攻擊冷卻與軌道旋轉速度依難度 speedMultiplier 動態計算（Easy 1000ms / Normal ~667ms / Hard 500ms）
+- systems/creatures.js (A5a)：巨人隊員跟隨閾值改為 `packFollowRange × 0.75`，閾值以內自由漫遊；移除隊長等待邏輯；加入成員隨機偏移量
+- systems/creatures.js (A5b)：巨人卡住偵測：連續 1 秒位移 < 0.5px 強制切回 wandering 並設新隨機方向
+- systems/creatures.js (A5c)：Alpha `packFollowRange` 從 1000 升至 1500
+- systems/hud.js / boss.js (A6)：Boss 血條顏色共用常數，統一各 Boss 視覺風格
+- systems/hud.js / ui.js (A7+B4)：精英怪與 Boss 出現公告加入物種代表色；手機版公告位置改至畫面上方
+- systems/hud.js (B1)：Boss 控制狀態指示改為靠左對齊血條
+- systems/hud.js / mobile.js (B2)：手機版小地圖預設縮小；GameInfo 欄位過長時自動換行
+- systems/hud.js (B3)：黑色獵人台詞字幕位置調整至畫面中央偏下
 
 ---
 
