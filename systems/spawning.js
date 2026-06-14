@@ -38,21 +38,23 @@ export function spawnFruit() {
 }
 
 // ── 在指定生態區內隨機找一個有效座標（最多200次嘗試）
-function _randomPointInBiome(biome) {
+function _randomPointInBiome(biome, deps = {}) {
+    const { random = Math.random, getBiome: gb = getBiome, width = MAP_WIDTH, height = MAP_HEIGHT } = deps;
     for (let i = 0; i < 200; i++) {
-        const x = 50 + Math.random() * (MAP_WIDTH  - 100);
-        const y = 50 + Math.random() * (MAP_HEIGHT - 100);
-        if (getBiome(x, y) === biome) return { x, y };
+        const x = 50 + random() * (width  - 100);
+        const y = 50 + random() * (height - 100);
+        if (gb(x, y) === biome) return { x, y };
     }
     // fallback：找不到指定生態區時返回隨機座標
-    return { x: 50 + Math.random() * (MAP_WIDTH - 100), y: 50 + Math.random() * (MAP_HEIGHT - 100) };
+    return { x: 50 + random() * (width - 100), y: 50 + random() * (height - 100) };
 }
 
 // ── 建立草系生物（herbivore）
-function _makeHerbCreature(x, y, biome, spec, strength) {
+function _makeHerbCreature(x, y, biome, spec, strength, deps = {}) {
+    const { random = Math.random, now: nowFn = Date.now } = deps;
     const str = (strength && strength.neutral) || { hpMultiplier: 1, speedMultiplier: 1, damageMultiplier: 1 };
-    const canFight = Math.random() < 0.5;
-    const now = Date.now();
+    const canFight = random() < 0.5;
+    const now = nowFn();
     return {
         x, y, biome,
         speciesId: spec.id,
@@ -77,8 +79,8 @@ function _makeHerbCreature(x, y, biome, spec, strength) {
         fruitsEaten: 0,
         lastDamageTime: 0,
         attackCooldown: 0,
-        _moveAngle: Math.random() * Math.PI * 2,
-        _nextBehaviorTime: now + 5000 + Math.random() * 10000,
+        _moveAngle: random() * Math.PI * 2,
+        _nextBehaviorTime: now + 5000 + random() * 10000,
         _seekingFruit: false,
     };
 }
@@ -164,9 +166,9 @@ export function spawnBiomeCreatures() {
     console.log('--- 生態生物生成完成：草系' + gameState.neutralCreatures.length + '隻、肉系' + gameState.hostileCreatures.length + '隻 ---');
 }
 
-export function moveCreature(entity, newX, newY) {
-    entity.x = ((newX % MAP_WIDTH)  + MAP_WIDTH)  % MAP_WIDTH;
-    entity.y = ((newY % MAP_HEIGHT) + MAP_HEIGHT) % MAP_HEIGHT;
+export function moveCreature(entity, newX, newY, bounds = { width: MAP_WIDTH, height: MAP_HEIGHT }) {
+    entity.x = ((newX % bounds.width)  + bounds.width)  % bounds.width;
+    entity.y = ((newY % bounds.height) + bounds.height) % bounds.height;
 }
 
 export function spawnTreasure() {

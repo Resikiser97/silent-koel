@@ -1,4 +1,4 @@
-## v0.1.17.1
+## v0.1.18.1
 
 # The Silent Koel — 模組架構說明
 
@@ -33,7 +33,7 @@ systems/audio.js          AudioManager, initAudio, preloadAllSfxBuffers
 systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera
                           _updateCameraZoom（視野縮放，重構自 _updateMobileCameraZoom，v0.58.0）
                           updateCamera：alwaysCenter 設定為 true 時 edgeThreshold=0.5，角色永遠居中（v0.57.5）
-systems/input.js          handleKeyDown, handleKeyUp（含設定介面按鍵 handler refs）
+systems/input.js          handleKeyDown, handleKeyUp, _calcMouseWorld, _updateMouseWorld（含設定介面按鍵 handler refs）
 systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature, spawnTreasure
                           _randomPointInBiome, _makeHerbCreature, _makeCarnCreature
                           spawnBiomeCreatures（開局設 spawnProtectUntil +3s，中心保護區不生肉食怪，v0.0.66.2）

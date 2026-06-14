@@ -1,5 +1,6 @@
 // =============================================================
 // 輸入系統 - 全域 handler refs / handleKeyDown / handleKeyUp
+//            _calcMouseWorld / _updateMouseWorld
 // =============================================================
 import { gameState } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT } from './map.js';
@@ -109,19 +110,26 @@ export function handleKeyUp(e) {
     }
 }
 
+// ── 純函式：client 座標 → world/screen 座標（不讀 DOM，供測試使用）
+export function _calcMouseWorld(clientX, clientY, rect, canvasSize, camera, bounds) {
+    const scaleX = canvasSize.width  / rect.width;
+    const scaleY = canvasSize.height / rect.height;
+    const sx = (clientX - rect.left) * scaleX;
+    const sy = (clientY - rect.top)  * scaleY;
+    const worldX = ((sx + camera.x) % bounds.width  + bounds.width)  % bounds.width;
+    const worldY = ((sy + camera.y) % bounds.height + bounds.height) % bounds.height;
+    return { worldX, worldY, screenX: sx, screenY: sy };
+}
+
 // ── 阿奇爾滑鼠世界座標追蹤（在 initializeGame 內的 mousemove listener 呼叫此函式）
 export function _updateMouseWorld(clientX, clientY) {
     const canvasEl = document.getElementById('gameCanvas');
     if (!canvasEl) return;
-    const rect   = canvasEl.getBoundingClientRect();
-    const scaleX = canvasEl.width  / rect.width;
-    const scaleY = canvasEl.height / rect.height;
-    const sx = (clientX - rect.left) * scaleX;
-    const sy = (clientY - rect.top)  * scaleY;
-    gameState.mouseWorld = {
-        x: ((sx + gameState.camera.x) % MAP_WIDTH  + MAP_WIDTH)  % MAP_WIDTH,
-        y: ((sy + gameState.camera.y) % MAP_HEIGHT + MAP_HEIGHT) % MAP_HEIGHT,
-    };
+    const rect       = canvasEl.getBoundingClientRect();
+    const canvasSize = { width: canvasEl.width, height: canvasEl.height };
+    const bounds     = { width: MAP_WIDTH, height: MAP_HEIGHT };
+    const { worldX, worldY, screenX, screenY } = _calcMouseWorld(clientX, clientY, rect, canvasSize, gameState.camera, bounds);
+    gameState.mouseWorld  = { x: worldX, y: worldY };
     // 同步保存 canvas 螢幕座標：攻擊時用當下玩家位置重新計算方向，不受 camera 位移影響
-    gameState.mouseScreen = { sx, sy };
+    gameState.mouseScreen = { sx: screenX, sy: screenY };
 }

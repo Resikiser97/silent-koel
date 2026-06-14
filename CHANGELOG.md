@@ -1,6 +1,18 @@
-## v0.1.18.0
+## v0.1.18.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.18.1 - 2026-06-14
+
+### 重構
+- Stage D：systems/spawning.js — `moveCreature` 加入 `bounds` 可選參數；`_randomPointInBiome` / `_makeHerbCreature` 加入 `deps` 可選參數（random、now、getBiome、width/height），呼叫點行為不變
+- Stage D：systems/input.js — 抽出純函式 `_calcMouseWorld(clientX, clientY, rect, canvasSize, camera, bounds)` 並 export；`_updateMouseWorld` 改為呼叫此純函式
+
+### 測試
+- tests/systems/spawning.test.js：新增 5 個單元測試（moveCreature wrap 邊界：正常座標、負座標、超出右邊界、剛好等於邊界、預設尺寸）
+- tests/systems/input.test.js：新增 4 個單元測試（_calcMouseWorld 座標轉換、右邊界 wrap、負 world wrap）
 
 ---
 

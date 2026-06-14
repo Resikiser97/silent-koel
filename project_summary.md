@@ -1,4 +1,4 @@
-## v0.1.17.1
+## v0.1.18.1
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,12 +12,12 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.17.1
+**現在版本:** v0.1.18.1
 
-**當前狀態：** v0.1.17.x 名人堂系統 + 毒傷疊加系統完成，等待進入 Stage D
+**當前狀態：** Stage D 依賴注入重構進行中（spawning.js + input.js 完成）
 
 **下一步：**
-1. Stage D：中層系統重構
+1. Stage D：creatures.js / audio.js 依賴注入
 2. Stage F：循環依賴打破（已知 12+ 個）
 3. 地獄難度地圖
 4. 遊戲說明 / 圖鑑更新
@@ -119,6 +119,8 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.18.1：Stage D spawning.js（moveCreature/\_randomPointInBiome/\_makeHerbCreature 依賴注入）+ input.js（抽出 \_calcMouseWorld 純函式）；新增 9 個單元測試，87/87 通過
+- v0.1.18.0：Stage D daynight.js getDayNightPhaseIndex 純函式重構；新增 8 個單元測試
 - v0.1.17.1：修復毒 debuff 圖示（hud.js/boss.js）、名人堂排名查詢效能（supabase.js）、排行榜 UI 重構（預設名人堂、三按鈕永遠顯示、趣味榜嵌入）；新增趣味排行榜「🦴 白骨精」類別（bone_count）
 - v0.1.17.0：毒刺數值調整（Lv3 累計 10/s，三等級統一持續 5 秒）；玩家對怪物毒傷改為 `poisonStacks[]` 獨立疊加，攻擊命中可引爆即時傷害並讓所有 stack -1 秒；提交分數新增 `bone_count`；新增 hall_of_fame 名人堂（2×3 Showcase、Top 10、個人排名）；排行榜改為 Top 100 可捲動
 - v0.1.16.3：修復 Vercel Vite build 遺漏 `sounds/` 資源導致線上音效 404；新增 `vercel.json` 和 `scripts/copy-sounds.js`，讓 Vercel / itch.io 共用 `dist/sounds/` 輸出結構
