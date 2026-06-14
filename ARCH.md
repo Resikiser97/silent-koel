@@ -1,4 +1,4 @@
-## v0.1.21.1
+## v0.1.21.3
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -113,6 +113,7 @@
 | `tests/systems/daynight.test.js` | daynight.js 純函式測試（getDayNightPhaseIndex） |
 | `tests/systems/creatures.test.js` | creatures.js 純函式測試（_effSpeed、_shouldFleeFromGiant、_getHyenaPackBonus、_hyenaWheelPosition） |
 | `tests/systems/audio.test.js` | audio.js 純函式測試（_mobileFadeScale、_playSfxBuffer） |
+| `tests/systems/damage.test.js` | damage/combat 回歸測試（handleKill、CustomEvent dispatch、玩家受傷、ranged callback） |
 
 ---
 
@@ -302,4 +303,4 @@ main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.21.1，damage.js 移除 organs.js import（Layer 1 違規修正）*
+*最後更新：v0.1.21.3，Stage F 3a 回歸測試與 damage.js handleKill 契約補強*

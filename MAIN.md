@@ -1,4 +1,4 @@
-## v0.1.21.2
+## v0.1.21.3
 
 # The Silent Koel — 模組架構說明
 
@@ -61,7 +61,7 @@ systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTuto
                           resetTutorial（強制重置教學狀態，供 initializeGame 每局呼叫，v0.1.3.6）
                           （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
 systems/damage.js         applyDamageToPlayer（玩家受傷、刺甲反傷、tenacity 保命）
-                          handleKill（普通/敵對生物擊殺獎勵）
+                          handleKill（普通/敵對生物擊殺獎勵；移除已擊殺生物；dispatch eliteKilled）
                           handleGiantKill（巨人/Alpha 擊殺獎勵）
                           （Stage F 3a：從 combat.js 抽出，供 boss/player/creatures/elite 共用，v0.1.21.0）
 systems/combat.js         playerAttack, setRangedAttackCallback

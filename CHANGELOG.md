@@ -1,6 +1,18 @@
-## v0.1.21.2
+## v0.1.21.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.21.3 - 2026-06-14
+
+### 修復
+- `systems/damage.js`：`handleKill()` 現在會從 `hostileCreatures` / `neutralCreatures` 移除已擊殺生物，並保留加入 `corpses` 的既有流程
+- `systems/damage.js`：`handleKill()` 擊殺 `isElite` 生物時 dispatch `CustomEvent('eliteKilled', { detail: { killer } })`
+
+### 測試
+- 新增 `tests/systems/damage.test.js`：永久回歸保護 `handleKill`、`eliteKilled`、`bossKilled`、`applyDamageToPlayer`、`showSkillTree` dispatch、`setRangedAttackCallback`
+- `npm test`：15 個測試檔、114 個測試全數通過（含原有 103 個 regression）
 
 ---
 

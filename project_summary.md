@@ -1,4 +1,4 @@
-## v0.1.21.2
+## v0.1.21.3
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,12 +12,12 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.21.2
+**現在版本:** v0.1.21.3
 
-**當前狀態：** Stage F 3a 完成 + dead import 清理，10 個系統檔案精簡，103/103 測試通過
+**當前狀態：** Stage F 3a 回歸測試完成，damage/combat 核心路徑已有永久測試保護，114/114 測試通過
 
 **下一步：**
-1. Stage F 批次 2：拆核心戰鬥 / 玩家 / 器官循環
+1. Stage F 批次 3b：拆 evolution / organs / ui 循環
 2. 地獄難度地圖
 3. 遊戲說明 / 圖鑑更新
 
@@ -118,15 +118,11 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.21.3：Stage F 3a 回歸測試 — 新增 `tests/systems/damage.test.js`，永久保護 `handleKill` / `eliteKilled` / `bossKilled` / `applyDamageToPlayer` / `showSkillTree` dispatch / `setRangedAttackCallback`；同步修正 `handleKill` 擊殺後移除生物與精英事件 dispatch；114/114 測試通過
 - v0.1.21.2：Dead Import 清理 — 10 個系統檔案共移除 22 個未使用 import（boss/combat/elite/evolution/hud/leaderboard/mutation/organs/player/tutorial）；103/103 測試通過
 - v0.1.21.1：damage.js 移除 organs.js Layer 1 違規 import，改用 CustomEvent('eliteKilled')；MAIN/QUICKREF/ARCH 文件補齊
 - v0.1.21.0：Stage F 3a — 新建 `systems/damage.js`，承載 `applyDamageToPlayer`/`handleKill`/`handleGiantKill`；boss↔combat / combat↔player 核心依賴解除
 - v0.1.20.1：Stage F 批次 2 第二波 — reward.js + loot.js + Boss kill 事件化 + utils/loot 拆分
-- v0.1.19.0：Stage F 批次 1 — 新增 `systems/gameFlow.js`，抽出 `pausePlayTimer` / `resumePlayTimer`；5 個 main.js 反向循環解除
-- v0.1.18.3：Stage D 收尾 — audio.test.js 補充 _mobileFadeScale fade 結束邊界 case（now >= end → 1）；103/103 通過；Stage D 正式完結
-- v0.1.18.2：Stage D creatures.js + audio.js 依賴注入；新增 15 個單元測試，102/102 通過
-- v0.1.18.1：Stage D spawning.js（moveCreature/\_randomPointInBiome/\_makeHerbCreature 依賴注入）+ input.js（抽出 \_calcMouseWorld 純函式）；新增 9 個單元測試，87/87 通過
-- v0.1.18.0：Stage D daynight.js getDayNightPhaseIndex 純函式重構；新增 8 個單元測試
 - v0.1.17.1：修復毒 debuff 圖示（hud.js/boss.js）、名人堂排名查詢效能（supabase.js）、排行榜 UI 重構（預設名人堂、三按鈕永遠顯示、趣味榜嵌入）；新增趣味排行榜「🦴 白骨精」類別（bone_count）
 - v0.1.17.0：毒刺數值調整（Lv3 累計 10/s，三等級統一持續 5 秒）；玩家對怪物毒傷改為 `poisonStacks[]` 獨立疊加，攻擊命中可引爆即時傷害並讓所有 stack -1 秒；提交分數新增 `bone_count`；新增 hall_of_fame 名人堂（2×3 Showcase、Top 10、個人排名）；排行榜改為 Top 100 可捲動
 - v0.1.16.3：修復 Vercel Vite build 遺漏 `sounds/` 資源導致線上音效 404；新增 `vercel.json` 和 `scripts/copy-sounds.js`，讓 Vercel / itch.io 共用 `dist/sounds/` 輸出結構

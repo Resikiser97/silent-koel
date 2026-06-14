@@ -138,10 +138,14 @@ export function handleKill(c, isHostile) {
     if (c.isKiller) { handleKillerKill(c); return; }
     const p = gameState.player;
     const now = Date.now();
+    const sourceArray = isHostile ? gameState.hostileCreatures : gameState.neutralCreatures;
+    const index = sourceArray.indexOf(c);
+    if (index !== -1) sourceArray.splice(index, 1);
     gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
     const baseXP = isHostile ? Math.min(80, 30 + Math.round((c.maxHp || 50) / 50 * 10)) : 20;
     const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * 10;
     const actualXP = addXP(rawXP);
     showXPPopup(p.x, p.y, actualXP);
+    if (c.isElite) window.dispatchEvent(new CustomEvent('eliteKilled', { detail: { killer: c } }));
     incrementStat('normalKills');
 }
