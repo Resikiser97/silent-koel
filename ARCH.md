@@ -68,7 +68,7 @@
 | `camera.js` | worldToScreen、updateCamera、wrappedDistance、wrappedDelta |
 | `input.js` | handleKeyDown、handleKeyUp、_updateMouseWorld |
 | `spawning.js` | 生物/果子/樹木生成邏輯、moveCreature |
-| `player.js` | 玩家移動、碰撞、XP、addXP、攻擊（含阿奇爾射水） |
+| `player.js` | 玩家移動、碰撞、攻擊（含阿奇爾射水）、Boss 死亡事件 dispatch |
 | `feedback.js` | showFloatingText（Canvas 浮動文字）、showXPPopup |
 | `reward.js` | addXP、checkLevelUp（升級 dispatch CustomEvent('levelUp')） |
 | `loot.js` | _spawnBone（push 白骨到 gameState.bones） |
@@ -140,6 +140,9 @@ main.js
   ├─ systems/input.js
   ├─ systems/spawning.js
   ├─ systems/player.js  ─┐
+  ├─ systems/feedback.js
+  ├─ systems/reward.js
+  ├─ systems/loot.js
   ├─ systems/combat.js  ─┤← 循環依賴叢（見第 6 節）
   ├─ systems/organs.js  ─┘
   ├─ systems/evolution.js
@@ -240,30 +243,51 @@ main.js
 
 ### 循環依賴（Stage F 處理中）
 
-以下為確認存在的循環依賴，JavaScript ESM 允許執行但有初始化順序風險：
+基於 v0.1.20.1 全域 import 重掃（排除 `dist/`、`node_modules/`、`tests/`），上次 1 個 18 檔案大型 SCC 已縮小為 1 個 12 檔案 SCC：
 
-```
-player.js  ──imports──▶  combat.js
-   ▲                         │
-   └─────────imports──────────┘
-   (applyDamageToPlayer,       (addXP, showXPPopup,
-    handleKill, showFloatingText) _archerAttack)
+`systems/boss.js`, `systems/chat.js`, `systems/combat.js`, `systems/creatures.js`, `systems/daynight.js`, `systems/elite.js`, `systems/evolution.js`, `systems/leaderboard.js`, `systems/mobile.js`, `systems/organs.js`, `systems/player.js`, `systems/ui.js`
 
-player.js  ──imports──▶  organs.js
-   ▲                         │
-   └─────────imports──────────┘
-   (handleEliteKill,           (addXP, showXPPopup)
-    applyOrganEffects)
+`main.js`、`systems/hud.js`、`systems/input.js`、`systems/mutation.js`、`systems/tutorial.js`、`systems/utils.js` 已不在大型 SCC 內。新建低層模組 `systems/gameFlow.js`、`systems/feedback.js`、`systems/reward.js`、`systems/loot.js` 均未進入任何循環。
 
-organs.js  ──imports──▶  gameFlow.js
-   (resumePlayTimer,
-    pausePlayTimer)             Stage F 批次 1 已解除 organs.js → main.js 反向依賴
-```
+#### Stage F 已解除循環
 
-**Stage F 批次 1 已完成（v0.1.19.0）**：`boss.js`、`organs.js`、`evolution.js`、`tutorial.js` 改由 `systems/gameFlow.js` 取得 timer 控制；`ui.js` / `evolution.js` 改用 `CustomEvent('startGame')` 通知 `main.js` 啟動遊戲，已解除 5 個高嚴重度 `main.js` 反向循環。  
-**Stage F 批次 2 第一波已完成（v0.1.20.0）**：新建 `systems/feedback.js`；`showFloatingText` / `showXPPopup` 搬出 combat/player；`combat.js` 死亡 `showSkillTree()` 改為 `CustomEvent('showSkillTree')` 由 `main.js` 監聽；解除循環 #9（combat ↔ evolution）、#13（combat ↔ mutation 的 feedback 側）。  
-**Stage F 批次 2 第二波已完成（v0.1.20.1）**：新建 `systems/reward.js`（addXP / checkLevelUp，升級 dispatch `CustomEvent('levelUp')`）；新建 `systems/loot.js`（_spawnBone）；boss/combat/organs/ui 的 addXP import 改為 reward.js；evolution.js 移除 dead addXP import；player.js 移除 handleBossKill import，Boss 死亡改 dispatch `CustomEvent('bossKilled')`；main.js 新增 levelUp / bossKilled listener；utils.js / combat.js 的 _spawnBone 改 import loot.js；解除循環 #6（combat ↔ player，addXP 側）、#7（organs ↔ player，addXP 側）、#12（boss ↔ player）、#14（combat ↔ utils）。  
-**仍待處理**：player ↔ combat（applyDamageToPlayer / handleKill 反向）、organs ↔ player（handleEliteKill / applyOrganEffects 反向）、organs ↔ evolution（#10）、boss ↔ combat（#11）等核心循環待批次 3 處理。
+| 編號 | 原循環 | 狀態 |
+|------|--------|------|
+| #1 | `main.js` ↔ `systems/boss.js` | ✅ 已解除 v0.1.19.0 |
+| #2 | `main.js` ↔ `systems/evolution.js` | ✅ 已解除 v0.1.19.0 |
+| #3 | `main.js` ↔ `systems/organs.js` | ✅ 已解除 v0.1.19.0 |
+| #4 | `main.js` ↔ `systems/tutorial.js` | ✅ 已解除 v0.1.19.0 |
+| #5 | `main.js` ↔ `systems/ui.js` | ✅ 已解除 v0.1.19.0 |
+| #13 | `systems/combat.js` ↔ `systems/mutation.js` | ✅ 已解除 v0.1.20.0（feedback 側拆出） |
+| #14 | `systems/combat.js` ↔ `systems/utils.js` | ✅ 已解除 v0.1.20.1（_spawnBone 改由 loot.js 提供） |
+
+#### 仍存在或部分存在循環
+
+| 編號 | 原循環 | v0.1.20.1 狀態 | 說明 |
+|------|--------|----------------|------|
+| #6 | `systems/combat.js` ↔ `systems/player.js` | ⚠️ 部分仍存在 | `addXP` / `showXPPopup` 已拆出，但仍有 `combat.js` ↔ `player.js` 直接雙向 import（`_archerAttack`、`applyDamageToPlayer`、`handleKill`）。 |
+| #7 | `systems/organs.js` ↔ `systems/player.js` | ⚠️ 部分仍存在 | `addXP` 側已拆出；`player.js` 仍 import `organs.js`，且兩者仍在同一 SCC，需處理器官效果與玩家狀態耦合。 |
+| #8 | `systems/combat.js` ↔ `systems/organs.js` | ⚠️ 部分仍存在 | `organs.js` 已不直接 import `combat.js`，但兩者仍可透過 SCC 互相抵達；戰鬥與器官規則仍耦合。 |
+| #9 | `systems/combat.js` ↔ `systems/evolution.js` | ⚠️ 部分仍存在 | 直接雙向 import 已解除，但仍在同一 SCC，透過 boss/organs/ui 等路徑互相抵達。 |
+| #10 | `systems/evolution.js` ↔ `systems/organs.js` | ❌ 仍存在 | 兩者仍直接雙向 import，是批次 3 的核心目標之一。 |
+| #11 | `systems/boss.js` ↔ `systems/combat.js` | ❌ 仍存在 | 兩者仍直接雙向 import，Boss / combat 流程仍互相依賴。 |
+| #12 | `systems/boss.js` ↔ `systems/player.js` | ⚠️ 部分仍存在 | 直接雙向 import 已解除，但仍在同一 SCC，透過 combat/mobile/organs 等路徑互相抵達。 |
+| #15 | `systems/mobile.js` ↔ `systems/player.js` | ❌ 仍存在 | 仍直接雙向 import，屬低嚴重度輸入/玩家耦合。 |
+| #16 | `systems/mobile.js` ↔ `systems/ui.js` | ❌ 仍存在 | 仍直接雙向 import，屬低嚴重度裝置/UI 耦合。 |
+| #17 | `systems/evolution.js` ↔ `systems/ui.js` | ❌ 仍存在 | 仍直接雙向 import，技能樹 overlay 與 UI builder 耦合。 |
+
+#### 新模組依賴確認
+
+| 模組 | import 清單 | 循環狀態 |
+|------|-------------|----------|
+| `systems/gameFlow.js` | `systems/gameState.js` | 無新循環 ✅ |
+| `systems/feedback.js` | `systems/camera.js`, `systems/gameState.js`, `systems/map.js` | 無新循環 ✅ |
+| `systems/reward.js` | `lang.js`, `systems/audio.js`, `systems/gameState.js` | 無新循環 ✅ |
+| `systems/loot.js` | `systems/gameState.js` | 無新循環 ✅ |
+
+**批次 1 已完成（v0.1.19.0）**：解除 #1~#5，`main.js` 反向依賴全部消失。  
+**批次 2 已完成（v0.1.20.0~v0.1.20.1）**：完全解除 #13、#14；#6、#7、#8、#9、#12 已移除部分直接依賴或 reward/feedback/loot 側耦合，但仍因核心 SCC 存在而未完全解除。  
+**批次 3 建議範圍**：優先處理 #10（evolution ↔ organs）與 #11（boss ↔ combat）兩個仍直接雙向的中嚴重度核心循環；接著處理 #6（combat ↔ player）殘留直接雙向 import。若這三處拆開，12 檔 SCC 應會明顯再縮小，最後再處理 #15~#17 的 UI / mobile 低嚴重度循環。
 
 ### 不一致模式
 - `hud.js` 同時負責 Canvas 渲染（`drawGame`）和 HTML overlay 更新（`updateUI`），職責混合
@@ -273,4 +297,4 @@ organs.js  ──imports──▶  gameFlow.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.17.1，由 Pre-Stage-D 輕量 Audit 補齊*
+*最後更新：v0.1.20.1，Stage F 全域循環依賴重掃*
