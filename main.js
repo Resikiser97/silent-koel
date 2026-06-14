@@ -21,7 +21,7 @@ import { _joyPaused } from './systems/mobile.js';
 import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from './systems/spawning.js';
 import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir, _archerAttack } from './systems/player.js';
 import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack, setRangedAttackCallback } from './systems/combat.js';
-import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion, showOrganSelection } from './systems/organs.js';
+import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion, showOrganSelection, handleEliteKill } from './systems/organs.js';
 import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans, showSkillTree } from './systems/evolution.js';
 import { initMutationData, applyAllMutationBonuses } from './systems/mutation.js';
 import { resetPackNames, resetHyenaPackNames, updateNeutralCreatures, updateHostileCreatures } from './systems/creatures.js';
@@ -654,6 +654,10 @@ window.onload = () => {
 
     window.addEventListener('bossKilled', () => {
         handleBossKill(gameState.boss);
+    });
+
+    window.addEventListener('eliteKilled', (e) => {
+        handleEliteKill(e.detail.killer);
     });
 
     // ── 禁止 #game-container 內右鍵選單（補強 CSS user-select）

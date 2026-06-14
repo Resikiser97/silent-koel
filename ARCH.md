@@ -1,4 +1,4 @@
-## v0.1.21.0
+## v0.1.21.1
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -69,10 +69,10 @@
 | `input.js` | handleKeyDown、handleKeyUp、_updateMouseWorld |
 | `spawning.js` | 生物/果子/樹木生成邏輯、moveCreature |
 | `player.js` | 玩家移動、碰撞、攻擊（含阿奇爾射水）、Boss 死亡事件 dispatch |
-| `feedback.js` | showFloatingText（Canvas 浮動文字）、showXPPopup |
-| `reward.js` | addXP、checkLevelUp（升級 dispatch CustomEvent('levelUp')） |
-| `loot.js` | _spawnBone（push 白骨到 gameState.bones） |
-| `damage.js` | applyDamageToPlayer、handleKill、handleGiantKill（Stage F 3a 從 combat.js 抽出） |
+| `feedback.js` | showFloatingText（Canvas 浮動文字）、showXPPopup（從 combat.js / player.js 抽出，v0.1.20.0） |
+| `reward.js` | addXP、checkLevelUp（升級 dispatch CustomEvent('levelUp')）（從 player.js 抽出，v0.1.20.1） |
+| `loot.js` | _spawnBone（push 白骨到 gameState.bones）（從 combat.js 抽出，v0.1.20.1） |
+| `damage.js` | applyDamageToPlayer、handleKill、handleGiantKill（從 combat.js 抽出，v0.1.21.0） |
 | `combat.js` | playerAttack、updateStatusEffects、白骨系統、毒傷疊加（poisonStacks）（傷害/擊殺服務已移至 damage.js） |
 | `organs.js` | 器官選擇、handleEliteKill、applyOrganEffects |
 | `evolution.js` | 技能樹、進化效果、buildSkillTreeOverlay |
@@ -287,7 +287,7 @@ main.js
 | `systems/feedback.js` | `systems/camera.js`, `systems/gameState.js`, `systems/map.js` | 無新循環 ✅ |
 | `systems/reward.js` | `lang.js`, `systems/audio.js`, `systems/gameState.js` | 無新循環 ✅ |
 | `systems/loot.js` | `systems/gameState.js` | 無新循環 ✅ |
-| `systems/damage.js` | `systems/gameState.js`, `systems/audio.js`, `systems/feedback.js`, `systems/reward.js`, `stats/index.js`, `systems/utils.js`, `lang.js`, `systems/mutation.js`, `systems/organs.js`（handleEliteKill） | `damage.js → organs.js` 為單向，無新循環 ✅ |
+| `systems/damage.js` | `systems/gameState.js`, `systems/audio.js`, `systems/feedback.js`, `systems/reward.js`, `stats/index.js`, `systems/utils.js`, `lang.js`, `systems/mutation.js` | 無新循環 ✅（v0.1.21.1 移除 organs.js import，改 dispatch eliteKilled 事件） |
 
 **批次 1 已完成（v0.1.19.0）**：解除 #1~#5，`main.js` 反向依賴全部消失。  
 **批次 2 已完成（v0.1.20.0~v0.1.20.1）**：完全解除 #13、#14；#6 等部分解除。  
@@ -302,4 +302,4 @@ main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.20.1，Stage F 全域循環依賴重掃*
+*最後更新：v0.1.21.1，damage.js 移除 organs.js import（Layer 1 違規修正）*

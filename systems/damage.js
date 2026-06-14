@@ -11,7 +11,6 @@ import { incrementStat, updateStatMax } from '../stats/index.js';
 import { spawnLootCircle } from './utils.js';
 import { t } from '../lang.js';
 import { addMutationPoints } from './mutation.js';
-import { handleEliteKill } from './organs.js';
 
 export function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
@@ -36,7 +35,7 @@ export function applyDamageToPlayer(rawDamage, attacker) {
             if (attacker === gameState.boss) {
                 window.dispatchEvent(new CustomEvent('bossKilled'));
             } else if (attacker === gameState.eliteCreature) {
-                handleEliteKill(attacker);
+                window.dispatchEvent(new CustomEvent('eliteKilled', { detail: { killer: attacker } }));
             } else {
                 const isHostile = gameState.hostileCreatures.includes(attacker);
                 handleKill(attacker, isHostile);

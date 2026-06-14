@@ -1,6 +1,24 @@
-## v0.1.21.0
+## v0.1.21.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.21.1 - 2026-06-14
+
+### 修復
+- `systems/damage.js`：移除 `import { handleEliteKill } from './organs.js'`，解除 Layer 1 → Layer 2 違規
+- `systems/damage.js`：刺甲反傷擊殺精英怪改 dispatch `CustomEvent('eliteKilled', { detail: { killer } })`
+- `main.js`：新增 `eliteKilled` event listener（→ `handleEliteKill(e.detail.killer)`）；`handleEliteKill` 加入 organs.js import 清單
+
+### 文件
+- `MAIN.md`：版本號 + 新增 feedback.js / reward.js / loot.js / damage.js 模組段落；修正 combat.js / player.js 段落
+- `QUICKREF.md`：版本號 + 補 feedback.js / reward.js / loot.js 條目
+- `ARCH.md`：版本號 + damage.js 依賴表移除 organs.js + 模組清單補齊
+- `docs/events.md`：新增 eliteKilled 事件記錄
+
+### 測試
+- `npm test`：14 個測試檔、103 個測試全數通過
 
 ---
 

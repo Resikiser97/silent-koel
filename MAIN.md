@@ -1,4 +1,4 @@
-## v0.1.19.0
+## v0.1.21.1
 
 # The Silent Koel — 模組架構說明
 
@@ -40,9 +40,17 @@ systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature, spawnTre
                           spawnBiomeCreatures（開局設 spawnProtectUntil +3s，中心保護區不生肉食怪，v0.0.66.2）
                           spawnCreatureAtEdgeBiome
                           updateCreatureSpawning（spawnProtectUntil 期間跳過肉食補充，v0.0.66.2）
+systems/feedback.js       showFloatingText（Canvas 浮動文字，推入 gameState.floatTexts）
+                          showXPPopup（XP 取得浮動文字）
+                          （Stage F 批次 2：從 combat.js / player.js 抽出，v0.1.20.0）
+systems/reward.js         addXP（XP 累加，含技能加成）
+                          checkLevelUp（升級判斷，dispatch CustomEvent('levelUp')）
+                          （Stage F 批次 2：從 player.js 抽出，v0.1.20.1）
+systems/loot.js           _spawnBone（push 白骨到 gameState.bones）
+                          （Stage F 批次 2：從 combat.js 抽出，v0.1.20.1）
 systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction
-                          showXPPopup, checkTreasureCollision, updatePassiveOrgans
-                          checkXPMilestone, addXP, checkLevelUp
+                          checkTreasureCollision, updatePassiveOrgans
+                          checkXPMilestone
                           findBestPerceptionPath
                           playerDash（閃現技能：瞬移+無敵+冷卻，v0.53.0）
                           _collectFruit（果子吸收 XP 共用函式，v0.54.0；v0.57.6 加入草食性判斷：ev.herbivore >= 1 才套正常 XP 計算，否則固定 1 XP）
@@ -52,14 +60,17 @@ systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTuto
                           showTutorialCombatHint，showTutorialCombatComplete
                           resetTutorial（強制重置教學狀態，供 initializeGame 每局呼叫，v0.1.3.6）
                           （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
-systems/combat.js         showFloatingText, applyDamageToPlayer, handleKill, playerAttack
-                          handleGiantKill, handleKillerKill, addMutationPoints（stub）
+systems/damage.js         applyDamageToPlayer（玩家受傷、刺甲反傷、tenacity 保命）
+                          handleKill（普通/敵對生物擊殺獎勵）
+                          handleGiantKill（巨人/Alpha 擊殺獎勵）
+                          （Stage F 3a：從 combat.js 抽出，供 boss/player/creatures/elite 共用，v0.1.21.0）
+systems/combat.js         playerAttack, setRangedAttackCallback
                           updateStatusEffects, updateCorpseEating, drawCorpseEatingBars
                           updateBoneEating, _addBoneMaterial, _checkPoisonSacUpgrade
-                          _spawnBone, drawBones
+                          drawBones
+                          （showFloatingText / _spawnBone / applyDamageToPlayer / handleKill / handleGiantKill 已移至 feedback.js / loot.js / damage.js）
                           （playerAttack() 將 tutorialStump 加入攻擊目標；v0.45.0）
                           （playerAttack() 含嘴器減速/鯊魚嗅葉傷害加成/Debuff StartTime；v0.56.0）
-                          （showFloatingText 改為 Canvas 批次繪製，推入 gameState.floatTexts，v0.1.4.2）
 systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, checkComboEffects
                           getOrganSlotsUsed, applyHiddenOrganEffects, applyOrganEffects
                           checkOrganUpgrade, showOrganSelection, drawOrganUI
@@ -392,7 +403,7 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 - 殺手化後每吃一具屍體：`killerLevel++`
 - `_getCreatureDisplayName` 顯示「[物種名] 殺手Lv[N]」（N ≥ 1 時顯示）
 
-### 擊殺獎勵（`handleKillerKill`，`systems/combat.js`）（v0.46.0 更新）
+### 擊殺獎勵（`handleKillerKill`，`systems/damage.js`）（v0.46.0 更新）
 - XP：`100 + killerLevel × 5 + 獵人本能 × 10`
 - `spawnLootCircle`：2 份 1 倍屍體（原為 3 份）
 - 100% 掉落 1 個變異點；`killerCorpseEaten = N` → N% 機率額外掉 1~N 個
@@ -500,7 +511,7 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 - 優先攻擊：guardianRange 內威脅組員的敵意生物（最優先）→ aggroRange 內的敵意生物 / 玩家（草食性Lv4+除外）
 - 無目標時：每3~5秒選最近果子作為移動目標，帶領隊伍前進
 
-### 擊殺獎勵（`handleGiantKill`，`systems/combat.js`）
+### 擊殺獎勵（`handleGiantKill`，`systems/damage.js`）
 - XP：100（+獵人本能加成）
 - `spawnLootCircle`：1個2倍屍體 + 1具白骨
 - 100% 掉落1個變異點；額外10%機率掉 1~3個

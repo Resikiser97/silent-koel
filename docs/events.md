@@ -1,5 +1,5 @@
 # 事件清單
-基準版本：v0.1.20.1
+基準版本：v0.1.21.1
 更新日期：2026-06-14
 
 ## 目的
@@ -166,6 +166,36 @@ payload：
 - listener 應集中呼叫 `handleBossKill(boss)`。
 - 不要在多處 listener 同時加 XP / 勝利 / 存檔，避免 Boss kill 流程被重複執行。
 - Boss kill handler 本身仍需防重入。
+
+### eliteKilled
+
+用途：
+
+刺甲反傷擊殺精英怪時，通知高層呼叫 `handleEliteKill`，解除 `damage.js`（Layer 1）直接 import `organs.js`（Layer 2）的層違規。
+
+dispatch 來源：
+
+- `systems/damage.js`（刺甲反傷路徑 `applyDamageToPlayer` 內）
+
+listen 位置：
+
+- `main.js`
+
+payload：
+
+```js
+{
+  killer: object  // 被刺甲擊殺的精英怪物件
+}
+```
+
+注意事項：
+
+- 只在刺甲反傷（thornDamage > 0）擊殺精英怪時觸發。
+- listener 呼叫 `handleEliteKill(e.detail.killer)`。
+- 與其他擊殺路徑（combat.js 攻擊路徑）的 handleEliteKill 直接呼叫並列，不替換。
+
+---
 
 ## 建議新增事件
 
