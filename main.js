@@ -22,7 +22,7 @@ import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from 
 import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir } from './systems/player.js';
 import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack } from './systems/combat.js';
 import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion } from './systems/organs.js';
-import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans } from './systems/evolution.js';
+import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans, showSkillTree } from './systems/evolution.js';
 import { initMutationData, applyAllMutationBonuses } from './systems/mutation.js';
 import { resetPackNames, resetHyenaPackNames, updateNeutralCreatures, updateHostileCreatures } from './systems/creatures.js';
 import { initEliteOrder, updateEliteCreature } from './systems/elite.js';
@@ -638,6 +638,10 @@ export function initializeGame() {
 window.onload = () => {
     window.addEventListener('startGame', () => {
         startGameWithLoading();
+    });
+
+    window.addEventListener('showSkillTree', (e) => {
+        showSkillTree(e.detail?.mode || 'postGame');
     });
 
     // ── 禁止 #game-container 內右鍵選單（補強 CSS user-select）

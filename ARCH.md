@@ -1,4 +1,4 @@
-## v0.1.19.0
+## v0.1.20.0
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -69,7 +69,8 @@
 | `input.js` | handleKeyDown、handleKeyUp、_updateMouseWorld |
 | `spawning.js` | 生物/果子/樹木生成邏輯、moveCreature |
 | `player.js` | 玩家移動、碰撞、XP、addXP、攻擊（含阿奇爾射水） |
-| `combat.js` | playerAttack、applyDamageToPlayer、handleKill、浮動文字、白骨系統、毒傷疊加（poisonStacks） |
+| `feedback.js` | showFloatingText（Canvas 浮動文字）、showXPPopup |
+| `combat.js` | playerAttack、applyDamageToPlayer、handleKill、白骨系統、毒傷疊加（poisonStacks） |
 | `organs.js` | 器官選擇、handleEliteKill、applyOrganEffects |
 | `evolution.js` | 技能樹、進化效果、buildSkillTreeOverlay |
 | `mutation.js` | 變異系統（跨局永久保留） |
@@ -258,11 +259,11 @@ organs.js  ──imports──▶  gameFlow.js
 ```
 
 **Stage F 批次 1 已完成（v0.1.19.0）**：`boss.js`、`organs.js`、`evolution.js`、`tutorial.js` 改由 `systems/gameFlow.js` 取得 timer 控制；`ui.js` / `evolution.js` 改用 `CustomEvent('startGame')` 通知 `main.js` 啟動遊戲，已解除 5 個高嚴重度 `main.js` 反向循環。  
-**仍待處理**：player ↔ combat、player ↔ organs、combat ↔ organs / evolution / mutation / boss 等核心循環仍待 Stage F 後續批次拆解。
+**Stage F 批次 2 第一波已完成（v0.1.20.0）**：新建 `systems/feedback.js`；`showFloatingText` / `showXPPopup` 搬出 combat/player；`combat.js` 死亡 `showSkillTree()` 改為 `CustomEvent('showSkillTree')` 由 `main.js` 監聽；解除循環 #9（combat ↔ evolution）、#13（combat ↔ mutation 的 feedback 側）。  
+**仍待處理**：player ↔ combat、player ↔ organs、combat ↔ organs / boss、addXP 的 reward 拆解，以及 #14（utils ↔ combat）等核心循環仍待後續批次處理。
 
 ### 不一致模式
 - `hud.js` 同時負責 Canvas 渲染（`drawGame`）和 HTML overlay 更新（`updateUI`），職責混合
-- `combat.js` 的 `showFloatingText` 與 canvas batch 系統耦合，需要 hud.js 才能完整運作
 
 ### Dead code（已清理 v0.1.13.0）
 - `systems/combat.js`：`addMutationPoints` stub 已移除，改為正式呼叫 mutation.js

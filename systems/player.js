@@ -16,7 +16,8 @@ import { EVOLUTION_PATHS } from '../config/evolution.js';
 import { AudioManager } from './audio.js';
 import { applyTenacity } from './utils.js';
 import { t } from '../lang.js';
-import { applyDamageToPlayer, handleKill, handleGiantKill, showFloatingText } from './combat.js';
+import { applyDamageToPlayer, handleKill, handleGiantKill } from './combat.js';
+import { showFloatingText, showXPPopup } from './feedback.js';
 import { handleEliteKill } from './organs.js';
 import { handleBossKill } from './boss.js';
 import { spawnFruitFromTree } from './spawning.js';
@@ -558,11 +559,6 @@ export function updateTreeFruitProduction(deltaTime) {
             spawnFruitFromTree(tree);
         }
     }
-}
-
-export function showXPPopup(wx, wy, amount) {
-    if (!amount || amount <= 0) return;
-    showFloatingText(wx, wy, '+' + amount, '#FFD700', 13);
 }
 
 export function checkTreasureCollision() {

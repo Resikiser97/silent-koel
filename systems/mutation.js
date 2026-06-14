@@ -8,7 +8,7 @@
 // =============================================================
 
 import { gameState } from './gameState.js';
-import { showFloatingText } from './combat.js';
+import { showFloatingText } from './feedback.js';
 import { t } from '../lang.js';
 import {
     STORAGE_KEYS,

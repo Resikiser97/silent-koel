@@ -1,6 +1,21 @@
-## v0.1.19.0
+## v0.1.20.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.20.0 - 2026-06-14
+
+### 重構
+- Stage F 批次 2 第一波：新建 `systems/feedback.js`，將 `showFloatingText`（from `combat.js`）與 `showXPPopup`（from `player.js`）搬移至此
+- `boss.js`、`creatures.js`、`elite.js`、`hud.js`、`mutation.js`、`organs.js`、`player.js`、`combat.js` 的浮動文字 import 改為 `feedback.js`
+- `evolution.js`：移除 `showFloatingText` dead import（from combat）
+- `combat.js`：玩家死亡時 `showSkillTree()` 改為 `CustomEvent('showSkillTree')` dispatch
+- `main.js`：新增 `showSkillTree` event listener
+- 解除循環依賴 #9（combat ↔ evolution）、#13（combat ↔ mutation 的 feedback 側）
+
+### 測試
+- `npm test`：14 個測試檔、103 個測試全數通過
 
 ---
 

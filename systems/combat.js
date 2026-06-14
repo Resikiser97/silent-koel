@@ -14,58 +14,14 @@ import { ORGANS } from '../config/organs.js';
 import { AudioManager } from './audio.js';
 import { getGameFont, spawnLootCircle, applyTenacity } from './utils.js';
 import { t } from '../lang.js';
-import { addXP, showXPPopup } from './player.js';
+import { addXP } from './player.js';
+import { showFloatingText, showXPPopup } from './feedback.js';
 import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
 import { handleBossKill } from './boss.js';
-import { showSkillTree } from './evolution.js';
 import { incrementStat, updateStatMax } from '../stats/index.js';
 import { _archerAttack } from './player.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 import { addMutationPoints } from './mutation.js';
-
-export function showFloatingText(wx, wy, text, color, fontSize, noMerge = false) {
-    const s = worldToScreen(wx, wy);
-    if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
-
-    // 手機模式上限 12，桌機上限 20
-    const maxTexts = gameState.isMobile ? 12 : 20;
-    if (gameState.floatTexts.length >= maxTexts) return;
-
-    // 同幀同位置同類型合併（50px 範圍內、100ms 內、同顏色）
-    const now = Date.now();
-    if (!noMerge) {
-        const existing = gameState.floatTexts.find(ft =>
-            !ft.noMerge &&
-            ft.color === color &&
-            Math.abs(ft.wx - wx) < 50 &&
-            Math.abs(ft.wy - wy) < 50 &&
-            now - ft.startTime < 100
-        );
-        if (existing) {
-            // 嘗試數字合併（如果兩個都是純數字或帶+/-符號的數字）
-            const existingNum = parseFloat(existing.text);
-            const newNum = parseFloat(text);
-            if (!isNaN(existingNum) && !isNaN(newNum)) {
-                const combined = existingNum + newNum;
-                existing.text = (combined > 0 ? '+' : '') + Math.round(combined);
-            }
-            // 非數字就跳過（不顯示重複）
-            return;
-        }
-    }
-
-    gameState.floatTexts.push({
-        wx, wy,
-        screenX: s.x,
-        screenY: s.y,
-        text: String(text),
-        color: color || 'white',
-        fontSize: fontSize || 16,
-        noMerge,
-        startTime: now,
-        duration: 1200,
-    });
-}
 
 export function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
@@ -105,7 +61,7 @@ export function applyDamageToPlayer(rawDamage, attacker) {
             showFloatingText(p.x, p.y - 40, t('tenacityFloat'), '#FF8800');
             return;
         }
-        showSkillTree();
+        window.dispatchEvent(new CustomEvent('showSkillTree', { detail: { mode: 'postGame' } }));
     }
 }
 
