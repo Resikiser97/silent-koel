@@ -817,12 +817,15 @@ function drawTopBarUI() {
     // 收集目標身上的有效 Debuff
     const _activeDebuffs = [];
     const _debuffDefs = [
-        { color: '#33FF66', label: '毒', endTime: target.poisonEndTime,  startTime: target._poisonStartTime },
         { color: '#FF4444', label: '血', endTime: target.bleedEndTime,   startTime: target._bleedStartTime  },
         { color: '#4488FF', label: '緩', endTime: target._slowUntil,     startTime: target._slowStartTime   },
         { color: '#FFE533', label: '暈', endTime: target.stunnedUntil,   startTime: target._stunStartTime   },
     ];
     _debuffDefs.forEach(d => { if (d.endTime && now < d.endTime) _activeDebuffs.push(d); });
+    if (target.poisonStacks && target.poisonStacks.some(s => s.expiryTime > now)) {
+        const _maxExpiry = Math.max(...target.poisonStacks.filter(s => s.expiryTime > now).map(s => s.expiryTime));
+        _activeDebuffs.unshift({ color: '#33FF66', label: '毒', endTime: _maxExpiry, startTime: null });
+    }
 
     const isMobileTopBar = gameState.isMobile;
     const topLeftEl = document.getElementById('top-left');

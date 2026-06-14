@@ -1,4 +1,4 @@
-## v0.1.16.3
+## v0.1.17.1
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,7 +12,7 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.16.3
+**現在版本:** v0.1.17.1
 
 **當前狀態：** Vercel / itch.io build 輸出已統一，`npm run build` 會將 `sounds/` 複製到 `dist/sounds/`，避免 Vercel 線上音效 404。
 

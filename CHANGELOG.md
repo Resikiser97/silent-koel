@@ -1,6 +1,40 @@
-## v0.1.16.3
+## v0.1.17.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.17.1 - 2026-06-14
+
+### 修復
+- systems/hud.js：修復毒 debuff 圖示永不顯示問題，改從 `poisonStacks[]` 判斷是否有毒狀態（原本讀廢棄的 `poisonEndTime`）
+- systems/boss.js：同上，Boss 血條下方毒圖示改用 `poisonStacks[]` 判斷
+- config/supabase.js：`fetchHallOfFameMyRank` 改為兩次高效 query（先取自己分數，再 HEAD count 計算排名），避免拉整張 table
+
+### 調整
+- systems/leaderboard.js：排行榜開啟預設顯示名人堂 Showcase
+- systems/leaderboard.js：[難度][種類][名人堂] 三個按鈕在所有 view 永遠顯示，導航邏輯統一（currentView: leaderboard / fun / hof）
+- systems/leaderboard.js：趣味排行榜嵌入主排行榜 overlay，不再跳新視窗
+
+---
+
+## v0.1.17.0 - 2026-06-14
+
+### 新增
+- systems/leaderboard.js：提交分數時新增 `bone_count`（白骨素）欄位到 `leaderboard` table
+- systems/leaderboard.js + config/supabase.js：新增名人堂（hall_of_fame）系統
+  - 登入玩家提交分數後自動 upsert 名人堂資料（累計通關次數 × 難度、角色，變異等級）
+  - `supabaseUpsert()` — REST resolution=merge-duplicates 輔助函式
+  - `fetchHallOfFameShowcase()` — 各類別 Top1（Showcase 2×3 用）
+  - `fetchHallOfFameTop10(category)` — 某類別 Top 10
+  - `fetchHallOfFameMyRank(username, category)` — 登入玩家排名
+- systems/leaderboard.js：排行榜加入「🏛️ 名人堂」Tab
+  - Showcase 2×3：困難通關 / 變異等級 / 普通通關 / 簡單通關 / 噪鵑通關 / 阿奇爾通關
+  - 點擊格子展開 Top 10 詳細清單，顯示排名 / 玩家名稱 / 數值 / 版本 / 日期
+  - 登入玩家底部顯示個人排名，未登入提示登入
+
+### 調整
+- systems/leaderboard.js：一般排行榜改為 Top 100 可捲動列表，移除翻頁按鈕
 
 ---
 

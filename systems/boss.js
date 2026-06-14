@@ -850,13 +850,16 @@ function _drawBossDebuffIcons(boss, barX, barY, barW) {
     const iconY    = barY + 8; // 血條下方 2px
 
     const debuffs = [
-        { color: '#33FF66', label: '毒', endTime: boss.poisonEndTime,  startTime: boss._poisonStartTime },
         { color: '#FF4444', label: '血', endTime: boss.bleedEndTime,   startTime: boss._bleedStartTime  },
         { color: '#4488FF', label: '緩', endTime: boss._slowUntil,     startTime: boss._slowStartTime   },
         { color: '#FFE533', label: '暈', endTime: boss.stunnedUntil,   startTime: boss._stunStartTime   },
     ];
 
     const active = debuffs.filter(d => d.endTime && now < d.endTime);
+    if (boss.poisonStacks && boss.poisonStacks.some(s => s.expiryTime > now)) {
+        const _maxExpiry = Math.max(...boss.poisonStacks.filter(s => s.expiryTime > now).map(s => s.expiryTime));
+        active.unshift({ color: '#33FF66', label: '毒', endTime: _maxExpiry, startTime: null });
+    }
     if (active.length === 0) return;
 
     let ix = barX + 8;

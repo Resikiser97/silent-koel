@@ -1,9 +1,10 @@
 // =============================================================
-// config/supabase.js — Supabase 連線設定與排行榜 REST API 封裝
+// config/supabase.js — Supabase 連線設定、排行榜 REST API 封裝、名人堂 API
 // =============================================================
 //
 // 【對外公開函式】（其他檔案可直接呼叫）
 //   supabaseQuery(table, method, body, params) — 通用 Supabase REST 請求
+//   supabaseUpsert(table, body, onConflict) — REST upsert（resolution=merge-duplicates）
 //   submitScore(data) — 提交一筆分數紀錄到 leaderboard 資料表
 //   fetchVictoryRecords(difficulty) — 拉取勝利排行（勝利、遊玩時間最短）
 //   fetchDefeatRecords(limit, difficulty) — 拉取失敗排行（遊玩時間最長）
@@ -19,6 +20,9 @@
 //   fetchFunFruitsEaten(difficulty) — 趣味榜：最佳果王（fruits_eaten 最多）
 //   fetchFunNormalKills(difficulty) — 趣味榜：最強獵戶（normal_kills 最多）
 //   fetchAvailableDifficulties() — 取得排行榜中有資料的難度陣列
+//   fetchHallOfFameShowcase() — 名人堂：各類別 Top1（Showcase 用）
+//   fetchHallOfFameTop10(category) — 名人堂：某類別 Top 10
+//   fetchHallOfFameMyRank(username, category) — 名人堂：登入玩家排名
 //
 // 【依賴的跨檔案函式】（修改時注意這些來自外部）
 //   gameState  ← 來自 systems/gameState.js（submitScore 讀取 sessionStats）
@@ -192,4 +196,70 @@ export async function fetchAvailableDifficulties() {
         }
     }
     return result;
+}
+
+// REST upsert（Prefer: resolution=merge-duplicates）
+export async function supabaseUpsert(table, body, onConflict) {
+    const url = `${SUPABASE_URL}/rest/v1/${table}?on_conflict=${onConflict}`;
+    const headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+    };
+    try {
+        const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+        if (!res.ok) { const errText = await res.text(); throw new Error(errText); }
+        return null;
+    } catch(e) {
+        console.warn('[Supabase] upsert failed:', e);
+        throw e;
+    }
+}
+
+// ── 名人堂（hall_of_fame）
+
+// 各類別 Top1（Showcase 用，並行查詢）
+export async function fetchHallOfFameShowcase() {
+    const cats = ['wins_hard','max_mutation_level','wins_normal','wins_easy','wins_koel','wins_archerfish'];
+    const results = {};
+    await Promise.all(cats.map(async cat => {
+        try {
+            const rows = await supabaseQuery('hall_of_fame', 'GET', null,
+                `?select=username,${cat},last_version,updated_at&order=${cat}.desc.nullslast&limit=1`);
+            results[cat] = (rows && rows.length > 0) ? rows[0] : null;
+        } catch(e) { results[cat] = null; }
+    }));
+    return results;
+}
+
+// 某類別 Top 10
+export async function fetchHallOfFameTop10(category) {
+    return supabaseQuery('hall_of_fame', 'GET', null,
+        `?select=username,${category},last_version,updated_at&order=${category}.desc.nullslast&limit=10`);
+}
+
+// 登入玩家在某類別的排名（兩次 query：先取自己的分數，再 count 高於自己的人數）
+async function _supabaseCountHigher(category, myScore) {
+    const url = `${SUPABASE_URL}/rest/v1/hall_of_fame?${category}=gt.${myScore}`;
+    const headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'count=exact'
+    };
+    const res = await fetch(url, { method: 'HEAD', headers });
+    if (!res.ok) throw new Error('count query failed');
+    const cr = res.headers.get('Content-Range');
+    if (cr) { const m = cr.match(/\/(\d+)$/); if (m) return parseInt(m[1]); }
+    return 0;
+}
+
+export async function fetchHallOfFameMyRank(username, category) {
+    const myRows = await supabaseQuery('hall_of_fame', 'GET', null,
+        `?select=${category}&username=eq.${encodeURIComponent(username)}&limit=1`);
+    if (!myRows || myRows.length === 0) return null;
+    const myScore = myRows[0][category];
+    if (myScore == null) return null;
+    const higherCount = await _supabaseCountHigher(category, myScore);
+    return { rank: higherCount + 1, value: myScore };
 }
