@@ -45,7 +45,9 @@ import {
     devSpawnHostile,
     devFastForward,
     devRewind,
-    devToggleDayNight
+    devToggleDayNight,
+    devToggleHP,
+    devToggleAI
 } from './systems/ui.js';
 import { showTutorial } from './systems/tutorial.js';
 import { disconnectChat, hideChat } from './systems/chat.js';
@@ -76,6 +78,8 @@ window.devSpawnHostile = devSpawnHostile;
 window.devFastForward = devFastForward;
 window.devRewind = devRewind;
 window.devToggleDayNight = devToggleDayNight;
+window.devToggleHP = devToggleHP;
+window.devToggleAI = devToggleAI;
 
 export function pausePlayTimer() {
     if (gameState._playTimerStart !== null) {

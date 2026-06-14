@@ -137,7 +137,7 @@ function _calcProgressScore(data) {
             : {};
         const total = mut.totalPointsEarned || 0;
         const sp    = data.skillPoints ? parseInt(data.skillPoints) : 0;
-        return total + sp;
+        return total * 10.01 + sp;
     } catch(e) { return 0; }
 }
 

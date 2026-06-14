@@ -122,7 +122,7 @@ export function _checkProjectileHit(b, idx) {
 
         c.hp -= dmg;
         showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg,
-            isCrit ? '#FFD700' : '#FF4444');
+            isCrit ? '#FFD700' : '#FF4444', 16, true);
 
         // 追蹤特殊目標
         if (c.isGiantized || c.isKiller || c === gameState.boss || c === gameState.eliteCreature) {
@@ -431,7 +431,7 @@ export function updatePlayerMovement() {
                 c._stunUntil = now + 500;
                 const dashDmg = Math.max(1, Math.round(p.attack));
                 c.hp -= dashDmg;
-                showFloatingText(c.x, c.y - 15, dashDmg, '#4FC3F7');
+                showFloatingText(c.x, c.y - 15, dashDmg, '#4FC3F7', 16, true);
                 if (c.hp <= 0) {
                     const isHostile = gameState.hostileCreatures.includes(c);
                     if (c.isGiantized) handleGiantKill(c);
@@ -597,7 +597,7 @@ export function updatePassiveOrgans() {
                     isCrit = true;
                 }
                 c.hp -= dmg;
-                showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FFAAAA');
+                showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FFAAAA', 16, true);
                 if (c.hp <= 0) {
                     handleKill(c, true);
                 }

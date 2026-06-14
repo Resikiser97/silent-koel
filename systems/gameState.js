@@ -79,6 +79,8 @@ export const gameState = {
     devInput: '',
     devMode: false,
     devModeUsed: false,
+    devShowHP: false,
+    devShowAI: false,
     timeRemaining: 600,
     lastTimeTick: 0,
     gameOver: false,

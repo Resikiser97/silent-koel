@@ -413,38 +413,66 @@ function _hasGiantizedNearby(creature, range) {
     return false;
 }
 
-// ── 肉系吃屍體成長（每具+10%基礎值，不累乘）──
+/**
+ * ═══════════════════════════════════════════════════════
+ * 肉食怪數值成長公式（v0.1.16.x 統一版）
+ * ═══════════════════════════════════════════════════════
+ *
+ * 【第一層】生成時計算，只算一次，存入 scaledBase：
+ *   scaledBaseHp     = baseHp     × hpMultiplier     × pow(1.2, nightNum)
+ *   scaledBaseDamage = baseDamage × damageMultiplier × pow(1.2, nightNum)
+ *   scaledBaseSpeed  = baseSpeed  × speedMultiplier  × pow(1.1, nightNum)
+ *   → 儲存在 creature.scaledBaseHp / scaledBaseDamage / scaledBaseSpeed
+ *
+ * 【第二層】動態成長，每次吃屍體後重算：
+ *   corpseMult = 1 + corpseEaten × 0.1
+ *
+ * 【第三層】殺手化額外 HP bonus（isKiller 後永久生效）：
+ *   killerHpBonus = isKiller ? 0.5 : 0
+ *
+ * 【最終公式】（所有時間點統一使用）：
+ *   maxHp  = scaledBaseHp     × (corpseMult + killerHpBonus)
+ *   damage = scaledBaseDamage × corpseMult
+ *   speed  = scaledBaseSpeed  × corpseMult
+ *   radius = baseRadius       × corpseMult
+ *
+ * 【驗算 — 困難模式 Night 0，scaledBaseHp = 125】：
+ *   0 屍        → HP 125
+ *   4 屍        → HP 175
+ *   5 屍（殺手）→ HP 250   (125 × 2.0)
+ *   6 屍（殺手後）→ HP 262.5 (125 × 2.1)
+ *
+ * 【禁止事項】：
+ *   - 不得在 _triggerKiller() 直接賦值 maxHp / damage / speed
+ *   - 不得讓 killerCorpseEaten 參與數值成長計算
+ *   - 不得在任何地方用 baseHp × hpMultiplier 重算（只有生成時才算）
+ * ═══════════════════════════════════════════════════════
+ */
 function _carnivoreEatCorpse(creature, corpse) {
     creature.corpseEaten++;
-    const bonus = creature.corpseEaten * 0.1; // 每吃1具+10%，不累乘
 
-    // 回血5% maxHP
-    creature.hp = Math.min(creature.maxHp, creature.hp + creature.maxHp * 0.05);
-
-    // 成長數值（基礎值×bonus，不累乘）
-    creature.maxHp   = creature.baseHp     * (1 + bonus);
-    creature.hp      = Math.min(creature.maxHp, creature.hp);
-    creature.speed   = creature.baseSpeed  * (1 + bonus);
-    creature.damage  = creature.baseDamage * (1 + bonus);
-    creature.radius  = creature.baseRadius * (1 + bonus);
-
-    if (creature.isKiller) {
-        // 殺手化後繼續吃：killerCorpseEaten 計數，再疊加+10%基礎值（帶難度倍率）
-        const kStr = (gameState.currentMap && gameState.currentMap.creatureStrength && gameState.currentMap.creatureStrength.hostile)
-            || { hpMultiplier: 1, damageMultiplier: 1, speedMultiplier: 1 };
-        creature.killerLevel = (creature.killerLevel || 0) + 1;
-        creature.killerCorpseEaten++;
-        const kBonus = creature.killerCorpseEaten * 0.1;
-        creature.damage  += creature.baseDamage * kStr.damageMultiplier * kBonus;
-        creature.speed   += creature.baseSpeed  * kStr.speedMultiplier  * kBonus;
-        creature.maxHp   += creature.baseHp     * kStr.hpMultiplier     * kBonus;
-        creature.hp       = Math.min(creature.maxHp, creature.hp);
-        creature.radius  += creature.baseRadius * kBonus;
-    } else if (creature.corpseEaten >= 5 &&
-               gameState.currentMap && gameState.currentMap.features &&
-               gameState.currentMap.features.killer) {
-        // 觸發殺手化
+    // 先觸發殺手化，使 isKiller 在本次統一公式中即刻生效
+    if (!creature.isKiller &&
+        creature.corpseEaten >= 5 &&
+        gameState.currentMap && gameState.currentMap.features &&
+        gameState.currentMap.features.killer) {
         _triggerKiller(creature);
+    }
+
+    // 【統一公式】
+    const corpseMult    = 1 + creature.corpseEaten * 0.1;
+    const killerHpBonus = creature.isKiller ? 0.5 : 0;
+
+    creature.maxHp  = (creature.scaledBaseHp     || creature.baseHp)     * (corpseMult + killerHpBonus);
+    creature.damage = (creature.scaledBaseDamage || creature.baseDamage) * corpseMult;
+    creature.speed  = (creature.scaledBaseSpeed  || creature.baseSpeed)  * corpseMult;
+    creature.radius = creature.baseRadius * corpseMult;
+    creature.hp     = Math.min(creature.hp + creature.maxHp * 0.05, creature.maxHp);
+
+    // killerCorpseEaten 計數追蹤（不參與數值計算）
+    if (creature.isKiller) {
+        creature.killerCorpseEaten++;
+        creature.killerLevel = (creature.killerLevel || 0) + 1;
     }
 
     // 鬣狗：分食系統（吃完屍體時，同具屍體的組員各+1計數）
@@ -467,17 +495,12 @@ function _carnivoreEatCorpse(creature, corpse) {
 }
 
 // ── 殺手化觸發（吃滿5具）──
+// maxHp / damage / speed 由 _carnivoreEatCorpse 統一公式重算，此處不覆蓋
 function _triggerKiller(creature) {
-    const str = (gameState.currentMap && gameState.currentMap.creatureStrength && gameState.currentMap.creatureStrength.hostile)
-        || { hpMultiplier: 1, damageMultiplier: 1 };
     creature.isKiller          = true;
     creature.killerLevel       = 0;
     creature.killerCorpseEaten = 0;
     creature.aggroRange        = creature.aggroRange * 2;
-    // 血量×難度倍率×2，攻擊×難度倍率×1.5，速度維持生成時的難度速度
-    creature.maxHp             = creature.baseHp     * str.hpMultiplier * 2;
-    creature.hp                = Math.min(creature.maxHp, creature.hp);
-    creature.damage            = creature.baseDamage * str.damageMultiplier * 1.5;
     creature.killerRegenTimer  = 0;
 }
 
@@ -1497,6 +1520,37 @@ export function drawNeutralCreatures() {
                 );
             }
         }
+
+        // ── Dev 疊加層 ──
+        const _cr = creature.radius * (gameState.cameraZoom || 1);
+        const _ny = s.y - _cr - 10;
+        if (gameState.devShowHP) {
+            const hpPct = creature.hp / (creature.maxHp || 30);
+            const hpColor = hpPct > 0.6 ? '#00FF88' : hpPct > 0.3 ? '#FFD700' : '#FF4444';
+            ctx.save();
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillStyle = hpColor;
+            ctx.fillText(Math.ceil(creature.hp) + ' / ' + (creature.maxHp || 30), s.x - _cr - 6, s.y + 6);
+            ctx.restore();
+        }
+        if (gameState.devShowAI) {
+            let aiLabel = '[' + (creature.state || '?') + ']';
+            if (creature.isGiantized || creature.isAlpha) {
+                aiLabel += creature.packLeader ? '[Leader]' : creature.packLeaderRef ? '[Member]' : '';
+            }
+            const dn = creature.isAlpha ? (creature.name || '') + '（Alpha）'
+                     : creature.isGiantized ? (creature.name || '') + '（巨人化）'
+                     : (creature.name || '');
+            ctx.save();
+            ctx.font = getGameFont(CREATURE_NAME_FONT_SIZE, false);
+            const nw = ctx.measureText(dn).width / 2;
+            ctx.font = '20px Arial';
+            ctx.fillStyle = 'rgba(200, 200, 255, 0.85)';
+            ctx.textAlign = 'left';
+            ctx.fillText(aiLabel, s.x + nw + 8, _ny);
+            ctx.restore();
+        }
     }
 }
 
@@ -1987,6 +2041,33 @@ export function drawHostileCreatures() {
                     3
                 );
             }
+        }
+
+        // ── Dev 疊加層 ──
+        const _hr = creature.radius * (gameState.cameraZoom || 1);
+        const _hny = s.y - _hr - 10;
+        if (gameState.devShowHP) {
+            const hpPct = creature.hp / (creature.maxHp || 50);
+            const hpColor = hpPct > 0.6 ? '#00FF88' : hpPct > 0.3 ? '#FFD700' : '#FF4444';
+            ctx.save();
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillStyle = hpColor;
+            ctx.fillText(Math.ceil(creature.hp) + ' / ' + (creature.maxHp || 50), s.x - _hr - 6, s.y + 6);
+            ctx.restore();
+        }
+        if (gameState.devShowAI) {
+            let aiLabel = '[' + (creature.state || '?') + ']';
+            if (creature.speciesId === 'hyena' && creature._attackState) aiLabel += '[' + creature._attackState + ']';
+            const hn = _getCreatureDisplayName(creature) || '';
+            ctx.save();
+            ctx.font = getGameFont(CREATURE_NAME_FONT_SIZE, false);
+            const hnw = ctx.measureText(hn).width / 2;
+            ctx.font = '20px Arial';
+            ctx.fillStyle = 'rgba(200, 200, 255, 0.85)';
+            ctx.textAlign = 'left';
+            ctx.fillText(aiLabel, s.x + hnw + 8, _hny);
+            ctx.restore();
         }
     }
 }

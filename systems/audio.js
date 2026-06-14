@@ -41,6 +41,7 @@ export const AudioManager = {
     _musicGain: null,
     _sfxGain: null,
     _unlocked: false,
+    _preloadDone: false,
     _mobileMasterFadeDone: false,
     _mobileMasterFadeStartMs: 0,
     _mobileMasterFadeEndMs: 0,
@@ -89,6 +90,7 @@ export const AudioManager = {
         if (!canPreloadBuffers || !this._audioCtx || total === 0) {
             completed = total;
             report();
+            this._preloadDone = true;
             return;
         }
 
@@ -101,6 +103,7 @@ export const AudioManager = {
                     report();
                 })
         ));
+        this._preloadDone = true;
     },
 
     // Stubs：由 Part A 覆寫；若 Codex 尚未完成則回傳 null
@@ -127,6 +130,9 @@ export const AudioManager = {
 
             return this._audioCtx.resume().then(() => {
                 this._unlocked = true;
+                if (!this._preloadDone) {
+                    this.preloadAllSfxBuffers(() => {}).catch(() => {});
+                }
                 if (gameState.isMobile && !this._mobileMasterFadeDone) {
                     this._mobileMasterFadeDone = true;
                     this._mobileMasterFadeStartMs = Date.now();
@@ -145,7 +151,10 @@ export const AudioManager = {
                 } else {
                     this._applyGainVolumes();
                 }
-            }).catch(() => {});
+            }).catch((e) => {
+                console.warn('[AudioManager] unlock failed:', e);
+                return Promise.resolve();
+            });
         } catch(e) {
             return Promise.resolve();
         }

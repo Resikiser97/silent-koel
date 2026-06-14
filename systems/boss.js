@@ -761,6 +761,28 @@ export function drawBoss() {
     ctx.fillText(boss.name || boss.label || 'Boss', s.x, s.y - r - 32);
     ctx.restore();
 
+    if (gameState.devShowHP) {
+        const hpPct = boss.hp / boss.maxHp;
+        const hpColor = hpPct > 0.6 ? '#00FF88' : hpPct > 0.3 ? '#FFD700' : '#FF4444';
+        ctx.save();
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = hpColor;
+        ctx.fillText(Math.ceil(boss.hp) + ' / ' + boss.maxHp, s.x - r - 6, s.y + 6);
+        ctx.restore();
+    }
+    if (gameState.devShowAI) {
+        const aiLabel = '[' + (boss.state || '?') + ']';
+        ctx.save();
+        ctx.font = 'bold 12px Arial';
+        const bnw = ctx.measureText(boss.name || boss.label || 'Boss').width / 2;
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'rgba(200, 200, 255, 0.85)';
+        ctx.textAlign = 'left';
+        ctx.fillText(aiLabel, s.x + bnw + 8, s.y - r - 32);
+        ctx.restore();
+    }
+
     // 血條
     const bBarW = 50, bBarH = 6;
     const bBarX = s.x - bBarW / 2;

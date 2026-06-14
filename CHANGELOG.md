@@ -1,6 +1,23 @@
-## v0.1.16.1
+## v0.1.16.2
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.16.2 - 2026-06-14
+
+### 修復
+- systems/audio.js：修復 iOS 手機版完全無音效問題三個根本原因：preloadAllSfxBuffers 在 AudioContext 建立前跳過預載、unlock() 錯誤完全靜默、Intro 音樂不等 unlock 就播放
+- systems/mutation.js：修復變異器官升級紅點在點數不足時仍然亮起的問題（addMutationPoints 判斷改為 total × 10.01 + sp）
+- systems/chat.js：修復雲端存檔同步判斷公式錯誤（_calcProgressScore 改為 total × 10.01 + sp）
+- systems/combat.js / player.js：修復攻擊多隻相鄰怪物時傷害數字被合併顯示的問題（加入 noMerge 機制）
+- systems/creatures.js / spawning.js：修復肉食怪殺手化後繼續吃屍體 HP 被重算為錯誤值的問題（統一成長公式，引入 scaledBase 與 killerHpBonus）
+
+### 調整
+- systems/combat.js：浮動文字持續時間從 700ms 延長至 1200ms
+
+### 新增（開發工具）
+- systems/gameState.js / ui.js / main.js / index.html / creatures.js / elite.js / boss.js：Dev Mode 新增 ❤️ HP 數字顯示與 🧠 AI 狀態顯示開關
 
 ---
 

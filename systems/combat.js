@@ -23,7 +23,7 @@ import { _archerAttack } from './player.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 import { addMutationPoints } from './mutation.js';
 
-export function showFloatingText(wx, wy, text, color, fontSize) {
+export function showFloatingText(wx, wy, text, color, fontSize, noMerge = false) {
     const s = worldToScreen(wx, wy);
     if (s.x < -30 || s.x > VIEW_W + 30 || s.y < -30 || s.y > VIEW_H + 30) return;
 
@@ -33,22 +33,25 @@ export function showFloatingText(wx, wy, text, color, fontSize) {
 
     // 同幀同位置同類型合併（50px 範圍內、100ms 內、同顏色）
     const now = Date.now();
-    const existing = gameState.floatTexts.find(ft =>
-        ft.color === color &&
-        Math.abs(ft.wx - wx) < 50 &&
-        Math.abs(ft.wy - wy) < 50 &&
-        now - ft.startTime < 100
-    );
-    if (existing) {
-        // 嘗試數字合併（如果兩個都是純數字或帶+/-符號的數字）
-        const existingNum = parseFloat(existing.text);
-        const newNum = parseFloat(text);
-        if (!isNaN(existingNum) && !isNaN(newNum)) {
-            const combined = existingNum + newNum;
-            existing.text = (combined > 0 ? '+' : '') + Math.round(combined);
+    if (!noMerge) {
+        const existing = gameState.floatTexts.find(ft =>
+            !ft.noMerge &&
+            ft.color === color &&
+            Math.abs(ft.wx - wx) < 50 &&
+            Math.abs(ft.wy - wy) < 50 &&
+            now - ft.startTime < 100
+        );
+        if (existing) {
+            // 嘗試數字合併（如果兩個都是純數字或帶+/-符號的數字）
+            const existingNum = parseFloat(existing.text);
+            const newNum = parseFloat(text);
+            if (!isNaN(existingNum) && !isNaN(newNum)) {
+                const combined = existingNum + newNum;
+                existing.text = (combined > 0 ? '+' : '') + Math.round(combined);
+            }
+            // 非數字就跳過（不顯示重複）
+            return;
         }
-        // 非數字就跳過（不顯示重複）
-        return;
     }
 
     gameState.floatTexts.push({
@@ -58,8 +61,9 @@ export function showFloatingText(wx, wy, text, color, fontSize) {
         text: String(text),
         color: color || 'white',
         fontSize: fontSize || 16,
+        noMerge,
         startTime: now,
-        duration: 700,    // 比原本 800ms 短一點，手機感覺更快
+        duration: 1200,
     });
 }
 
@@ -270,7 +274,7 @@ export function playerAttack() {
         if (isElite || isBoss || c.isGiantized || c.isKiller) gameState.topBarTarget = c;
 
         c.hp -= dmg;
-        showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FF4444');
+        showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FF4444', 16, true);
 
         // 嘴器Lv3：命中施加減速 -20% / 2秒（韌性縮短）
         if (getOrganLevel('mouthOrgan') >= 3) {
@@ -369,7 +373,7 @@ export function updateStatusEffects() {
             const hpBefore = c.hp;
             c.hp -= bleedAmt;
             c.lastBleedTick = now;
-            showFloatingText(c.x, c.y - 18, t('bleedFloat', { n: bleedAmt }), '#880000', 11);
+            showFloatingText(c.x, c.y - 18, t('bleedFloat', { n: bleedAmt }), '#880000', 11, true);
             if (hpBefore > 0 && c.hp <= 0) {
                 if (isBoss) handleBossKill(c);
                 else if (isElite) handleEliteKill(c);
@@ -385,7 +389,7 @@ export function updateStatusEffects() {
             const hpBefore = c.hp;
             c.hp -= actualPoison;
             c.lastPoisonTick += 1000;
-            showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: actualPoison }), '#8800CC', 11);
+            showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: actualPoison }), '#8800CC', 11, true);
             if (hpBefore > 0 && c.hp <= 0) {
                 if (isBoss) handleBossKill(c);
                 else if (isElite) handleEliteKill(c);

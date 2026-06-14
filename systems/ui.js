@@ -1012,6 +1012,18 @@ export function devToggleDayNight() {
     gameState.lastTimeTick = Date.now();
 }
 
+export function devToggleHP() {
+    gameState.devShowHP = !gameState.devShowHP;
+    const btn = document.getElementById('dev-btn-hp');
+    if (btn) btn.style.opacity = gameState.devShowHP ? '1' : '0.5';
+}
+
+export function devToggleAI() {
+    gameState.devShowAI = !gameState.devShowAI;
+    const btn = document.getElementById('dev-btn-ai');
+    if (btn) btn.style.opacity = gameState.devShowAI ? '1' : '0.5';
+}
+
 // =============================================================
 // 遊戲說明 (Guide)
 // =============================================================
@@ -2349,8 +2361,9 @@ export function showSplashScreen() {
     });
 
     splash.addEventListener('click', () => {
-        AudioManager.unlock().catch(() => {});
-        if (typeof playIntroTheme === 'function') playIntroTheme();
+        AudioManager.unlock().then(() => {
+            if (typeof playIntroTheme === 'function') playIntroTheme();
+        }).catch(() => {});
         splash.style.opacity = '0';
         setTimeout(() => { splash.remove(); showStartScreen(); }, 800);
     }, { once: true });

@@ -540,6 +540,28 @@ export function drawEliteCreature() {
     const barColor = elite.isHunterElite ? (elite.glowColor || '#CC44FF') : '#CC44FF';
     drawHealthBar(selx, bY, elite.hp, elite.maxHp, bW, barColor, '#330033', bH);
     drawNameTag(selx, bY - 4, elite.label, elite.isHunterElite ? (elite.glowColor || '#FFD700') : '#FFD700', 'bold 11px Arial');
+
+    if (gameState.devShowHP) {
+        const hpPct = elite.hp / elite.maxHp;
+        const hpColor = hpPct > 0.6 ? '#00FF88' : hpPct > 0.3 ? '#FFD700' : '#FF4444';
+        ctx.save();
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = hpColor;
+        ctx.fillText(Math.ceil(elite.hp) + ' / ' + elite.maxHp, selx - r - 6, sely + 6);
+        ctx.restore();
+    }
+    if (gameState.devShowAI) {
+        const aiLabel = '[' + (elite.state || elite._phase || '?') + ']';
+        ctx.save();
+        ctx.font = 'bold 11px Arial';
+        const enw = ctx.measureText(elite.label || '').width / 2;
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'rgba(200, 200, 255, 0.85)';
+        ctx.textAlign = 'left';
+        ctx.fillText(aiLabel, selx + enw + 8, bY - 4);
+        ctx.restore();
+    }
 }
 
 function _drawHunterElite(sx, sy, r, t2, elite) {
