@@ -112,7 +112,7 @@ z  = 修復版本，AI 可進位（bug fix）
 - docs/history/ ESM 舊文件歸檔規則建立，ARCH.md 模組清單補齊（v0.1.17.1）
 
 ### ⏳ 待處理
-- Stage D：中層系統重構
+- Stage D：中層系統重構（daynight.js getDayNightPhaseIndex 純函式化已完成，v0.1.18.0）
 - Stage F：核心循環依賴打破（已知 12+ 循環依賴，見 ARCH.md）
 
 ### ❌ 已知問題（需要注意）

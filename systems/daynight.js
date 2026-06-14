@@ -1,5 +1,5 @@
 // =============================================================
-// 日夜循環系統 - getDayNightPhaseIndex / applyNightTransition
+// 日夜循環系統 - getDayNightPhaseIndex(timeRemaining) / applyNightTransition
 //               applyDayTransition / updateDayNightCycle
 // =============================================================
 
@@ -9,9 +9,9 @@ import { spawnEliteCreature } from './elite.js';
 import { spawnBoss } from './boss.js';
 import { t } from '../lang.js';
 
-export function getDayNightPhaseIndex() {
+export function getDayNightPhaseIndex(timeRemaining) {
     // 每 75 秒一個時段，共 8 段；偶數=白天，奇數=夜晚
-    return Math.min(7, Math.floor(Math.max(0, 600 - gameState.timeRemaining) / 75));
+    return Math.min(7, Math.floor(Math.max(0, 600 - timeRemaining) / 75));
 }
 
 export function applyNightTransition() {
@@ -50,7 +50,7 @@ export function applyDayTransition() {
 }
 
 export function updateDayNightCycle() {
-    const phaseIndex = getDayNightPhaseIndex();
+    const phaseIndex = getDayNightPhaseIndex(gameState.timeRemaining);
     if (phaseIndex === gameState.currentPhaseIndex) return;
     gameState.currentPhaseIndex = phaseIndex;
     if (phaseIndex % 2 === 1) {

@@ -1,4 +1,4 @@
-## v0.1.17.1
+## v0.1.18.0
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -105,6 +105,7 @@
 | `tests/systems/camera.test.js` | camera 系統測試 |
 | `tests/systems/hud-font.test.js` | HUD 字體與顯示測試 |
 | `tests/systems/map.test.js` | map 系統測試 |
+| `tests/systems/daynight.test.js` | daynight.js 純函式測試（getDayNightPhaseIndex） |
 
 ---
 
@@ -193,7 +194,7 @@ main.js
 
 ### Day/Night（daynight.js）
 - 每局倒計時 600 秒（`gameState.timeRemaining`）
-- `getDayNightPhaseIndex()` 依剩餘時間決定當前階段（phases 定義在 config）
+- `getDayNightPhaseIndex(timeRemaining)` 依剩餘時間決定當前階段（純函式，參數注入）
 - `updateDayNightCycle()` 每幀呼叫，觸發 `applyNightTransition / applyDayTransition`
 
 ### Elite 系統（elite.js）

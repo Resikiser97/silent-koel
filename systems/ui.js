@@ -1007,7 +1007,7 @@ export function devRewind() {
 
 export function devToggleDayNight() {
     // 將 timeRemaining 跳到下一個時段起點，讓 updateDayNightCycle 自動觸發切換
-    const nextIdx = (getDayNightPhaseIndex() + 1) % 8;
+    const nextIdx = (getDayNightPhaseIndex(gameState.timeRemaining) + 1) % 8;
     gameState.timeRemaining = Math.max(0, 600 - nextIdx * 75 - 1);
     gameState.lastTimeTick = Date.now();
 }

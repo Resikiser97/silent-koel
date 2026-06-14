@@ -1,6 +1,14 @@
-## v0.1.17.1
+## v0.1.18.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.18.0 - 2026-06-14
+
+### 新增
+- Stage D：systems/daynight.js — 將 `getDayNightPhaseIndex()` 重構為純函式（參數注入 `timeRemaining`），呼叫點 `updateDayNightCycle()` 與 `devToggleDayNight()` 同步更新
+- tests/systems/daynight.test.js：新增 8 個單元測試，涵蓋各 phase 臨界點、邊界值（0/600/超限）與回傳型別
 
 ---
 

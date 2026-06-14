@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.17.1**
+- 版本：**v0.1.18.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -112,7 +112,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `elite.js` | spawnEliteCreature / updateEliteCreature |
 | `boss.js` | spawnBoss / updateBoss / showVictory |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
-| `daynight.js` | getDayNightPhaseIndex / updateDayNightCycle |
+| `daynight.js` | getDayNightPhaseIndex(timeRemaining) / updateDayNightCycle |
 | `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息） |
 | `leaderboard.js` | 排行榜面板 / 分數提交 / 難度狀態管理 |
 | `mobile.js` | 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層 |
