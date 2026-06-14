@@ -1,6 +1,13 @@
-## v0.1.16.2
+## v0.1.16.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.16.3 - 2026-06-14
+
+### 修復
+- package.json / scripts / vercel.json: 修復 Vercel Vite build 只部署 `dist/` 導致線上 `sounds/*.mp3` 404、手機版無音效的問題；`npm run build` 現在會複製 `sounds/` 到 `dist/sounds/`，Vercel 和 itch.io 共用同一套音效路徑。
 
 ---
 

@@ -1,4 +1,4 @@
-## v0.1.16.1
+## v0.1.16.3
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.16.1
+**現在版本:** v0.1.16.3
 
-**當前狀態：** 手機版多項 Bug 修復完成（音效、公告位置、GameInfo 兩行、Boss HP Bar 縮短），鬣狗圍圈切線繞行改善。
+**當前狀態：** Vercel / itch.io build 輸出已統一，`npm run build` 會將 `sounds/` 複製到 `dist/sounds/`，避免 Vercel 線上音效 404。
 
 **下一步：**
 1. Stage D：中層系統重構
@@ -117,6 +117,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.16.3：修復 Vercel Vite build 遺漏 `sounds/` 資源導致線上音效 404；新增 `vercel.json` 和 `scripts/copy-sounds.js`，讓 Vercel / itch.io 共用 `dist/sounds/` 輸出結構
 - v0.1.14.4：補上 HARD_MAP import 修復困難模式 reload 後難度失效；修復小地圖難度標籤困難模式顯示「簡單」的問題（hud.js）
 - v0.1.14.3：修復黑色獵人血管擊破後跳白天問題，補上 x5 HUD 顏色階段顯示（boss.js、hud.js）
 - v0.1.14.2：修復草食性 Lv4/5 巨人不攻擊玩家、巨人卡死在果子旁、困難模式再來一次變簡單、箭頭無 outline（creatures.js、utils.js、main.js）

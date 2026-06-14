@@ -1,4 +1,4 @@
-## v0.1.16.2
+## v0.1.16.3
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.16.2**
+- 版本：**v0.1.16.3**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -36,7 +36,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | 環境 | 網址 / 指令 |
 |------|-------------|
 | GitHub | https://github.com/Resikiser97/silent-koel |
-| Vercel Master（測試） | silent-koel.vercel.app |
+| Vercel Master（測試） | silent-koel.vercel.app（`vercel.json` 使用 `npm run build`，輸出 `dist/`） |
 | Vercel Stable（穩定） | silent-koel-git-stable-goblinnest-s-projects.vercel.app |
 | CC 推送指令（Windows） | `"C:\AI\Git\bin\git.exe" -C "c:\AI\VS CODE" push origin master` |
 | itch.io 打包 | `npm run build:itch` → 產出 `silent-koel-itch.zip` 上傳 |
@@ -57,6 +57,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `main.js` | ESM 入口 / isGamePaused / gameLoop / initializeGame / startGameWithLoading / window.onload |
 | `lang.js` | LANG_LIST、LANG 字典、applyLanguage()、t(key, params?) |
 | `vite.config.js` | Vite 打包設定（itch.io 用，`base: './'`，輸出 `index.js` 到根目錄）|
+| `vercel.json` | Vercel 部署設定：`buildCommand` = `npm run build`，`outputDirectory` = `dist` |
 | `itch.md` | itch.io 部署 SOP 與踩坑紀錄（給 Claude Chat 參考） |
 | `MAIN.md` | 完整模組架構、函式列表、跨模組依賴 |
 | `CHANGELOG.md` | 所有版本紀錄（最新在最上方） |
@@ -66,7 +67,8 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 ### scripts/
 | 檔案 | 職責 |
 |------|------|
-| `scripts/pack-itch.js` | 複製 `sounds/` → `dist/sounds/`，用 archiver 打包成 `silent-koel-itch.zip` |
+| `scripts/copy-sounds.js` | `npm run build` 後複製 `sounds/` → `dist/sounds/`，供 Vercel / itch.io 共用 |
+| `scripts/pack-itch.js` | 將 `dist/` 用 archiver 打包成 `silent-koel-itch.zip` |
 
 ### sounds/
 | 路徑 | 說明 |

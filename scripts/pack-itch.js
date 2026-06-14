@@ -1,4 +1,4 @@
-import { createWriteStream, existsSync, cpSync, rmSync } from 'fs';
+import { createWriteStream, existsSync, rmSync } from 'fs';
 import { createRequire } from 'module';
 
 const { ZipArchive } = createRequire(import.meta.url)('archiver');
@@ -8,9 +8,10 @@ if (!existsSync('dist')) {
     process.exit(1);
 }
 
-console.log('🔊 複製音效資料夾...');
-if (existsSync('dist/sounds')) rmSync('dist/sounds', { recursive: true });
-cpSync('sounds', 'dist/sounds', { recursive: true });
+if (!existsSync('dist/sounds')) {
+    console.error('dist/sounds folder does not exist. Run npm run build first.');
+    process.exit(1);
+}
 
 const zipName = 'silent-koel-itch.zip';
 if (existsSync(zipName)) rmSync(zipName);

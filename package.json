@@ -7,8 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "build": "vite build",
-    "build:itch": "vite build && node scripts/pack-itch.js",
+    "build": "vite build && node scripts/copy-sounds.js",
+    "build:itch": "npm run build && node scripts/pack-itch.js",
     "preview": "vite preview",
     "test": "vitest run --pool=threads",
     "test:watch": "vitest --pool=threads"

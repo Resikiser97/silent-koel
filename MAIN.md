@@ -1,4 +1,4 @@
-## v0.1.16.1
+## v0.1.16.3
 
 # The Silent Koel — 模組架構說明
 
@@ -144,6 +144,12 @@ systems/ui.js             showTooltip, hideTooltip, showMapSelect
 main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
                           updateGameLogic, gameLoop, startGameWithLoading, initializeGame, window.onload
 ```
+
+## Deployment Build Assets (v0.1.16.3)
+
+- `npm run build`: runs Vite, then `scripts/copy-sounds.js` copies `sounds/` to `dist/sounds/`. Vercel uses this through `vercel.json`.
+- `npm run build:itch`: runs `npm run build`, then `scripts/pack-itch.js` packages `dist/` into `silent-koel-itch.zip`.
+- Audio paths stay shared in `config/gameConfig.js` as `sounds/...`; do not split paths for Vercel and itch.io.
 
 ## systems/utils.js
 
