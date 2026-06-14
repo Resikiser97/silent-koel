@@ -44,6 +44,13 @@ describe('AudioManager._mobileFadeScale', () => {
         AudioManager._mobileMasterFadeEndMs = 1300;
         expect(AudioManager._mobileFadeScale(1150, true)).toBeCloseTo(0.5, 5);
     });
+
+    it('isMobile = true，fade 結束後（now >= end）→ 回傳 1', () => {
+        AudioManager._mobileMasterFadeStartMs = 1000;
+        AudioManager._mobileMasterFadeEndMs = 1300;
+        expect(AudioManager._mobileFadeScale(1300, true)).toBe(1);
+        expect(AudioManager._mobileFadeScale(1500, true)).toBe(1);
+    });
 });
 
 // ── _playSfxBuffer ────────────────────────────────────────────

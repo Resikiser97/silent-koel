@@ -1,4 +1,4 @@
-## v0.1.18.1
+## v0.1.18.3
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,15 +12,14 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.18.1
+**現在版本:** v0.1.18.3
 
-**當前狀態：** Stage D 依賴注入重構進行中（spawning.js + input.js 完成）
+**當前狀態：** Stage D 全部完結，測試 103/103 通過
 
 **下一步：**
-1. Stage D：creatures.js / audio.js 依賴注入
-2. Stage F：循環依賴打破（已知 12+ 個）
-3. 地獄難度地圖
-4. 遊戲說明 / 圖鑑更新
+1. Stage F：循環依賴打破（已知 12+ 個）
+2. 地獄難度地圖
+3. 遊戲說明 / 圖鑑更新
 
 **開發工具：**
 - Claude Chat（規劃、審查、寫 Prompt）
@@ -119,6 +118,8 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.18.3：Stage D 收尾 — audio.test.js 補充 _mobileFadeScale fade 結束邊界 case（now >= end → 1）；103/103 通過；Stage D 正式完結
+- v0.1.18.2：Stage D creatures.js + audio.js 依賴注入；新增 15 個單元測試，102/102 通過
 - v0.1.18.1：Stage D spawning.js（moveCreature/\_randomPointInBiome/\_makeHerbCreature 依賴注入）+ input.js（抽出 \_calcMouseWorld 純函式）；新增 9 個單元測試，87/87 通過
 - v0.1.18.0：Stage D daynight.js getDayNightPhaseIndex 純函式重構；新增 8 個單元測試
 - v0.1.17.1：修復毒 debuff 圖示（hud.js/boss.js）、名人堂排名查詢效能（supabase.js）、排行榜 UI 重構（預設名人堂、三按鈕永遠顯示、趣味榜嵌入）；新增趣味排行榜「🦴 白骨精」類別（bone_count）

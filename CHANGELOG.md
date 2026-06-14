@@ -1,6 +1,13 @@
-## v0.1.18.2
+## v0.1.18.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.18.3 - 2026-06-14
+
+### 測試
+- tests/systems/audio.test.js：補充 _mobileFadeScale fade 結束邊界 case（now >= end → 1），共 103 個測試全數通過
 
 ---
 
