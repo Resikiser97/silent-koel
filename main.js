@@ -350,6 +350,9 @@ export function initializeGame() {
     if (typeof resetFogFrameCount === 'function') resetFogFrameCount();
     gameState.floatTexts = [];
     storageSet(STORAGE_KEYS.HAS_PLAYED_BEFORE, 'true');
+    if (!storageGet(STORAGE_KEYS.FIRST_PLAY_DATE)) {
+        storageSet(STORAGE_KEYS.FIRST_PLAY_DATE, new Date().toISOString());
+    }
 
     // 清除首頁公告標籤
     const _badge = document.getElementById('announce-badge');

@@ -19,6 +19,8 @@ export const STORAGE_KEYS = {
     HUNTER_SLAYER_UNLOCKED:  'hunterSlayerUnlocked', // 已寫入但未讀取，保留備用
     CHAT_POSITION:           'chatPosition',
     CHAT_SETTINGS:           'chatSettings',
+    ACHIEVEMENTS:            'achievements',
+    FIRST_PLAY_DATE:         'firstPlayDate',
     // 動態 key（用函式產生）
     // CLEAR_COUNT_DIFF:     由 storageKey.clearCountDiff(diff) 產生
     // CLEAR_COUNT_CHAR:     由 storageKey.clearCountChar(charId) 產生

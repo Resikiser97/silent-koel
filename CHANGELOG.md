@@ -4,6 +4,23 @@
 
 ---
 
+## v0.1.22.0 - 2026-06-14
+
+### 新增
+- `config/achievements.js`：36 個成就定義（beginner / clear / boss / collect / character / growth / hidden 七類），純資料 export
+- `systems/achievements.js`：成就系統讀寫入口（unlockAchievement / isUnlocked / getUnlockedAchievements / getActiveTitle / setActiveTitle）
+- `config/attributes.js`：5 個 Attribute 純資料定義（venom / specter / shadow / sniper / shotgun），對應 docs/MODULAR_ATTRIBUTE_DESIGN.md Phase B
+- `storage/index.js`：新增 `ACHIEVEMENTS` / `FIRST_PLAY_DATE` 兩個 localStorage key
+- `main.js`：首次遊玩時寫入 `FIRST_PLAY_DATE`（ISO date string）
+- `systems/chat.js`：新增 `_validateUsername()`（長度 1~20、英數字限制、leet-speak GOBLINNEST 過濾）；chatLogin 所有路徑 username 一律 toLowerCase 正規化；_collectLocalData 加入 ACHIEVEMENTS / FIRST_PLAY_DATE
+
+### 測試
+- 新增 `tests/systems/achievements.test.js`：17 個測試（unlock / idempotent / isUnlocked / getActiveTitle / setActiveTitle / id 不重複 / title 數量）
+- 新增 `tests/config/attributes.test.js`：7 個測試（id 不重複 / ability id 不重複 / 必填欄位 / appliesTo 不為空）
+- `npm test`：17 個測試檔、132 個測試全數通過
+
+---
+
 ## v0.1.21.3 - 2026-06-14
 
 ### 修復

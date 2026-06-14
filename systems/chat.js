@@ -141,6 +141,20 @@ function _calcProgressScore(data) {
     } catch(e) { return 0; }
 }
 
+function _validateUsername(name) {
+    if (!name || name.length < 1 || name.length > 20) {
+        return { valid: false, reason: '名稱不能超過 20 個字符' };
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(name)) {
+        return { valid: false, reason: '名稱只能包含英文字母和數字' };
+    }
+    const normalized = name.toLowerCase().replace(/0/g, 'o').replace(/1/g, 'i').replace(/l/g, 'i');
+    if (normalized.includes('goblinnest')) {
+        return { valid: false, reason: '此名稱不可使用' };
+    }
+    return { valid: true, reason: null };
+}
+
 function _collectLocalData() {
     const keys = [
         STORAGE_KEYS.PLAYER_SKILLS,
@@ -150,7 +164,9 @@ function _collectLocalData() {
         STORAGE_KEYS.LAST_RUN_ORGANS,
         STORAGE_KEYS.GAME_SETTINGS,
         STORAGE_KEYS.MUTATION_DATA,
-        STORAGE_KEYS.SAVE_VERSION
+        STORAGE_KEYS.SAVE_VERSION,
+        STORAGE_KEYS.ACHIEVEMENTS,
+        STORAGE_KEYS.FIRST_PLAY_DATE,
     ];
     const obj = {};
     keys.forEach(k => {
@@ -170,6 +186,7 @@ function _applyRemoteData(gameData) {
 
 async function chatLogin(username, password) {
     if (!username || !password) return { ok: false, msg: '請輸入名字和密碼' };
+    const lowerName = username.toLowerCase();
     const hash = await _sha256(password);
 
     // 查詢帳號
@@ -180,14 +197,14 @@ async function chatLogin(username, password) {
             const { data, error } = await _sbClient
                 .from('chat_users')
                 .select('*')
-                .eq('username', username)
+                .eq('username', lowerName)
                 .maybeSingle();
             if (error) connErr = true;
             else user = data || null;
         } else {
             const data = await supabaseQuery(
                 'chat_users', 'GET', null,
-                '?select=*&username=eq.' + encodeURIComponent(username) + '&limit=1'
+                '?select=*&username=eq.' + encodeURIComponent(lowerName) + '&limit=1'
             );
             user = (Array.isArray(data) && data.length > 0) ? data[0] : null;
         }
@@ -196,21 +213,23 @@ async function chatLogin(username, password) {
     if (connErr) return { ok: false, msg: '連線失敗，請稍後再試' };
 
     if (!user) {
-        // 帳號不存在 → 自動註冊
+        // 帳號不存在 → 驗證後自動註冊
+        const validation = _validateUsername(lowerName);
+        if (!validation.valid) return { ok: false, msg: validation.reason };
         const localData = _collectLocalData();
         try {
             if (_sbClient) {
                 const { error: insertErr } = await _sbClient
                     .from('chat_users')
-                    .insert({ username, password: hash, is_gm: false, game_data: localData });
+                    .insert({ username: lowerName, password: hash, is_gm: false, game_data: localData });
                 if (insertErr) return { ok: false, msg: '註冊失敗，請稍後再試' };
             } else {
                 await supabaseQuery('chat_users', 'POST', {
-                    username, password: hash, is_gm: false, game_data: localData
+                    username: lowerName, password: hash, is_gm: false, game_data: localData
                 });
             }
         } catch(e) { return { ok: false, msg: '註冊失敗，請稍後再試' }; }
-        saveChatSettings({ playerName: username, isGM: false, loggedIn: true });
+        saveChatSettings({ playerName: lowerName, isGM: false, loggedIn: true });
         return { ok: true, msg: '✅ 註冊成功並登入', isGM: false };
     }
 

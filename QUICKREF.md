@@ -1,4 +1,4 @@
-## v0.1.21.3
+## v0.1.22.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.21.3**
+- 版本：**v0.1.22.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -86,6 +86,8 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `evolution.js` | EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種） |
 | `patchnotes.js` | PATCH_NOTES（版本更新公告，最新置頂） |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
+| `achievements.js` | ACHIEVEMENTS（36 個成就定義，七類） |
+| `attributes.js` | ATTRIBUTES（5 個屬性純資料，Attribute Design v1） |
 
 ### lang/
 | 檔案 | 職責 |
@@ -118,7 +120,8 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `boss.js` | spawnBoss / updateBoss / showVictory |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
 | `daynight.js` | getDayNightPhaseIndex(timeRemaining) / updateDayNightCycle |
-| `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息） |
+| `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息 / username 小寫正規化+GOBLINNEST 過濾） |
+| `achievements.js` | unlockAchievement(id) / isUnlocked(id) / getUnlockedAchievements() / getActiveTitle() / setActiveTitle(title) |
 | `leaderboard.js` | 排行榜面板 / 分數提交 / 難度狀態管理 |
 | `mobile.js` | 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層 |
 | `hud.js` | drawGame 主渲染 / HUD 更新 / 小地圖 / 上方血條 |
@@ -159,6 +162,9 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `zoomResetVersion` | 鏡頭縮放預設值重置版本 |
 | `lastSeenPatchVersion` | 已讀取的最新版本公告 |
 | `chatPosition` / `chatSettings` | 聊天室位置與設定 |
+| `achievements` | 已解鎖成就 `{ [id]: { unlockedAt: ISO string } }` |
+| `firstPlayDate` | 首次遊玩日期（ISO string，initializeGame 時寫入一次） |
+| `activeTitle` | 目前啟用的稱號字串（由 achievements.js 讀寫） |
 
 ---
 

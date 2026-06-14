@@ -1,4 +1,4 @@
-## v0.1.21.3
+## v0.1.22.0
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -40,6 +40,8 @@
 | `patchnotes.js` | PATCH_NOTES 陣列，最新版本置頂 |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
 | `compendium_data.js` | COMPENDIUM_DATA 圖鑑資料 |
+| `achievements.js` | ACHIEVEMENTS 陣列（36 個成就定義，v0.1.22.0） |
+| `attributes.js` | ATTRIBUTES 陣列（5 個屬性純資料，Attribute Design v1，v0.1.22.0） |
 
 ### lang/
 | 檔案 | 職責 |
@@ -84,7 +86,8 @@
 | `hud.js` | drawGame 主渲染、updateUI、小地圖、Boss 血條 UI |
 | `ui.js` | 面板系統、showSettings、showCompendium、showPatchNotes |
 | `tutorial.js` | 新手教學、spawnTutorialStump |
-| `chat.js` | 聊天室、帳號登入、Realtime、GM 指令 |
+| `chat.js` | 聊天室、帳號登入、Realtime、GM 指令（username 小寫正規化 + GOBLINNEST 過濾，v0.1.22.0） |
+| `achievements.js` | 成就系統讀寫入口：unlockAchievement / isUnlocked / getUnlockedAchievements / getActiveTitle / setActiveTitle（v0.1.22.0） |
 | `leaderboard.js` | 排行榜面板、分數提交 |
 | `mobile.js` | 裝置偵測、搖桿、攻擊區、觸控疊加層 |
 
