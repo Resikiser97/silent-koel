@@ -1,3 +1,21 @@
+## v0.1.18.2
+
+# CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.18.2 - 2026-06-14
+
+### 重構
+- Stage D：systems/creatures.js — `_effSpeed(c)` 加入 `now = Date.now()` 參數；`_shouldFleeFromGiant`、`_getHyenaPackBonus`、`_hyenaWheelPosition` 加 `export`；`_hyenaWheelPosition` 加入 `now = Date.now()` 參數
+- Stage D：systems/audio.js — 移除 dead import `getSettings`；`_mobileFadeScale()` 加入 `now = Date.now(), isMobile = gameState.isMobile` 參數；`_playSfxBuffer(key)` 加入 `random = Math.random` 參數
+
+### 測試
+- tests/systems/creatures.test.js：新增 9 個單元測試（_effSpeed × 3、_shouldFleeFromGiant × 3、_getHyenaPackBonus × 2、_hyenaWheelPosition × 1）
+- tests/systems/audio.test.js：新增 6 個單元測試（_mobileFadeScale × 4、_playSfxBuffer × 2）
+
+---
+
 ## v0.1.18.1
 
 # CHANGELOG — 只吃不叫的噪鵑

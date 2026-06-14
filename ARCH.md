@@ -1,4 +1,4 @@
-## v0.1.18.0
+## v0.1.18.2
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -106,6 +106,8 @@
 | `tests/systems/hud-font.test.js` | HUD 字體與顯示測試 |
 | `tests/systems/map.test.js` | map 系統測試 |
 | `tests/systems/daynight.test.js` | daynight.js 純函式測試（getDayNightPhaseIndex） |
+| `tests/systems/creatures.test.js` | creatures.js 純函式測試（_effSpeed、_shouldFleeFromGiant、_getHyenaPackBonus、_hyenaWheelPosition） |
+| `tests/systems/audio.test.js` | audio.js 純函式測試（_mobileFadeScale、_playSfxBuffer） |
 
 ---
 

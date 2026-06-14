@@ -4,7 +4,7 @@
 // =============================================================
 import { AUDIO_FILES } from '../config/gameConfig.js';
 import { gameState } from './gameState.js';
-import { getSettings, saveSettingsToStorage } from '../storage/index.js';
+import { saveSettingsToStorage } from '../storage/index.js';
 
 let _introThemeAudio = null;
 
@@ -215,7 +215,7 @@ export const AudioManager = {
         return this._sfxLoading[key];
     },
 
-    _playSfxBuffer(key) {
+    _playSfxBuffer(key, random = Math.random) {
         const ctx = this.getContext();
         const gainNode = this.getSfxGain();
         if (!ctx || !gainNode || !this._unlocked) return false;
@@ -225,7 +225,7 @@ export const AudioManager = {
 
         // 支援音效變體（陣列隨機選一個）
         const buffer = Array.isArray(bufferOrArr)
-            ? bufferOrArr[Math.floor(Math.random() * bufferOrArr.length)]
+            ? bufferOrArr[Math.floor(random() * bufferOrArr.length)]
             : bufferOrArr;
         if (!buffer) return false;
 
@@ -276,9 +276,8 @@ export const AudioManager = {
         return (v.master / 100) * (v.music / 100);
     },
 
-    _mobileFadeScale() {
-        if (!gameState.isMobile || !this._mobileMasterFadeEndMs) return 1;
-        const now = Date.now();
+    _mobileFadeScale(now = Date.now(), isMobile = gameState.isMobile) {
+        if (!isMobile || !this._mobileMasterFadeEndMs) return 1;
         if (now >= this._mobileMasterFadeEndMs) return 1;
         if (now <= this._mobileMasterFadeStartMs) return 0;
         return Math.max(0, Math.min(1, (now - this._mobileMasterFadeStartMs) / 300));

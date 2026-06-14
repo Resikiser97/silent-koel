@@ -82,8 +82,7 @@ function _drawCenteredCreatureText(text, x, y, font, fillStyle, lineWidth) {
 }
 
 // ── 嘴器減速：取生物有效速度（被減速中則乘以 _slowMult）────────
-export function _effSpeed(c) {
-    const now = Date.now();
+export function _effSpeed(c, now = Date.now()) {
     return (c._slowUntil && now < c._slowUntil) ? c.speed * (c._slowMult || 1.0) : c.speed;
 }
 
@@ -673,7 +672,7 @@ function _findNearestBiomePoint(biome, x, y) {
 }
 
 // ── 肉食者是否應逃離巨人 ──
-function _shouldFleeFromGiant(creature, target) {
+export function _shouldFleeFromGiant(creature, target) {
     // 殺手化：使用獨立戰術邏輯，此函式直接返回 false
     if (creature.isKiller) return false;
     // 非殺手：Alpha 一律逃，普通巨人 HP > 肉食者 HP × 3 才逃
@@ -873,7 +872,7 @@ function _moveHyenaTowardPack(hyena, now) {
 }
 
 // ── 鬣狗組隊加成 ──
-function _getHyenaPackBonus(hyena) {
+export function _getHyenaPackBonus(hyena) {
     const count = (hyena.packMates || []).filter(m => m.hp > 0).length;
     return {
         atkMult:   1.0 + count * 0.2,
@@ -944,11 +943,11 @@ function _syncHyenaAttackTurn(hyena, pack, now) {
     return attacker;
 }
 
-function _hyenaWheelPosition(hyena, pack, target) {
+export function _hyenaWheelPosition(hyena, pack, target, now = Date.now()) {
     const index = Math.max(0, pack.indexOf(hyena));
     const spacing = hyena.radius * 2 + 15;
     const orbit = Math.max(target.radius + hyena.attackRange + spacing, spacing * pack.length / Math.PI);
-    const angle = (Math.PI * 2 / Math.max(1, pack.length)) * index + (Date.now() / ((hyena.hyenaAttackInterval || 1000) * 0.9));
+    const angle = (Math.PI * 2 / Math.max(1, pack.length)) * index + (now / ((hyena.hyenaAttackInterval || 1000) * 0.9));
     return {
         x: target.x + Math.cos(angle) * orbit,
         y: target.y + Math.sin(angle) * orbit,
