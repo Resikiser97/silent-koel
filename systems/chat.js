@@ -1499,3 +1499,33 @@ export function isVipPlayer(msg) {
     // TODO: 先驅者系統實作點
     return false;
 }
+
+// 開啟聊天室登入面板（成就稱號 UI 未登入時呼叫）
+export function openChatLogin() {
+    const sp = document.getElementById('chat-settings-panel');
+    if (!sp) return;
+    _renderChatSettingsPanel(sp);
+    sp.style.left   = '20px';
+    sp.style.bottom = '80px';
+    sp.style.top    = 'auto';
+    sp.style.right  = 'auto';
+    sp.style.display = 'block';
+}
+
+// 將稱號同步至 Supabase chat_users 資料表
+export async function syncTitleToServer(title) {
+    const settings = loadChatSettings();
+    if (!settings.loggedIn || !settings.playerName) return;
+    try {
+        if (_sbClient) {
+            await _sbClient.from('chat_users')
+                .update({ title: title || '' })
+                .eq('username', settings.playerName);
+        } else {
+            await supabaseQuery('chat_users', 'PATCH',
+                { title: title || '' },
+                '?username=eq.' + encodeURIComponent(settings.playerName)
+            );
+        }
+    } catch(e) {}
+}

@@ -1,4 +1,4 @@
-## v0.1.22.0
+## v0.1.22.1
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.22.0**
+- 版本：**v0.1.22.1**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -121,7 +121,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
 | `daynight.js` | getDayNightPhaseIndex(timeRemaining) / updateDayNightCycle |
 | `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息 / username 小寫正規化+GOBLINNEST 過濾） |
-| `achievements.js` | unlockAchievement(id) / isUnlocked(id) / getUnlockedAchievements() / getActiveTitle() / setActiveTitle(title) |
+| `achievements.js` | unlockAchievement(id) / isUnlocked(id) / getUnlockedAchievements() / getActiveTitle() / setActiveTitle(title) / showAchievements(opts) |
 | `leaderboard.js` | 排行榜面板 / 分數提交 / 難度狀態管理 |
 | `mobile.js` | 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層 |
 | `hud.js` | drawGame 主渲染 / HUD 更新 / 小地圖 / 上方血條 |

@@ -1,4 +1,4 @@
-## v0.1.21.3
+## v0.1.22.1
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.21.3
+**現在版本:** v0.1.22.1
 
-**當前狀態：** Stage F 3a 回歸測試完成，damage/combat 核心路徑已有永久測試保護，114/114 測試通過
+**當前狀態：** 成就 UI（Phase B/C）完成：首頁成就按鈕、成就 Overlay（3×3 翻頁）、稱號選擇同步至 Supabase；132/132 測試通過
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,6 +118,8 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.22.1：成就 UI（Phase B/C）— 首頁成就導航按鈕；成就 Overlay（3×3 格、4 頁翻頁、右欄說明、hidden 未解鎖顯示 ???）；稱號選擇 pop-up（已登入選稱號 / 未登入提示登入）；syncTitleToServer 同步至 Supabase；132/132 測試通過
+- v0.1.22.0：config/achievements.js（36 成就定義）/ systems/achievements.js（讀寫入口）/ config/attributes.js；storage 新增 ACHIEVEMENTS / FIRST_PLAY_DATE key；chat.js username 正規化 + GOBLINNEST 過濾；132/132 測試通過
 - v0.1.21.3：Stage F 3a 回歸測試 — 新增 `tests/systems/damage.test.js`，永久保護 `handleKill` / `eliteKilled` / `bossKilled` / `applyDamageToPlayer` / `showSkillTree` dispatch / `setRangedAttackCallback`；同步修正 `handleKill` 擊殺後移除生物與精英事件 dispatch；114/114 測試通過
 - v0.1.21.2：Dead Import 清理 — 10 個系統檔案共移除 22 個未使用 import（boss/combat/elite/evolution/hud/leaderboard/mutation/organs/player/tutorial）；103/103 測試通過
 - v0.1.21.1：damage.js 移除 organs.js Layer 1 違規 import，改用 CustomEvent('eliteKilled')；MAIN/QUICKREF/ARCH 文件補齊

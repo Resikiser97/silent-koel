@@ -1,6 +1,17 @@
-## v0.1.21.3
+## v0.1.22.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.22.1 - 2026-06-14
+
+### 新增
+- `systems/achievements.js`：新增 `showAchievements(opts)` 成就 Overlay UI（3×3 格子、4 頁翻頁、右側說明欄、hidden 成就未解鎖顯示 ???）
+- `systems/ui.js`：首頁左側新增「成就」導航按鈕（Discord 按鈕下方，風格一致），點擊呼叫 `showAchievements()`
+- `systems/chat.js`：新增 `openChatLogin()` / `syncTitleToServer(title)` 兩個 export（稱號 UI 使用）
+- `lang/zh-TW.js` / `lang/en.js`：新增 achievementTitle / achievementBtn / achievementUnlocked / achievementHowTo / achievementDaysPlayed / achievementProgress 等 11 個 lang key
+- 成就 Overlay 右上角 [稱號 ▾] 按鈕：已登入可選擇稱號（active 顯示 ✓，再點取消），未登入顯示登入提示；選擇後同步至 Supabase `chat_users.title`
 
 ---
 

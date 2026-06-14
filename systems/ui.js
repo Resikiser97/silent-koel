@@ -33,7 +33,8 @@ import { addXP } from './reward.js';
 import { spawnFruit } from './spawning.js';
 import { getDayNightPhaseIndex } from './daynight.js';
 import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans } from './evolution.js';
-import { buildChatUI, initChat, showChat, hideChat, _esc } from './chat.js';
+import { buildChatUI, initChat, showChat, hideChat, _esc, loadChatSettings, openChatLogin, syncTitleToServer } from './chat.js';
+import { showAchievements } from './achievements.js';
 import { showLeaderboard, _diffKey } from './leaderboard.js';
 import { fetchTop10 } from '../config/supabase.js';
 import { getRankIcon } from './utils.js';
@@ -2277,9 +2278,53 @@ export function showStartScreen() {
         discordBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
     };
     discordBtn.onclick = () => { window.open('https://discord.gg/BCAJMQrGeN', '_blank'); };
+
+    // ── 成就按鈕（在 Discord 按鈕下方）
+    const achievementBtn = document.createElement('div');
+    achievementBtn.id = 'achievement-nav-btn';
+    achievementBtn.style.cssText = `
+        position: absolute;
+        top: 248px;
+        left: 20px;
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 220, 130, 0.12);
+        border: 2px solid rgba(255, 220, 130, 0.45);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: all;
+        transition: all 0.2s ease;
+        z-index: 201;
+    `;
+    achievementBtn.innerHTML = '<div style="font-size:28px;line-height:1;">🏆</div><div style="font-size:9px;color:#FFF5DC;letter-spacing:0.5px;margin-top:2px;text-align:center;line-height:1.4;">' + t('achievementBtn') + '</div>';
+    achievementBtn.onmouseenter = () => {
+        achievementBtn.style.background = 'rgba(255, 220, 130, 0.28)';
+        achievementBtn.style.transform = 'scale(1.08)';
+        achievementBtn.style.borderColor = 'rgba(255, 220, 130, 0.8)';
+    };
+    achievementBtn.onmouseleave = () => {
+        achievementBtn.style.background = 'rgba(255, 220, 130, 0.12)';
+        achievementBtn.style.transform = 'scale(1)';
+        achievementBtn.style.borderColor = 'rgba(255, 220, 130, 0.45)';
+    };
+    achievementBtn.onclick = () => {
+        hideChat();
+        const chatSettings = loadChatSettings();
+        showAchievements({
+            isLoggedIn: chatSettings.loggedIn,
+            onTitleSync: async (title) => { await syncTitleToServer(title); },
+            onShowLogin: () => { openChatLogin(); }
+        });
+    };
+
     overlay.appendChild(bookBtn);
     overlay.appendChild(patchBtn);
     overlay.appendChild(discordBtn);
+    overlay.appendChild(achievementBtn);
 
     // ── 首頁公告標籤（右上角旋轉印章）
     if (!document.getElementById('_badge-style')) {
