@@ -1,4 +1,4 @@
-## v0.1.22.1
+## v0.1.23.0
 
 # The Silent Koel — 模組架構說明
 
@@ -152,6 +152,10 @@ systems/ui.js             showTooltip, hideTooltip, showMapSelect
                           showPatchNotes, checkPatchNotesPopup
                           buildEvoLevelDesc（全域，動態生成進化圖鑑描述）
                           showCompendium → _renderGuide / _renderOrgans / _renderEvo（三分頁均為桌機雙欄/手機 Tab 版面，讀 COMPENDIUM_DATA / ORGANS / EVOLUTION_PATHS / SKILLS）
+
+systems/achievements.js   unlockAchievement(id), isUnlocked(id), getUnlockedAchievements()
+                          getActiveTitle(), setActiveTitle(title), showAchievements(opts)
+systems/achievementTriggers.js  initAchievementTriggers()（Phase D：監聽 CustomEvent 解鎖成就）
 
 main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGame
                           startGameWithLoading, startGame CustomEvent listener

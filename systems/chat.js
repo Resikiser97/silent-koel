@@ -263,6 +263,7 @@ async function chatLogin(username, password) {
     }
 
     saveChatSettings({ playerName: username, isGM: user.is_gm, title: user.title || '', loggedIn: true });
+    if (user.is_pioneer) window.dispatchEvent(new CustomEvent('pioneerConfirmed'));
     return { ok: true, msg: syncMsg, isGM: user.is_gm };
 }
 

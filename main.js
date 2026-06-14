@@ -52,6 +52,8 @@ import {
 } from './systems/ui.js';
 import { showTutorial } from './systems/tutorial.js';
 import { disconnectChat, hideChat } from './systems/chat.js';
+import { unlockAchievement } from './systems/achievements.js';
+import { initAchievementTriggers } from './systems/achievementTriggers.js';
 import { resetSessionStats } from './stats/index.js';
 import {
     STORAGE_KEYS,
@@ -352,7 +354,10 @@ export function initializeGame() {
     storageSet(STORAGE_KEYS.HAS_PLAYED_BEFORE, 'true');
     if (!storageGet(STORAGE_KEYS.FIRST_PLAY_DATE)) {
         storageSet(STORAGE_KEYS.FIRST_PLAY_DATE, new Date().toISOString());
+        unlockAchievement('first_play');
     }
+    gameState.tookDamageThisRun = false;
+    gameState.regenedThisRun = false;
 
     // 清除首頁公告標籤
     const _badge = document.getElementById('announce-badge');
@@ -464,6 +469,7 @@ export function initializeGame() {
     // mutationData 不重置（跨局永久保存，由 window.onload 的 initMutationData 管理）
 
     gameState.gameStarted = true;
+    window.dispatchEvent(new CustomEvent('gameStarted'));
     console.log("--- 遊戲初始化開始 ---");
     console.log('[v0.47.0] B1+B8+二+三+四+五+六+七+八+九+十+十一+十二 全部套用');
 
@@ -642,6 +648,10 @@ export function initializeGame() {
 window.onload = () => {
     // 注入阿奇爾遠程攻擊 callback，解除 combat.js ↔ player.js 直接 import
     setRangedAttackCallback(_archerAttack);
+    initAchievementTriggers();
+
+    window.addEventListener('playerDamaged', () => { gameState.tookDamageThisRun = true; });
+    window.addEventListener('playerRegen',   () => { gameState.regenedThisRun = true; });
 
     window.addEventListener('startGame', () => {
         startGameWithLoading();

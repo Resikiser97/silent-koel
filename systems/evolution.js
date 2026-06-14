@@ -86,6 +86,7 @@ export function applyEvolutionLevelEffect(type, newLevel) {
     }
     p.organSlots += 3;
     p.evolution[type] = newLevel;
+    window.dispatchEvent(new CustomEvent('evolutionLevelUp', { detail: { level: newLevel } }));
     if (p.evolution.omnivore > 0) p.evolution.active = 'omnivore';
     else if (p.evolution.carnivore > 0) p.evolution.active = 'carnivore';
     else p.evolution.active = 'herbivore';
@@ -809,6 +810,7 @@ export function upgradeSkill(id) {
     storageSetJSON(STORAGE_KEYS.PLAYER_SKILLS, gameState.playerSkills);
     storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     buildSkillTreeOverlay(null, _skillTreeFromHome, false, _skillTreeMode);
+    window.dispatchEvent(new CustomEvent('skillUpgraded', { detail: { skills: gameState.playerSkills } }));
 }
 
 // ── 左欄內容建立（可重複呼叫刷新）
@@ -848,6 +850,10 @@ function _buildMutLeftColContent(leftCol) {
         cb.disabled = !canUp;
         cb.onclick = () => {
             if (typeof upgradeMutation === 'function') upgradeMutation(def.id);
+            if (gameState.mutationData) {
+                const _mutTotal = Object.values(gameState.mutationData.levels).reduce((a, b) => a + b, 0);
+                window.dispatchEvent(new CustomEvent('mutationLevelChanged', { detail: { total: _mutTotal } }));
+            }
             _refreshMutContentLeft(document.getElementById('mut-skill-panel'));
             _refreshMutContentRight(document.getElementById('mut-skill-panel'));
         };

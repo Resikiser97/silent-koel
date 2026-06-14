@@ -1502,6 +1502,18 @@ export function showVictory() {
     storageRemove(STORAGE_KEYS.SAVED_ORGANS);
     storageRemove(STORAGE_KEYS.SAVED_HIDDEN_ORGANS);
     const bossKillTime = gameState.bossSpawnTime ? Math.floor((Date.now() - gameState.bossSpawnTime) / 1000) : null;
+    const _bossTypeForEvent = gameState.boss
+        ? ({ forest: 'bear', ocean: 'shark', desert: 'scorpion', hunter: 'hunter' }[gameState.boss.biome] || null)
+        : null;
+    window.dispatchEvent(new CustomEvent('gameVictory', { detail: {
+        difficulty: gameState.lastDifficulty,
+        playTime: Math.floor(gameState.realPlayTime / 1000),
+        bossKillTime,
+        character: gameState.selectedCharacter,
+        bossType: _bossTypeForEvent,
+        tookDamage: gameState.tookDamageThisRun || false,
+        regenedThisRun: gameState.regenedThisRun || false,
+    } }));
     const doShowVictory = () => {
         const bossName = gameState.boss && gameState.boss.name ? gameState.boss.name : (BOSS_CONFIG.forest.name);
         const spLines = [t('skillPtBoss', { n: 3 })];

@@ -1,4 +1,4 @@
-## v0.1.22.1
+## v0.1.23.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.22.1**
+- 版本：**v0.1.23.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -122,6 +122,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `daynight.js` | getDayNightPhaseIndex(timeRemaining) / updateDayNightCycle |
 | `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息 / username 小寫正規化+GOBLINNEST 過濾） |
 | `achievements.js` | unlockAchievement(id) / isUnlocked(id) / getUnlockedAchievements() / getActiveTitle() / setActiveTitle(title) / showAchievements(opts) |
+| `achievementTriggers.js` | initAchievementTriggers()（Phase D：監聽 CustomEvent 觸發成就，不 import SCC 模組） |
 | `leaderboard.js` | 排行榜面板 / 分數提交 / 難度狀態管理 |
 | `mobile.js` | 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層 |
 | `hud.js` | drawGame 主渲染 / HUD 更新 / 小地圖 / 上方血條 |
@@ -165,6 +166,10 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `achievements` | 已解鎖成就 `{ [id]: { unlockedAt: ISO string } }` |
 | `firstPlayDate` | 首次遊玩日期（ISO string，initializeGame 時寫入一次） |
 | `activeTitle` | 目前啟用的稱號字串（由 achievements.js 讀寫） |
+| `winStreak` | 連勝局數（死亡時歸零，勝利時+1，由 achievementTriggers 維護） |
+| `killTotal` | 累積擊殺普通怪數（由 damage.js 遞增） |
+| `killKillerTotal` | 累積擊殺殺手化怪數（由 damage.js 遞增） |
+| `killGiantTotal` | 累積擊殺巨人數（由 damage.js 遞增） |
 
 ---
 

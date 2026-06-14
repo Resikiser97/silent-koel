@@ -27,6 +27,14 @@ export function unlockAchievement(id) {
     if (data[id]) return; // idempotent：已解鎖不覆蓋
     data[id] = { unlockedAt: new Date().toISOString() };
     storageSetJSON(STORAGE_KEYS.ACHIEVEMENTS, data);
+    // 完全體：所有非 hidden 成就全部解鎖時自動觸發
+    if (id !== 'all_achievements') {
+        const nonHidden = ACHIEVEMENTS.filter(a => a.category !== 'hidden');
+        if (nonHidden.every(a => data[a.id])) {
+            data['all_achievements'] = { unlockedAt: new Date().toISOString() };
+            storageSetJSON(STORAGE_KEYS.ACHIEVEMENTS, data);
+        }
+    }
 }
 
 export function isUnlocked(id) {
@@ -84,6 +92,10 @@ export function showAchievements(opts = {}) {
 
     const unlocked = getUnlockedAchievements();
     const firstPlayDate = storageGet('firstPlayDate');
+    if (firstPlayDate) {
+        const _days = Math.floor((Date.now() - new Date(firstPlayDate)) / 86400000);
+        if (_days >= 30) unlockAchievement('veteran_days');
+    }
     const total = ACHIEVEMENTS.length;
 
     let currentPage = 0;

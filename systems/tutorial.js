@@ -606,6 +606,7 @@ import {
                 const el = document.getElementById('tutorial-combat-complete');
                 if (el) el.remove();
                 storageSet(STORAGE_KEYS.TUTORIAL_COMBAT_DONE, 'true');
+                window.dispatchEvent(new CustomEvent('tutorialCompleted'));
                 gameState.tutorialOpen = false;
                 resumePlayTimer();
             }, 2000);

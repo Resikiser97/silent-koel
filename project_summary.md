@@ -1,4 +1,4 @@
-## v0.1.22.1
+## v0.1.23.0
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.22.1
+**現在版本:** v0.1.23.0
 
-**當前狀態：** 成就 UI（Phase B/C）完成：首頁成就按鈕、成就 Overlay（3×3 翻頁）、稱號選擇同步至 Supabase；132/132 測試通過
+**當前狀態：** 成就觸發接入（Phase D）完成：achievementTriggers.js 監聽 20+ CustomEvent，SCC 檔案零新增 import；146/146 測試通過
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,12 +118,12 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.23.0：成就觸發接入（Phase D）— 新建 `systems/achievementTriggers.js`；SCC 檔案（boss/evolution/organs/player/combat）僅新增 dispatch 行、零新增 import；damage.js 新增 killCountUpdated 累積計數；storage 新增 4 個 key；achievements.js 補上 veteran_days / all_achievements 自動觸發；146/146 測試通過
 - v0.1.22.1：成就 UI（Phase B/C）— 首頁成就導航按鈕；成就 Overlay（3×3 格、4 頁翻頁、右欄說明、hidden 未解鎖顯示 ???）；稱號選擇 pop-up（已登入選稱號 / 未登入提示登入）；syncTitleToServer 同步至 Supabase；132/132 測試通過
 - v0.1.22.0：config/achievements.js（36 成就定義）/ systems/achievements.js（讀寫入口）/ config/attributes.js；storage 新增 ACHIEVEMENTS / FIRST_PLAY_DATE key；chat.js username 正規化 + GOBLINNEST 過濾；132/132 測試通過
 - v0.1.21.3：Stage F 3a 回歸測試 — 新增 `tests/systems/damage.test.js`，永久保護 `handleKill` / `eliteKilled` / `bossKilled` / `applyDamageToPlayer` / `showSkillTree` dispatch / `setRangedAttackCallback`；同步修正 `handleKill` 擊殺後移除生物與精英事件 dispatch；114/114 測試通過
 - v0.1.21.2：Dead Import 清理 — 10 個系統檔案共移除 22 個未使用 import（boss/combat/elite/evolution/hud/leaderboard/mutation/organs/player/tutorial）；103/103 測試通過
 - v0.1.21.1：damage.js 移除 organs.js Layer 1 違規 import，改用 CustomEvent('eliteKilled')；MAIN/QUICKREF/ARCH 文件補齊
-- v0.1.21.0：Stage F 3a — 新建 `systems/damage.js`，承載 `applyDamageToPlayer`/`handleKill`/`handleGiantKill`；boss↔combat / combat↔player 核心依賴解除
 - v0.1.20.1：Stage F 批次 2 第二波 — reward.js + loot.js + Boss kill 事件化 + utils/loot 拆分
 - v0.1.17.1：修復毒 debuff 圖示（hud.js/boss.js）、名人堂排名查詢效能（supabase.js）、排行榜 UI 重構（預設名人堂、三按鈕永遠顯示、趣味榜嵌入）；新增趣味排行榜「🦴 白骨精」類別（bone_count）
 - v0.1.17.0：毒刺數值調整（Lv3 累計 10/s，三等級統一持續 5 秒）；玩家對怪物毒傷改為 `poisonStacks[]` 獨立疊加，攻擊命中可引爆即時傷害並讓所有 stack -1 秒；提交分數新增 `bone_count`；新增 hall_of_fame 名人堂（2×3 Showcase、Top 10、個人排名）；排行榜改為 Top 100 可捲動
@@ -166,6 +166,7 @@
 - itch.io 正式上架（已完成，Vite 打包 pipeline 建立）
 - Stage D：中層系統重構（v0.1.18.3，5 個系統依賴注入，33 個測試）
 - Stage F 批次 1：main.js 反向依賴解除（v0.1.19.0，新建 gameFlow.js，5 個高嚴重度循環消除）
+- Stage F 3a：新建 systems/damage.js，boss↔combat / combat↔player 核心依賴解除（v0.1.21.0）
 
 ### 🔄 進行中
 - Stage F 批次 2：核心戰鬥耦合拆分（規劃中）

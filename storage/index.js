@@ -21,6 +21,10 @@ export const STORAGE_KEYS = {
     CHAT_SETTINGS:           'chatSettings',
     ACHIEVEMENTS:            'achievements',
     FIRST_PLAY_DATE:         'firstPlayDate',
+    WIN_STREAK:              'winStreak',
+    KILL_TOTAL:              'killTotal',
+    KILL_KILLER_TOTAL:       'killKillerTotal',
+    KILL_GIANT_TOTAL:        'killGiantTotal',
     // 動態 key（用函式產生）
     // CLEAR_COUNT_DIFF:     由 storageKey.clearCountDiff(diff) 產生
     // CLEAR_COUNT_CHAR:     由 storageKey.clearCountChar(charId) 產生

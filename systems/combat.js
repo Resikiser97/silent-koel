@@ -412,6 +412,7 @@ export function updateBoneEating() {
 function _addBoneMaterial(amount) {
     const p = gameState.player;
     p.boneMaterial = (p.boneMaterial || 0) + amount;
+    window.dispatchEvent(new CustomEvent('boneMaterialUpdated', { detail: { total: p.boneMaterial } }));
     // 檢查毒囊升級
     _checkPoisonSacUpgrade(p);
 }

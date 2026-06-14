@@ -1,6 +1,28 @@
-## v0.1.22.1
+## v0.1.23.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.23.0 - 2026-06-15
+
+### 新增
+- `systems/achievementTriggers.js`：Phase D 成就觸發接入，`initAchievementTriggers()` 監聽 20+ 個 CustomEvent，不 import 任何 SCC 模組
+- `storage/index.js`：新增 `WIN_STREAK` / `KILL_TOTAL` / `KILL_KILLER_TOTAL` / `KILL_GIANT_TOTAL` 四個 localStorage key
+- `systems/damage.js`：新增 `playerDamaged` / `gameOver` / `killCountUpdated`（normal / killer / giant）dispatch；新增 storage import 以累積擊殺計數
+- `systems/tutorial.js`：教學完成後 dispatch `tutorialCompleted`
+- `systems/boss.js`：`showVictory()` dispatch `gameVictory`（含 difficulty / playTime / bossKillTime / character / bossType / tookDamage / regenedThisRun）
+- `systems/player.js`：回血時 dispatch `playerRegen`；果實計數遞增後 dispatch `fruitCollected`
+- `systems/evolution.js`：進化升等 dispatch `evolutionLevelUp`；技能升級 dispatch `skillUpgraded`；變異升級 dispatch `mutationLevelChanged`
+- `systems/organs.js`：`applyOrganEffects()` 末尾 dispatch `organUnlocked`
+- `systems/combat.js`：`_addBoneMaterial()` dispatch `boneMaterialUpdated`
+- `systems/chat.js`：登入成功且 `is_pioneer=true` 時 dispatch `pioneerConfirmed`
+- `systems/achievements.js`：`unlockAchievement()` 末尾自動檢查 `all_achievements`；`showAchievements()` 開啟時自動判斷 `veteran_days`
+- `main.js`：import `initAchievementTriggers` / `unlockAchievement`；首次遊玩寫入 `first_play`；每局重置 `tookDamageThisRun` / `regenedThisRun`；監聽 `playerDamaged` / `playerRegen` 設定 flag；dispatch `gameStarted`
+
+### 測試
+- 新增 `tests/systems/achievementTriggers.test.js`：14 個測試（initAchievementTriggers / gameVictory / levelUp / mutationLevelChanged / killCountUpdated / win_streak）
+- `npm test`：18 個測試檔、146 個測試全數通過
 
 ---
 

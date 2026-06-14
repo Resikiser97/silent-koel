@@ -140,6 +140,7 @@ export function applyOrganEffects(organ) {
     // 刷新變異倍率（只更新 player 上的 mutationXxxBonus，不直接改 stats）
     // 實際一次性 Final 值乘算由 applyAllMutationBonuses() 在遊戲初始化末尾完成
     if (typeof applyMutationEffects === 'function') applyMutationEffects();
+    window.dispatchEvent(new CustomEvent('organUnlocked', { detail: { organs: gameState.player.organs } }));
 }
 
 function checkOrganUpgrade() {

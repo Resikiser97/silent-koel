@@ -22,7 +22,7 @@ import { addXP } from './reward.js';
 import { handleEliteKill } from './organs.js';
 import { spawnFruitFromTree } from './spawning.js';
 import { getOrganLevel, showOrganSelection } from './organs.js';
-import { incrementStat } from '../stats/index.js';
+import { incrementStat, getSessionStats } from '../stats/index.js';
 import { _joyPaused } from './mobile.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 
@@ -313,6 +313,7 @@ function _collectFruit(p, fruit) {
     AudioManager.play('eatFruit');
     showXPPopup(p.x, p.y, actualFruitXP);
     incrementStat('fruitsEaten');
+    window.dispatchEvent(new CustomEvent('fruitCollected', { detail: { total: getSessionStats().fruitsEaten } }));
 }
 
 export function playerDash() {
@@ -613,6 +614,7 @@ export function updatePassiveOrgans() {
             const amt = flatAmt + percentAmt;
             gameState.stats.hpCurrent = Math.min(gameState.stats.hpMax, gameState.stats.hpCurrent + amt);
             showFloatingText(p.x, p.y - 30, '+' + amt + ' HP', '#00FF88');
+            window.dispatchEvent(new CustomEvent('playerRegen'));
         }
     }
 }

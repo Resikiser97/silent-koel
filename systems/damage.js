@@ -11,6 +11,7 @@ import { incrementStat, updateStatMax } from '../stats/index.js';
 import { spawnLootCircle } from './utils.js';
 import { t } from '../lang.js';
 import { addMutationPoints } from './mutation.js';
+import { STORAGE_KEYS, storageGet, storageSet } from '../storage/index.js';
 
 export function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
@@ -23,6 +24,7 @@ export function applyDamageToPlayer(rawDamage, attacker) {
     }
     const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
     gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
+    window.dispatchEvent(new CustomEvent('playerDamaged'));
     const isArcher = gameState.selectedCharacter === 'archerfish';
     const hurtKey = isArcher ? 'archerHurt' : 'hurt';
     AudioManager.play(hurtKey);
@@ -50,6 +52,7 @@ export function applyDamageToPlayer(rawDamage, attacker) {
             showFloatingText(p.x, p.y - 40, t('tenacityFloat'), '#FF8800');
             return;
         }
+        window.dispatchEvent(new CustomEvent('gameOver'));
         window.dispatchEvent(new CustomEvent('showSkillTree', { detail: { mode: 'postGame' } }));
     }
 }
@@ -88,6 +91,9 @@ export function handleGiantKill(c) {
 
     // 記錄巨人化擊殺數
     incrementStat('giantKills');
+    const _giantTotal = (parseInt(storageGet(STORAGE_KEYS.KILL_GIANT_TOTAL)) || 0) + 1;
+    storageSet(STORAGE_KEYS.KILL_GIANT_TOTAL, _giantTotal);
+    window.dispatchEvent(new CustomEvent('killCountUpdated', { detail: { type: 'giant', total: _giantTotal } }));
 
     // 清理隊伍與UI追蹤狀態
     if (c.isAlpha && gameState.alphaCreature === c) {
@@ -129,6 +135,9 @@ function handleKillerKill(creature) {
     // 記錄殺手化擊殺數與最高等級
     incrementStat('killerKills');
     updateStatMax('killerMaxLevel', creature.killerLevel || 0);
+    const _killerTotal = (parseInt(storageGet(STORAGE_KEYS.KILL_KILLER_TOTAL)) || 0) + 1;
+    storageSet(STORAGE_KEYS.KILL_KILLER_TOTAL, _killerTotal);
+    window.dispatchEvent(new CustomEvent('killCountUpdated', { detail: { type: 'killer', total: _killerTotal } }));
 
     // 殺手本身屍體
     gameState.corpses.push({ x: creature.x, y: creature.y, radius: creature.radius, spawnTime: Date.now() });
@@ -148,4 +157,7 @@ export function handleKill(c, isHostile) {
     showXPPopup(p.x, p.y, actualXP);
     if (c.isElite) window.dispatchEvent(new CustomEvent('eliteKilled', { detail: { killer: c } }));
     incrementStat('normalKills');
+    const _normalTotal = (parseInt(storageGet(STORAGE_KEYS.KILL_TOTAL)) || 0) + 1;
+    storageSet(STORAGE_KEYS.KILL_TOTAL, _normalTotal);
+    window.dispatchEvent(new CustomEvent('killCountUpdated', { detail: { type: 'normal', total: _normalTotal } }));
 }
