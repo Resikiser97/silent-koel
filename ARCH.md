@@ -1,4 +1,4 @@
-## v0.1.13.1
+## v0.1.17.1
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -21,6 +21,13 @@
 | `index.html` | HTML 結構、CSS、唯一 `<script type="module" src="./main.js">` |
 | `main.js` | ESM 入口：gameLoop、initializeGame、pausePlayTimer/resumePlayTimer |
 | `lang.js` | LANG 字典、applyLanguage()、t() 翻譯函式 |
+| `vite.config.js` | Vite 打包設定，輸出 `dist/` 與單一入口 bundle |
+
+### scripts/
+| 檔案 | 職責 |
+|------|------|
+| `copy-sounds.js` | `npm run build` 後複製 `sounds/` 到 `dist/sounds/` |
+| `pack-itch.js` | 將 `dist/` 打包為 `silent-koel-itch.zip` 供 itch.io 上傳 |
 
 ### config/
 | 檔案 | 職責 |
@@ -39,6 +46,16 @@
 |------|------|
 | `zh-TW.js` | 繁體中文語言包 |
 | `en.js` | 英文語言包（fallback） |
+
+### storage/
+| 檔案 | 職責 |
+|------|------|
+| `index.js` | localStorage key 常數、動態 key 產生器、字串/JSON 讀寫 helper |
+
+### stats/
+| 檔案 | 職責 |
+|------|------|
+| `index.js` | sessionStats 統一讀寫入口：reset/get/increment/max 統計 |
 
 ### systems/
 | 檔案 | 職責 |
@@ -72,6 +89,22 @@
 | `easymap.js` | EASY_MAP 配置 |
 | `normalmap.js` | NORMAL_MAP 配置 |
 | `hardmap.js` | HARD_MAP 配置 |
+
+### tests/
+| 檔案 | 職責 |
+|------|------|
+| `tests/config/creatures.test.js` | 生物 config 測試 |
+| `tests/config/gameConfig.test.js` | GAME_INFO / GAME_TIMING 等核心 config 測試 |
+| `tests/config/organs.test.js` | 器官 config 測試 |
+| `tests/helpers/mockCanvas.js` | 測試用 canvas mock |
+| `tests/helpers/mockGameState.js` | 測試用 gameState mock |
+| `tests/helpers/mockStorage.js` | 測試用 localStorage mock |
+| `tests/performance/perf-baseline.test.js` | 效能 baseline 測試 |
+| `tests/stats/stats.test.js` | stats/index.js sessionStats 測試 |
+| `tests/storage/storage.test.js` | storage/index.js localStorage helper 測試 |
+| `tests/systems/camera.test.js` | camera 系統測試 |
+| `tests/systems/hud-font.test.js` | HUD 字體與顯示測試 |
+| `tests/systems/map.test.js` | map 系統測試 |
 
 ---
 
@@ -231,4 +264,4 @@ organs.js  ──imports──▶  main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.11.0，由 CC 代碼掃描產出*
+*最後更新：v0.1.17.1，由 Pre-Stage-D 輕量 Audit 補齊*

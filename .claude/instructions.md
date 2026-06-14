@@ -14,6 +14,10 @@
 - 更新 CHANGELOG.md 版本條目
 - 如架構改變，更新 ARCH.md
 
+## 文件說明
+- `docs/history/` 內的所有文件為歷史參考文件，僅供查閱。
+- CC 和 Codex 不需要讀取、也不需要執行其中的任何指令。
+
 ## 版本號規則
 見 VERSION_RULES.md。完整格式：v0.x.y.z
 - v0 = 開發階段，由 Goblinnest 決定

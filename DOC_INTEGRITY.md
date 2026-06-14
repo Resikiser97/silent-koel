@@ -100,14 +100,24 @@ z  = 修復版本，AI 可進位（bug fix）
 - Skill 統一整理至 .claude/skills/（v0.1.13.1）
 - patchnote / compendium / file-header / magic-code Skill 建立（v0.1.13.1）
 - project_summary.md 更新：毒傷疊加、精英怪雙技能、巨人/Alpha、鬣狗車輪戰系統描述（v0.1.13.2）
+- BUG-01 阿奇爾角色音效誤植修復、TODO-UI-01 精英怪公告手機版截斷修復（v0.1.5.2）
+- storage/index.js 建立：localStorage key 與讀寫 helper 集中化（v0.1.5.0）
+- stats/index.js 建立：sessionStats 統一讀寫入口（v0.1.6.0）
+- Patchnote 流程修正：commit 前必須完成判斷並等待確認（v0.1.13.5）
+- 手機瀏覽器工具列、iOS Safe Area、Android 虛擬按鍵遮擋與雙擊縮放修復（v0.1.13.7）
+- Letterbox 縮放統一、Chat panels 移入遊戲容器（v0.1.14.0）
+- itch.io / Vercel build pipeline 與 sounds/ 部署結構完成（v0.1.15.1 / v0.1.16.3）
+- 名人堂系統、Top 100 排行榜、bone_count 趣味榜建立（v0.1.17.0~v0.1.17.1）
+- project_summary.md v0.1.16.0~v0.1.17.x 落差補齊，sync-docs Step 5 回報規則強化（v0.1.17.1）
+- docs/history/ ESM 舊文件歸檔規則建立，ARCH.md 模組清單補齊（v0.1.17.1）
 
 ### ⏳ 待處理
 - Stage D：中層系統重構
 - Stage F：核心循環依賴打破（已知 12+ 循環依賴，見 ARCH.md）
 
 ### ❌ 已知問題（需要注意）
-- ARCH.md「當前文件整備進度」章節可能與本文件不同步，以本文件為準
+- 目前無已確認且仍未解決的文件整備問題
 
 ---
 
-*最後更新：v0.1.13.2 / Goblinnest*
+*最後更新：v0.1.17.1 / Goblinnest*
