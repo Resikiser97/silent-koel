@@ -10,7 +10,7 @@ import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
 import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
 import { FIXED_DELTA } from '../config/gameConfig.js';
 import { moveCreature } from './spawning.js';
-import { applyDamageToPlayer, handleKill } from './combat.js';
+import { applyDamageToPlayer, handleKill } from './damage.js';
 import { showFloatingText } from './feedback.js';
 import { applyTenacity, getGameFont } from './utils.js';
 import { showAlphaAnnouncement } from './ui.js';

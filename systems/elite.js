@@ -12,7 +12,7 @@ import { ELITE_CONFIG } from '../config/creatures.js';
 import { HARD_ELITE_CONFIG } from '../config/gameConfig.js';
 import { AudioManager } from './audio.js';
 import { moveCreature } from './spawning.js';
-import { applyDamageToPlayer } from './combat.js';
+import { applyDamageToPlayer } from './damage.js';
 import { showFloatingText } from './feedback.js';
 import { _effSpeed } from './creatures.js';
 import { drawArrow, drawGlowEffect, drawHealthBar, drawNameTag } from './utils.js';

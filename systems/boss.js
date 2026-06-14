@@ -11,7 +11,7 @@ import { GAME_INFO, GAME_TIMING } from '../config/gameConfig.js';
 import { BOSS_CONFIG, BOSS_BAR_COLORS, BOSS_BAR_NEXT_COLORS } from '../config/creatures.js';
 import { AudioManager } from './audio.js';
 import { moveCreature } from './spawning.js';
-import { applyDamageToPlayer } from './combat.js';
+import { applyDamageToPlayer } from './damage.js';
 import { showFloatingText } from './feedback.js';
 import { _effSpeed } from './creatures.js';
 import { addXP } from './reward.js';

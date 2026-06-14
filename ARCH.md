@@ -1,4 +1,4 @@
-## v0.1.20.1
+## v0.1.21.0
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -72,7 +72,8 @@
 | `feedback.js` | showFloatingText（Canvas 浮動文字）、showXPPopup |
 | `reward.js` | addXP、checkLevelUp（升級 dispatch CustomEvent('levelUp')） |
 | `loot.js` | _spawnBone（push 白骨到 gameState.bones） |
-| `combat.js` | playerAttack、applyDamageToPlayer、handleKill、白骨系統、毒傷疊加（poisonStacks） |
+| `damage.js` | applyDamageToPlayer、handleKill、handleGiantKill（Stage F 3a 從 combat.js 抽出） |
+| `combat.js` | playerAttack、updateStatusEffects、白骨系統、毒傷疊加（poisonStacks）（傷害/擊殺服務已移至 damage.js） |
 | `organs.js` | 器官選擇、handleEliteKill、applyOrganEffects |
 | `evolution.js` | 技能樹、進化效果、buildSkillTreeOverlay |
 | `mutation.js` | 變異系統（跨局永久保留） |
@@ -260,17 +261,19 @@ main.js
 | #5 | `main.js` ↔ `systems/ui.js` | ✅ 已解除 v0.1.19.0 |
 | #13 | `systems/combat.js` ↔ `systems/mutation.js` | ✅ 已解除 v0.1.20.0（feedback 側拆出） |
 | #14 | `systems/combat.js` ↔ `systems/utils.js` | ✅ 已解除 v0.1.20.1（_spawnBone 改由 loot.js 提供） |
+| #11 | `systems/boss.js` ↔ `systems/combat.js` | ✅ 已解除 v0.1.21.0（damage.js 抽出 + bossKilled 事件化） |
+| #6 | `systems/combat.js` ↔ `systems/player.js` | ✅ 已解除 v0.1.21.0（damage.js 抽出 + callback injection） |
 
 #### 仍存在或部分存在循環
 
 | 編號 | 原循環 | v0.1.20.1 狀態 | 說明 |
 |------|--------|----------------|------|
-| #6 | `systems/combat.js` ↔ `systems/player.js` | ⚠️ 部分仍存在 | `addXP` / `showXPPopup` 已拆出，但仍有 `combat.js` ↔ `player.js` 直接雙向 import（`_archerAttack`、`applyDamageToPlayer`、`handleKill`）。 |
+| #6 | `systems/combat.js` ↔ `systems/player.js` | ✅ 完全解除 v0.1.21.0 | `applyDamageToPlayer`/`handleKill`/`handleGiantKill` 移至 `damage.js`；`_archerAttack` 改 callback injection，直接雙向 import 全消除。 |
 | #7 | `systems/organs.js` ↔ `systems/player.js` | ⚠️ 部分仍存在 | `addXP` 側已拆出；`player.js` 仍 import `organs.js`，且兩者仍在同一 SCC，需處理器官效果與玩家狀態耦合。 |
 | #8 | `systems/combat.js` ↔ `systems/organs.js` | ⚠️ 部分仍存在 | `organs.js` 已不直接 import `combat.js`，但兩者仍可透過 SCC 互相抵達；戰鬥與器官規則仍耦合。 |
 | #9 | `systems/combat.js` ↔ `systems/evolution.js` | ⚠️ 部分仍存在 | 直接雙向 import 已解除，但仍在同一 SCC，透過 boss/organs/ui 等路徑互相抵達。 |
 | #10 | `systems/evolution.js` ↔ `systems/organs.js` | ❌ 仍存在 | 兩者仍直接雙向 import，是批次 3 的核心目標之一。 |
-| #11 | `systems/boss.js` ↔ `systems/combat.js` | ❌ 仍存在 | 兩者仍直接雙向 import，Boss / combat 流程仍互相依賴。 |
+| #11 | `systems/boss.js` ↔ `systems/combat.js` | ✅ 完全解除 v0.1.21.0 | `applyDamageToPlayer` 移至 `damage.js`（boss 改 import damage.js）；combat→boss `handleBossKill` 改 dispatch `bossKilled` 事件。 |
 | #12 | `systems/boss.js` ↔ `systems/player.js` | ⚠️ 部分仍存在 | 直接雙向 import 已解除，但仍在同一 SCC，透過 combat/mobile/organs 等路徑互相抵達。 |
 | #15 | `systems/mobile.js` ↔ `systems/player.js` | ❌ 仍存在 | 仍直接雙向 import，屬低嚴重度輸入/玩家耦合。 |
 | #16 | `systems/mobile.js` ↔ `systems/ui.js` | ❌ 仍存在 | 仍直接雙向 import，屬低嚴重度裝置/UI 耦合。 |
@@ -284,10 +287,12 @@ main.js
 | `systems/feedback.js` | `systems/camera.js`, `systems/gameState.js`, `systems/map.js` | 無新循環 ✅ |
 | `systems/reward.js` | `lang.js`, `systems/audio.js`, `systems/gameState.js` | 無新循環 ✅ |
 | `systems/loot.js` | `systems/gameState.js` | 無新循環 ✅ |
+| `systems/damage.js` | `systems/gameState.js`, `systems/audio.js`, `systems/feedback.js`, `systems/reward.js`, `stats/index.js`, `systems/utils.js`, `lang.js`, `systems/mutation.js`, `systems/organs.js`（handleEliteKill） | `damage.js → organs.js` 為單向，無新循環 ✅ |
 
 **批次 1 已完成（v0.1.19.0）**：解除 #1~#5，`main.js` 反向依賴全部消失。  
-**批次 2 已完成（v0.1.20.0~v0.1.20.1）**：完全解除 #13、#14；#6、#7、#8、#9、#12 已移除部分直接依賴或 reward/feedback/loot 側耦合，但仍因核心 SCC 存在而未完全解除。  
-**批次 3 建議範圍**：優先處理 #10（evolution ↔ organs）與 #11（boss ↔ combat）兩個仍直接雙向的中嚴重度核心循環；接著處理 #6（combat ↔ player）殘留直接雙向 import。若這三處拆開，12 檔 SCC 應會明顯再縮小，最後再處理 #15~#17 的 UI / mobile 低嚴重度循環。
+**批次 2 已完成（v0.1.20.0~v0.1.20.1）**：完全解除 #13、#14；#6 等部分解除。  
+**批次 3a 已完成（v0.1.21.0）**：完全解除 #11（boss ↔ combat）、#6（combat ↔ player），新建 `damage.js`，bossKilled 事件化，_archerAttack callback 注入。  
+**批次 3b / 3c 待處理**：#10（evolution ↔ organs）、#17（evolution ↔ ui）、#15（mobile ↔ player）、#16（mobile ↔ ui）。
 
 ### 不一致模式
 - `hud.js` 同時負責 Canvas 渲染（`drawGame`）和 HTML overlay 更新（`updateUI`），職責混合

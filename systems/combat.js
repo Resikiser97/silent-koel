@@ -1,9 +1,10 @@
 // =============================================================
-// 戰鬥系統 - showFloatingText / applyDamageToPlayer / handleKill
-//            handleGiantKill / handleKillerKill / addMutationPoints
-//            playerAttack / updateStatusEffects
+// 戰鬥系統 - playerAttack / updateStatusEffects
 //            updateCorpseEating / updateBoneEating
 //            drawCorpseEatingBars / drawBones
+//            setRangedAttackCallback
+// （Stage F 3a：applyDamageToPlayer / handleKill / handleGiantKill
+//   已搬至 damage.js；boss.js / player.js 直接依賴已解除）
 // =============================================================
 import { gameState, ctx } from './gameState.js';
 import { VIEW_W, VIEW_H } from './map.js';
@@ -18,153 +19,22 @@ import { t } from '../lang.js';
 import { addXP } from './reward.js';
 import { showFloatingText, showXPPopup } from './feedback.js';
 import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
-import { handleBossKill } from './boss.js';
-import { incrementStat, updateStatMax } from '../stats/index.js';
-import { _archerAttack } from './player.js';
+import { incrementStat } from '../stats/index.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 import { addMutationPoints } from './mutation.js';
+import { applyDamageToPlayer, handleKill, handleGiantKill } from './damage.js';
 
-export function applyDamageToPlayer(rawDamage, attacker) {
-    const p = gameState.player;
-    // 閃現無敵期間豁免所有外部傷害（毒傷tick/刺甲反傷不走此函式，不受影響）
-    if (p.dashInvincible) return;
-    // 巨人/Alpha 傷害減免（草食性 Lv4/Lv5 效果）
-    if (attacker && (attacker.isGiantized || attacker.isAlpha)) {
-        const reduction = p.giantDamageReduction || 0;
-        if (reduction > 0) rawDamage = Math.round(rawDamage * (1 - reduction));
-    }
-    const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
-    gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
-    const isArcher = gameState.selectedCharacter === 'archerfish';
-    const hurtKey = isArcher ? 'archerHurt' : 'hurt';
-    AudioManager.play(hurtKey);
-    if (p.thornDamage > 0 && attacker && attacker.hp > 0) {
-        const thornMult = p.comboShellArmor ? 2 : 1; // 龜殼+刺甲組合：反彈時傷害翻倍
-        // 刺甲：反彈最大HP百分比的傷害
-        const thornTotal = Math.max(1, Math.round(gameState.stats.hpMax * p.thornDamage * thornMult));
-        attacker.hp -= thornTotal;
-        if (attacker.hp <= 0) {
-            if (attacker === gameState.boss) {
-                handleBossKill(attacker);
-            } else if (attacker === gameState.eliteCreature) {
-                handleEliteKill(attacker);
-            } else {
-                const isHostile = gameState.hostileCreatures.includes(attacker);
-                handleKill(attacker, isHostile);
-            }
-        }
-    }
-    if (gameState.stats.hpCurrent <= 0) {
-        const tenacityLevel = gameState.playerSkills.tenacity || 0;
-        if (tenacityLevel > 0 && !p.tenacityUsed) {
-            gameState.stats.hpCurrent = Math.max(1, Math.ceil(gameState.stats.hpMax * 0.1 * tenacityLevel));
-            p.tenacityUsed = true;
-            showFloatingText(p.x, p.y - 40, t('tenacityFloat'), '#FF8800');
-            return;
-        }
-        window.dispatchEvent(new CustomEvent('showSkillTree', { detail: { mode: 'postGame' } }));
-    }
-}
-
-export function handleGiantKill(c) {
-    const p = gameState.player;
-    // XP：巨人化 100，Alpha 300（+獵人本能加成）
-    const baseXP = c.isAlpha ? 300 : 100;
-    const xp = baseXP + (gameState.playerSkills.hunter || 0) * 10;
-    const actualXP = addXP(xp);
-    showXPPopup(p.x, p.y, actualXP);
-
-    // 掉落道具（圓形散落）
-    const items = c.isAlpha
-        ? [{ type: 'corpse', data: { multiplier: 2 } },
-           { type: 'corpse', data: { multiplier: 2 } },
-           { type: 'bone',   data: {} },
-           { type: 'bone',   data: {} },
-           { type: 'bone',   data: {} }]
-        : [{ type: 'corpse', data: { multiplier: 2 } },
-           { type: 'bone',   data: {} }];
-    spawnLootCircle(c.x, c.y, items);
-
-    // 變異點掉落
-    // 普通：普通巨人+1，Alpha+2（20%機率額外+2~6）
-    // 困難：普通巨人+3，Alpha+5（20%機率額外+2~6）
-    const isHard = !!(gameState.currentMap && gameState.currentMap.difficulty === 'hard');
-    if (isHard) {
-        addMutationPoints(c.isAlpha ? 5 : 3);
-    } else {
-        addMutationPoints(c.isAlpha ? 2 : 1);
-    }
-    if (c.isAlpha && Math.random() < 0.2) {
-        addMutationPoints(2 + Math.floor(Math.random() * 5));
-    }
-
-    // 記錄巨人化擊殺數
-    incrementStat('giantKills');
-
-    // 清理隊伍與UI追蹤狀態
-    if (c.isAlpha && gameState.alphaCreature === c) {
-        gameState.alphaCreature = null;
-        gameState._pendingAlphaInherit = true; // 通知 creatures.js 執行繼承掃描
-    }
-    if (c.packMembers) {
-        for (const m of c.packMembers) m.packLeaderRef = null;
-        c.packMembers = [];
-    }
-    if (gameState.topBarTarget === c) { gameState.topBarTarget = null; gameState.topBarFadeTimer = 0; }
-}
-
-function handleKillerKill(creature) {
-    // 固定100 + 殺手Lv×5 + 獵人本能加成
-    const killerLv = creature.killerLevel || 0;
-    const baseXP = 100 + killerLv * 5 + (gameState.playerSkills.hunter || 0) * 10;
-    const actualXP = addXP(baseXP);
-    showXPPopup(creature.x, creature.y, actualXP);
-
-    // 圓形散落：2份1倍屍體
-    spawnLootCircle(creature.x, creature.y, [
-        { type: 'corpse', data: { multiplier: 1 } },
-        { type: 'corpse', data: { multiplier: 1 } },
-    ]);
-
-    // 變異點：普通+1，困難+2
-    const isHardMap = !!(gameState.currentMap && gameState.currentMap.difficulty === 'hard');
-    addMutationPoints(isHardMap ? 2 : 1);
-    // 殺手化後每吃1具N%機率額外掉落1~N個（N=killerCorpseEaten）
-    const killerEaten = creature.killerCorpseEaten || 0;
-    if (killerEaten > 0) {
-        const extraChance = killerEaten / 100;
-        if (Math.random() < extraChance) {
-            addMutationPoints(Math.floor(Math.random() * killerEaten) + 1);
-        }
-    }
-
-    // 記錄殺手化擊殺數與最高等級
-    incrementStat('killerKills');
-    updateStatMax('killerMaxLevel', creature.killerLevel || 0);
-
-    // 殺手本身屍體
-    gameState.corpses.push({ x: creature.x, y: creature.y, radius: creature.radius, spawnTime: Date.now() });
-}
-
-export function handleKill(c, isHostile) {
-    if (c.isKiller) { handleKillerKill(c); return; }
-    const p = gameState.player;
-    const now = Date.now();
-    gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
-    const baseXP = isHostile ? Math.min(80, 30 + Math.round((c.maxHp || 50) / 50 * 10)) : 20;
-    const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * 10;
-    const actualXP = addXP(rawXP);
-    showXPPopup(p.x, p.y, actualXP);
-    incrementStat('normalKills');
-}
+// 遠程攻擊 callback（由 main.js 在初始化時注入，避免 combat↔player 直接 import）
+let _rangedAttackFn = null;
+export function setRangedAttackCallback(fn) { _rangedAttackFn = fn; }
 
 export function playerAttack() {
     const p = gameState.player;
     const now = Date.now();
 
-    // 遠程角色（阿奇爾）→ 分派至射水攻擊
+    // 遠程角色（阿奇爾）→ 分派至射水攻擊（callback 由 main.js 注入）
     if (p.isRanged) {
-        _archerAttack();
+        if (_rangedAttackFn) _rangedAttackFn();
         return;
     }
 
@@ -352,7 +222,7 @@ export function playerAttack() {
         const normalKey = isArcher ? 'archerAttackNormal' : 'attackNormal';
         AudioManager.play(anyCrit ? critKey : normalKey);
     }
-    if (bossDied) handleBossKill(gameState.boss);
+    if (bossDied) window.dispatchEvent(new CustomEvent('bossKilled'));
 }
 
 export function updateStatusEffects() {
@@ -372,7 +242,7 @@ export function updateStatusEffects() {
             c.lastBleedTick = now;
             showFloatingText(c.x, c.y - 18, t('bleedFloat', { n: bleedAmt }), '#880000', 11, true);
             if (hpBefore > 0 && c.hp <= 0) {
-                if (isBoss) handleBossKill(c);
+                if (isBoss) window.dispatchEvent(new CustomEvent('bossKilled'));
                 else if (isElite) handleEliteKill(c);
                 else if (c.isGiantized) handleGiantKill(c);
                 else handleKill(c, isHostile);
@@ -391,7 +261,7 @@ export function updateStatusEffects() {
                 c.hp -= actualPoison;
                 showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: actualPoison }), '#8800CC', 11, true);
                 if (hpBefore > 0 && c.hp <= 0) {
-                    if (isBoss) handleBossKill(c);
+                    if (isBoss) window.dispatchEvent(new CustomEvent('bossKilled'));
                     else if (isElite) handleEliteKill(c);
                     else if (c.isGiantized) handleGiantKill(c);
                     else handleKill(c, isHostile);

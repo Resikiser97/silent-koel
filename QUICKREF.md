@@ -1,4 +1,4 @@
-## v0.1.20.1
+## v0.1.21.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.20.1**
+- 版本：**v0.1.21.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -106,7 +106,8 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `spawning.js` | 生物／果子／樹木生成 |
 | `player.js` | updatePlayerMovement / checkFruitCollision / 靈敏知覺算法 |
 | `tutorial.js` | showTutorial / spawnTutorialStump / handleTutorialStumpKill |
-| `combat.js` | playerAttack / applyDamageToPlayer / updateStatusEffects / 白骨系統 |
+| `damage.js` | applyDamageToPlayer / handleKill / handleGiantKill（Stage F 3a 從 combat.js 抽出） |
+| `combat.js` | playerAttack / setRangedAttackCallback / updateStatusEffects / 白骨系統 |
 | `organs.js` | showOrganSelection / handleEliteKill / applyOrganEffects |
 | `evolution.js` | buildSkillTreeOverlay / upgradeSkill / applyEvolutionEffects |
 | `creatures.js` | updateNeutralCreatures / updateHostileCreatures |

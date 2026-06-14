@@ -19,10 +19,9 @@ vi.mock('../../config/gameConfig.js', () => ({
 vi.mock('../../systems/spawning.js', () => ({
     moveCreature: vi.fn(),
 }));
-vi.mock('../../systems/combat.js', () => ({
+vi.mock('../../systems/damage.js', () => ({
     applyDamageToPlayer: vi.fn(),
     handleKill: vi.fn(),
-    showFloatingText: vi.fn(),
 }));
 vi.mock('../../systems/utils.js', () => ({
     applyTenacity: vi.fn(),

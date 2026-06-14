@@ -1,6 +1,22 @@
-## v0.1.20.0
+## v0.1.21.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.21.0 - 2026-06-14
+
+### 重構
+- Stage F 3a：新建 `systems/damage.js`，承載 `applyDamageToPlayer`、`handleKill`、`handleGiantKill`、`handleKillerKill`（private）
+- `boss.js`、`player.js`、`elite.js`、`creatures.js` 的 `applyDamageToPlayer`/`handleKill`/`handleGiantKill` import 改為 `damage.js`
+- `combat.js` 移除 `import { handleBossKill } from './boss.js'`，4 個 Boss 死亡呼叫點改 dispatch `CustomEvent('bossKilled')`
+- `combat.js` 移除 `import { _archerAttack } from './player.js'`，改用 callback injection（`setRangedAttackCallback`）
+- `main.js` 新增 `setRangedAttackCallback(_archerAttack)` 初始化呼叫
+- `tests/systems/creatures.test.js` mock 由 `combat.js` 改為 `damage.js`
+- 解除循環依賴 #11（boss ↔ combat）、#6（combat ↔ player）直接雙向 import
+
+### 測試
+- `npm test`：14 個測試檔、103 個測試全數通過
 
 ---
 

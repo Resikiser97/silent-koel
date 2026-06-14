@@ -16,7 +16,7 @@ import { EVOLUTION_PATHS } from '../config/evolution.js';
 import { AudioManager } from './audio.js';
 import { applyTenacity } from './utils.js';
 import { t } from '../lang.js';
-import { applyDamageToPlayer, handleKill, handleGiantKill } from './combat.js';
+import { applyDamageToPlayer, handleKill, handleGiantKill } from './damage.js';
 import { showFloatingText, showXPPopup } from './feedback.js';
 import { addXP } from './reward.js';
 import { handleEliteKill } from './organs.js';

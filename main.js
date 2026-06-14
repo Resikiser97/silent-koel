@@ -19,8 +19,8 @@ import { handleKeyDown, handleKeyUp, _updateMouseWorld } from './systems/input.j
 import { initAudio, stopIntroTheme, AudioManager } from './systems/audio.js';
 import { _joyPaused } from './systems/mobile.js';
 import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from './systems/spawning.js';
-import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir } from './systems/player.js';
-import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack } from './systems/combat.js';
+import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir, _archerAttack } from './systems/player.js';
+import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack, setRangedAttackCallback } from './systems/combat.js';
 import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion, showOrganSelection } from './systems/organs.js';
 import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans, showSkillTree } from './systems/evolution.js';
 import { initMutationData, applyAllMutationBonuses } from './systems/mutation.js';
@@ -82,7 +82,8 @@ window.devToggleDayNight = devToggleDayNight;
 window.devToggleHP = devToggleHP;
 window.devToggleAI = devToggleAI;
 
-export { pausePlayTimer, resumePlayTimer } from './systems/gameFlow.js';
+import { pausePlayTimer, resumePlayTimer } from './systems/gameFlow.js';
+export { pausePlayTimer, resumePlayTimer };
 
 export function isGamePaused() {
     return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen ||
@@ -636,6 +637,9 @@ export function initializeGame() {
 }
 
 window.onload = () => {
+    // 注入阿奇爾遠程攻擊 callback，解除 combat.js ↔ player.js 直接 import
+    setRangedAttackCallback(_archerAttack);
+
     window.addEventListener('startGame', () => {
         startGameWithLoading();
     });
