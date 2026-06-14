@@ -4,6 +4,25 @@
 
 ---
 
+## v0.1.20.1 - 2026-06-14
+
+### 重構
+- Stage F 批次 2 第二波：新建 `systems/reward.js`，將 `addXP` / `checkLevelUp` 從 `player.js` 搬出
+- 新建 `systems/loot.js`，將 `_spawnBone` 從 `combat.js` 搬出
+- `boss.js`、`combat.js`、`organs.js`、`ui.js` 的 `addXP` import 改為 `reward.js`
+- `evolution.js`：移除 `addXP` dead import（from player.js）
+- `player.js`：移除 `addXP` / `checkLevelUp` 定義，移除 `handleBossKill` import；Boss 死亡改 dispatch `CustomEvent('bossKilled')`
+- `reward.js`：升級後改 dispatch `CustomEvent('levelUp')` 取代直接呼叫 `showOrganSelection()`
+- `utils.js`：`_spawnBone` import 改為 `loot.js`（移除 combat.js 反向依賴）
+- `combat.js`：`_spawnBone` import 改為 `loot.js`，移除本地定義
+- `main.js`：新增 `levelUp`（→ showOrganSelection）、`bossKilled`（→ handleBossKill）event listener
+- 解除循環依賴 #6（combat ↔ player，addXP 側）、#7（organs ↔ player，addXP 側）、#12（boss ↔ player）、#14（combat ↔ utils）
+
+### 測試
+- `npm test`：14 個測試檔、103 個測試全數通過
+
+---
+
 ## v0.1.20.0 - 2026-06-14
 
 ### 重構

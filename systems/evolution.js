@@ -9,7 +9,6 @@ import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
 import { ORGANS, HIDDEN_ORGANS } from '../config/organs.js';
 import { GAME_INFO } from '../config/gameConfig.js';
 import { t } from '../lang.js';
-import { addXP } from './player.js';
 import { applyOrganEffects, applyHiddenOrganEffects, showOrganSelection, showHiddenOrganSelection, getOrganSlotsUsed } from './organs.js';
 import { applyMutationEffects, saveMutationData, getMutationUpgradeCost, upgradeMutation, initMutationSkills, _syncMutationSkillPoints, _saveMutationSkills } from './mutation.js';
 import { showTooltip, hideTooltip, buildEndGameOverlay } from './ui.js';

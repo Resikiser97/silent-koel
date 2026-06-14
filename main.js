@@ -21,12 +21,12 @@ import { _joyPaused } from './systems/mobile.js';
 import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from './systems/spawning.js';
 import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir } from './systems/player.js';
 import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack } from './systems/combat.js';
-import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion } from './systems/organs.js';
+import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion, showOrganSelection } from './systems/organs.js';
 import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans, showSkillTree } from './systems/evolution.js';
 import { initMutationData, applyAllMutationBonuses } from './systems/mutation.js';
 import { resetPackNames, resetHyenaPackNames, updateNeutralCreatures, updateHostileCreatures } from './systems/creatures.js';
 import { initEliteOrder, updateEliteCreature } from './systems/elite.js';
-import { updateBoss } from './systems/boss.js';
+import { updateBoss, handleBossKill } from './systems/boss.js';
 import { updateDayNightCycle } from './systems/daynight.js';
 import { updateMinimapFog, drawGame, updateUI } from './systems/hud.js';
 import {
@@ -642,6 +642,14 @@ window.onload = () => {
 
     window.addEventListener('showSkillTree', (e) => {
         showSkillTree(e.detail?.mode || 'postGame');
+    });
+
+    window.addEventListener('levelUp', () => {
+        showOrganSelection();
+    });
+
+    window.addEventListener('bossKilled', () => {
+        handleBossKill(gameState.boss);
     });
 
     // ── 禁止 #game-container 內右鍵選單（補強 CSS user-select）

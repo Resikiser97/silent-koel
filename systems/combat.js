@@ -13,8 +13,9 @@ import { EVOLUTION_PATHS } from '../config/evolution.js';
 import { ORGANS } from '../config/organs.js';
 import { AudioManager } from './audio.js';
 import { getGameFont, spawnLootCircle, applyTenacity } from './utils.js';
+import { _spawnBone } from './loot.js';
 import { t } from '../lang.js';
-import { addXP } from './player.js';
+import { addXP } from './reward.js';
 import { showFloatingText, showXPPopup } from './feedback.js';
 import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
 import { handleBossKill } from './boss.js';
@@ -426,10 +427,6 @@ function _getTotalCorpseXP() {
         total += EVOLUTION_PATHS.carnivore.levels[i].eatXP;
     }
     return total;
-}
-
-export function _spawnBone(x, y, radius) {
-    gameState.bones.push({ x, y, radius: Math.max(4, (radius || 8) * 0.6), spawnTime: Date.now(), eatProgress: 0, lastEatTick: null });
 }
 
 export function updateCorpseEating() {

@@ -2,7 +2,7 @@
 // 玩家系統 - updatePlayerMovement / playerDash / checkFruitCollision
 //            updateTreeFruitProduction / showXPPopup
 //            checkTreasureCollision / updatePassiveOrgans
-//            checkXPMilestone / addXP / checkLevelUp
+//            checkXPMilestone
 //            updateProjectiles / findBestPerceptionPath
 //            _checkProjectileHit（子彈系統）
 //            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
@@ -18,8 +18,8 @@ import { applyTenacity } from './utils.js';
 import { t } from '../lang.js';
 import { applyDamageToPlayer, handleKill, handleGiantKill } from './combat.js';
 import { showFloatingText, showXPPopup } from './feedback.js';
+import { addXP } from './reward.js';
 import { handleEliteKill } from './organs.js';
-import { handleBossKill } from './boss.js';
 import { spawnFruitFromTree } from './spawning.js';
 import { getOrganLevel, getOrganCumulative, applyOrganEffects, showOrganSelection } from './organs.js';
 import { incrementStat } from '../stats/index.js';
@@ -136,7 +136,7 @@ export function _checkProjectileHit(b, idx) {
         // 目標死亡路由
         if (c.hp <= 0) {
             if (c === gameState.boss) {
-                handleBossKill(c);
+                window.dispatchEvent(new CustomEvent('bossKilled'));
             } else if (c === gameState.eliteCreature) {
                 handleEliteKill(c);
             } else if (c.isGiantized) {
@@ -620,27 +620,6 @@ export function updatePassiveOrgans() {
 export function checkXPMilestone() {
     if (gameState.organSelectionActive) return;
     if (gameState.stats.xpCurrent >= gameState.xpThreshold) {
-        showOrganSelection();
-    }
-}
-
-export function addXP(amount) {
-    const xpMult = (gameState.player.mutationXpBonus || 1);
-    const finalAmount = xpMult !== 1 ? Math.round(amount * xpMult) : amount;
-    gameState.stats.xpCurrent += finalAmount;
-    gameState.player.levelXP  += finalAmount;
-    checkLevelUp();
-    return finalAmount; // 回傳實際加入的 XP（已乘 mutationXpBonus）
-}
-
-function checkLevelUp() {
-    const p = gameState.player;
-    const threshold = 100 + (p.level - 1) * 50;
-    if (p.levelXP >= threshold) {
-        p.levelXP = 0;
-        p.level++;
-        gameState.levelUpMessage = { text: t('levelUpFloat', { lv: p.level }), timer: Date.now() };
-        AudioManager.play('levelUp');
         showOrganSelection();
     }
 }

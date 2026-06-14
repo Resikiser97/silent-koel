@@ -14,7 +14,7 @@ import { moveCreature } from './spawning.js';
 import { applyDamageToPlayer } from './combat.js';
 import { showFloatingText } from './feedback.js';
 import { _effSpeed } from './creatures.js';
-import { addXP } from './player.js';
+import { addXP } from './reward.js';
 import { buildSkillTreeOverlay, saveLastRunOrgans } from './evolution.js';
 import { saveSettings, buildEndGameOverlay } from './ui.js';
 import { showScoreSubmitPopup } from './leaderboard.js';

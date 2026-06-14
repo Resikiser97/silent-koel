@@ -1,4 +1,4 @@
-## v0.1.20.0
+## v0.1.20.1
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -70,6 +70,8 @@
 | `spawning.js` | 生物/果子/樹木生成邏輯、moveCreature |
 | `player.js` | 玩家移動、碰撞、XP、addXP、攻擊（含阿奇爾射水） |
 | `feedback.js` | showFloatingText（Canvas 浮動文字）、showXPPopup |
+| `reward.js` | addXP、checkLevelUp（升級 dispatch CustomEvent('levelUp')） |
+| `loot.js` | _spawnBone（push 白骨到 gameState.bones） |
 | `combat.js` | playerAttack、applyDamageToPlayer、handleKill、白骨系統、毒傷疊加（poisonStacks） |
 | `organs.js` | 器官選擇、handleEliteKill、applyOrganEffects |
 | `evolution.js` | 技能樹、進化效果、buildSkillTreeOverlay |
@@ -260,7 +262,8 @@ organs.js  ──imports──▶  gameFlow.js
 
 **Stage F 批次 1 已完成（v0.1.19.0）**：`boss.js`、`organs.js`、`evolution.js`、`tutorial.js` 改由 `systems/gameFlow.js` 取得 timer 控制；`ui.js` / `evolution.js` 改用 `CustomEvent('startGame')` 通知 `main.js` 啟動遊戲，已解除 5 個高嚴重度 `main.js` 反向循環。  
 **Stage F 批次 2 第一波已完成（v0.1.20.0）**：新建 `systems/feedback.js`；`showFloatingText` / `showXPPopup` 搬出 combat/player；`combat.js` 死亡 `showSkillTree()` 改為 `CustomEvent('showSkillTree')` 由 `main.js` 監聽；解除循環 #9（combat ↔ evolution）、#13（combat ↔ mutation 的 feedback 側）。  
-**仍待處理**：player ↔ combat、player ↔ organs、combat ↔ organs / boss、addXP 的 reward 拆解，以及 #14（utils ↔ combat）等核心循環仍待後續批次處理。
+**Stage F 批次 2 第二波已完成（v0.1.20.1）**：新建 `systems/reward.js`（addXP / checkLevelUp，升級 dispatch `CustomEvent('levelUp')`）；新建 `systems/loot.js`（_spawnBone）；boss/combat/organs/ui 的 addXP import 改為 reward.js；evolution.js 移除 dead addXP import；player.js 移除 handleBossKill import，Boss 死亡改 dispatch `CustomEvent('bossKilled')`；main.js 新增 levelUp / bossKilled listener；utils.js / combat.js 的 _spawnBone 改 import loot.js；解除循環 #6（combat ↔ player，addXP 側）、#7（organs ↔ player，addXP 側）、#12（boss ↔ player）、#14（combat ↔ utils）。  
+**仍待處理**：player ↔ combat（applyDamageToPlayer / handleKill 反向）、organs ↔ player（handleEliteKill / applyOrganEffects 反向）、organs ↔ evolution（#10）、boss ↔ combat（#11）等核心循環待批次 3 處理。
 
 ### 不一致模式
 - `hud.js` 同時負責 Canvas 渲染（`drawGame`）和 HTML overlay 更新（`updateUI`），職責混合

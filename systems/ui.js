@@ -29,7 +29,7 @@ import { COMPENDIUM_DATA } from '../config/compendium_data.js';
 import { LANG, LANG_LIST, t, applyLanguage } from '../lang.js';
 import { AudioManager, playIntroTheme } from './audio.js';
 import { applyDeviceMode, _effectiveMobile, _letterboxScale } from './mobile.js';
-import { addXP } from './player.js';
+import { addXP } from './reward.js';
 import { spawnFruit } from './spawning.js';
 import { getDayNightPhaseIndex } from './daynight.js';
 import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans } from './evolution.js';

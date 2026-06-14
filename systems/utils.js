@@ -4,7 +4,7 @@
 // =============================================================
 import { gameState, ctx } from './gameState.js';
 import { wrappedDelta } from './camera.js';
-import { _spawnBone } from './combat.js';
+import { _spawnBone } from './loot.js';
 
 /**
  * 韌性計算：用目標自身的韌性縮短控制效果持續時間。

@@ -10,7 +10,7 @@ import { VIEW_H } from './map.js';
 import { ORGANS, HIDDEN_ORGANS, COMBOS } from '../config/organs.js';
 import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
 import { t } from '../lang.js';
-import { addXP } from './player.js';
+import { addXP } from './reward.js';
 import { showFloatingText, showXPPopup } from './feedback.js';
 import { spawnLootCircle } from './utils.js';
 import { applyEvolutionLevelEffect, checkEvolutionUnlock } from './evolution.js';
