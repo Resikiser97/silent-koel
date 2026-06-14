@@ -24,7 +24,6 @@ import {
     submitScore, supabaseUpsert,
     fetchVictoryRecords,
     fetchDefeatRecords,
-    fetchTop10,
     fetchFunSpeedVictory,
     fetchFunSpeedDeath,
     fetchFunGiantKills,

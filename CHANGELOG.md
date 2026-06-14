@@ -1,6 +1,25 @@
-## v0.1.21.1
+## v0.1.21.2
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.21.2 - 2026-06-14
+
+### 清理
+- `systems/boss.js`：移除 dead import `storageGetJSON`
+- `systems/combat.js`：移除 dead import `getGameFont`、`spawnLootCircle`、`showXPPopup`、`incrementStat`、`addMutationPoints`
+- `systems/elite.js`：移除 dead import `storageGet`、`storageRemove`、`storageGetJSON`、`storageSetJSON`
+- `systems/evolution.js`：移除 dead import `showOrganSelection`、`showHiddenOrganSelection`、`getOrganSlotsUsed`、`applyMutationEffects`、`resumePlayTimer`
+- `systems/hud.js`：移除 dead import `drawArrow`、`showFloatingText`
+- `systems/leaderboard.js`：移除 dead import `fetchTop10`
+- `systems/mutation.js`：移除 dead import `storageRemove`
+- `systems/organs.js`：移除 dead import `SKILLS`、`showFloatingText`、`getGameFont`、`storageRemove`、`storageGetJSON`、`storageSetJSON`
+- `systems/player.js`：移除 dead import `VIEW_W`、`VIEW_H`、`getOrganCumulative`、`applyOrganEffects`
+- `systems/tutorial.js`：移除 dead import `storageGet`、`storageRemove`、`storageGetJSON`、`storageSetJSON`
+
+### 測試
+- `npm test`：103/103 通過
 
 ---
 

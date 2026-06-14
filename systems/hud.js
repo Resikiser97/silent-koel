@@ -5,11 +5,10 @@ import { VIEW_W, VIEW_H, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, BIOME_COLOR, getBiome
 import { worldToScreen, wrappedDistance } from './camera.js';
 import { FIXED_DELTA, GAME_INFO } from '../config/gameConfig.js';
 import { BOSS_BAR_COLORS, BOSS_BAR_NEXT_COLORS } from '../config/creatures.js';
-import { getGameFont, drawArrow } from './utils.js';
+import { getGameFont } from './utils.js';
 import { t } from '../lang.js';
 import { drawCorpses, drawNeutralCreatures, drawHostileCreatures, _getCreatureDisplayName } from './creatures.js';
 import { drawCorpseEatingBars, drawBones } from './combat.js';
-import { showFloatingText } from './feedback.js';
 import { drawOrganUI } from './organs.js';
 import { _renderMobileOverlay } from './mobile.js';
 import { drawEliteCreature, drawEliteArrow } from './elite.js';

@@ -10,11 +10,7 @@ import { worldToScreen, wrappedDistance } from './camera.js';
 import { pausePlayTimer, resumePlayTimer } from './gameFlow.js';
 import {
     STORAGE_KEYS,
-    storageGet,
-    storageSet,
-    storageRemove,
-    storageGetJSON,
-    storageSetJSON
+    storageSet
 } from '../storage/index.js';
 
     // ── 教學內部狀態

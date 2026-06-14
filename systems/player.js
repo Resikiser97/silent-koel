@@ -8,7 +8,7 @@
 //            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
 // =============================================================
 import { gameState } from './gameState.js';
-import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
+import { MAP_WIDTH, MAP_HEIGHT, getBiome } from './map.js';
 import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
 import { FIXED_DELTA, ARCHER_BULLET_SPEED } from '../config/gameConfig.js';
 import { ORGANS } from '../config/organs.js';
@@ -21,7 +21,7 @@ import { showFloatingText, showXPPopup } from './feedback.js';
 import { addXP } from './reward.js';
 import { handleEliteKill } from './organs.js';
 import { spawnFruitFromTree } from './spawning.js';
-import { getOrganLevel, getOrganCumulative, applyOrganEffects, showOrganSelection } from './organs.js';
+import { getOrganLevel, showOrganSelection } from './organs.js';
 import { incrementStat } from '../stats/index.js';
 import { _joyPaused } from './mobile.js';
 import { handleTutorialStumpKill } from './tutorial.js';

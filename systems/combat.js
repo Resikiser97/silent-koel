@@ -13,15 +13,13 @@ import { CORPSE_EAT_HP, CORPSE_BONE_EAT_TICK, CORPSE_EXPIRE_MS, BONE_EXPIRE_MS }
 import { EVOLUTION_PATHS } from '../config/evolution.js';
 import { ORGANS } from '../config/organs.js';
 import { AudioManager } from './audio.js';
-import { getGameFont, spawnLootCircle, applyTenacity } from './utils.js';
+import { applyTenacity } from './utils.js';
 import { _spawnBone } from './loot.js';
 import { t } from '../lang.js';
 import { addXP } from './reward.js';
-import { showFloatingText, showXPPopup } from './feedback.js';
+import { showFloatingText } from './feedback.js';
 import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
-import { incrementStat } from '../stats/index.js';
 import { handleTutorialStumpKill } from './tutorial.js';
-import { addMutationPoints } from './mutation.js';
 import { applyDamageToPlayer, handleKill, handleGiantKill } from './damage.js';
 
 // 遠程攻擊 callback（由 main.js 在初始化時注入，避免 combat↔player 直接 import）

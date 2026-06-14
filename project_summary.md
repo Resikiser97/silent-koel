@@ -1,4 +1,4 @@
-## v0.1.19.0
+## v0.1.21.2
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.19.0
+**現在版本:** v0.1.21.2
 
-**當前狀態：** Stage F 批次 1 完成，5 個 main.js 反向循環已解除，測試 103/103 通過
+**當前狀態：** Stage F 3a 完成 + dead import 清理，10 個系統檔案精簡，103/103 測試通過
 
 **下一步：**
 1. Stage F 批次 2：拆核心戰鬥 / 玩家 / 器官循環
@@ -118,7 +118,11 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
-- v0.1.19.0：Stage F 批次 1 — 新增 `systems/gameFlow.js`，抽出 `pausePlayTimer` / `resumePlayTimer`；`boss.js`、`organs.js`、`evolution.js`、`tutorial.js` 不再 import `main.js`；`ui.js` / `evolution.js` 改用 `CustomEvent('startGame')` 啟動遊戲；解除 5 個高嚴重度 `main.js` 反向循環；103/103 測試通過
+- v0.1.21.2：Dead Import 清理 — 10 個系統檔案共移除 22 個未使用 import（boss/combat/elite/evolution/hud/leaderboard/mutation/organs/player/tutorial）；103/103 測試通過
+- v0.1.21.1：damage.js 移除 organs.js Layer 1 違規 import，改用 CustomEvent('eliteKilled')；MAIN/QUICKREF/ARCH 文件補齊
+- v0.1.21.0：Stage F 3a — 新建 `systems/damage.js`，承載 `applyDamageToPlayer`/`handleKill`/`handleGiantKill`；boss↔combat / combat↔player 核心依賴解除
+- v0.1.20.1：Stage F 批次 2 第二波 — reward.js + loot.js + Boss kill 事件化 + utils/loot 拆分
+- v0.1.19.0：Stage F 批次 1 — 新增 `systems/gameFlow.js`，抽出 `pausePlayTimer` / `resumePlayTimer`；5 個 main.js 反向循環解除
 - v0.1.18.3：Stage D 收尾 — audio.test.js 補充 _mobileFadeScale fade 結束邊界 case（now >= end → 1）；103/103 通過；Stage D 正式完結
 - v0.1.18.2：Stage D creatures.js + audio.js 依賴注入；新增 15 個單元測試，102/102 通過
 - v0.1.18.1：Stage D spawning.js（moveCreature/\_randomPointInBiome/\_makeHerbCreature 依賴注入）+ input.js（抽出 \_calcMouseWorld 純函式）；新增 9 個單元測試，87/87 通過

@@ -14,7 +14,6 @@ import {
     STORAGE_KEYS,
     storageGet,
     storageSet,
-    storageRemove,
     storageGetJSON,
     storageSetJSON
 } from '../storage/index.js';

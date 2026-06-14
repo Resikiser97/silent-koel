@@ -8,10 +8,10 @@
 import { gameState, ctx } from './gameState.js';
 import { VIEW_H } from './map.js';
 import { ORGANS, HIDDEN_ORGANS, COMBOS } from '../config/organs.js';
-import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { EVOLUTION_PATHS } from '../config/evolution.js';
 import { t } from '../lang.js';
 import { addXP } from './reward.js';
-import { showFloatingText, showXPPopup } from './feedback.js';
+import { showXPPopup } from './feedback.js';
 import { spawnLootCircle } from './utils.js';
 import { applyEvolutionLevelEffect, checkEvolutionUnlock } from './evolution.js';
 import { applyMutationEffects } from './mutation.js';
@@ -19,15 +19,11 @@ import { spawnTutorialStump } from './tutorial.js';
 import { updateDayNightCycle } from './daynight.js';
 import { resumePlayTimer, pausePlayTimer } from './gameFlow.js';
 import { _handleHunterEliteKill } from './elite.js';
-import { getGameFont } from './utils.js';
 import { showTooltip, hideTooltip } from './ui.js';
 import {
     STORAGE_KEYS,
     storageGet,
-    storageSet,
-    storageRemove,
-    storageGetJSON,
-    storageSetJSON
+    storageSet
 } from '../storage/index.js';
 
 // 器官點擊區域（由 drawOrganUI 寫入，由 ui.js 讀取）

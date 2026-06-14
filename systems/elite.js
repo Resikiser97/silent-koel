@@ -19,11 +19,7 @@ import { drawArrow, drawGlowEffect, drawHealthBar, drawNameTag } from './utils.j
 import { t } from '../lang.js';
 import {
     STORAGE_KEYS,
-    storageGet,
-    storageSet,
-    storageRemove,
-    storageGetJSON,
-    storageSetJSON
+    storageSet
 } from '../storage/index.js';
 
 const _HUNTER_ELITE_META = {

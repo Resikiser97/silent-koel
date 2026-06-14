@@ -28,7 +28,6 @@ import {
     storageGet,
     storageSet,
     storageRemove,
-    storageGetJSON,
     storageSetJSON
 } from '../storage/index.js';
 
