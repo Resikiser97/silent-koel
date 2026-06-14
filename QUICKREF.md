@@ -1,4 +1,4 @@
-## v0.1.18.3
+## v0.1.19.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.18.3**
+- 版本：**v0.1.19.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -54,7 +54,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | 檔案 | 職責 |
 |------|------|
 | `index.html` | HTML 結構 + CSS + 唯一 `<script type="module" src="./main.js">` 入口 |
-| `main.js` | ESM 入口 / isGamePaused / gameLoop / initializeGame / startGameWithLoading / window.onload |
+| `main.js` | ESM 入口 / isGamePaused / gameLoop / initializeGame / startGameWithLoading / startGame event listener / window.onload |
 | `lang.js` | LANG_LIST、LANG 字典、applyLanguage()、t(key, params?) |
 | `vite.config.js` | Vite 打包設定（itch.io 用，`base: './'`，輸出 `index.js` 到根目錄）|
 | `vercel.json` | Vercel 部署設定：`buildCommand` = `npm run build`，`outputDirectory` = `dist` |
@@ -97,6 +97,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | 檔案 | 職責 |
 |------|------|
 | `gameState.js` | DEFAULT_SETTINGS、gameState 物件、canvas/ctx |
+| `gameFlow.js` | pausePlayTimer / resumePlayTimer（Stage F 批次 1：解除 main.js 反向依賴） |
 | `utils.js` | drawArrow / drawHealthBar / drawNameTag / drawGlowEffect / applyTenacity |
 | `audio.js` | AudioManager（play / playMusic / refreshMusicVolume）/ preloadAllSfxBuffers |
 | `camera.js` | updateCamera / worldToScreen / wrappedDistance / wrappedDelta / _updateCameraZoom |

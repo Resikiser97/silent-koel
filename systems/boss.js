@@ -18,7 +18,7 @@ import { buildSkillTreeOverlay, saveLastRunOrgans } from './evolution.js';
 import { saveSettings, buildEndGameOverlay } from './ui.js';
 import { showScoreSubmitPopup } from './leaderboard.js';
 import { loadChatSettings, chatSaveProgress } from './chat.js';
-import { pausePlayTimer } from '../main.js';
+import { pausePlayTimer } from './gameFlow.js';
 import { t } from '../lang.js';
 import { drawArrow } from './utils.js';
 import {

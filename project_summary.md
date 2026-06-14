@@ -1,4 +1,4 @@
-## v0.1.18.3
+## v0.1.19.0
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,12 +12,12 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.18.3
+**現在版本:** v0.1.19.0
 
-**當前狀態：** Stage D 全部完結，測試 103/103 通過
+**當前狀態：** Stage F 批次 1 完成，5 個 main.js 反向循環已解除，測試 103/103 通過
 
 **下一步：**
-1. Stage F：循環依賴打破（已知 12+ 個）
+1. Stage F 批次 2：拆核心戰鬥 / 玩家 / 器官循環
 2. 地獄難度地圖
 3. 遊戲說明 / 圖鑑更新
 
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.19.0：Stage F 批次 1 — 新增 `systems/gameFlow.js`，抽出 `pausePlayTimer` / `resumePlayTimer`；`boss.js`、`organs.js`、`evolution.js`、`tutorial.js` 不再 import `main.js`；`ui.js` / `evolution.js` 改用 `CustomEvent('startGame')` 啟動遊戲；解除 5 個高嚴重度 `main.js` 反向循環；103/103 測試通過
 - v0.1.18.3：Stage D 收尾 — audio.test.js 補充 _mobileFadeScale fade 結束邊界 case（now >= end → 1）；103/103 通過；Stage D 正式完結
 - v0.1.18.2：Stage D creatures.js + audio.js 依賴注入；新增 15 個單元測試，102/102 通過
 - v0.1.18.1：Stage D spawning.js（moveCreature/\_randomPointInBiome/\_makeHerbCreature 依賴注入）+ input.js（抽出 \_calcMouseWorld 純函式）；新增 9 個單元測試，87/87 通過
@@ -160,15 +161,16 @@
 - 修復黑色獵人血管擊破後跳白天問題，補上 x5 HUD 顏色階段顯示（v0.1.14.3）
 - 修復困難模式 reload 後難度失效與小地圖難度標籤錯誤（v0.1.14.4）
 - 毒霧隼炮彈計數修復、鬣狗圍攻持續繞圈與難度攻速、巨人隊員自由漫遊與卡住保護、Alpha 帶隊範圍加大、Boss HP Bar 顏色共用、公告與字幕位置調整（v0.1.16.0）
+- itch.io 正式上架（已完成，Vite 打包 pipeline 建立）
+- Stage D：中層系統重構（v0.1.18.3，5 個系統依賴注入，33 個測試）
+- Stage F 批次 1：main.js 反向依賴解除（v0.1.19.0，新建 gameFlow.js，5 個高嚴重度循環消除）
 
 ### 🔄 進行中
-- 等待進入 Stage D：中層系統重構
+- Stage F 批次 2：核心戰鬥耦合拆分（規劃中）
 
 ### ⏳ 計劃中（按優先順序）
-1. Stage D：中層系統重構
-2. Stage F：核心循環依賴打破（已知 12+ 循環依賴，見 ARCH.md）
-3. 地獄難度地圖
-4. 遊戲說明 / 圖鑑更新
+1. 地獄難度地圖
+2. 遊戲說明 / 圖鑑更新
 
 ### 💡 長期想法（未排入計劃）
 - 遊戲幣系統（角色購買）

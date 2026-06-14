@@ -7,7 +7,7 @@
 import { gameState, canvas } from './gameState.js';
 import { VIEW_W } from './map.js';
 import { worldToScreen, wrappedDistance } from './camera.js';
-import { pausePlayTimer, resumePlayTimer } from '../main.js';
+import { pausePlayTimer, resumePlayTimer } from './gameFlow.js';
 import {
     STORAGE_KEYS,
     storageGet,

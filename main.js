@@ -1,6 +1,7 @@
 // =============================================================
-// 主程式入口 - pausePlayTimer / resumePlayTimer / isGamePaused
-//             updateGameLogic / gameLoop / initializeGame
+// 主程式入口 - isGamePaused / updateGameLogic / gameLoop
+//             initializeGame / startGameWithLoading
+//             pausePlayTimer / resumePlayTimer 由 gameFlow.js re-export
 // =============================================================
 
 import { GAME_INFO } from './config/gameConfig.js';
@@ -81,18 +82,7 @@ window.devToggleDayNight = devToggleDayNight;
 window.devToggleHP = devToggleHP;
 window.devToggleAI = devToggleAI;
 
-export function pausePlayTimer() {
-    if (gameState._playTimerStart !== null) {
-        gameState.realPlayTime += Date.now() - gameState._playTimerStart;
-        gameState._playTimerStart = null;
-    }
-    gameState._playTimerPaused = true;
-}
-
-export function resumePlayTimer() {
-    gameState._playTimerStart = Date.now();
-    gameState._playTimerPaused = false;
-}
+export { pausePlayTimer, resumePlayTimer } from './systems/gameFlow.js';
 
 export function isGamePaused() {
     return gameState.organSelectionActive || gameState.settingsOpen || gameState.skillTreeOpen ||
@@ -646,6 +636,10 @@ export function initializeGame() {
 }
 
 window.onload = () => {
+    window.addEventListener('startGame', () => {
+        startGameWithLoading();
+    });
+
     // ── 禁止 #game-container 內右鍵選單（補強 CSS user-select）
     const _gameContainer = document.getElementById('game-container');
     if (_gameContainer) {

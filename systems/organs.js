@@ -17,7 +17,7 @@ import { applyEvolutionLevelEffect, checkEvolutionUnlock } from './evolution.js'
 import { applyMutationEffects } from './mutation.js';
 import { spawnTutorialStump } from './tutorial.js';
 import { updateDayNightCycle } from './daynight.js';
-import { resumePlayTimer, pausePlayTimer } from '../main.js';
+import { resumePlayTimer, pausePlayTimer } from './gameFlow.js';
 import { _handleHunterEliteKill } from './elite.js';
 import { getGameFont } from './utils.js';
 import { showTooltip, hideTooltip } from './ui.js';

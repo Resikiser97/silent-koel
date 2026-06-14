@@ -1,4 +1,4 @@
-## v0.1.18.3
+## v0.1.19.0
 
 # The Silent Koel — 模組架構說明
 
@@ -18,6 +18,7 @@ lang/zh-TW.js             LANG['zh-TW']
 lang/en.js                LANG['en']
 
 systems/gameState.js      DEFAULT_SETTINGS, gameState, canvas, ctx, MAP 常數
+systems/gameFlow.js       pausePlayTimer, resumePlayTimer（Stage F 批次 1：從 main.js 抽出，供 boss/organs/evolution/tutorial 使用）
 systems/map.js            MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H, TILE_SIZE, NOISE_SCALE, MAP_RULES
                           BIOME_COLOR
                           getBiome, getBgColor
@@ -141,7 +142,9 @@ systems/ui.js             showTooltip, hideTooltip, showMapSelect
                           buildEvoLevelDesc（全域，動態生成進化圖鑑描述）
                           showCompendium → _renderGuide / _renderOrgans / _renderEvo（三分頁均為桌機雙欄/手機 Tab 版面，讀 COMPENDIUM_DATA / ORGANS / EVOLUTION_PATHS / SKILLS）
 
-main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
+main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGame
+                          startGameWithLoading, startGame CustomEvent listener
+                          pausePlayTimer / resumePlayTimer 由 systems/gameFlow.js re-export
                           updateGameLogic, gameLoop, startGameWithLoading, initializeGame, window.onload
 ```
 

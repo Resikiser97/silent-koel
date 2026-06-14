@@ -1,6 +1,20 @@
-## v0.1.18.3
+## v0.1.19.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.19.0 - 2026-06-14
+
+### 重構
+- Stage F 批次 1：新增 `systems/gameFlow.js`，將 `pausePlayTimer` / `resumePlayTimer` 從 `main.js` 抽出並由 `main.js` re-export
+- `boss.js`、`organs.js`、`evolution.js`、`tutorial.js` 改由 `systems/gameFlow.js` import timer 控制函式
+- `ui.js` / `evolution.js` 改用 `CustomEvent('startGame')` 通知 `main.js` 啟動遊戲，移除對 `main.js` 的反向 import
+- 解除 Stage F 審計中 5 個高嚴重度 `main.js` 反向循環依賴
+- `docs/stage-d-audit*.md` 已完成並歸檔至 `docs/history/`
+
+### 測試
+- `npm.cmd test`：14 個測試檔、103 個測試全數通過
 
 ---
 

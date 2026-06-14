@@ -1,4 +1,4 @@
-## v0.1.18.2
+## v0.1.19.0
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -19,7 +19,7 @@
 | 檔案 | 職責 |
 |------|------|
 | `index.html` | HTML 結構、CSS、唯一 `<script type="module" src="./main.js">` |
-| `main.js` | ESM 入口：gameLoop、initializeGame、pausePlayTimer/resumePlayTimer |
+| `main.js` | ESM 入口：gameLoop、initializeGame、startGameWithLoading、startGame event listener；re-export pausePlayTimer/resumePlayTimer |
 | `lang.js` | LANG 字典、applyLanguage()、t() 翻譯函式 |
 | `vite.config.js` | Vite 打包設定，輸出 `dist/` 與單一入口 bundle |
 
@@ -61,6 +61,7 @@
 | 檔案 | 職責 |
 |------|------|
 | `gameState.js` | DEFAULT_SETTINGS、gameState 物件、canvas/ctx export |
+| `gameFlow.js` | pausePlayTimer / resumePlayTimer；Stage F 批次 1 從 main.js 抽出，供 boss/organs/evolution/tutorial 使用 |
 | `map.js` | 地形生成、biome 系統、drawTerrain |
 | `utils.js` | 繪製工具：drawArrow、drawHealthBar、drawNameTag、drawGlowEffect、spawnLootCircle |
 | `audio.js` | AudioManager、initAudio、preloadAllSfxBuffers |
@@ -128,6 +129,7 @@ main.js
   ├─ lang.js → lang/zh-TW.js, lang/en.js
   ├─ map/easymap.js, normalmap.js, hardmap.js
   ├─ systems/gameState.js
+  ├─ systems/gameFlow.js
   ├─ systems/map.js
   ├─ systems/utils.js
   ├─ systems/audio.js
@@ -233,7 +235,7 @@ main.js
 
 ## 6. 已知架構問題
 
-### 循環依賴（待 Stage F 處理）
+### 循環依賴（Stage F 處理中）
 
 以下為確認存在的循環依賴，JavaScript ESM 允許執行但有初始化順序風險：
 
@@ -250,13 +252,13 @@ player.js  ──imports──▶  organs.js
    (handleEliteKill,           (addXP, showXPPopup)
     applyOrganEffects)
 
-organs.js  ──imports──▶  main.js
-   (resumePlayTimer,           ← main.js 是整個 import 樹頂層
-    pausePlayTimer)             嚴重循環，是最需要解決的項目
+organs.js  ──imports──▶  gameFlow.js
+   (resumePlayTimer,
+    pausePlayTimer)             Stage F 批次 1 已解除 organs.js → main.js 反向依賴
 ```
 
-**影響範圍**：player ↔ combat ↔ organs ↔ main 形成一個大循環叢。  
-**處理計畫**：Stage F — 將共用函式抽離至獨立模組，打破循環。
+**Stage F 批次 1 已完成（v0.1.19.0）**：`boss.js`、`organs.js`、`evolution.js`、`tutorial.js` 改由 `systems/gameFlow.js` 取得 timer 控制；`ui.js` / `evolution.js` 改用 `CustomEvent('startGame')` 通知 `main.js` 啟動遊戲，已解除 5 個高嚴重度 `main.js` 反向循環。  
+**仍待處理**：player ↔ combat、player ↔ organs、combat ↔ organs / evolution / mutation / boss 等核心循環仍待 Stage F 後續批次拆解。
 
 ### 不一致模式
 - `hud.js` 同時負責 Canvas 渲染（`drawGame`）和 HTML overlay 更新（`updateUI`），職責混合
