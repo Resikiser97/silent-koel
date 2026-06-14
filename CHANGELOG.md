@@ -11,6 +11,9 @@
 - systems/boss.js：同上，Boss 血條下方毒圖示改用 `poisonStacks[]` 判斷
 - config/supabase.js：`fetchHallOfFameMyRank` 改為兩次高效 query（先取自己分數，再 HEAD count 計算排名），避免拉整張 table
 
+### 新增
+- systems/leaderboard.js + config/supabase.js：趣味排行榜新增「🦴 白骨精」類別（bone_count 最多）
+
 ### 調整
 - systems/leaderboard.js：排行榜開啟預設顯示名人堂 Showcase
 - systems/leaderboard.js：[難度][種類][名人堂] 三個按鈕在所有 view 永遠顯示，導航邏輯統一（currentView: leaderboard / fun / hof）

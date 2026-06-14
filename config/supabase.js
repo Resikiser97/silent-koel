@@ -19,6 +19,7 @@
 //   fetchFunHunterKill(difficulty) — 趣味榜：最快擊殺黑色獵人（困難地圖）
 //   fetchFunFruitsEaten(difficulty) — 趣味榜：最佳果王（fruits_eaten 最多）
 //   fetchFunNormalKills(difficulty) — 趣味榜：最強獵戶（normal_kills 最多）
+//   fetchFunBoneCount(difficulty) — 趣味榜：白骨精（bone_count 最多）
 //   fetchAvailableDifficulties() — 取得排行榜中有資料的難度陣列
 //   fetchHallOfFameShowcase() — 名人堂：各類別 Top1（Showcase 用）
 //   fetchHallOfFameTop10(category) — 名人堂：某類別 Top 10
@@ -180,6 +181,16 @@ export async function fetchFunNormalKills(difficulty) {
         'leaderboard', 'GET', null,
         '?select=name,normal_kills,version,created_at,character' + diffFilter +
         '&normal_kills=gt.0&order=normal_kills.desc&limit=10'
+    );
+}
+
+// 白骨精（bone_count 最多）
+export async function fetchFunBoneCount(difficulty) {
+    const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
+    return supabaseQuery(
+        'leaderboard', 'GET', null,
+        '?select=name,bone_count,version,created_at,character' + diffFilter +
+        '&bone_count=gt.0&order=bone_count.desc&limit=10'
     );
 }
 

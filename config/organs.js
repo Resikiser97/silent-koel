@@ -32,10 +32,10 @@ export const ORGANS = {
         levels: [
             { desc: '攻擊時附加中毒每秒2傷持續5秒',
               effects: { poisonDmg: 2, poisonDur: 5000 } },
-            { desc: '每秒傷+1，持續+3秒',
-              effects: { poisonDmg: 1, poisonDur: 3000 } },
-            { desc: '每秒傷+2，持續+2秒',
-              effects: { poisonDmg: 2, poisonDur: 2000 } }
+            { desc: '每秒傷+3（累計5/s），持續5秒',
+              effects: { poisonDmg: 3 } },
+            { desc: '每秒傷+5（累計10/s），持續5秒',
+              effects: { poisonDmg: 5 } }
         ]
     },
     fang: {

@@ -117,6 +117,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.17.1：修復毒 debuff 圖示（hud.js/boss.js）、名人堂排名查詢效能（supabase.js）、排行榜 UI 重構（預設名人堂、三按鈕永遠顯示、趣味榜嵌入）；新增趣味排行榜「🦴 白骨精」類別（bone_count）
 - v0.1.16.3：修復 Vercel Vite build 遺漏 `sounds/` 資源導致線上音效 404；新增 `vercel.json` 和 `scripts/copy-sounds.js`，讓 Vercel / itch.io 共用 `dist/sounds/` 輸出結構
 - v0.1.14.4：補上 HARD_MAP import 修復困難模式 reload 後難度失效；修復小地圖難度標籤困難模式顯示「簡單」的問題（hud.js）
 - v0.1.14.3：修復黑色獵人血管擊破後跳白天問題，補上 x5 HUD 顏色階段顯示（boss.js、hud.js）

@@ -301,6 +301,25 @@ export function playerAttack() {
             c.healReduction = 0.5;
         }
 
+        /**
+         * ═══════════════════════════════════════════
+         * 玩家→怪物毒傷疊加系統（v0.1.17.x）
+         * ═══════════════════════════════════════════
+         *
+         * 每次帶毒攻擊命中 → 加入一個獨立 stack：
+         *   c.poisonStacks.push({ dmg, expiryTime })
+         *
+         * 每 tick（每秒）實際毒傷 = 所有活躍 stack 的 dmg 加總
+         *
+         * 攻擊引爆（On-hit Detonation）：
+         *   - 觸發：本次攻擊前目標已有 ≥1 個活躍 stack
+         *   - 效果：即時傷害 = 所有活躍 stack 的 dmg 加總（×1 tick）
+         *   - 代價：所有活躍 stack 的 expiryTime 各 -1000ms
+         *   - 毒繼續計時，stack 不消失（直到自然過期）
+         *
+         * comboCrabPoison（×2）在 stack 建立時套用，不在 tick 時套用
+         * ═══════════════════════════════════════════
+         */
         // 毒刺 + 毒囊：合併計算
         const stingerLv = getOrganLevel('poisonStinger');
         const sacOrgan = p.organs.find(o => o.id === 'poisonSac');
@@ -314,11 +333,32 @@ export function playerAttack() {
             const finalPoisonDur = Math.max(stingerDur, sacDur);
             if (p.comboCrabPoison) finalPoisonDmg *= 2;
             if (finalPoisonDmg > 0 && finalPoisonDur > 0) {
-                const wasAlreadyPoisoned = c.poisonEndTime && now < c.poisonEndTime;
-                c.poisonEndTime    = now + finalPoisonDur;
-                c._poisonStartTime = now;
-                c.poisonDmg        = finalPoisonDmg;
-                if (!wasAlreadyPoisoned) c.lastPoisonTick = now;
+                if (!c.poisonStacks) c.poisonStacks = [];
+
+                // 引爆：若已有活躍 stack，先引爆
+                const activeStacks = c.poisonStacks.filter(s => s.expiryTime > now);
+                if (activeStacks.length >= 1) {
+                    const burstDmg = activeStacks.reduce((sum, s) => sum + s.dmg, 0);
+                    const hpBefore = c.hp;
+                    c.hp -= burstDmg;
+                    showFloatingText(c.x, c.y - 25, '💥 -' + burstDmg, '#FF6600', 14, true);
+                    c.poisonStacks.forEach(s => { s.expiryTime -= 1000; });
+                    if (hpBefore > 0 && c.hp <= 0) {
+                        if (isBoss) { bossDied = true; }
+                        else if (isElite) { handleEliteKill(c); }
+                        else if (c.isGiantized) { handleGiantKill(c); }
+                        else { handleKill(c, hostile); }
+                    }
+                }
+
+                // 加入新 stack（僅在目標仍存活時）
+                if (c.hp > 0) {
+                    c.poisonStacks.push({
+                        dmg:        finalPoisonDmg,
+                        expiryTime: now + finalPoisonDur,
+                    });
+                    if (!c.lastPoisonTick) c.lastPoisonTick = now;
+                }
             }
         }
 
@@ -382,19 +422,23 @@ export function updateStatusEffects() {
             }
         }
 
-        if (c.poisonEndTime && now < c.poisonEndTime && now - c.lastPoisonTick >= 1000) {
-            const poisonAmt = c.poisonDmg || 2;
-            const poisonResist = c.poisonResist || 0;
-            const actualPoison = Math.round(poisonAmt * (1 - poisonResist));
-            const hpBefore = c.hp;
-            c.hp -= actualPoison;
-            c.lastPoisonTick += 1000;
-            showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: actualPoison }), '#8800CC', 11, true);
-            if (hpBefore > 0 && c.hp <= 0) {
-                if (isBoss) handleBossKill(c);
-                else if (isElite) handleEliteKill(c);
-                else if (c.isGiantized) handleGiantKill(c);
-                else handleKill(c, isHostile);
+        // 玩家→怪物毒傷 tick（stack 系統）
+        if (c.poisonStacks && c.poisonStacks.length > 0) {
+            c.poisonStacks = c.poisonStacks.filter(s => s.expiryTime > now);
+            if (c.poisonStacks.length > 0 && now - (c.lastPoisonTick || 0) >= 1000) {
+                c.lastPoisonTick += 1000;
+                const poisonResist = c.poisonResist || 0;
+                const totalDmg = c.poisonStacks.reduce((sum, s) => sum + s.dmg, 0);
+                const actualPoison = Math.round(totalDmg * (1 - poisonResist));
+                const hpBefore = c.hp;
+                c.hp -= actualPoison;
+                showFloatingText(c.x, c.y - 18, t('poisonFloat', { n: actualPoison }), '#8800CC', 11, true);
+                if (hpBefore > 0 && c.hp <= 0) {
+                    if (isBoss) handleBossKill(c);
+                    else if (isElite) handleEliteKill(c);
+                    else if (c.isGiantized) handleGiantKill(c);
+                    else handleKill(c, isHostile);
+                }
             }
         }
     }

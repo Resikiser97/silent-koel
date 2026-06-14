@@ -35,6 +35,7 @@ import {
     fetchFunHunterKill,
     fetchFunFruitsEaten,
     fetchFunNormalKills,
+    fetchFunBoneCount,
     fetchAvailableDifficulties,
     fetchHallOfFameShowcase,
     fetchHallOfFameTop10,
@@ -196,6 +197,7 @@ export function showLeaderboard() {
         { key: 'maxlevel', label: '👑 最高等級',    fetchFn: () => fetchFunMaxLevel(_lbDifficulty),       colName: 'level',            colLabel: '等級',       format: v => 'Lv.' + v },
         { key: 'fruits',   label: '🍎 最佳果王',    fetchFn: () => fetchFunFruitsEaten(_lbDifficulty),    colName: 'fruits_eaten',     colLabel: '果子數',     format: v => String(v) },
         { key: 'normkill', label: '🏹 最強獵戶',    fetchFn: () => fetchFunNormalKills(_lbDifficulty),    colName: 'normal_kills',     colLabel: '擊殺數',     format: v => String(v) },
+        { key: 'bone',     label: '🦴 白骨精',      fetchFn: () => fetchFunBoneCount(_lbDifficulty),      colName: 'bone_count',       colLabel: '白骨素',     format: v => String(v) },
     ];
     let currentFunCat = FUN_CATS[0];
     const funCatBtns = {};
@@ -679,6 +681,13 @@ export function showScoreSubmitPopup(isVictory, bossKillTime, onDone) {
             myValue:  getSessionStats().normalKills || 0,
             ascending: false,
         },
+        {
+            label:    '🦴 白骨精',
+            fetchFn:  () => fetchFunBoneCount(difficulty),
+            colName:  'bone_count',
+            myValue:  gameState.player ? (gameState.player.boneMaterial || 0) : 0,
+            ascending: false,
+        },
     ];
 
     // 計算本局成績在一般榜的排名
@@ -868,6 +877,8 @@ export function showFunLeaderboard(difficulty) {
           colName: 'fruits_eaten', colLabel: '果子數', format: v => String(v) },
         { key: 'normkill', label: '🏹 最強獵戶', fetchFn: () => fetchFunNormalKills(difficulty),
           colName: 'normal_kills', colLabel: '擊殺數', format: v => String(v) },
+        { key: 'bone',     label: '🦴 白骨精',   fetchFn: () => fetchFunBoneCount(difficulty),
+          colName: 'bone_count',   colLabel: '白骨素', format: v => String(v) },
     ];
     let currentCat = categories[0];
 

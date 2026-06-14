@@ -892,6 +892,7 @@ main.js                   pausePlayTimer, resumePlayTimer, isGamePaused
 | `fetchFunHunterKill(difficulty)` | 最快擊殺黑色獵人（困難地圖） |
 | `fetchFunFruitsEaten(difficulty)` | 最佳果王（fruits_eaten 最多，v0.1.3.0） |
 | `fetchFunNormalKills(difficulty)` | 最強獵戶（normal_kills 最多，v0.1.3.0） |
+| `fetchFunBoneCount(difficulty)` | 白骨精（bone_count 最多） |
 
 ### sessionStats 欄位（gameState.sessionStats）
 
