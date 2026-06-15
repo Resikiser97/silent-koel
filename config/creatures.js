@@ -102,3 +102,44 @@ export const BOSS_BAR_COLORS = {
 export const BOSS_BAR_NEXT_COLORS = {
     hunter: { 5: '#1976D2', 4: '#FF9800', 3: '#E64A19', 2: '#FF1744', 1: null },
 };
+
+// ── 獵人技能擊殺 XP 加成（共用） ──
+export const HUNTER_BONUS_CONFIG = {
+    xpPerLevel: 10,
+};
+
+// ── 巨人 / Alpha 系統數值 ──
+export const GIANT_CONFIG = {
+    xp: { base: 100, alpha: 300 },
+    hunterBonus: HUNTER_BONUS_CONFIG,
+    loot: {
+        giant: [
+            { type: 'corpse', data: { multiplier: 2 } },
+            { type: 'bone',   data: {} },
+        ],
+        alpha: [
+            { type: 'corpse', data: { multiplier: 2 } },
+            { type: 'corpse', data: { multiplier: 2 } },
+            { type: 'bone',   data: {} },
+            { type: 'bone',   data: {} },
+            { type: 'bone',   data: {} },
+        ],
+    },
+    mutation: {
+        normal: { giant: 1, alpha: 2 },
+        hard:   { giant: 3, alpha: 5 },
+    },
+    alphaBonus: { chance: 0.2, min: 2, range: 5 },
+};
+
+// ── 殺手化系統數值 ──
+export const KILLER_CONFIG = {
+    xp: { base: 100, perLevel: 5 },
+    hunterBonus: HUNTER_BONUS_CONFIG,
+    loot: [
+        { type: 'corpse', data: { multiplier: 1 } },
+        { type: 'corpse', data: { multiplier: 1 } },
+    ],
+    mutation: { normal: 1, hard: 2 },
+    extraMutation: { chanceDivisor: 100, min: 1 },
+};

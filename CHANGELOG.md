@@ -1,3 +1,18 @@
+## v0.1.24.2
+
+# CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.24.2 - 2026-06-16
+
+### 重構
+- `config/creatures.js`：新增 `HUNTER_BONUS_CONFIG`、`GIANT_CONFIG`、`KILLER_CONFIG` 三個 export，集中定義巨人 / Alpha / 殺手化系統的 XP、loot、變異點與機率數值
+- `systems/damage.js`：`handleGiantKill` / `handleKillerKill` 中所有裸數值改讀上述 config；不改變任何遊戲行為
+- 新增 `import { GIANT_CONFIG, KILLER_CONFIG } from '../config/creatures.js'`
+
+---
+
 ## v0.1.24.1
 
 # CHANGELOG — 只吃不叫的噪鵑

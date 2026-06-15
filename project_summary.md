@@ -1,4 +1,4 @@
-## v0.1.24.1
+## v0.1.24.2
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.24.1
+**現在版本:** v0.1.24.2
 
-**當前狀態：** 角色通關成就條件 data-driven：koel_50 / archer_50 加入 condition 欄位，achievementTriggers 改通用迴圈
+**當前狀態：** Magic Number 搬移第一批：巨人 / Alpha / 殺手化 XP、loot、變異點裸數值集中到 config/creatures.js
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.24.2：Magic Number 搬移第一批 — `config/creatures.js` 新增 `HUNTER_BONUS_CONFIG` / `GIANT_CONFIG` / `KILLER_CONFIG`；`systems/damage.js` `handleGiantKill` / `handleKillerKill` 裸數值全改讀 config；不改遊戲行為
 - v0.1.24.1：角色通關成就條件 data-driven — `config/achievements.js` `koel_50` / `archer_50` 加入 `condition` 欄位；`achievementTriggers.js` 移除硬寫 id 判斷，改通用迴圈掃描；新增角色成就只需加 config，不需改 systems/
 - v0.1.24.0：角色音效 config 化 — `config/characters.js` 新增 `sfx` 欄位（koel / archerfish）；`systems/damage.js / combat.js / player.js` 移除 archerfish id 硬寫判斷，改讀 `CHARACTERS[id].sfx`
 - v0.1.23.2：achievements.js UI i18n — 新增 25 個 lang key（stat* 16 個、achievement* 6 個、statPanelTitle / unitPerFruit / unitPerKill 3 個）；硬寫中文 UI 文字全改 `t('key')`；A 組純符號與 D 組 roadmap 文字不動；165/165 測試通過

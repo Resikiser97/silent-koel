@@ -2,7 +2,7 @@
 // 傷害與擊殺服務 - applyDamageToPlayer / handleKill / handleGiantKill
 // （Stage F 3a：從 combat.js 抽出，讓 boss.js / player.js / creatures.js /
 //   elite.js 共同依賴此低層模組，解除 boss↔combat / combat↔player 循環）
-// 依賴：config/characters.js（sfx config 化，v0.1.24.0）
+// 依賴：config/characters.js（sfx config 化，v0.1.24.0）、config/creatures.js（GIANT_CONFIG/KILLER_CONFIG，v0.1.24.2）
 // =============================================================
 import { gameState } from './gameState.js';
 import { AudioManager } from './audio.js';
@@ -14,6 +14,7 @@ import { t } from '../lang.js';
 import { addMutationPoints } from './mutation.js';
 import { STORAGE_KEYS, storageGet, storageSet } from '../storage/index.js';
 import { CHARACTERS } from '../config/characters.js';
+import { GIANT_CONFIG, KILLER_CONFIG } from '../config/creatures.js';
 
 export function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
@@ -61,20 +62,13 @@ export function applyDamageToPlayer(rawDamage, attacker) {
 export function handleGiantKill(c) {
     const p = gameState.player;
     // XP：巨人化 100，Alpha 300（+獵人本能加成）
-    const baseXP = c.isAlpha ? 300 : 100;
-    const xp = baseXP + (gameState.playerSkills.hunter || 0) * 10;
+    const baseXP = c.isAlpha ? GIANT_CONFIG.xp.alpha : GIANT_CONFIG.xp.base;
+    const xp = baseXP + (gameState.playerSkills.hunter || 0) * GIANT_CONFIG.hunterBonus.xpPerLevel;
     const actualXP = addXP(xp);
     showXPPopup(p.x, p.y, actualXP);
 
     // 掉落道具（圓形散落）
-    const items = c.isAlpha
-        ? [{ type: 'corpse', data: { multiplier: 2 } },
-           { type: 'corpse', data: { multiplier: 2 } },
-           { type: 'bone',   data: {} },
-           { type: 'bone',   data: {} },
-           { type: 'bone',   data: {} }]
-        : [{ type: 'corpse', data: { multiplier: 2 } },
-           { type: 'bone',   data: {} }];
+    const items = c.isAlpha ? GIANT_CONFIG.loot.alpha : GIANT_CONFIG.loot.giant;
     spawnLootCircle(c.x, c.y, items);
 
     // 變異點掉落
@@ -82,12 +76,12 @@ export function handleGiantKill(c) {
     // 困難：普通巨人+3，Alpha+5（20%機率額外+2~6）
     const isHard = !!(gameState.currentMap && gameState.currentMap.difficulty === 'hard');
     if (isHard) {
-        addMutationPoints(c.isAlpha ? 5 : 3);
+        addMutationPoints(c.isAlpha ? GIANT_CONFIG.mutation.hard.alpha : GIANT_CONFIG.mutation.hard.giant);
     } else {
-        addMutationPoints(c.isAlpha ? 2 : 1);
+        addMutationPoints(c.isAlpha ? GIANT_CONFIG.mutation.normal.alpha : GIANT_CONFIG.mutation.normal.giant);
     }
-    if (c.isAlpha && Math.random() < 0.2) {
-        addMutationPoints(2 + Math.floor(Math.random() * 5));
+    if (c.isAlpha && Math.random() < GIANT_CONFIG.alphaBonus.chance) {
+        addMutationPoints(GIANT_CONFIG.alphaBonus.min + Math.floor(Math.random() * GIANT_CONFIG.alphaBonus.range));
     }
 
     // 記錄巨人化擊殺數
@@ -111,25 +105,22 @@ export function handleGiantKill(c) {
 function handleKillerKill(creature) {
     // 固定100 + 殺手Lv×5 + 獵人本能加成
     const killerLv = creature.killerLevel || 0;
-    const baseXP = 100 + killerLv * 5 + (gameState.playerSkills.hunter || 0) * 10;
+    const baseXP = KILLER_CONFIG.xp.base + killerLv * KILLER_CONFIG.xp.perLevel + (gameState.playerSkills.hunter || 0) * KILLER_CONFIG.hunterBonus.xpPerLevel;
     const actualXP = addXP(baseXP);
     showXPPopup(creature.x, creature.y, actualXP);
 
     // 圓形散落：2份1倍屍體
-    spawnLootCircle(creature.x, creature.y, [
-        { type: 'corpse', data: { multiplier: 1 } },
-        { type: 'corpse', data: { multiplier: 1 } },
-    ]);
+    spawnLootCircle(creature.x, creature.y, KILLER_CONFIG.loot);
 
     // 變異點：普通+1，困難+2
     const isHardMap = !!(gameState.currentMap && gameState.currentMap.difficulty === 'hard');
-    addMutationPoints(isHardMap ? 2 : 1);
+    addMutationPoints(isHardMap ? KILLER_CONFIG.mutation.hard : KILLER_CONFIG.mutation.normal);
     // 殺手化後每吃1具N%機率額外掉落1~N個（N=killerCorpseEaten）
     const killerEaten = creature.killerCorpseEaten || 0;
     if (killerEaten > 0) {
-        const extraChance = killerEaten / 100;
+        const extraChance = killerEaten / KILLER_CONFIG.extraMutation.chanceDivisor;
         if (Math.random() < extraChance) {
-            addMutationPoints(Math.floor(Math.random() * killerEaten) + 1);
+            addMutationPoints(Math.floor(Math.random() * killerEaten) + KILLER_CONFIG.extraMutation.min);
         }
     }
 
