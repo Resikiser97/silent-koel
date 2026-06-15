@@ -5,14 +5,14 @@
 //            setRangedAttackCallback
 // （Stage F 3a：applyDamageToPlayer / handleKill / handleGiantKill
 //   已搬至 damage.js；boss.js / player.js 直接依賴已解除）
-// 依賴：config/characters.js（sfx config 化，v0.1.24.0）
+// 依賴：config/characters.js（sfx config 化，v0.1.24.0）；config/organs.js COMBOS（comboCrabGloves effects，v0.1.24.3）
 // =============================================================
 import { gameState, ctx } from './gameState.js';
 import { VIEW_W, VIEW_H } from './map.js';
 import { worldToScreen, wrappedDistance } from './camera.js';
 import { CORPSE_EAT_HP, CORPSE_BONE_EAT_TICK, CORPSE_EXPIRE_MS, BONE_EXPIRE_MS } from '../config/gameConfig.js';
 import { EVOLUTION_PATHS } from '../config/evolution.js';
-import { ORGANS } from '../config/organs.js';
+import { ORGANS, COMBOS } from '../config/organs.js';
 import { AudioManager } from './audio.js';
 import { CHARACTERS } from '../config/characters.js';
 import { applyTenacity } from './utils.js';
@@ -23,6 +23,8 @@ import { showFloatingText } from './feedback.js';
 import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 import { applyDamageToPlayer, handleKill, handleGiantKill } from './damage.js';
+
+const _comboCrabGlovesEffects = COMBOS.find(combo => combo.key === 'comboCrabGloves').effects;
 
 // 遠程攻擊 callback（由 main.js 在初始化時注入，避免 combat↔player 直接 import）
 let _rangedAttackFn = null;
@@ -103,11 +105,12 @@ export function playerAttack() {
         c.hp -= dmg;
         showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FF4444', 16, true);
 
-        // 嘴器Lv3：命中施加減速 -20% / 2秒（韌性縮短）
+        // 嘴器Lv3：命中施加減速（韌性縮短）
         if (getOrganLevel('mouthOrgan') >= 3) {
-            c._slowUntil     = now + applyTenacity(2000, c);
+            const _mouthSlow = ORGANS.mouthOrgan.levels[2].effects.onHitSlow;
+            c._slowUntil     = now + applyTenacity(_mouthSlow.duration, c);
             c._slowStartTime = now;
-            c._slowMult      = 0.8;
+            c._slowMult      = 1 - _mouthSlow.amount;
         }
 
         // 蟹鉗：等級化流血
@@ -119,13 +122,13 @@ export function playerAttack() {
                 c.bleedEndTime    = now + getOrganCumulative('crabClaw', 'bleedDur');
                 c._bleedStartTime = now;
                 // 蟹鉗+搏擊拳套組合：流血傷害翻倍
-                c.bleedDmg = p.comboCrabGloves ? baseDmg * 2 : baseDmg;
+                c.bleedDmg = p.comboCrabGloves ? baseDmg * _comboCrabGlovesEffects.bleedMultiplier : baseDmg;
                 c.lastBleedTick = now;
             }
         }
         // 蟹鉗+搏擊拳套組合：命中施加回復量-50% Debuff（供未來有回復的Boss使用）
         if (p.comboCrabGloves) {
-            c.healReduction = 0.5;
+            c.healReduction = _comboCrabGlovesEffects.healReduction;
         }
 
         /**
@@ -155,7 +158,7 @@ export function playerAttack() {
             const stingerDmg = getOrganCumulative('poisonStinger', 'poisonDmg');
             const stingerDur = getOrganCumulative('poisonStinger', 'poisonDur');
             const sacDmg = sacLv > 0 ? getOrganCumulative('poisonSac', 'poisonSacDmg') : 0;
-            const sacDur = sacLv > 0 ? 5000 : 0;
+            const sacDur = sacLv > 0 ? ORGANS.poisonSac.levels[0].effects.poisonSacDur : 0;
             let finalPoisonDmg = stingerDmg + sacDmg;
             const finalPoisonDur = Math.max(stingerDur, sacDur);
             if (p.comboCrabPoison) finalPoisonDmg *= 2;

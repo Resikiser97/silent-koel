@@ -25,6 +25,13 @@ export const CHARACTERS = {
         startOrgans:    [],
         startEvolution: { type: 'herbivore', level: 1 },
         specialSkill:   'dash',   // F技：閃現
+        specialSkillConfig: {
+            dashDistMultiplier: 50,
+            dashDistMax:        500,
+            dashCD:             15000,
+            dashInvincible:     500,
+            dashEffectDuration: 150,
+        },
         sfx: {
             hurt:          'hurt',
             attackNormal:  'attackNormal',
@@ -51,8 +58,23 @@ export const CHARACTERS = {
         },
         startOrgans:    [{ id: 'mouthOrgan', level: 3 }],
         startEvolution: { type: 'carnivore', level: 1 },
-        specialSkill:   'archerfishDash',  // F技：衝刺（待實裝）
-        isRanged:       true,              // 遠程攻擊標記（待實裝）
+        specialSkill:   'archerfishDash',  // F技：衝刺
+        isRanged:       true,              // 遠程攻擊標記
+        specialSkillConfig: {
+            dashSpeedAdd:         { water: 5, land: 3 },
+            dashDuration:         3000,
+            dashCD:               15000,
+            dashStunDuration:     500,
+            chargeMax:            3,
+            chargeInterval:       1000,
+            chargeConsumeInterval:500,
+        },
+        projectile: {
+            radius:           5,
+            rangeMultiplier:  1.2,
+            minShootDistance: 5,
+        },
+        waterSpeedMultiplier: 1.5,
         sfx: {
             hurt:          'archerHurt',
             attackNormal:  'archerAttackNormal',

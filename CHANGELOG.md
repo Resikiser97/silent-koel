@@ -1,6 +1,18 @@
-## v0.1.24.2
+## v0.1.24.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.24.3 - 2026-06-16
+
+### 重構
+- `config/organs.js` COMBOS `comboCrabGloves` 新增 `effects: { bleedMultiplier: 2, healReduction: 0.5 }`
+- `config/characters.js` koel 新增 `specialSkillConfig`（dashDistMultiplier / dashDistMax / dashCD / dashInvincible / dashEffectDuration）
+- `config/characters.js` archerfish 新增 `specialSkillConfig`（dashSpeedAdd / dashDuration / dashCD / dashStunDuration / chargeMax / chargeInterval / chargeConsumeInterval）、`projectile`（radius / rangeMultiplier / minShootDistance）、`waterSpeedMultiplier`
+- `systems/combat.js`：mouthOrgan slow 倍率/duration 改讀 `ORGANS.mouthOrgan.levels[2].effects.onHitSlow`；comboCrabGloves bleedMultiplier / healReduction 改讀 COMBOS effects；poisonSac sacDur 改讀 `ORGANS.poisonSac.levels[0].effects.poisonSacDur`
+- `systems/player.js`：同步 mouthOrgan slow config 化；阿奇爾所有 dash/charge/projectile/waterSpeed 裸數值改讀 `CHARACTERS[id]`；噪鵑 dash 裸數值改讀 `CHARACTERS[id].specialSkillConfig`
+- 不改變任何遊戲數值與行為
 
 ---
 

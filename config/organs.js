@@ -220,7 +220,8 @@ export const HIDDEN_ORGANS = {
 
 export const COMBOS = [
     { ids: ['poisonStinger', 'poisonSac'],             key: 'comboCrabPoison', desc: '毒傷翻倍（毒刺Lv3且擁有毒囊）' },
-    { ids: ['crabClaw',      'boxingGloves'],          key: 'comboCrabGloves', desc: '流血傷害翻倍，命中敵人施加回復量-50%（蟹鉗+搏擊拳套各達Lv3）' },
+    { ids: ['crabClaw',      'boxingGloves'],          key: 'comboCrabGloves', desc: '流血傷害翻倍，命中敵人施加回復量-50%（蟹鉗+搏擊拳套各達Lv3）',
+      effects: { bleedMultiplier: 2, healReduction: 0.5 } },
     { ids: ['turtleShell',   'thornArmor'],            key: 'comboShellArmor', desc: '反彈時傷害翻倍（各達Lv3）' },
     { ids: ['brain',         'trueEye'],               key: 'comboBrainEye',   desc: '念力波可沿用暴擊率和暴擊傷害（各達Lv3）' },
     { ids: ['thickSkin',     'naturalRegen'],          key: 'comboSkinRegen',  desc: '回復量+1HP，回復間隔再-1秒（各達Lv3）' },

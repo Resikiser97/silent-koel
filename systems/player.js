@@ -6,7 +6,7 @@
 //            updateProjectiles / findBestPerceptionPath
 //            _checkProjectileHit（子彈系統）
 //            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
-// 依賴：config/characters.js（sfx config 化，v0.1.24.0）
+// 依賴：config/characters.js（sfx config 化 v0.1.24.0；specialSkillConfig / projectile / waterSpeedMultiplier config 化 v0.1.24.3）
 // =============================================================
 import { gameState } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, getBiome } from './map.js';
@@ -115,12 +115,13 @@ export function _checkProjectileHit(b, idx) {
             }
         }
 
-        // 嘴器Lv3：命中施加減速 -20% / 2秒（韌性縮短）
+        // 嘴器Lv3：命中施加減速（韌性縮短）
         if (getOrganLevel('mouthOrgan') >= 3) {
             const _nowHit    = Date.now();
-            c._slowUntil     = _nowHit + applyTenacity(2000, c);
+            const _mouthSlow = ORGANS.mouthOrgan.levels[2].effects.onHitSlow;
+            c._slowUntil     = _nowHit + applyTenacity(_mouthSlow.duration, c);
             c._slowStartTime = _nowHit;
-            c._slowMult      = 0.8;
+            c._slowMult      = 1 - _mouthSlow.amount;
         }
 
         c.hp -= dmg;
@@ -182,7 +183,7 @@ export function _findArcherAutoTarget() {
     const tgts = _getAllAttackTargets();
     if (tgts.length === 0) return null;
 
-    const bulletRange = p.attackRange * 1.2;
+    const bulletRange = p.attackRange * CHARACTERS[gameState.selectedCharacter].projectile.rangeMultiplier;
     const moveAngle   = Math.atan2(p.lastMoveDir.dy || 0, p.lastMoveDir.dx || 0);
 
     // P1：射程內 + ±45° 扇形（迎面優先）
@@ -233,7 +234,7 @@ export function _getArcherShootDir() {
             const ddx = ms.sx - ps.x;
             const ddy = ms.sy - ps.y;
             const len = Math.sqrt(ddx * ddx + ddy * ddy);
-            if (len > 5) return { dx: ddx / len, dy: ddy / len };
+            if (len > CHARACTERS[gameState.selectedCharacter].projectile.minShootDistance) return { dx: ddx / len, dy: ddy / len };
         }
         // fallback：移動方向
         return { dx: p.lastMoveDir.dx || 0, dy: p.lastMoveDir.dy || -1 };
@@ -281,9 +282,9 @@ export function _archerAttack() {
         vx: dir.dx * bulletSpeed,
         vy: dir.dy * bulletSpeed,
         damage:       dmg,
-        maxRange:     p.attackRange * 1.2,
+        maxRange:     p.attackRange * CHARACTERS[gameState.selectedCharacter].projectile.rangeMultiplier,
         distTraveled: 0,
-        radius:       5,
+        radius:       CHARACTERS[gameState.selectedCharacter].projectile.radius,
         ownerId:      'player',
         hasCrit:      isCrit,
     });
@@ -322,16 +323,17 @@ export function playerDash() {
     if (p.dashCooldown > 0) return;
     if (_joyPaused()) return;
 
-    // ── 阿奇爾 F技：加速衝刺（持續 3 秒，陸地+3 水中+5）
+    // ── 阿奇爾 F技：加速衝刺
     if (p.isRanged) {
         const now = Date.now();
         const inWater = getBiome(p.x, p.y) === 'ocean';
-        const dashSpeedAdd = inWater ? 5 : 3;
+        const _archerSC = CHARACTERS[gameState.selectedCharacter].specialSkillConfig;
+        const dashSpeedAdd = inWater ? _archerSC.dashSpeedAdd.water : _archerSC.dashSpeedAdd.land;
 
         p.archerDashActive = true;
-        p.archerDashEnd    = now + 3000;
+        p.archerDashEnd    = now + _archerSC.dashDuration;
         p.archerDashSpeed  = dashSpeedAdd;
-        p.dashCooldown     = 15000;
+        p.dashCooldown     = _archerSC.dashCD;
 
         const dir = p.lastMoveDir;
         gameState.dashEffect = {
@@ -359,23 +361,24 @@ export function playerDash() {
     dirX /= len;
     dirY /= len;
 
-    const distance = Math.min(p.speed * 50, 500);
+    const _koelSC = CHARACTERS[gameState.selectedCharacter].specialSkillConfig;
+    const distance = Math.min(p.speed * _koelSC.dashDistMultiplier, _koelSC.dashDistMax);
     const prevX = p.x, prevY = p.y;
     const targetX = Math.max(p.radius, Math.min(MAP_WIDTH  - p.radius, p.x + dirX * distance));
     const targetY = Math.max(p.radius, Math.min(MAP_HEIGHT - p.radius, p.y + dirY * distance));
 
     p.x = targetX;
     p.y = targetY;
-    p.dashCooldown      = 15000;
+    p.dashCooldown      = _koelSC.dashCD;
     p.dashInvincible    = true;
-    p.dashInvincibleEnd = Date.now() + 500;
+    p.dashInvincibleEnd = Date.now() + _koelSC.dashInvincible;
 
     // 閃現特效
     gameState.dashEffect = {
         ax: prevX, ay: prevY,
         bx: targetX, by: targetY,
         startTime: Date.now(),
-        duration: 150
+        duration: _koelSC.dashEffectDuration
     };
 
     // A→B 直線範圍果子吸收
@@ -431,7 +434,7 @@ export function updatePlayerMovement() {
                 if (c.hp <= 0) continue;
                 if (wrappedDistance(p.x, p.y, c.x, c.y) > p.radius + (c.radius || 0) + 5) continue;
                 if (c._stunUntil && now < c._stunUntil) continue; // 避免重複暈眩
-                c._stunUntil = now + 500;
+                c._stunUntil = now + CHARACTERS[gameState.selectedCharacter].specialSkillConfig.dashStunDuration;
                 const dashDmg = Math.max(1, Math.round(p.attack));
                 c.hp -= dashDmg;
                 showFloatingText(c.x, c.y - 15, dashDmg, '#4FC3F7', 16, true);
@@ -446,20 +449,21 @@ export function updatePlayerMovement() {
 
     // ── 阿奇爾充能計時（每幀遞增）
     if (p.isRanged) {
+        const _archerSC      = CHARACTERS[gameState.selectedCharacter].specialSkillConfig;
         const totalBonus     = p.attackSpeedBonus || 0;
-        const reloadInterval = Math.round(1000 / (1 + totalBonus));
+        const reloadInterval = Math.round(_archerSC.chargeInterval / (1 + totalBonus));
         p.reloadTimer += FIXED_DELTA;
-        if (p.reloadTimer >= reloadInterval && p.reloadCharges < 3) {
+        if (p.reloadTimer >= reloadInterval && p.reloadCharges < _archerSC.chargeMax) {
             p.reloadCharges++;
             p.reloadTimer = 0;
         }
-        // 蓄力手動模式：每 500ms 消耗 1 格（持續按住攻擊鍵時）
+        // 蓄力手動模式：消耗充能格
         if (p.chargeHolding && !gameState.settings.autoAttack) {
             p.chargeHoldTime += FIXED_DELTA;
-            while (p.chargeHoldTime >= 500 && p.reloadCharges > 0 && p.chargeConsumed < 3) {
+            while (p.chargeHoldTime >= _archerSC.chargeConsumeInterval && p.reloadCharges > 0 && p.chargeConsumed < _archerSC.chargeMax) {
                 p.reloadCharges--;
                 p.chargeConsumed++;
-                p.chargeHoldTime -= 500;
+                p.chargeHoldTime -= _archerSC.chargeConsumeInterval;
                 p.reloadTimer = 0;
             }
         }
@@ -490,12 +494,13 @@ export function updatePlayerMovement() {
         dy *= 0.6;
     }
 
-    // ── 阿奇爾水中速度 +50%
+    // ── 阿奇爾水中速度加乘
     if (p.isRanged) {
         const biome = getBiome(p.x, p.y);
         if (biome === 'ocean') {
-            dx *= 1.5;
-            dy *= 1.5;
+            const _wsm = CHARACTERS[gameState.selectedCharacter].waterSpeedMultiplier;
+            dx *= _wsm;
+            dy *= _wsm;
         }
         // F技衝刺附加速度
         if (p.archerDashActive && p.archerDashSpeed > 0) {
