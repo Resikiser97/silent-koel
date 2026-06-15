@@ -1,6 +1,20 @@
-## v0.1.23.0
+## v0.1.23.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.23.1 - 2026-06-15
+
+### 修復
+- `config/playerStatsFormula.js`：Fix C — savedOrgans 已含 fang 時 terribleFang fangBonus 不再雙算（原本只排除 startOrgans）
+- `config/playerStatsFormula.js`：Fix D — speed 計算補入 `_startEvoEffect(char, 'speedBonus')`（omnivore startEvolution 速度加成原本未套用）
+
+### 新增
+- `docs/PLAYER_STATS_FORMULA.md`：`calcPlayerStats` 完整參考手冊（概覽、資料來源對照表、計算順序、已知限制、引用範例）
+
+### 測試
+- `tests/config/playerStatsFormula.test.js`：新增 Fix C / Fix D 測試，共 165 個測試全數通過
 
 ---
 

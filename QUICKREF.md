@@ -1,4 +1,4 @@
-## v0.1.23.0
+## v0.1.23.1
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.23.0**
+- 版本：**v0.1.23.1**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -88,6 +88,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
 | `achievements.js` | ACHIEVEMENTS（36 個成就定義，七類） |
 | `attributes.js` | ATTRIBUTES（5 個屬性純資料，Attribute Design v1） |
+| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)` → 10 屬性快照（純資料，不依賴 runtime）；詳見 `docs/PLAYER_STATS_FORMULA.md` |
 
 ### lang/
 | 檔案 | 職責 |

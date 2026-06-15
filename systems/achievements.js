@@ -18,6 +18,8 @@
 
 import { STORAGE_KEYS, storageGet, storageSet, storageGetJSON, storageSetJSON } from '../storage/index.js';
 import { ACHIEVEMENTS } from '../config/achievements.js';
+import { CHARACTERS } from '../config/characters.js';
+import { calcPlayerStats } from '../config/playerStatsFormula.js';
 import { t } from '../lang.js';
 
 const ACTIVE_TITLE_KEY = 'activeTitle';
@@ -99,11 +101,12 @@ export function showAchievements(opts = {}) {
     const total = ACHIEVEMENTS.length;
 
     let currentPage = 0;
-    let selectedIdx = null; // index in ACHIEVEMENTS
+    let selectedIdx = null; // null = 顯示屬性面板；數字 = 顯示成就詳情
 
-    // 預設選中第一個已解鎖成就
-    const firstUnlockedIdx = ACHIEVEMENTS.findIndex(a => unlocked[a.id]);
-    selectedIdx = firstUnlockedIdx >= 0 ? firstUnlockedIdx : 0;
+    // 角色切換（屬性面板用）
+    const charIds      = Object.keys(CHARACTERS);
+    const _lastCharId  = storageGet(STORAGE_KEYS.LAST_CHARACTER);
+    let   statsCharIdx = Math.max(0, charIds.indexOf(_lastCharId));
 
     const overlay = document.createElement('div');
     overlay.id = 'achievement-overlay';
@@ -311,9 +314,11 @@ export function showAchievements(opts = {}) {
             ? '[' + activeTitle + '] ▾'
             : t('achievementTitleActive') + ' ▾';
 
-        // 確保 selectedIdx 在當前頁
-        currentPage = Math.floor(selectedIdx / PAGE_SIZE);
-        currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
+        // 確保 selectedIdx 在當前頁（null 時維持 currentPage 不動）
+        if (selectedIdx !== null) {
+            currentPage = Math.floor(selectedIdx / PAGE_SIZE);
+            currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
+        }
 
         // 格子
         grid.innerHTML = '';
@@ -356,7 +361,7 @@ export function showAchievements(opts = {}) {
 
             cell.appendChild(iconEl);
             cell.appendChild(nameEl2);
-            cell.onclick = () => { selectedIdx = i; _render(); };
+            cell.onclick = () => { selectedIdx = (selectedIdx === i) ? null : i; _render(); };
             cell.onmouseenter = () => { if (i !== selectedIdx) cell.style.borderColor = '#888'; };
             cell.onmouseleave = () => { if (i !== selectedIdx) cell.style.borderColor = isUnlockedA ? '#555' : '#333'; };
             grid.appendChild(cell);
@@ -383,15 +388,197 @@ export function showAchievements(opts = {}) {
     }
 
     function _renderRightDefault(col, unlockedCount, total, firstPlayDate) {
-        const prog = document.createElement('div');
-        prog.style.cssText = 'font-size:15px;font-weight:bold;color:#FFD700;margin-bottom:10px;';
-        prog.textContent = t('achievementProgress') + ': ' + unlockedCount + ' / ' + total;
-        col.appendChild(prog);
+        // ── Header：📊 當前屬性 + 角色切換 ──────────────────────
+        const hdr = document.createElement('div');
+        hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
 
-        const days = document.createElement('div');
-        days.style.cssText = 'color:#aaa;';
-        days.textContent = _daysSince(firstPlayDate);
-        col.appendChild(days);
+        const hdrTitle = document.createElement('span');
+        hdrTitle.style.cssText = 'font-size:13px;font-weight:bold;color:#88CCFF;';
+        hdrTitle.textContent = '📊 當前屬性';
+
+        const switcher = document.createElement('div');
+        switcher.style.cssText = 'display:flex;align-items:center;gap:3px;';
+
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '←';
+        prevBtn.style.cssText = 'padding:1px 6px;cursor:pointer;border:1px solid #555;background:#2a2a2a;color:white;border-radius:3px;font-size:11px;';
+
+        const charNameEl = document.createElement('span');
+        charNameEl.style.cssText = 'min-width:36px;text-align:center;color:#FFD700;font-size:11px;';
+
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '→';
+        nextBtn.style.cssText = prevBtn.style.cssText;
+
+        switcher.appendChild(prevBtn);
+        switcher.appendChild(charNameEl);
+        switcher.appendChild(nextBtn);
+        hdr.appendChild(hdrTitle);
+        hdr.appendChild(switcher);
+        col.appendChild(hdr);
+
+        // ── 佈局區塊 ──────────────────────────────────────────
+        const statsArea = document.createElement('div');
+        col.appendChild(statsArea);
+
+        const sep1 = document.createElement('div');
+        sep1.style.cssText = 'border-top:1px solid #2a2a2a;margin:5px 0;';
+        col.appendChild(sep1);
+
+        const xpArea = document.createElement('div');
+        col.appendChild(xpArea);
+
+        const sep2 = document.createElement('div');
+        sep2.style.cssText = 'border-top:1px solid #2a2a2a;margin:5px 0;';
+        col.appendChild(sep2);
+
+        const achBonusEl = document.createElement('div');
+        achBonusEl.style.cssText = 'font-size:10px;color:#555;margin-bottom:5px;';
+        achBonusEl.textContent = '成就加成：尚未解鎖（待 v0.2.x）';
+        col.appendChild(achBonusEl);
+
+        const footerEl = document.createElement('div');
+        footerEl.style.cssText = 'font-size:10px;color:#aaa;';
+        col.appendChild(footerEl);
+
+        // ── Row builder ───────────────────────────────────────
+        function makeRow(container, label, valueStr, breakdown) {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:baseline;gap:4px;margin-bottom:2px;font-size:11px;line-height:1.5;';
+
+            const lbl = document.createElement('span');
+            lbl.style.cssText = 'min-width:52px;color:#bbb;flex-shrink:0;';
+            lbl.textContent = label;
+
+            const val = document.createElement('span');
+            val.style.cssText = 'min-width:38px;color:white;font-weight:bold;text-align:right;flex-shrink:0;';
+            val.textContent = valueStr;
+
+            const brk = document.createElement('span');
+            brk.style.cssText = 'color:#666;font-size:10px;flex:1;padding-left:4px;';
+            brk.textContent = breakdown;
+
+            row.appendChild(lbl);
+            row.appendChild(val);
+            row.appendChild(brk);
+            container.appendChild(row);
+        }
+
+        // 拼裝 breakdown 字串：過濾空字串，追加突變倍率
+        function brkStr(parts, mutMult) {
+            const txt = parts.filter(Boolean).join(' + ');
+            return txt + (mutMult && mutMult !== 1 ? ' ×' + mutMult.toFixed(2) + '突變' : '');
+        }
+
+        // ── 重繪屬性（每次切換角色時呼叫）────────────────────
+        function renderStats() {
+            const charId = charIds[statsCharIdx];
+            charNameEl.textContent = CHARACTERS[charId].name;
+            statsArea.innerHTML = '';
+            xpArea.innerHTML    = '';
+
+            const skills       = storageGetJSON(STORAGE_KEYS.PLAYER_SKILLS)       || {};
+            const organs       = storageGetJSON(STORAGE_KEYS.SAVED_ORGANS)       || {};
+            const hiddenOrgans = storageGetJSON(STORAGE_KEYS.SAVED_HIDDEN_ORGANS) || {};
+            const mutData      = storageGetJSON(STORAGE_KEYS.MUTATION_DATA)      || {};
+            const mutLevels    = mutData.levels || {};
+            const st = calcPlayerStats(charId, skills, organs, hiddenOrgans, mutLevels);
+
+            // 攻擊
+            makeRow(statsArea, '攻擊', String(st.attack.final),
+                brkStr([
+                    '基礎' + st.attack.base,
+                    st.attack.skillAdd ? '技能+' + st.attack.skillAdd : '',
+                    st.attack.organAdd ? '器官+' + st.attack.organAdd : '',
+                ], st.attack.mutMultiplier));
+
+            // 血量上限
+            makeRow(statsArea, '血量上限', String(st.hpMax.final),
+                brkStr([
+                    '基礎' + st.hpMax.base,
+                    st.hpMax.skillAdd ? '技能+' + st.hpMax.skillAdd : '',
+                    st.hpMax.organAdd ? '器官+' + st.hpMax.organAdd : '',
+                ], st.hpMax.mutMultiplier));
+
+            // 速度
+            makeRow(statsArea, '速度', String(st.speed.final),
+                brkStr([
+                    '基礎' + st.speed.base,
+                    st.speed.skillAdd ? '技能+' + st.speed.skillAdd.toFixed(1) : '',
+                    st.speed.organAdd ? '器官+' + st.speed.organAdd : '',
+                ], st.speed.mutMultiplier));
+
+            // 體型
+            makeRow(statsArea, '體型', String(st.radius.final),
+                brkStr([
+                    '基礎' + st.radius.base,
+                    st.radius.organAdd ? '器官+' + st.radius.organAdd : '',
+                ]));
+
+            // 攻擊範圍
+            makeRow(statsArea, '攻擊範圍', String(st.attackRange.final),
+                brkStr([
+                    '基礎' + st.attackRange.base,
+                    st.attackRange.organAdd ? '器官+' + st.attackRange.organAdd : '',
+                ]));
+
+            // 韌性（只有器官加成 > 0 時顯示）
+            if (st.tenacity.final > 0) {
+                makeRow(statsArea, '韌性',
+                    st.tenacity.final.toFixed(2) + 's',
+                    '器官+' + st.tenacity.organAdd.toFixed(2));
+            }
+
+            // 暴擊率
+            makeRow(statsArea, '暴擊率',
+                (st.critChance.final * 100).toFixed(0) + '%',
+                brkStr([
+                    '基礎' + (st.critChance.base * 100).toFixed(0) + '%',
+                    st.critChance.organAdd ? '器官+' + (st.critChance.organAdd * 100).toFixed(0) + '%' : '',
+                ]));
+
+            // 暴擊傷害
+            makeRow(statsArea, '暴擊傷害',
+                '×' + st.critMult.final.toFixed(2),
+                brkStr([
+                    '基礎×' + st.critMult.base.toFixed(2),
+                    st.critMult.organAdd ? '器官+' + st.critMult.organAdd.toFixed(2) : '',
+                ]));
+
+            // 採集 XP
+            makeRow(xpArea, '採集XP',
+                '+' + st.fruitXP.final + '/果',
+                brkStr([
+                    '基礎+' + st.fruitXP.base,
+                    st.fruitXP.skillAdd ? '技能+' + st.fruitXP.skillAdd : '',
+                ], st.fruitXP.mutMultiplier));
+
+            // 獵人 XP
+            makeRow(xpArea, '獵人XP',
+                '+' + st.killXP.final + '/殺',
+                brkStr([
+                    '基礎+' + st.killXP.base,
+                    st.killXP.skillAdd ? '技能+' + st.killXP.skillAdd : '',
+                ], st.killXP.mutMultiplier));
+
+            // 底部：遊玩天數 + 成就進度
+            const daysAgo = firstPlayDate
+                ? Math.floor((Date.now() - new Date(firstPlayDate)) / 86400000)
+                : null;
+            footerEl.textContent =
+                (daysAgo !== null ? '遊玩天數：' + daysAgo + ' 天　　' : '') +
+                '成就進度：' + unlockedCount + ' / ' + total;
+        }
+
+        prevBtn.onclick = () => {
+            statsCharIdx = (statsCharIdx - 1 + charIds.length) % charIds.length;
+            renderStats();
+        };
+        nextBtn.onclick = () => {
+            statsCharIdx = (statsCharIdx + 1) % charIds.length;
+            renderStats();
+        };
+        renderStats();
     }
 
     function _renderRightDetail(col, a, unlockedEntry, isHidden) {

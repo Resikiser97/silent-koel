@@ -23,7 +23,7 @@ export const CHARACTERS = {
             attackSpeed:  1000,
         },
         startOrgans:    [],
-        startEvolution: null,
+        startEvolution: { type: 'herbivore', level: 1 },
         specialSkill:   'dash',   // F技：閃現
     },
     archerfish: {
