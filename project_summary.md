@@ -1,4 +1,4 @@
-## v0.1.24.3
+## v0.1.24.4
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.24.3
+**現在版本:** v0.1.24.4
 
-**當前狀態：** Magic Number 搬移第二批：mouthOrgan slow / comboCrabGloves / characters specialSkillConfig / poisonSac duration config 化
+**當前狀態：** Magic Number 搬移第三批（B 類）：16 個成就 condition 欄位 + _getThreshold type 驗證 + COMBAT_CONFIG.baseAttackIntervalMs config 化
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.24.4：Magic Number 搬移第三批（B 類）— `config/achievements.js` 16 個成就新增 `condition` 欄位；`systems/achievementTriggers.js` `_getThreshold` 加入 `expectedType` 驗證 + 16 個 call site 加 null guard；新增 `config/combatConfig.js`（`baseAttackIntervalMs`）；`systems/combat.js` 改讀 `COMBAT_CONFIG`；不改遊戲行為
 - v0.1.24.3：Magic Number 搬移第二批 — `config/organs.js` COMBOS `comboCrabGloves` 新增 `effects`；`config/characters.js` koel / archerfish 新增 `specialSkillConfig` / `projectile` / `waterSpeedMultiplier`；`systems/combat.js` / `systems/player.js` 所有對應裸數值改讀 config；不改遊戲行為
 - v0.1.24.2：Magic Number 搬移第一批 — `config/creatures.js` 新增 `HUNTER_BONUS_CONFIG` / `GIANT_CONFIG` / `KILLER_CONFIG`；`systems/damage.js` `handleGiantKill` / `handleKillerKill` 裸數值全改讀 config；不改遊戲行為
 - v0.1.24.1：角色通關成就條件 data-driven — `config/achievements.js` `koel_50` / `archer_50` 加入 `condition` 欄位；`achievementTriggers.js` 移除硬寫 id 判斷，改通用迴圈掃描；新增角色成就只需加 config，不需改 systems/

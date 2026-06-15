@@ -11,6 +11,14 @@ import { SKILLS } from '../config/evolution.js';
 import { ORGANS } from '../config/organs.js';
 import { ACHIEVEMENTS } from '../config/achievements.js';
 
+function _getThreshold(id, expectedType) {
+    const ach = ACHIEVEMENTS.find(a => a.id === id);
+    if (!ach?.condition) return null;
+    if (ach.condition.type !== expectedType) return null;
+    if (typeof ach.condition.threshold !== 'number') return null;
+    return ach.condition.threshold;
+}
+
 export function initAchievementTriggers() {
     // 教學完成
     window.addEventListener('tutorialCompleted', () => {
@@ -36,11 +44,14 @@ export function initAchievementTriggers() {
         // 累積通關次數
         const clearKeys = ['easy', 'normal', 'hard', 'hell'].map(k => 'clearCount_' + k);
         const clearCount = clearKeys.reduce((sum, k) => sum + (parseInt(storageGet(k)) || 0), 0);
-        if (clearCount >= 10)  unlockAchievement('clear_10');
-        if (clearCount >= 100) unlockAchievement('clear_100');
+        const thrClear10  = _getThreshold('clear_10',  'totalClearCount');
+        const thrClear100 = _getThreshold('clear_100', 'totalClearCount');
+        if (thrClear10  !== null && clearCount >= thrClear10)  unlockAchievement('clear_10');
+        if (thrClear100 !== null && clearCount >= thrClear100) unlockAchievement('clear_100');
 
         // 速通（5分30秒 = 330秒）
-        if (typeof d.playTime === 'number' && d.playTime <= 330) unlockAchievement('speed_clear');
+        const thrSpeedClear = _getThreshold('speed_clear', 'clearTimeMax');
+        if (thrSpeedClear !== null && typeof d.playTime === 'number' && d.playTime <= thrSpeedClear) unlockAchievement('speed_clear');
 
         // 無傷
         if (!d.tookDamage) unlockAchievement('no_damage_clear');
@@ -58,11 +69,13 @@ export function initAchievementTriggers() {
         // 獵人剋星：困難模式擊殺5次
         if (bossType === 'hunter' && diff === 'hard') {
             const hCount = parseInt(storageGet('killCount_hunter')) || 0;
-            if (hCount >= 5) unlockAchievement('hunter_slayer');
+            const thrHunterSlayer = _getThreshold('hunter_slayer', 'hardHunterKills');
+            if (thrHunterSlayer !== null && hCount >= thrHunterSlayer) unlockAchievement('hunter_slayer');
         }
 
         // 速殺 Boss（60秒）
-        if (typeof d.bossKillTime === 'number' && d.bossKillTime <= 60) unlockAchievement('speed_kill_boss');
+        const thrSpeedKill = _getThreshold('speed_kill_boss', 'bossKillTimeMax');
+        if (thrSpeedKill !== null && typeof d.bossKillTime === 'number' && d.bossKillTime <= thrSpeedKill) unlockAchievement('speed_kill_boss');
 
         // 角色通關次數
         const char = d.character;
@@ -73,6 +86,7 @@ export function initAchievementTriggers() {
                 const cond = ach.condition;
                 if (cond?.type === 'characterClearCount'
                     && cond.characterId === char
+                    && typeof cond.threshold === 'number'
                     && charCount >= cond.threshold) {
                     unlockAchievement(ach.id);
                 }
@@ -82,20 +96,25 @@ export function initAchievementTriggers() {
         // 連勝
         const streak = (parseInt(storageGet(STORAGE_KEYS.WIN_STREAK)) || 0) + 1;
         storageSet(STORAGE_KEYS.WIN_STREAK, String(streak));
-        if (streak >= 5) unlockAchievement('win_streak_5');
+        const thrWinStreak = _getThreshold('win_streak_5', 'winStreak');
+        if (thrWinStreak !== null && streak >= thrWinStreak) unlockAchievement('win_streak_5');
     });
 
     // 升等
     window.addEventListener('levelUp', (e) => {
-        if (e.detail && e.detail.level >= 50) unlockAchievement('level_50');
+        const thr = _getThreshold('level_50', 'playerLevel');
+        if (e.detail && thr !== null && e.detail.level >= thr) unlockAchievement('level_50');
     });
 
     // 累積擊殺
     window.addEventListener('killCountUpdated', (e) => {
         const d = e.detail || {};
-        if (d.type === 'normal' && d.total >= 10000) unlockAchievement('kill_10000');
-        if (d.type === 'killer' && d.total >= 100)   unlockAchievement('kill_100_killer');
-        if (d.type === 'giant'  && d.total >= 100)   unlockAchievement('kill_100_giant');
+        const thrKill10k = _getThreshold('kill_10000',      'totalKills');
+        const thrKiller  = _getThreshold('kill_100_killer', 'killerKills');
+        const thrGiant   = _getThreshold('kill_100_giant',  'giantKills');
+        if (d.type === 'normal' && thrKill10k !== null && d.total >= thrKill10k) unlockAchievement('kill_10000');
+        if (d.type === 'killer' && thrKiller  !== null && d.total >= thrKiller)  unlockAchievement('kill_100_killer');
+        if (d.type === 'giant'  && thrGiant   !== null && d.total >= thrGiant)   unlockAchievement('kill_100_giant');
     });
 
     // 技能樹全滿
@@ -108,14 +127,17 @@ export function initAchievementTriggers() {
 
     // 進化
     window.addEventListener('evolutionLevelUp', (e) => {
-        if (e.detail && e.detail.level >= 5) unlockAchievement('evo_5star');
+        const thr = _getThreshold('evo_5star', 'evolutionLevel');
+        if (e.detail && thr !== null && e.detail.level >= thr) unlockAchievement('evo_5star');
     });
 
     // 變異等級
     window.addEventListener('mutationLevelChanged', (e) => {
         const total = e.detail && e.detail.total;
-        if (total >= 100) unlockAchievement('mutation_100');
-        if (total >= 500) unlockAchievement('mutation_500');
+        const thr100 = _getThreshold('mutation_100', 'totalMutationLevel');
+        const thr500 = _getThreshold('mutation_500', 'totalMutationLevel');
+        if (thr100 !== null && total >= thr100) unlockAchievement('mutation_100');
+        if (thr500 !== null && total >= thr500) unlockAchievement('mutation_500');
     });
 
     // 器官收藏家：所有普通器官（15種）至少 lv1
@@ -129,12 +151,14 @@ export function initAchievementTriggers() {
 
     // 白骨（單局）
     window.addEventListener('boneMaterialUpdated', (e) => {
-        if (e.detail && e.detail.total >= 500) unlockAchievement('bone_500');
+        const thr = _getThreshold('bone_500', 'sessionBones');
+        if (e.detail && thr !== null && e.detail.total >= thr) unlockAchievement('bone_500');
     });
 
     // 果實（單局）
     window.addEventListener('fruitCollected', (e) => {
-        if (e.detail && e.detail.total >= 2000) unlockAchievement('fruit_2000');
+        const thr = _getThreshold('fruit_2000', 'sessionFruits');
+        if (e.detail && thr !== null && e.detail.total >= thr) unlockAchievement('fruit_2000');
     });
 
     // 先驅者
@@ -145,6 +169,7 @@ export function initAchievementTriggers() {
     // 深夜鳥（凌晨0~4點 GMT+8）
     window.addEventListener('gameStarted', () => {
         const hour = new Date(new Date().toLocaleString('en', { timeZone: 'Asia/Taipei' })).getHours();
-        if (hour >= 0 && hour < 4) unlockAchievement('night_owl');
+        const thr = _getThreshold('night_owl', 'nightOwlHour');
+        if (thr !== null && hour >= 0 && hour < thr) unlockAchievement('night_owl');
     });
 }

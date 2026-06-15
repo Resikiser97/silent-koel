@@ -1,4 +1,4 @@
-## v0.1.23.1
+## v0.1.24.4
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -40,7 +40,8 @@
 | `patchnotes.js` | PATCH_NOTES 陣列，最新版本置頂 |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
 | `compendium_data.js` | COMPENDIUM_DATA 圖鑑資料 |
-| `achievements.js` | ACHIEVEMENTS 陣列（36 個成就定義，v0.1.22.0） |
+| `achievements.js` | ACHIEVEMENTS 陣列（36 個成就定義，v0.1.22.0；16 個新增 condition 欄位，v0.1.24.4） |
+| `combatConfig.js` | COMBAT_CONFIG（攻擊間隔公式基底，v0.1.24.4） |
 | `attributes.js` | ATTRIBUTES 陣列（5 個屬性純資料，Attribute Design v1，v0.1.22.0） |
 | `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)` → 10 屬性快照；純資料模組，不依賴任何 systems/，只 import characters.js / organs.js / evolution.js；詳見 docs/PLAYER_STATS_FORMULA.md（v0.1.23.1） |
 
@@ -310,4 +311,4 @@ main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.23.1，補入 config/playerStatsFormula.js、systems/achievementTriggers.js；import chain 補齊*
+*最後更新：v0.1.24.4，新增 config/combatConfig.js；config/achievements.js condition 欄位補齊*

@@ -1,6 +1,17 @@
-## v0.1.24.3
+## v0.1.24.4
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.24.4 - 2026-06-16
+
+### 重構
+- `config/achievements.js`：16 個成就新增 `condition` 欄位（`type` / `threshold`），統一定義觸發條件；type 命名規則：`*Max` 後綴表示 `<= threshold`，`nightOwlHour` 表示 `hour >= 0 && hour < threshold`，其餘為 `>= threshold`
+- `systems/achievementTriggers.js`：新增 `_getThreshold(id)` helper，所有 listener 裡的裸數值改讀 `_getThreshold(id)`（涵蓋 16 個成就觸發點）
+- 新增 `config/combatConfig.js`：`COMBAT_CONFIG.baseAttackIntervalMs = 1000`，集中定義攻擊間隔公式基底
+- `systems/combat.js`：攻擊間隔計算改讀 `COMBAT_CONFIG.baseAttackIntervalMs`，新增 `import { COMBAT_CONFIG }`
+- 不改變任何遊戲數值與行為
 
 ---
 

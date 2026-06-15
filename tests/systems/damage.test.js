@@ -88,6 +88,9 @@ vi.mock('../../config/evolution.js', () => ({
 }));
 vi.mock('../../config/organs.js', () => ({
     ORGANS: {},
+    COMBOS: [
+        { key: 'comboCrabGloves', effects: { bleedMultiplier: 2, healReduction: 0.5 } },
+    ],
 }));
 vi.mock('../../systems/loot.js', () => ({
     _spawnBone: vi.fn(),

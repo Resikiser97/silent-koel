@@ -15,6 +15,7 @@ import { EVOLUTION_PATHS } from '../config/evolution.js';
 import { ORGANS, COMBOS } from '../config/organs.js';
 import { AudioManager } from './audio.js';
 import { CHARACTERS } from '../config/characters.js';
+import { COMBAT_CONFIG } from '../config/combatConfig.js';
 import { applyTenacity } from './utils.js';
 import { _spawnBone } from './loot.js';
 import { t } from '../lang.js';
@@ -44,7 +45,7 @@ export function playerAttack() {
     if (p._stunUntil && now < p._stunUntil) return;
     // 攻速：加法公式 interval = 1000ms / (1 + totalBonus)
     const totalBonus = (p.attackSpeedBonus || 0);
-    const attackInterval = Math.round(1000 / (1 + totalBonus));
+    const attackInterval = Math.round(COMBAT_CONFIG.baseAttackIntervalMs / (1 + totalBonus));
     if (now - p.attackTimer < attackInterval) return;
     p.attackTimer = now;
 

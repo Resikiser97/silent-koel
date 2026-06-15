@@ -53,6 +53,7 @@ export const ACHIEVEMENTS = [
         category: 'clear',
         title: '老鳥',
         bonus: null,
+        condition: { type: 'totalClearCount', threshold: 10 },
     },
     {
         id: 'clear_hard',
@@ -85,6 +86,7 @@ export const ACHIEVEMENTS = [
         category: 'clear',
         title: '疾風鳥',
         bonus: null,
+        condition: { type: 'clearTimeMax', threshold: 330 }, // *Max：<= threshold
     },
 
     // ── boss ─────────────────────────────────────────────────
@@ -127,6 +129,7 @@ export const ACHIEVEMENTS = [
         category: 'boss',
         title: '獵人的剋星',
         bonus: null,
+        condition: { type: 'hardHunterKills', threshold: 5 },
     },
     {
         id: 'speed_kill_boss',
@@ -135,6 +138,7 @@ export const ACHIEVEMENTS = [
         category: 'boss',
         title: null,
         bonus: null,
+        condition: { type: 'bossKillTimeMax', threshold: 60 }, // *Max：<= threshold
     },
 
     // ── collect ──────────────────────────────────────────────
@@ -161,6 +165,7 @@ export const ACHIEVEMENTS = [
         category: 'collect',
         title: '白骨精',
         bonus: null,
+        condition: { type: 'sessionBones', threshold: 500 },
     },
     {
         id: 'fruit_2000',
@@ -169,6 +174,7 @@ export const ACHIEVEMENTS = [
         category: 'collect',
         title: null,
         bonus: null,
+        condition: { type: 'sessionFruits', threshold: 2000 },
     },
     {
         id: 'level_50',
@@ -177,6 +183,7 @@ export const ACHIEVEMENTS = [
         category: 'collect',
         title: null,
         bonus: null,
+        condition: { type: 'playerLevel', threshold: 50 },
     },
     {
         id: 'kill_10000',
@@ -185,6 +192,7 @@ export const ACHIEVEMENTS = [
         category: 'collect',
         title: null,
         bonus: null,
+        condition: { type: 'totalKills', threshold: 10000 },
     },
     {
         id: 'kill_100_killer',
@@ -193,6 +201,7 @@ export const ACHIEVEMENTS = [
         category: 'collect',
         title: null,
         bonus: null,
+        condition: { type: 'killerKills', threshold: 100 },
     },
     {
         id: 'kill_100_giant',
@@ -201,6 +210,7 @@ export const ACHIEVEMENTS = [
         category: 'collect',
         title: null,
         bonus: null,
+        condition: { type: 'giantKills', threshold: 100 },
     },
 
     // ── character ────────────────────────────────────────────
@@ -247,6 +257,7 @@ export const ACHIEVEMENTS = [
         category: 'growth',
         title: '百戰老兵',
         bonus: null,
+        condition: { type: 'totalClearCount', threshold: 100 },
     },
     {
         id: 'evo_5star',
@@ -255,6 +266,7 @@ export const ACHIEVEMENTS = [
         category: 'growth',
         title: null,
         bonus: null,
+        condition: { type: 'evolutionLevel', threshold: 5 },
     },
     {
         id: 'mutation_100',
@@ -263,6 +275,7 @@ export const ACHIEVEMENTS = [
         category: 'growth',
         title: null,
         bonus: null,
+        condition: { type: 'totalMutationLevel', threshold: 100 },
     },
 
     // ── hidden ───────────────────────────────────────────────
@@ -281,6 +294,7 @@ export const ACHIEVEMENTS = [
         category: 'hidden',
         title: null,
         bonus: null,
+        condition: { type: 'winStreak', threshold: 5 },
     },
     {
         id: 'no_regen_clear',
@@ -305,6 +319,7 @@ export const ACHIEVEMENTS = [
         category: 'hidden',
         title: null,
         bonus: null,
+        condition: { type: 'nightOwlHour', threshold: 4 }, // nightOwlHour：hour >= 0 && hour < threshold
     },
     {
         id: 'mutation_500',
@@ -313,5 +328,6 @@ export const ACHIEVEMENTS = [
         category: 'hidden',
         title: '無敵',
         bonus: null,
+        condition: { type: 'totalMutationLevel', threshold: 500 },
     },
 ];

@@ -18,6 +18,26 @@ const mocks = vi.hoisted(() => {
             crabClaw:       { id: 'crabClaw' },
             boxingGloves:   { id: 'boxingGloves' },
         },
+        ACHIEVEMENTS: [
+            { id: 'clear_10',        condition: { type: 'totalClearCount',    threshold: 10     } },
+            { id: 'clear_100',       condition: { type: 'totalClearCount',    threshold: 100    } },
+            { id: 'speed_clear',     condition: { type: 'clearTimeMax',       threshold: 330    } },
+            { id: 'hunter_slayer',   condition: { type: 'hardHunterKills',    threshold: 5      } },
+            { id: 'speed_kill_boss', condition: { type: 'bossKillTimeMax',    threshold: 60     } },
+            { id: 'win_streak_5',    condition: { type: 'winStreak',          threshold: 5      } },
+            { id: 'level_50',        condition: { type: 'playerLevel',        threshold: 50     } },
+            { id: 'kill_10000',      condition: { type: 'totalKills',         threshold: 10000  } },
+            { id: 'kill_100_killer', condition: { type: 'killerKills',        threshold: 100    } },
+            { id: 'kill_100_giant',  condition: { type: 'giantKills',         threshold: 100    } },
+            { id: 'evo_5star',       condition: { type: 'evolutionLevel',     threshold: 5      } },
+            { id: 'mutation_100',    condition: { type: 'totalMutationLevel', threshold: 100    } },
+            { id: 'mutation_500',    condition: { type: 'totalMutationLevel', threshold: 500    } },
+            { id: 'bone_500',        condition: { type: 'sessionBones',       threshold: 500    } },
+            { id: 'fruit_2000',      condition: { type: 'sessionFruits',      threshold: 2000   } },
+            { id: 'night_owl',       condition: { type: 'nightOwlHour',       threshold: 4      } },
+            { id: 'koel_50',         condition: { type: 'characterClearCount', characterId: 'koel',      threshold: 50 } },
+            { id: 'archer_50',       condition: { type: 'characterClearCount', characterId: 'archerfish', threshold: 50 } },
+        ],
         storage,
     };
 });
@@ -38,6 +58,9 @@ vi.mock('../../storage/index.js', () => ({
 }));
 vi.mock('../../config/evolution.js', () => ({ SKILLS: mocks.SKILLS }));
 vi.mock('../../config/organs.js', () => ({ ORGANS: mocks.ORGANS }));
+vi.mock('../../config/achievements.js', () => ({
+    ACHIEVEMENTS: mocks.ACHIEVEMENTS,
+}));
 
 function fireEvent(type, detail) {
     globalThis.window.dispatchEvent(new CustomEvent(type, { detail }));
@@ -160,5 +183,24 @@ describe('win_streak', () => {
     it('死亡後 showSkillTree 重置 WIN_STREAK 為 0', () => {
         fireEvent('showSkillTree', { mode: 'postGame' });
         expect(mocks.storageSet).toHaveBeenCalledWith('winStreak', '0');
+    });
+});
+
+describe('condition.type 驗證', () => {
+    it('level_50 condition.type 不匹配時不觸發', () => {
+        // 臨時把 level_50 的 type 改成錯誤值，驗證 _getThreshold 回傳 null 造成不觸發
+        const entry = mocks.ACHIEVEMENTS.find(a => a.id === 'level_50');
+        const origType = entry.condition.type;
+        entry.condition.type = 'WRONG_TYPE';
+
+        fireEvent('levelUp', { level: 50 });
+        expect(mocks.unlockAchievement).not.toHaveBeenCalledWith('level_50');
+
+        entry.condition.type = origType; // 還原
+    });
+
+    it('level_50 condition.type 正確時邊界值 50 可觸發', () => {
+        fireEvent('levelUp', { level: 50 });
+        expect(mocks.unlockAchievement).toHaveBeenCalledWith('level_50');
     });
 });
