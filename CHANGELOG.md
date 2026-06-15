@@ -1,6 +1,14 @@
-## v0.1.23.1
+## v0.1.23.2
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.23.2 - 2026-06-15
+
+### 修復
+- `systems/achievements.js`：UI 硬寫中文文字全數改為 `t('key')` 引用（共 25 個 lang key）
+- `lang/zh-TW.js` / `lang/en.js`：新增 stat*（16 個）、achievementHidden/PageFmt/CountFmt/ProgressFmt/DaysFmt/DetailTitle（6 個）、statPanelTitle/unitPerFruit/unitPerKill（3 個），共 25 個 key
 
 ---
 

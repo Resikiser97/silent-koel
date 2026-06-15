@@ -306,7 +306,7 @@ export function showAchievements(opts = {}) {
         const totalPages = Math.ceil(total / PAGE_SIZE);
 
         titleEl.textContent = t('achievementTitle');
-        countEl.textContent = '(' + unlockedCount + ' / ' + total + ')';
+        countEl.textContent = t('achievementCountFmt', { unlocked: unlockedCount, total });
 
         // 稱號按鈕標籤
         const activeTitle = getActiveTitle();
@@ -353,7 +353,7 @@ export function showAchievements(opts = {}) {
             if (isUnlockedA) {
                 nameEl2.textContent = a.name;
             } else if (isHidden) {
-                nameEl2.textContent = '???';
+                nameEl2.textContent = t('achievementHidden');
             } else {
                 nameEl2.textContent = a.name;
                 nameEl2.style.color = '#444';
@@ -368,7 +368,7 @@ export function showAchievements(opts = {}) {
         }
 
         // 分頁
-        pageLbl.textContent = currentPage + 1 + ' / ' + totalPages;
+        pageLbl.textContent = t('achievementPageFmt', { cur: currentPage + 1, total: totalPages });
         prevPageBtn.disabled = currentPage === 0;
         nextPageBtn.disabled = currentPage === totalPages - 1;
         prevPageBtn.style.opacity = prevPageBtn.disabled ? '0.35' : '1';
@@ -394,7 +394,7 @@ export function showAchievements(opts = {}) {
 
         const hdrTitle = document.createElement('span');
         hdrTitle.style.cssText = 'font-size:13px;font-weight:bold;color:#88CCFF;';
-        hdrTitle.textContent = '📊 當前屬性';
+        hdrTitle.textContent = '📊 ' + t('statPanelTitle');
 
         const switcher = document.createElement('div');
         switcher.style.cssText = 'display:flex;align-items:center;gap:3px;';
@@ -467,7 +467,7 @@ export function showAchievements(opts = {}) {
         // 拼裝 breakdown 字串：過濾空字串，追加突變倍率
         function brkStr(parts, mutMult) {
             const txt = parts.filter(Boolean).join(' + ');
-            return txt + (mutMult && mutMult !== 1 ? ' ×' + mutMult.toFixed(2) + '突變' : '');
+            return txt + (mutMult && mutMult !== 1 ? ' ×' + mutMult.toFixed(2) + t('statMutation') : '');
         }
 
         // ── 重繪屬性（每次切換角色時呼叫）────────────────────
@@ -485,80 +485,80 @@ export function showAchievements(opts = {}) {
             const st = calcPlayerStats(charId, skills, organs, hiddenOrgans, mutLevels);
 
             // 攻擊
-            makeRow(statsArea, '攻擊', String(st.attack.final),
+            makeRow(statsArea, t('statAtk'), String(st.attack.final),
                 brkStr([
-                    '基礎' + st.attack.base,
-                    st.attack.skillAdd ? '技能+' + st.attack.skillAdd : '',
-                    st.attack.organAdd ? '器官+' + st.attack.organAdd : '',
+                    t('statBase') + st.attack.base,
+                    st.attack.skillAdd ? t('statSkill') + st.attack.skillAdd : '',
+                    st.attack.organAdd ? t('statOrgan') + st.attack.organAdd : '',
                 ], st.attack.mutMultiplier));
 
             // 血量上限
-            makeRow(statsArea, '血量上限', String(st.hpMax.final),
+            makeRow(statsArea, t('statHp'), String(st.hpMax.final),
                 brkStr([
-                    '基礎' + st.hpMax.base,
-                    st.hpMax.skillAdd ? '技能+' + st.hpMax.skillAdd : '',
-                    st.hpMax.organAdd ? '器官+' + st.hpMax.organAdd : '',
+                    t('statBase') + st.hpMax.base,
+                    st.hpMax.skillAdd ? t('statSkill') + st.hpMax.skillAdd : '',
+                    st.hpMax.organAdd ? t('statOrgan') + st.hpMax.organAdd : '',
                 ], st.hpMax.mutMultiplier));
 
             // 速度
-            makeRow(statsArea, '速度', String(st.speed.final),
+            makeRow(statsArea, t('statSpeed'), String(st.speed.final),
                 brkStr([
-                    '基礎' + st.speed.base,
-                    st.speed.skillAdd ? '技能+' + st.speed.skillAdd.toFixed(1) : '',
-                    st.speed.organAdd ? '器官+' + st.speed.organAdd : '',
+                    t('statBase') + st.speed.base,
+                    st.speed.skillAdd ? t('statSkill') + st.speed.skillAdd.toFixed(1) : '',
+                    st.speed.organAdd ? t('statOrgan') + st.speed.organAdd : '',
                 ], st.speed.mutMultiplier));
 
             // 體型
-            makeRow(statsArea, '體型', String(st.radius.final),
+            makeRow(statsArea, t('statSize'), String(st.radius.final),
                 brkStr([
-                    '基礎' + st.radius.base,
-                    st.radius.organAdd ? '器官+' + st.radius.organAdd : '',
+                    t('statBase') + st.radius.base,
+                    st.radius.organAdd ? t('statOrgan') + st.radius.organAdd : '',
                 ]));
 
             // 攻擊範圍
-            makeRow(statsArea, '攻擊範圍', String(st.attackRange.final),
+            makeRow(statsArea, t('statRange'), String(st.attackRange.final),
                 brkStr([
-                    '基礎' + st.attackRange.base,
-                    st.attackRange.organAdd ? '器官+' + st.attackRange.organAdd : '',
+                    t('statBase') + st.attackRange.base,
+                    st.attackRange.organAdd ? t('statOrgan') + st.attackRange.organAdd : '',
                 ]));
 
             // 韌性（只有器官加成 > 0 時顯示）
             if (st.tenacity.final > 0) {
-                makeRow(statsArea, '韌性',
+                makeRow(statsArea, t('statTenacity'),
                     st.tenacity.final.toFixed(2) + 's',
-                    '器官+' + st.tenacity.organAdd.toFixed(2));
+                    t('statOrgan') + st.tenacity.organAdd.toFixed(2));
             }
 
             // 暴擊率
-            makeRow(statsArea, '暴擊率',
+            makeRow(statsArea, t('statCritChance'),
                 (st.critChance.final * 100).toFixed(0) + '%',
                 brkStr([
-                    '基礎' + (st.critChance.base * 100).toFixed(0) + '%',
-                    st.critChance.organAdd ? '器官+' + (st.critChance.organAdd * 100).toFixed(0) + '%' : '',
+                    t('statBase') + (st.critChance.base * 100).toFixed(0) + '%',
+                    st.critChance.organAdd ? t('statOrgan') + (st.critChance.organAdd * 100).toFixed(0) + '%' : '',
                 ]));
 
             // 暴擊傷害
-            makeRow(statsArea, '暴擊傷害',
+            makeRow(statsArea, t('statCritDamage'),
                 '×' + st.critMult.final.toFixed(2),
                 brkStr([
-                    '基礎×' + st.critMult.base.toFixed(2),
-                    st.critMult.organAdd ? '器官+' + st.critMult.organAdd.toFixed(2) : '',
+                    t('statBaseMul') + st.critMult.base.toFixed(2),
+                    st.critMult.organAdd ? t('statOrgan') + st.critMult.organAdd.toFixed(2) : '',
                 ]));
 
             // 採集 XP
-            makeRow(xpArea, '採集XP',
-                '+' + st.fruitXP.final + '/果',
+            makeRow(xpArea, t('statFruitXp'),
+                '+' + st.fruitXP.final + t('unitPerFruit'),
                 brkStr([
-                    '基礎+' + st.fruitXP.base,
-                    st.fruitXP.skillAdd ? '技能+' + st.fruitXP.skillAdd : '',
+                    t('statBasePlus') + st.fruitXP.base,
+                    st.fruitXP.skillAdd ? t('statSkill') + st.fruitXP.skillAdd : '',
                 ], st.fruitXP.mutMultiplier));
 
             // 獵人 XP
-            makeRow(xpArea, '獵人XP',
-                '+' + st.killXP.final + '/殺',
+            makeRow(xpArea, t('statKillXp'),
+                '+' + st.killXP.final + t('unitPerKill'),
                 brkStr([
-                    '基礎+' + st.killXP.base,
-                    st.killXP.skillAdd ? '技能+' + st.killXP.skillAdd : '',
+                    t('statBasePlus') + st.killXP.base,
+                    st.killXP.skillAdd ? t('statSkill') + st.killXP.skillAdd : '',
                 ], st.killXP.mutMultiplier));
 
             // 底部：遊玩天數 + 成就進度
@@ -566,8 +566,8 @@ export function showAchievements(opts = {}) {
                 ? Math.floor((Date.now() - new Date(firstPlayDate)) / 86400000)
                 : null;
             footerEl.textContent =
-                (daysAgo !== null ? '遊玩天數：' + daysAgo + ' 天　　' : '') +
-                '成就進度：' + unlockedCount + ' / ' + total;
+                (daysAgo !== null ? t('achievementDaysFmt', { n: daysAgo }) + '　　' : '') +
+                t('achievementProgressFmt', { unlocked: unlockedCount, total });
         }
 
         prevBtn.onclick = () => {
@@ -584,13 +584,13 @@ export function showAchievements(opts = {}) {
     function _renderRightDetail(col, a, unlockedEntry, isHidden) {
         const nameEl = document.createElement('div');
         nameEl.style.cssText = 'font-size:16px;font-weight:bold;color:#FFD700;margin-bottom:8px;';
-        nameEl.textContent = (isHidden && !unlockedEntry) ? '???' : a.name;
+        nameEl.textContent = (isHidden && !unlockedEntry) ? t('achievementHidden') : a.name;
         col.appendChild(nameEl);
 
         if (a.title) {
             const titleTagEl = document.createElement('div');
             titleTagEl.style.cssText = 'font-size:12px;color:#88CCFF;margin-bottom:8px;';
-            titleTagEl.textContent = '稱號：[' + a.title + ']';
+            titleTagEl.textContent = t('achievementDetailTitle') + '[' + a.title + ']';
             col.appendChild(titleTagEl);
         }
 
@@ -601,7 +601,7 @@ export function showAchievements(opts = {}) {
 
         const howTo = document.createElement('div');
         howTo.style.cssText = 'color:#ddd;margin-bottom:12px;';
-        howTo.textContent = (isHidden && !unlockedEntry) ? '???' : a.description;
+        howTo.textContent = (isHidden && !unlockedEntry) ? t('achievementHidden') : a.description;
         col.appendChild(howTo);
 
         const dateLabel = document.createElement('div');

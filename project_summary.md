@@ -1,4 +1,4 @@
-## v0.1.23.1
+## v0.1.23.2
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.23.1
+**現在版本:** v0.1.23.2
 
-**當前狀態：** 成就觸發接入（Phase D）完成：achievementTriggers.js 監聽 20+ CustomEvent，SCC 檔案零新增 import；146/146 測試通過
+**當前狀態：** achievements.js UI 文字 i18n 化：25 個 lang key（stat*/achievement*/unit*），硬寫中文全改 t('key')；165/165 測試通過
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.23.2：achievements.js UI i18n — 新增 25 個 lang key（stat* 16 個、achievement* 6 個、statPanelTitle / unitPerFruit / unitPerKill 3 個）；硬寫中文 UI 文字全改 `t('key')`；A 組純符號與 D 組 roadmap 文字不動；165/165 測試通過
 - v0.1.23.0：成就觸發接入（Phase D）— 新建 `systems/achievementTriggers.js`；SCC 檔案（boss/evolution/organs/player/combat）僅新增 dispatch 行、零新增 import；damage.js 新增 killCountUpdated 累積計數；storage 新增 4 個 key；achievements.js 補上 veteran_days / all_achievements 自動觸發；146/146 測試通過
 - v0.1.22.1：成就 UI（Phase B/C）— 首頁成就導航按鈕；成就 Overlay（3×3 格、4 頁翻頁、右欄說明、hidden 未解鎖顯示 ???）；稱號選擇 pop-up（已登入選稱號 / 未登入提示登入）；syncTitleToServer 同步至 Supabase；132/132 測試通過
 - v0.1.22.0：config/achievements.js（36 成就定義）/ systems/achievements.js（讀寫入口）/ config/attributes.js；storage 新增 ACHIEVEMENTS / FIRST_PLAY_DATE key；chat.js username 正規化 + GOBLINNEST 過濾；132/132 測試通過
