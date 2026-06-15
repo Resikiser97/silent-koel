@@ -1,4 +1,4 @@
-## v0.1.23.2
+## v0.1.24.0
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.23.2
+**現在版本:** v0.1.24.0
 
-**當前狀態：** achievements.js UI 文字 i18n 化：25 個 lang key（stat*/achievement*/unit*），硬寫中文全改 t('key')；165/165 測試通過
+**當前狀態：** 角色音效 config 化：characters.js 新增 sfx 欄位，damage/combat/player 移除 archerfish id 硬寫；165/165 測試通過
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,19 +118,11 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.24.0：角色音效 config 化 — `config/characters.js` 新增 `sfx` 欄位（koel / archerfish）；`systems/damage.js / combat.js / player.js` 移除 archerfish id 硬寫判斷，改讀 `CHARACTERS[id].sfx`
 - v0.1.23.2：achievements.js UI i18n — 新增 25 個 lang key（stat* 16 個、achievement* 6 個、statPanelTitle / unitPerFruit / unitPerKill 3 個）；硬寫中文 UI 文字全改 `t('key')`；A 組純符號與 D 組 roadmap 文字不動；165/165 測試通過
 - v0.1.23.0：成就觸發接入（Phase D）— 新建 `systems/achievementTriggers.js`；SCC 檔案（boss/evolution/organs/player/combat）僅新增 dispatch 行、零新增 import；damage.js 新增 killCountUpdated 累積計數；storage 新增 4 個 key；achievements.js 補上 veteran_days / all_achievements 自動觸發；146/146 測試通過
 - v0.1.22.1：成就 UI（Phase B/C）— 首頁成就導航按鈕；成就 Overlay（3×3 格、4 頁翻頁、右欄說明、hidden 未解鎖顯示 ???）；稱號選擇 pop-up（已登入選稱號 / 未登入提示登入）；syncTitleToServer 同步至 Supabase；132/132 測試通過
 - v0.1.22.0：config/achievements.js（36 成就定義）/ systems/achievements.js（讀寫入口）/ config/attributes.js；storage 新增 ACHIEVEMENTS / FIRST_PLAY_DATE key；chat.js username 正規化 + GOBLINNEST 過濾；132/132 測試通過
-- v0.1.21.3：Stage F 3a 回歸測試 — 新增 `tests/systems/damage.test.js`，永久保護 `handleKill` / `eliteKilled` / `bossKilled` / `applyDamageToPlayer` / `showSkillTree` dispatch / `setRangedAttackCallback`；同步修正 `handleKill` 擊殺後移除生物與精英事件 dispatch；114/114 測試通過
-- v0.1.21.2：Dead Import 清理 — 10 個系統檔案共移除 22 個未使用 import（boss/combat/elite/evolution/hud/leaderboard/mutation/organs/player/tutorial）；103/103 測試通過
-- v0.1.21.1：damage.js 移除 organs.js Layer 1 違規 import，改用 CustomEvent('eliteKilled')；MAIN/QUICKREF/ARCH 文件補齊
-- v0.1.20.1：Stage F 批次 2 第二波 — reward.js + loot.js + Boss kill 事件化 + utils/loot 拆分
-- v0.1.17.1：修復毒 debuff 圖示（hud.js/boss.js）、名人堂排名查詢效能（supabase.js）、排行榜 UI 重構（預設名人堂、三按鈕永遠顯示、趣味榜嵌入）；新增趣味排行榜「🦴 白骨精」類別（bone_count）
-- v0.1.17.0：毒刺數值調整（Lv3 累計 10/s，三等級統一持續 5 秒）；玩家對怪物毒傷改為 `poisonStacks[]` 獨立疊加，攻擊命中可引爆即時傷害並讓所有 stack -1 秒；提交分數新增 `bone_count`；新增 hall_of_fame 名人堂（2×3 Showcase、Top 10、個人排名）；排行榜改為 Top 100 可捲動
-- v0.1.16.3：修復 Vercel Vite build 遺漏 `sounds/` 資源導致線上音效 404；新增 `vercel.json` 和 `scripts/copy-sounds.js`，讓 Vercel / itch.io 共用 `dist/sounds/` 輸出結構
-- v0.1.16.2：修復 iOS 音效根本問題（preload 補跑、unlock 錯誤可見、intro 等 unlock）；雲端同步公式改為 `totalPointsEarned × 10.01 + skillPoints`；浮動文字延長至 1200ms；傷害數字加入 noMerge 機制；Dev Mode 新增 HP 數字與 AI 狀態開關；肉食怪 HP 成長統一為 scaledBase 系統
-- v0.1.16.1：hotfix 手機版音效 unlock、Boss debuff 圖示靠左、變異紅點殘留、鬣狗圍圈切線移動抖動、手機版公告位置與 GameInfo 兩行顯示，並限制手機版 Boss HP Bar 寬度 55%
 
 ### 已知問題（待修）
 - 目前無已確認且仍未解決的條目
@@ -167,6 +159,8 @@
 - itch.io 正式上架（已完成，Vite 打包 pipeline 建立）
 - Stage D：中層系統重構（v0.1.18.3，5 個系統依賴注入，33 個測試）
 - Stage F 批次 1：main.js 反向依賴解除（v0.1.19.0，新建 gameFlow.js，5 個高嚴重度循環消除）
+- Stage F 批次 2：reward.js + loot.js + Boss kill 事件化 + utils/loot 拆分（v0.1.20.1）
+- damage.js 違規 import 清理 + Dead Import 10 檔案清理 + Stage F 3a 回歸測試（v0.1.21.1～v0.1.21.3，114/114 測試）
 - Stage F 3a：新建 systems/damage.js，boss↔combat / combat↔player 核心依賴解除（v0.1.21.0）
 
 ### 🔄 進行中

@@ -1,6 +1,16 @@
-## v0.1.23.2
+## v0.1.24.0
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.24.0 - 2026-06-15
+
+### 重構
+- `config/characters.js`：koel / archerfish 新增 `sfx` 欄位（hurt / attackNormal / attackCrit）
+- `systems/damage.js`：移除 `archerfish` id 硬寫判斷，改讀 `CHARACTERS[id].sfx.hurt`
+- `systems/combat.js`：移除 `archerfish` id 硬寫判斷，改讀 `CHARACTERS[id].sfx.attackCrit / .attackNormal`
+- `systems/player.js`：移除 `archerfish` id 硬寫判斷，改讀 `CHARACTERS[id].sfx.attackNormal`
 
 ---
 
