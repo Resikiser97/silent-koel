@@ -1,6 +1,8 @@
 // =============================================================
 // 共用繪圖工具 - drawArrow / drawHealthBar / drawNameTag / drawGlowEffect
+//               spawnLootCircle / buildCrown / getRankIcon
 // 韌性計算      - applyTenacity
+// 字型輔助      - getGameFont
 // =============================================================
 import { gameState, ctx } from './gameState.js';
 import { wrappedDelta } from './camera.js';

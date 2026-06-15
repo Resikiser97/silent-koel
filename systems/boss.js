@@ -1,5 +1,5 @@
 // =============================================================
-// 首領系統 - spawnBoss / updateBoss / showVictory
+// 首領系統 - spawnBoss / updateBoss / showVictory / handleBossKill
 //            drawBoss / drawBossShape / drawBossArrow
 // =============================================================
 

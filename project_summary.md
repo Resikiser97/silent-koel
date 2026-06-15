@@ -1,4 +1,4 @@
-## v0.1.23.0
+## v0.1.23.1
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,7 +12,7 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.23.0
+**現在版本:** v0.1.23.1
 
 **當前狀態：** 成就觸發接入（Phase D）完成：achievementTriggers.js 監聽 20+ CustomEvent，SCC 檔案零新增 import；146/146 測試通過
 

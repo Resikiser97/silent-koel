@@ -14,6 +14,8 @@
 //   renderChat() — 重新渲染聊天訊息列表
 //   isVipPlayer(msg) — 判斷訊息是否來自 VIP 玩家
 //   chatSaveProgress() — 將目前遊戲進度儲存到 Supabase 雲端（已登入才執行）
+//   openChatLogin() — 強制開啟聊天室登入流程（供成就 Overlay 稱號功能呼叫）
+//   syncTitleToServer(title) — 將已選稱號同步至 Supabase chat_users.title（已登入才執行）
 //
 // 【依賴的跨檔案函式】（修改時注意這些來自外部）
 //   SUPABASE_URL, SUPABASE_KEY  ← 來自 config/supabase.js

@@ -1,5 +1,5 @@
 // =============================================================
-// 精英怪系統 - spawnEliteCreature / updateEliteCreature
+// 精英怪系統 - initEliteOrder / spawnEliteCreature / updateEliteCreature
 //              drawEliteCreature / drawEliteArrow
 // 支援：標準精英怪 / 三犬（dogElites）/ 三隼（hardElites）
 // =============================================================

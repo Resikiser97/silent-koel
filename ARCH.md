@@ -1,4 +1,4 @@
-## v0.1.22.0
+## v0.1.23.1
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -42,6 +42,7 @@
 | `compendium_data.js` | COMPENDIUM_DATA 圖鑑資料 |
 | `achievements.js` | ACHIEVEMENTS 陣列（36 個成就定義，v0.1.22.0） |
 | `attributes.js` | ATTRIBUTES 陣列（5 個屬性純資料，Attribute Design v1，v0.1.22.0） |
+| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)` → 10 屬性快照；純資料模組，不依賴任何 systems/，只 import characters.js / organs.js / evolution.js；詳見 docs/PLAYER_STATS_FORMULA.md（v0.1.23.1） |
 
 ### lang/
 | 檔案 | 職責 |
@@ -88,6 +89,7 @@
 | `tutorial.js` | 新手教學、spawnTutorialStump |
 | `chat.js` | 聊天室、帳號登入、Realtime、GM 指令（username 小寫正規化 + GOBLINNEST 過濾，v0.1.22.0） |
 | `achievements.js` | 成就系統讀寫入口：unlockAchievement / isUnlocked / getUnlockedAchievements / getActiveTitle / setActiveTitle（v0.1.22.0） |
+| `achievementTriggers.js` | Phase D 成就觸發接入：`initAchievementTriggers()` 監聽 20+ 個 CustomEvent（gameVictory / levelUp / killCountUpdated 等），呼叫 unlockAchievement(id)；架構原則：不 import 任何 SCC 模組（v0.1.23.0） |
 | `leaderboard.js` | 排行榜面板、分數提交 |
 | `mobile.js` | 裝置偵測、搖桿、攻擊區、觸控疊加層 |
 
@@ -160,6 +162,8 @@ main.js
   ├─ systems/ui.js
   ├─ systems/tutorial.js
   ├─ systems/chat.js
+  ├─ systems/achievements.js
+  ├─ systems/achievementTriggers.js
   ├─ systems/leaderboard.js
   └─ systems/mobile.js
 ```
@@ -306,4 +310,4 @@ main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.21.3，Stage F 3a 回歸測試與 damage.js handleKill 契約補強*
+*最後更新：v0.1.23.1，補入 config/playerStatsFormula.js、systems/achievementTriggers.js；import chain 補齊*

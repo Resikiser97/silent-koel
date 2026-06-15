@@ -1,7 +1,8 @@
 // =============================================================
 // 新手教學系統 - showTutorial / 三步驟教學流程
-//               spawnTutorialStump / showTutorialCombatHint
-//               handleTutorialStumpKill / showTutorialCombatComplete
+//               spawnTutorialStump / showTutorialCombatHint（內部）
+//               handleTutorialStumpKill / showTutorialCombatComplete（內部）
+//               resetTutorial（強制重置教學狀態）
 // 觸發時機：initializeGame() 結束後，若 localStorage 無 tutorialCompleted
 // =============================================================
 import { gameState, canvas } from './gameState.js';

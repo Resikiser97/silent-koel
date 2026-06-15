@@ -1,5 +1,5 @@
 // =============================================================
-// 音效系統 - AudioManager / initAudio
+// 音效系統 - AudioManager / initAudio / preloadAllSfxBuffers
 //           playIntroTheme / stopIntroTheme（首頁背景音樂）
 // =============================================================
 import { AUDIO_FILES } from '../config/gameConfig.js';

@@ -4,10 +4,11 @@
 //           showSettings / hideSettings / updateTimer
 //           toggleDevMode / devAddXP / devAddHP / devFullHP
 //           devSpawnFruits / devKillHostiles / devSpawnNeutral / devSpawnHostile
-//           devFastForward / devRewind / devToggleDayNight
+//           devFastForward / devRewind / devToggleDayNight / devToggleHP / devToggleAI
 //           showGuide / hideGuide / showGuideStory
 //           getOrganDisplayName / buildEvoLevelDesc / showCompendium
-//           showMapSelect / showStartScreen / showPatchNotes / checkPatchNotesPopup
+//           showMapSelect / showStartScreen / showSplashScreen
+//           showPatchNotes / checkPatchNotesPopup / buildEndGameOverlay
 // （drawGame / updateUI / drawTopBarUI / drawMinimap / drawTreasures 已移至 systems/hud.js）
 // =============================================================
 
