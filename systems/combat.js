@@ -5,6 +5,7 @@
 //            setRangedAttackCallback
 // （Stage F 3a：applyDamageToPlayer / handleKill / handleGiantKill
 //   已搬至 damage.js；boss.js / player.js 直接依賴已解除）
+// 依賴：config/characters.js（sfx config 化，v0.1.24.0）
 // =============================================================
 import { gameState, ctx } from './gameState.js';
 import { VIEW_W, VIEW_H } from './map.js';
@@ -13,6 +14,7 @@ import { CORPSE_EAT_HP, CORPSE_BONE_EAT_TICK, CORPSE_EXPIRE_MS, BONE_EXPIRE_MS }
 import { EVOLUTION_PATHS } from '../config/evolution.js';
 import { ORGANS } from '../config/organs.js';
 import { AudioManager } from './audio.js';
+import { CHARACTERS } from '../config/characters.js';
 import { applyTenacity } from './utils.js';
 import { _spawnBone } from './loot.js';
 import { t } from '../lang.js';
@@ -215,9 +217,9 @@ export function playerAttack() {
     }
 
     if (anyHit) {
-        const isArcher = gameState.selectedCharacter === 'archerfish';
-        const critKey   = isArcher ? 'archerAttackCrit'   : 'attackCrit';
-        const normalKey = isArcher ? 'archerAttackNormal' : 'attackNormal';
+        const sfx       = CHARACTERS[gameState.selectedCharacter]?.sfx;
+        const critKey   = sfx?.attackCrit   ?? 'attackCrit';
+        const normalKey = sfx?.attackNormal ?? 'attackNormal';
         AudioManager.play(anyCrit ? critKey : normalKey);
     }
     if (bossDied) window.dispatchEvent(new CustomEvent('bossKilled'));

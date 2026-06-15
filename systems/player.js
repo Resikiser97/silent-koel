@@ -6,6 +6,7 @@
 //            updateProjectiles / findBestPerceptionPath
 //            _checkProjectileHit（子彈系統）
 //            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
+// 依賴：config/characters.js（sfx config 化，v0.1.24.0）
 // =============================================================
 import { gameState } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, getBiome } from './map.js';
@@ -17,6 +18,7 @@ import { AudioManager } from './audio.js';
 import { applyTenacity } from './utils.js';
 import { t } from '../lang.js';
 import { applyDamageToPlayer, handleKill, handleGiantKill } from './damage.js';
+import { CHARACTERS } from '../config/characters.js';
 import { showFloatingText, showXPPopup } from './feedback.js';
 import { addXP } from './reward.js';
 import { handleEliteKill } from './organs.js';
@@ -287,8 +289,7 @@ export function _archerAttack() {
     });
 
     p.attackVisual = now;
-    const isArcher  = gameState.selectedCharacter === 'archerfish';
-    const normalKey = isArcher ? 'archerAttackNormal' : 'attackNormal';
+    const normalKey = CHARACTERS[gameState.selectedCharacter]?.sfx?.attackNormal ?? 'attackNormal';
     AudioManager.play(normalKey);
 }
 

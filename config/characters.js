@@ -25,6 +25,11 @@ export const CHARACTERS = {
         startOrgans:    [],
         startEvolution: { type: 'herbivore', level: 1 },
         specialSkill:   'dash',   // F技：閃現
+        sfx: {
+            hurt:          'hurt',
+            attackNormal:  'attackNormal',
+            attackCrit:    'attackCrit',
+        },
     },
     archerfish: {
         id:          'archerfish',
@@ -48,6 +53,11 @@ export const CHARACTERS = {
         startEvolution: { type: 'carnivore', level: 1 },
         specialSkill:   'archerfishDash',  // F技：衝刺（待實裝）
         isRanged:       true,              // 遠程攻擊標記（待實裝）
+        sfx: {
+            hurt:          'archerHurt',
+            attackNormal:  'archerAttackNormal',
+            attackCrit:    'archerAttackCrit',
+        },
     },
 };
 

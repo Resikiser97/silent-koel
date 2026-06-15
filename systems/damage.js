@@ -2,6 +2,7 @@
 // 傷害與擊殺服務 - applyDamageToPlayer / handleKill / handleGiantKill
 // （Stage F 3a：從 combat.js 抽出，讓 boss.js / player.js / creatures.js /
 //   elite.js 共同依賴此低層模組，解除 boss↔combat / combat↔player 循環）
+// 依賴：config/characters.js（sfx config 化，v0.1.24.0）
 // =============================================================
 import { gameState } from './gameState.js';
 import { AudioManager } from './audio.js';
@@ -12,6 +13,7 @@ import { spawnLootCircle } from './utils.js';
 import { t } from '../lang.js';
 import { addMutationPoints } from './mutation.js';
 import { STORAGE_KEYS, storageGet, storageSet } from '../storage/index.js';
+import { CHARACTERS } from '../config/characters.js';
 
 export function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
@@ -25,8 +27,7 @@ export function applyDamageToPlayer(rawDamage, attacker) {
     const final = Math.max(1, Math.round(rawDamage * (1 - p.damageReduction)));
     gameState.stats.hpCurrent = Math.max(0, gameState.stats.hpCurrent - final);
     window.dispatchEvent(new CustomEvent('playerDamaged'));
-    const isArcher = gameState.selectedCharacter === 'archerfish';
-    const hurtKey = isArcher ? 'archerHurt' : 'hurt';
+    const hurtKey = CHARACTERS[gameState.selectedCharacter]?.sfx?.hurt ?? 'hurt';
     AudioManager.play(hurtKey);
     if (p.thornDamage > 0 && attacker && attacker.hp > 0) {
         const thornMult = p.comboShellArmor ? 2 : 1; // 龜殼+刺甲組合：反彈時傷害翻倍
