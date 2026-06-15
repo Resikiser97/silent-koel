@@ -211,6 +211,11 @@ export const ACHIEVEMENTS = [
         category: 'character',
         title: null,
         bonus: null,
+        condition: {
+            type: 'characterClearCount',
+            characterId: 'koel',
+            threshold: 50,
+        },
     },
     {
         id: 'archer_50',
@@ -219,6 +224,11 @@ export const ACHIEVEMENTS = [
         category: 'character',
         title: null,
         bonus: null,
+        condition: {
+            type: 'characterClearCount',
+            characterId: 'archerfish',
+            threshold: 50,
+        },
     },
 
     // ── growth ───────────────────────────────────────────────

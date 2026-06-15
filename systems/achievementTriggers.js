@@ -2,11 +2,14 @@
 // 成就觸發接入 - initAchievementTriggers
 // 監聽遊戲事件並呼叫 unlockAchievement(id)
 // 架構原則：不 import 任何 SCC 模組，只依賴 achievements.js / storage
+// 依賴：systems/achievements.js, storage/index.js,
+//       config/evolution.js, config/organs.js, config/achievements.js
 // =============================================================
 import { unlockAchievement } from './achievements.js';
 import { STORAGE_KEYS, storageGet, storageSet, storageGetJSON } from '../storage/index.js';
 import { SKILLS } from '../config/evolution.js';
 import { ORGANS } from '../config/organs.js';
+import { ACHIEVEMENTS } from '../config/achievements.js';
 
 export function initAchievementTriggers() {
     // 教學完成
@@ -66,8 +69,14 @@ export function initAchievementTriggers() {
         if (char) {
             const charClearKey = 'clearCount_char_' + char;
             const charCount = parseInt(storageGet(charClearKey)) || 0;
-            if (char === 'koel'       && charCount >= 50) unlockAchievement('koel_50');
-            if (char === 'archerfish' && charCount >= 50) unlockAchievement('archer_50');
+            ACHIEVEMENTS.forEach(ach => {
+                const cond = ach.condition;
+                if (cond?.type === 'characterClearCount'
+                    && cond.characterId === char
+                    && charCount >= cond.threshold) {
+                    unlockAchievement(ach.id);
+                }
+            });
         }
 
         // 連勝

@@ -1,3 +1,18 @@
+## v0.1.24.1
+
+# CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.24.1 - 2026-06-15
+
+### 重構
+- `config/achievements.js`：`koel_50` / `archer_50` 新增 `condition` 欄位（`type: 'characterClearCount'`, `characterId`, `threshold`）
+- `systems/achievementTriggers.js`：移除角色 id 硬寫判斷，改為通用迴圈掃描 `ACHIEVEMENTS` 中所有 `condition.type === 'characterClearCount'` 成就；新增 `import { ACHIEVEMENTS } from '../config/achievements.js'`
+- 新增角色成就只需在 `config/achievements.js` 加 `condition` 欄位，不需改 `systems/`
+
+---
+
 ## v0.1.24.0
 
 # CHANGELOG — 只吃不叫的噪鵑
