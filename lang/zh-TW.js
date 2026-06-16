@@ -111,6 +111,8 @@ LANG['zh-TW'] = {
         statCritDamage: '暴擊傷害',
         statFruitXp: '採集XP',
         statKillXp: '獵人XP',
+        statKillXpBonus: '最低擊殺 XP',
+        statKillXpBaseNote: '（最低生物基礎）',
         statBase: '基礎',
         statSkill: '技能+',
         statOrgan: '器官+',

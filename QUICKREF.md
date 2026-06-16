@@ -1,4 +1,4 @@
-## v0.1.24.4
+## v0.1.24.5
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.24.4**
+- 版本：**v0.1.24.5**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -89,6 +89,8 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `achievements.js` | ACHIEVEMENTS（36 個成就定義，七類） |
 | `attributes.js` | ATTRIBUTES（5 個屬性純資料，Attribute Design v1） |
 | `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)` → 10 屬性快照（純資料，不依賴 runtime）；詳見 `docs/PLAYER_STATS_FORMULA.md` |
+| `xpConfig.js` | `XP_CONFIG`：採集 XP（base / foragerPerLevel / noHerbivoreBase）與擊殺 XP（minCreatureBaseXP / hunterPerLevel）所有常數的集中定義 |
+| `combatConfig.js` | `COMBAT_CONFIG`（攻擊間隔公式基底，v0.1.24.4） |
 
 ### lang/
 | 檔案 | 職責 |

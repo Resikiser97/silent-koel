@@ -68,8 +68,8 @@ calcPlayerStats(
 | `tenacity` | `0` | — | `tenacityAdd`（上限 1.0） | — | — |
 | `critChance` | `CHARACTERS[id].stats.critChance` | — | `critChanceAdd` | — | — |
 | `critMult` | `CHARACTERS[id].stats.critMult` | — | `critMultiplierAdd` | — | — |
-| `fruitXP` | `5` | `forager` × 3 | — | `fruitXPBonus`（herbivore Lv2+） | `eye`（× 1 + level × 0.01） |
-| `killXP` | `10` | `hunter` × 10 | — | — | `eye`（× 1 + level × 0.01） |
+| `fruitXP` | `XP_CONFIG.fruit.base`（5） | `forager` × `XP_CONFIG.fruit.foragerPerLevel`（3） | — | `fruitXPBonus`（herbivore Lv2+） | `eye`（× 1 + level × 0.01） |
+| `killXP` | `XP_CONFIG.kill.minCreatureBaseXP`（20，最低 creature 基準） | `hunter` × `XP_CONFIG.kill.hunterPerLevel`（10） | — | — | `eye`（× 1 + level × 0.01） |
 
 資料來源檔案：
 - 角色基礎值：`config/characters.js` → `CHARACTERS[id].stats`

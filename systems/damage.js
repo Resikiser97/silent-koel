@@ -2,7 +2,7 @@
 // 傷害與擊殺服務 - applyDamageToPlayer / handleKill / handleGiantKill
 // （Stage F 3a：從 combat.js 抽出，讓 boss.js / player.js / creatures.js /
 //   elite.js 共同依賴此低層模組，解除 boss↔combat / combat↔player 循環）
-// 依賴：config/characters.js（sfx config 化，v0.1.24.0）、config/creatures.js（GIANT_CONFIG/KILLER_CONFIG，v0.1.24.2）
+// 依賴：config/characters.js（sfx config 化，v0.1.24.0）、config/creatures.js（GIANT_CONFIG/KILLER_CONFIG，v0.1.24.2）、config/xpConfig.js（XP_CONFIG，v0.1.24.5）
 // =============================================================
 import { gameState } from './gameState.js';
 import { AudioManager } from './audio.js';
@@ -15,6 +15,7 @@ import { addMutationPoints } from './mutation.js';
 import { STORAGE_KEYS, storageGet, storageSet } from '../storage/index.js';
 import { CHARACTERS } from '../config/characters.js';
 import { GIANT_CONFIG, KILLER_CONFIG } from '../config/creatures.js';
+import { XP_CONFIG } from '../config/xpConfig.js';
 
 export function applyDamageToPlayer(rawDamage, attacker) {
     const p = gameState.player;
@@ -63,7 +64,7 @@ export function handleGiantKill(c) {
     const p = gameState.player;
     // XP：巨人化 100，Alpha 300（+獵人本能加成）
     const baseXP = c.isAlpha ? GIANT_CONFIG.xp.alpha : GIANT_CONFIG.xp.base;
-    const xp = baseXP + (gameState.playerSkills.hunter || 0) * GIANT_CONFIG.hunterBonus.xpPerLevel;
+    const xp = baseXP + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
     const actualXP = addXP(xp);
     showXPPopup(p.x, p.y, actualXP);
 
@@ -105,7 +106,7 @@ export function handleGiantKill(c) {
 function handleKillerKill(creature) {
     // 固定100 + 殺手Lv×5 + 獵人本能加成
     const killerLv = creature.killerLevel || 0;
-    const baseXP = KILLER_CONFIG.xp.base + killerLv * KILLER_CONFIG.xp.perLevel + (gameState.playerSkills.hunter || 0) * KILLER_CONFIG.hunterBonus.xpPerLevel;
+    const baseXP = KILLER_CONFIG.xp.base + killerLv * KILLER_CONFIG.xp.perLevel + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
     const actualXP = addXP(baseXP);
     showXPPopup(creature.x, creature.y, actualXP);
 
@@ -143,8 +144,8 @@ export function handleKill(c, isHostile) {
     const index = sourceArray.indexOf(c);
     if (index !== -1) sourceArray.splice(index, 1);
     gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
-    const baseXP = isHostile ? Math.min(80, 30 + Math.round((c.maxHp || 50) / 50 * 10)) : 20;
-    const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * 10;
+    const baseXP = isHostile ? Math.min(80, 30 + Math.round((c.maxHp || 50) / 50 * 10)) : XP_CONFIG.kill.minCreatureBaseXP;
+    const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
     const actualXP = addXP(rawXP);
     showXPPopup(p.x, p.y, actualXP);
     if (c.isElite) window.dispatchEvent(new CustomEvent('eliteKilled', { detail: { killer: c } }));

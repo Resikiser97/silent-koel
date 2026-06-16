@@ -1,6 +1,21 @@
-## v0.1.24.4
+## v0.1.24.5
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.24.5 - 2026-06-16
+
+### 重構
+- 新增 `config/xpConfig.js`：`XP_CONFIG`，集中定義採集 XP（`fruit.base / foragerPerLevel / noHerbivoreBase`）與擊殺 XP（`kill.minCreatureBaseXP / hunterPerLevel`）所有常數
+- `config/playerStatsFormula.js`：`fruitBase / fruitSkill / killBase / killSkill` 改讀 `XP_CONFIG`
+- `systems/player.js`：`_collectFruit` 採集 XP 計算改讀 `XP_CONFIG.fruit.*`
+- `systems/damage.js`：`handleKill / handleGiantKill / handleKillerKill` hunter 加成與中立怪基準值改讀 `XP_CONFIG.kill.*`
+- `config/creatures.js`：刪除 `HUNTER_BONUS_CONFIG`，移除 `GIANT_CONFIG / KILLER_CONFIG` 的 `hunterBonus` 欄位（hunter 加成統一由 `XP_CONFIG` 管理）
+- `systems/achievements.js`：擊殺 XP 面板標題改為 `statKillXpBonus`（最低擊殺 XP），breakdown 加注 `statKillXpBaseNote`（最低生物基礎）
+- `lang/zh-TW.js` + `lang/en.js`：新增 `statKillXpBonus / statKillXpBaseNote` i18n key
+- `tests/config/playerStatsFormula.test.js`：`killXP.final` 期望值更新為 `30`（`killBase` 20 × `xpMut` 1.5）
+- 不改變任何遊戲 XP 數值與行為
 
 ---
 

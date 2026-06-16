@@ -30,6 +30,7 @@
 import { CHARACTERS }                from './characters.js';
 import { ORGANS, HIDDEN_ORGANS }     from './organs.js';
 import { EVOLUTION_PATHS }           from './evolution.js';
+import { XP_CONFIG }                 from './xpConfig.js';
 
 // ── 私有輔助函式 ─────────────────────────────────────────────
 
@@ -218,15 +219,15 @@ export function calcPlayerStats(
 
     // ── 採集 XP ───────────────────────────────────────────────
     const xpMut      = 1 + (mut.eye || 0) * 0.01;
-    const fruitBase  = 5;
-    const fruitSkill = (sk.forager || 0) * 3;
+    const fruitBase  = XP_CONFIG.fruit.base;
+    const fruitSkill = (sk.forager || 0) * XP_CONFIG.fruit.foragerPerLevel;
     // herbivore Lv1 fruitXPBonus = 0（Lv2 才開始加），carnivore 無 fruitXPBonus
     const fruitEvo   = _startEvoEffect(char, 'fruitXPBonus');
     const fruitFinal = parseFloat(((fruitBase + fruitSkill + fruitEvo) * xpMut).toFixed(2));
 
     // ── 獵人 XP ───────────────────────────────────────────────
-    const killBase  = 10;
-    const killSkill = (sk.hunter || 0) * 10;
+    const killBase  = XP_CONFIG.kill.minCreatureBaseXP;
+    const killSkill = (sk.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
     const killFinal = parseFloat(((killBase + killSkill) * xpMut).toFixed(2));
 
     return {

@@ -34,7 +34,7 @@ describe('calcPlayerStats — 基礎', () => {
         const result = calcPlayerStats('koel', {}, {}, {}, { eye: 50 });
         expect(result.fruitXP.mutMultiplier).toBe(1.5);
         expect(result.fruitXP.final).toBe(7.5);    // (5 + 0) × 1.5
-        expect(result.killXP.final).toBe(15);       // (10 + 0) × 1.5
+        expect(result.killXP.final).toBe(30);       // (20 + 0) × 1.5
     });
 
     it('所有 10 個屬性 key 都存在且各有 final 欄位', () => {

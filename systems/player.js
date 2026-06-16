@@ -6,7 +6,7 @@
 //            updateProjectiles / findBestPerceptionPath
 //            _checkProjectileHit（子彈系統）
 //            _archerAttack / _getArcherShootDir / _getAllAttackTargets（阿奇爾攻擊）
-// 依賴：config/characters.js（sfx config 化 v0.1.24.0；specialSkillConfig / projectile / waterSpeedMultiplier config 化 v0.1.24.3）
+// 依賴：config/characters.js（sfx config 化 v0.1.24.0；specialSkillConfig / projectile / waterSpeedMultiplier config 化 v0.1.24.3）、config/xpConfig.js（XP_CONFIG，v0.1.24.5）
 // =============================================================
 import { gameState } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, getBiome } from './map.js';
@@ -27,6 +27,7 @@ import { getOrganLevel, showOrganSelection } from './organs.js';
 import { incrementStat, getSessionStats } from '../stats/index.js';
 import { _joyPaused } from './mobile.js';
 import { handleTutorialStumpKill } from './tutorial.js';
+import { XP_CONFIG } from '../config/xpConfig.js';
 
 // =============================================================
 // 子彈系統（阿奇爾 Archerfish 射水）
@@ -306,10 +307,10 @@ function _collectFruit(p, fruit) {
         for (let h = 1; h < ev.herbivore; h++) {
             herbBonus += EVOLUTION_PATHS.herbivore.levels[h].fruitXPBonus || 0;
         }
-        fruitXP = 5 + (gameState.playerSkills.forager || 0) * 3 + herbBonus;
+        fruitXP = XP_CONFIG.fruit.base + (gameState.playerSkills.forager || 0) * XP_CONFIG.fruit.foragerPerLevel + herbBonus;
     } else {
         // 無草食性：只得 1 XP（可吃但效益極低，避免刷巨人時靠果子回血）
-        fruitXP = 1;
+        fruitXP = XP_CONFIG.fruit.noHerbivoreBase;
     }
     const actualFruitXP = addXP(fruitXP);
     AudioManager.play('eatFruit');

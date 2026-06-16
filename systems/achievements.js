@@ -554,10 +554,10 @@ export function showAchievements(opts = {}) {
                 ], st.fruitXP.mutMultiplier));
 
             // 獵人 XP
-            makeRow(xpArea, t('statKillXp'),
+            makeRow(xpArea, t('statKillXpBonus'),
                 '+' + st.killXP.final + t('unitPerKill'),
                 brkStr([
-                    t('statBasePlus') + st.killXP.base,
+                    t('statBasePlus') + st.killXP.base + t('statKillXpBaseNote'),
                     st.killXP.skillAdd ? t('statSkill') + st.killXP.skillAdd : '',
                 ], st.killXP.mutMultiplier));
 

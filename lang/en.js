@@ -109,6 +109,8 @@ LANG['en'] = {
         statCritDamage: 'Crit Dmg',
         statFruitXp: 'Fruit XP',
         statKillXp: 'Kill XP',
+        statKillXpBonus: 'Min Kill XP',
+        statKillXpBaseNote: ' (min creature base)',
         statBase: 'Base',
         statSkill: 'Skill+',
         statOrgan: 'Organ+',
