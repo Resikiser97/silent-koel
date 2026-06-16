@@ -17,6 +17,7 @@ import {
     storageGetJSON,
     storageSetJSON
 } from '../storage/index.js';
+import { MUTATION_CONFIG } from '../config/mutationConfig.js';
 
 export const DEFAULT_MUTATION_DATA = {
     levels: { fang: 0, tail: 0, wing: 0, eye: 0 },
@@ -378,6 +379,8 @@ export function showMutationPanel() {
     exchangeHint.textContent = t('mutationExchangeHint', { n: gameState.skillPoints || 0 });
     panel.appendChild(exchangeHint);
 
+    const _discount = gameState.player._achMutationExchangeDiscount || 0;
+    const _cost = _discount > 0 ? MUTATION_CONFIG.discountedSkillPointCost : MUTATION_CONFIG.skillPointCost;
     const exchangeBtn = document.createElement('button');
     exchangeBtn.style.cssText = [
         'display:block', 'width:100%', 'margin-top:6px',
@@ -385,16 +388,16 @@ export function showMutationPanel() {
         'border:1px solid #8a6a2a', 'background:rgba(180,120,20,0.2)',
         'color:#FFD700', 'border-radius:6px'
     ].join(';');
-    exchangeBtn.textContent = t('mutationExchange') || '100 技能點 → 10 變異點';
-    const canExchange = (gameState.skillPoints || 0) >= 100;
+    exchangeBtn.textContent = _cost + ' 技能點 → ' + MUTATION_CONFIG.mutationPointGain + ' 變異點';
+    const canExchange = (gameState.skillPoints || 0) >= _cost;
     exchangeBtn.disabled = !canExchange;
     exchangeBtn.style.opacity = canExchange ? '1' : '0.5';
     if (canExchange) {
         exchangeBtn.onclick = () => {
-            if ((gameState.skillPoints || 0) < 100) return;
-            gameState.skillPoints -= 100;
-            gameState.mutationData.points += 10;
-            gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + 10;
+            if ((gameState.skillPoints || 0) < _cost) return;
+            gameState.skillPoints -= _cost;
+            gameState.mutationData.points += MUTATION_CONFIG.mutationPointGain;
+            gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + MUTATION_CONFIG.mutationPointGain;
             storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
             saveMutationData();
             overlay.remove();

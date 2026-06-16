@@ -18,7 +18,7 @@ export const ACHIEVEMENTS = [
         description: '完成新手教學',
         category: 'beginner',
         title: null,
-        bonus: null,
+        bonus: { attackAdd: 1 },
     },
     {
         id: 'first_death',
@@ -26,7 +26,7 @@ export const ACHIEVEMENTS = [
         description: '第一次死亡',
         category: 'beginner',
         title: null,
-        bonus: null,
+        bonus: { hpMaxAdd: 1 },
     },
     {
         id: 'first_clear',
@@ -34,7 +34,7 @@ export const ACHIEVEMENTS = [
         description: '首次通關任意難度',
         category: 'beginner',
         title: '大佬',
-        bonus: null,
+        bonus: { fruitXpAdd: 1 },
     },
 
     // ── clear ────────────────────────────────────────────────
@@ -44,7 +44,7 @@ export const ACHIEVEMENTS = [
         description: '首次通關普通難度',
         category: 'clear',
         title: '獠牙',
-        bonus: null,
+        bonus: { hpMaxAdd: 2 },
     },
     {
         id: 'clear_10',
@@ -52,7 +52,7 @@ export const ACHIEVEMENTS = [
         description: '累積通關 10 次',
         category: 'clear',
         title: '老鳥',
-        bonus: null,
+        bonus: { speedAdd: 0.5 },
         condition: { type: 'totalClearCount', threshold: 10 },
     },
     {
@@ -61,7 +61,7 @@ export const ACHIEVEMENTS = [
         description: '首次通關困難難度',
         category: 'clear',
         title: '黑羽',
-        bonus: null,
+        bonus: { attackPercent: 0.05 },
     },
     {
         id: 'clear_hell',
@@ -77,7 +77,7 @@ export const ACHIEVEMENTS = [
         description: '任意難度不受傷通關',
         category: 'clear',
         title: null,
-        bonus: null,
+        bonus: { specialCdReduction: 0.10 },
     },
     {
         id: 'speed_clear',
@@ -85,7 +85,7 @@ export const ACHIEVEMENTS = [
         description: '任意難度 5 分 30 秒內通關',
         category: 'clear',
         title: '疾風鳥',
-        bonus: null,
+        bonus: { speedPercent: 0.10 },
         condition: { type: 'clearTimeMax', threshold: 330 }, // *Max：<= threshold
     },
 
@@ -96,7 +96,7 @@ export const ACHIEVEMENTS = [
         description: '首次擊殺黑熊王',
         category: 'boss',
         title: null,
-        bonus: null,
+        bonus: { hpMaxAdd: 3 },
     },
     {
         id: 'kill_scorpion',
@@ -104,7 +104,7 @@ export const ACHIEVEMENTS = [
         description: '首次擊殺沙漠蠍王',
         category: 'boss',
         title: null,
-        bonus: null,
+        bonus: { speedAdd: 0.5 },
     },
     {
         id: 'kill_shark',
@@ -112,7 +112,7 @@ export const ACHIEVEMENTS = [
         description: '首次擊殺大白鯊',
         category: 'boss',
         title: null,
-        bonus: null,
+        bonus: { attackAdd: 3 },
     },
     {
         id: 'kill_hunter',
@@ -120,7 +120,7 @@ export const ACHIEVEMENTS = [
         description: '首次擊殺黑色獵人',
         category: 'boss',
         title: null,
-        bonus: null,
+        bonus: { attackSpeedBonus: 0.05 },
     },
     {
         id: 'hunter_slayer',
@@ -128,7 +128,7 @@ export const ACHIEVEMENTS = [
         description: '困難模式擊殺黑色獵人 5 次',
         category: 'boss',
         title: '獵人的剋星',
-        bonus: null,
+        bonus: { killXpPercent: 0.10 },
         condition: { type: 'hardHunterKills', threshold: 5 },
     },
     {
@@ -137,7 +137,7 @@ export const ACHIEVEMENTS = [
         description: '60 秒內擊殺 Boss',
         category: 'boss',
         title: null,
-        bonus: null,
+        bonus: { attackSpeedBonus: 0.05 },
         condition: { type: 'bossKillTimeMax', threshold: 60 }, // *Max：<= threshold
     },
 
@@ -148,7 +148,7 @@ export const ACHIEVEMENTS = [
         description: '解鎖全部器官槽（lv1 即可）',
         category: 'collect',
         title: null,
-        bonus: null,
+        bonus: { critChanceAdd: 0.05 },
     },
     {
         id: 'skill_master',
@@ -156,7 +156,7 @@ export const ACHIEVEMENTS = [
         description: '技能樹全滿',
         category: 'collect',
         title: null,
-        bonus: null,
+        bonus: { mutationExchangeDiscountPercent: 0.10 },
     },
     {
         id: 'bone_500',
@@ -164,7 +164,7 @@ export const ACHIEVEMENTS = [
         description: '單局收集 500 根白骨',
         category: 'collect',
         title: '白骨精',
-        bonus: null,
+        bonus: { critChanceAdd: 0.05 },
         condition: { type: 'sessionBones', threshold: 500 },
     },
     {
@@ -173,7 +173,7 @@ export const ACHIEVEMENTS = [
         description: '單局吃 2000 個果實',
         category: 'collect',
         title: null,
-        bonus: null,
+        bonus: { fruitXpPercent: 0.05, killXpPercent: 0.05 },
         condition: { type: 'sessionFruits', threshold: 2000 },
     },
     {
@@ -182,7 +182,7 @@ export const ACHIEVEMENTS = [
         description: '單局達到 50 等',
         category: 'collect',
         title: null,
-        bonus: null,
+        bonus: { attackPercent: 0.10 },
         condition: { type: 'playerLevel', threshold: 50 },
     },
     {
@@ -191,7 +191,7 @@ export const ACHIEVEMENTS = [
         description: '累積擊殺 10000 隻普通怪',
         category: 'collect',
         title: null,
-        bonus: null,
+        bonus: { killXpPercent: 0.25 },
         condition: { type: 'totalKills', threshold: 10000 },
     },
     {
@@ -200,7 +200,7 @@ export const ACHIEVEMENTS = [
         description: '累積擊殺 100 隻殺手化怪',
         category: 'collect',
         title: null,
-        bonus: null,
+        bonus: { attackPercent: 0.05 },
         condition: { type: 'killerKills', threshold: 100 },
     },
     {
@@ -209,7 +209,7 @@ export const ACHIEVEMENTS = [
         description: '累積擊殺 100 隻巨人',
         category: 'collect',
         title: null,
-        bonus: null,
+        bonus: { radiusPercent: 0.20 },
         condition: { type: 'giantKills', threshold: 100 },
     },
 
@@ -220,7 +220,7 @@ export const ACHIEVEMENTS = [
         description: '用噪鵑通關 50 次',
         category: 'character',
         title: null,
-        bonus: null,
+        bonus: { attackRangePercent: 0.10 },
         condition: {
             type: 'characterClearCount',
             characterId: 'koel',
@@ -233,7 +233,7 @@ export const ACHIEVEMENTS = [
         description: '用阿奇爾通關 50 次',
         category: 'character',
         title: null,
-        bonus: null,
+        bonus: { attackRangePercent: 0.10 },
         condition: {
             type: 'characterClearCount',
             characterId: 'archerfish',
@@ -248,7 +248,7 @@ export const ACHIEVEMENTS = [
         description: '遊玩滿 30 天',
         category: 'growth',
         title: null,
-        bonus: null,
+        bonus: { hpMaxPercent: 0.05 },
     },
     {
         id: 'clear_100',
@@ -256,7 +256,7 @@ export const ACHIEVEMENTS = [
         description: '累積通關 100 次',
         category: 'growth',
         title: '百戰老兵',
-        bonus: null,
+        bonus: { fruitXpPercent: 0.10, killXpPercent: 0.10 },
         condition: { type: 'totalClearCount', threshold: 100 },
     },
     {
@@ -265,7 +265,7 @@ export const ACHIEVEMENTS = [
         description: '單局達成 5⭐ 進化',
         category: 'growth',
         title: null,
-        bonus: null,
+        bonus: { special: 'forceEvoChoice' },
         condition: { type: 'evolutionLevel', threshold: 5 },
     },
     {
@@ -274,7 +274,7 @@ export const ACHIEVEMENTS = [
         description: '變異等級達到 100 級',
         category: 'growth',
         title: null,
-        bonus: null,
+        bonus: { radiusPercent: 0.20 },
         condition: { type: 'totalMutationLevel', threshold: 100 },
     },
 
@@ -285,7 +285,7 @@ export const ACHIEVEMENTS = [
         description: '早期玩家',
         category: 'hidden',
         title: '先驅者',
-        bonus: null,
+        bonus: { allStatsPercent: 0.05 },
     },
     {
         id: 'win_streak_5',
@@ -293,7 +293,7 @@ export const ACHIEVEMENTS = [
         description: '連續 5 局不死且勝利',
         category: 'hidden',
         title: null,
-        bonus: null,
+        bonus: { hpMaxAdd: 10 },
         condition: { type: 'winStreak', threshold: 5 },
     },
     {
@@ -302,7 +302,7 @@ export const ACHIEVEMENTS = [
         description: '困難難度通關但全程未回血',
         category: 'hidden',
         title: null,
-        bonus: null,
+        bonus: { hpMaxAdd: 20 },
     },
     {
         id: 'all_achievements',
@@ -310,7 +310,7 @@ export const ACHIEVEMENTS = [
         description: '解鎖所有非隱藏成就（#1~#30）',
         category: 'hidden',
         title: '恐怖如斯',
-        bonus: null,
+        bonus: { organSlotsAdd: 1, fruitXpPercent: 0.05, killXpPercent: 0.05 },
     },
     {
         id: 'night_owl',
@@ -318,16 +318,16 @@ export const ACHIEVEMENTS = [
         description: '凌晨 0~4 點（GMT+8）遊玩',
         category: 'hidden',
         title: null,
-        bonus: null,
+        bonus: { attackAdd: 1 },
         condition: { type: 'nightOwlHour', threshold: 4 }, // nightOwlHour：hour >= 0 && hour < threshold
     },
     {
         id: 'mutation_500',
         name: '我無敵了',
-        description: '累積使用 500 次變異技能',
+        description: '變異等級達到500',
         category: 'hidden',
         title: '無敵',
-        bonus: null,
+        bonus: { specialCdReduction: 0.10 },
         condition: { type: 'totalMutationLevel', threshold: 500 },
     },
 ];

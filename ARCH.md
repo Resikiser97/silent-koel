@@ -1,4 +1,4 @@
-## v0.1.24.4
+## v0.1.25.0
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -42,6 +42,7 @@
 | `compendium_data.js` | COMPENDIUM_DATA 圖鑑資料 |
 | `achievements.js` | ACHIEVEMENTS 陣列（36 個成就定義，v0.1.22.0；16 個新增 condition 欄位，v0.1.24.4） |
 | `combatConfig.js` | COMBAT_CONFIG（攻擊間隔公式基底，v0.1.24.4） |
+| `mutationConfig.js` | MUTATION_CONFIG（技能點換變異點常數，v0.1.25.0） |
 | `attributes.js` | ATTRIBUTES 陣列（5 個屬性純資料，Attribute Design v1，v0.1.22.0） |
 | `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)` → 10 屬性快照；純資料模組，不依賴任何 systems/，只 import characters.js / organs.js / evolution.js；詳見 docs/PLAYER_STATS_FORMULA.md（v0.1.23.1） |
 
@@ -91,6 +92,7 @@
 | `chat.js` | 聊天室、帳號登入、Realtime、GM 指令（username 小寫正規化 + GOBLINNEST 過濾，v0.1.22.0） |
 | `achievements.js` | 成就系統讀寫入口：unlockAchievement / isUnlocked / getUnlockedAchievements / getActiveTitle / setActiveTitle（v0.1.22.0） |
 | `achievementTriggers.js` | Phase D 成就觸發接入：`initAchievementTriggers()` 監聽 20+ 個 CustomEvent（gameVictory / levelUp / killCountUpdated 等），呼叫 unlockAchievement(id)；架構原則：不 import 任何 SCC 模組（v0.1.23.0） |
+| `achievementBonus.js` | 成就永久加成：`getAchievementBonusTotals(unlockedIds)` / `applyAchievementStatBonuses()`；純資料聚合 + runtime 套用，不依賴 SCC 模組（v0.1.25.0） |
 | `leaderboard.js` | 排行榜面板、分數提交 |
 | `mobile.js` | 裝置偵測、搖桿、攻擊區、觸控疊加層 |
 
@@ -311,4 +313,4 @@ main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.24.4，新增 config/combatConfig.js；config/achievements.js condition 欄位補齊*
+*最後更新：v0.1.25.0，成就 Bonus 系統實作；新增 systems/achievementBonus.js、config/mutationConfig.js*

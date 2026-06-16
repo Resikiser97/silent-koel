@@ -1058,7 +1058,7 @@ export function handleBossKill(boss) {
         if (boss.barsRemaining <= 0) {
             // 黑色獵人真正死亡
             _recordBossKill('hunter');
-            addXP(1000);
+            { const _kxp = gameState.player._achKillXpPercent || 0; addXP(_kxp ? Math.round(1000 * (1 + _kxp)) : 1000); }
             gameState.skillPoints += 5;
             storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
             gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + 5;
@@ -1076,7 +1076,7 @@ export function handleBossKill(boss) {
             boss.hp    = boss.maxHpPerBar;
             boss.maxHp = boss.maxHpPerBar;
             _triggerHunterPhaseCheck(boss);
-            addXP(300);
+            { const _kxp = gameState.player._achKillXpPercent || 0; addXP(_kxp ? Math.round(300 * (1 + _kxp)) : 300); }
             gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + 1;
             // 每管擊破加30秒；上限夾在 phase 7 天花板，防止 phaseIndex 退回觸發日夜切換
             const _phase7Ceiling = GAME_TIMING.totalTime - 7 * GAME_TIMING.phaseLength;
@@ -1478,7 +1478,7 @@ export function showVictory() {
     gameState.victory = true;
     AudioManager.stopMusic();
     AudioManager.play('victory');
-    addXP(500);
+    { const _kxp = gameState.player._achKillXpPercent || 0; addXP(_kxp ? Math.round(500 * (1 + _kxp)) : 500); }
     // F19：普通難度通關 → 解鎖第二章劇情
     if (gameState.lastDifficulty === 'normal') {
         storageSet(STORAGE_KEYS.CHAPTER2_UNLOCKED, 'true');

@@ -433,8 +433,8 @@ export function showAchievements(opts = {}) {
         col.appendChild(sep2);
 
         const achBonusEl = document.createElement('div');
-        achBonusEl.style.cssText = 'font-size:10px;color:#555;margin-bottom:5px;';
-        achBonusEl.textContent = '成就加成：尚未解鎖（待 v0.2.x）';
+        achBonusEl.id = 'ach-bonus-summary';
+        achBonusEl.style.cssText = 'font-size:10px;color:#888;margin-bottom:5px;line-height:1.5;';
         col.appendChild(achBonusEl);
 
         const footerEl = document.createElement('div');
@@ -477,12 +477,13 @@ export function showAchievements(opts = {}) {
             statsArea.innerHTML = '';
             xpArea.innerHTML    = '';
 
-            const skills       = storageGetJSON(STORAGE_KEYS.PLAYER_SKILLS)       || {};
-            const organs       = storageGetJSON(STORAGE_KEYS.SAVED_ORGANS)       || {};
-            const hiddenOrgans = storageGetJSON(STORAGE_KEYS.SAVED_HIDDEN_ORGANS) || {};
-            const mutData      = storageGetJSON(STORAGE_KEYS.MUTATION_DATA)      || {};
-            const mutLevels    = mutData.levels || {};
-            const st = calcPlayerStats(charId, skills, organs, hiddenOrgans, mutLevels);
+            const skills            = storageGetJSON(STORAGE_KEYS.PLAYER_SKILLS)       || {};
+            const organs            = storageGetJSON(STORAGE_KEYS.SAVED_ORGANS)       || {};
+            const hiddenOrgans      = storageGetJSON(STORAGE_KEYS.SAVED_HIDDEN_ORGANS) || {};
+            const mutData           = storageGetJSON(STORAGE_KEYS.MUTATION_DATA)      || {};
+            const mutLevels         = mutData.levels || {};
+            const unlockedAch       = storageGetJSON(STORAGE_KEYS.ACHIEVEMENTS) || {};
+            const st = calcPlayerStats(charId, skills, organs, hiddenOrgans, mutLevels, unlockedAch);
 
             // 攻擊
             makeRow(statsArea, t('statAtk'), String(st.attack.final),
@@ -560,6 +561,28 @@ export function showAchievements(opts = {}) {
                     t('statBasePlus') + st.killXP.base + t('statKillXpBaseNote'),
                     st.killXP.skillAdd ? t('statSkill') + st.killXP.skillAdd : '',
                 ], st.killXP.mutMultiplier));
+
+            // 成就加成摘要
+            const _bonusSummary = document.getElementById('ach-bonus-summary');
+            if (_bonusSummary) {
+                const _parts = [];
+                if (st.attack.achAdd)    _parts.push('攻擊 +' + st.attack.achAdd);
+                if (st.attack.achPercent) _parts.push('攻擊 +' + (st.attack.achPercent * 100).toFixed(0) + '%');
+                if (st.hpMax.achAdd)     _parts.push('HP +' + st.hpMax.achAdd);
+                if (st.hpMax.achPercent) _parts.push('HP +' + (st.hpMax.achPercent * 100).toFixed(0) + '%');
+                if (st.speed.achAdd)     _parts.push('速度 +' + st.speed.achAdd);
+                if (st.speed.achPercent) _parts.push('速度 +' + (st.speed.achPercent * 100).toFixed(0) + '%');
+                if (st.attackRange.achPercent) _parts.push('攻擊範圍 +' + (st.attackRange.achPercent * 100).toFixed(0) + '%');
+                if (st.radius.achPercent) _parts.push('體型 +' + (st.radius.achPercent * 100).toFixed(0) + '%');
+                if (st.critChance.achAdd) _parts.push('暴擊 +' + (st.critChance.achAdd * 100).toFixed(0) + '%');
+                if (st.fruitXP.achAdd)   _parts.push('採果XP +' + st.fruitXP.achAdd);
+                if (st.fruitXP.achPercent) _parts.push('採果XP +' + (st.fruitXP.achPercent * 100).toFixed(0) + '%');
+                if (st.killXP.achPercent) _parts.push('擊殺XP +' + (st.killXP.achPercent * 100).toFixed(0) + '%');
+                if (st.corpseXP && st.corpseXP.achPercent) _parts.push('屍體XP +' + (st.corpseXP.achPercent * 100).toFixed(0) + '%');
+                _bonusSummary.textContent = _parts.length
+                    ? '成就加成：' + _parts.join('、')
+                    : '成就加成：尚未解鎖';
+            }
 
             // 底部：遊玩天數 + 成就進度
             const daysAgo = firstPlayDate

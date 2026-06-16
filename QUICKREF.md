@@ -1,4 +1,4 @@
-## v0.1.24.5
+## v0.1.25.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.24.5**
+- 版本：**v0.1.25.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -91,6 +91,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)` → 10 屬性快照（純資料，不依賴 runtime）；詳見 `docs/PLAYER_STATS_FORMULA.md` |
 | `xpConfig.js` | `XP_CONFIG`：採集 XP（fruit.base / foragerPerLevel / noHerbivoreBase）、擊殺 XP（kill.minCreatureBaseXP / hunterPerLevel）、hostile XP 公式（kill.hostile.base / hpDivisor / hpScale / cap / defaultHp）所有常數集中定義 |
 | `combatConfig.js` | `COMBAT_CONFIG`（攻擊間隔公式基底，v0.1.24.4） |
+| `mutationConfig.js` | `MUTATION_CONFIG`（技能點換變異點常數：skillPointCost/discountedSkillPointCost/mutationPointGain，v0.1.25.0） |
 
 ### lang/
 | 檔案 | 職責 |
@@ -126,6 +127,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息 / username 小寫正規化+GOBLINNEST 過濾） |
 | `achievements.js` | unlockAchievement(id) / isUnlocked(id) / getUnlockedAchievements() / getActiveTitle() / setActiveTitle(title) / showAchievements(opts) |
 | `achievementTriggers.js` | initAchievementTriggers()（Phase D：監聽 CustomEvent 觸發成就，不 import SCC 模組） |
+| `achievementBonus.js` | getAchievementBonusTotals(unlockedIds) / applyAchievementStatBonuses()（成就永久加成套用，v0.1.25.0） |
 | `leaderboard.js` | 排行榜面板 / 分數提交 / 難度狀態管理 |
 | `mobile.js` | 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層 |
 | `hud.js` | drawGame 主渲染 / HUD 更新 / 小地圖 / 上方血條 |

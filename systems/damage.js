@@ -64,7 +64,8 @@ export function handleGiantKill(c) {
     const p = gameState.player;
     // XP：巨人化 100，Alpha 300（+獵人本能加成）
     const baseXP = c.isAlpha ? GIANT_CONFIG.xp.alpha : GIANT_CONFIG.xp.base;
-    const xp = baseXP + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
+    let xp = baseXP + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
+    if (p._achKillXpPercent) xp = Math.round(xp * (1 + p._achKillXpPercent));
     const actualXP = addXP(xp);
     showXPPopup(p.x, p.y, actualXP);
 
@@ -106,7 +107,9 @@ export function handleGiantKill(c) {
 function handleKillerKill(creature) {
     // 固定100 + 殺手Lv×5 + 獵人本能加成
     const killerLv = creature.killerLevel || 0;
-    const baseXP = KILLER_CONFIG.xp.base + killerLv * KILLER_CONFIG.xp.perLevel + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
+    let baseXP = KILLER_CONFIG.xp.base + killerLv * KILLER_CONFIG.xp.perLevel + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
+    const p = gameState.player;
+    if (p._achKillXpPercent) baseXP = Math.round(baseXP * (1 + p._achKillXpPercent));
     const actualXP = addXP(baseXP);
     showXPPopup(creature.x, creature.y, actualXP);
 
@@ -148,7 +151,8 @@ export function handleKill(c, isHostile) {
     const baseXP = isHostile
         ? Math.min(h.cap, h.base + Math.round(((c.maxHp || h.defaultHp) / h.hpDivisor) * h.hpScale))
         : XP_CONFIG.kill.minCreatureBaseXP;
-    const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
+    let rawXP = baseXP + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
+    if (p._achKillXpPercent) rawXP = Math.round(rawXP * (1 + p._achKillXpPercent));
     const actualXP = addXP(rawXP);
     showXPPopup(p.x, p.y, actualXP);
     if (c.isElite) window.dispatchEvent(new CustomEvent('eliteKilled', { detail: { killer: c } }));

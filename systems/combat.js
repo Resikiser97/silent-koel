@@ -345,7 +345,8 @@ export function updateCorpseEating() {
                     : Math.floor(corpse.xpBuffer);
                 if (giveXP > 0) {
                     corpse.xpBuffer -= giveXP;
-                    const actualCorpseXP = addXP(giveXP);
+                    const _cxp = gameState.player._achCorpseXpPercent || 0;
+                    const actualCorpseXP = addXP(_cxp ? Math.round(giveXP * (1 + _cxp)) : giveXP);
                     showFloatingText(corpse.x, corpse.y - 15, '+' + actualCorpseXP + ' XP', '#00CC44');
                 }
 

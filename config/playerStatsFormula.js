@@ -31,6 +31,7 @@ import { CHARACTERS }                from './characters.js';
 import { ORGANS, HIDDEN_ORGANS }     from './organs.js';
 import { EVOLUTION_PATHS }           from './evolution.js';
 import { XP_CONFIG }                 from './xpConfig.js';
+import { ACHIEVEMENTS }              from './achievements.js';
 
 // ── 私有輔助函式 ─────────────────────────────────────────────
 
@@ -119,14 +120,41 @@ function _applyRadiusLevels(organDef, level, state) {
     }
 }
 
+// 聚合已解鎖成就 bonus（與 systems/achievementBonus.js 保持一致）
+function _sumAchievementBonuses(unlockedIds) {
+    const t = {
+        attackAdd: 0, hpMaxAdd: 0, speedAdd: 0, critChanceAdd: 0, organSlotsAdd: 0,
+        attackPercent: 0, hpMaxPercent: 0, speedPercent: 0,
+        attackRangePercent: 0, radiusPercent: 0,
+        fruitXpPercent: 0, fruitXpAdd: 0, killXpPercent: 0, corpseXpPercent: 0,
+    };
+    const unlockedSet = new Set(unlockedIds || []);
+    for (const ach of ACHIEVEMENTS) {
+        if (!unlockedSet.has(ach.id)) continue;
+        const b = ach.bonus;
+        if (!b || b.special) continue;
+        if (b.allStatsPercent !== undefined) {
+            t.attackPercent += b.allStatsPercent;
+            t.hpMaxPercent  += b.allStatsPercent;
+            t.speedPercent  += b.allStatsPercent;
+            continue;
+        }
+        for (const [key, val] of Object.entries(b)) {
+            if (key in t) t[key] += val;
+        }
+    }
+    return t;
+}
+
 // ── 公開函式 ─────────────────────────────────────────────────
 
 export function calcPlayerStats(
     charId,
-    skills         = {},
-    organs         = {},
-    hiddenOrgans   = {},
-    mutationLevels = {}
+    skills              = {},
+    organs              = {},
+    hiddenOrgans        = {},
+    mutationLevels      = {},
+    unlockedAchievements = null
 ) {
     const char = CHARACTERS[charId];
     if (!char) throw new Error('[playerStatsFormula] Unknown charId: ' + charId);
@@ -230,48 +258,84 @@ export function calcPlayerStats(
     const killSkill = (sk.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
     const killFinal = parseFloat(((killBase + killSkill) * xpMut).toFixed(2));
 
+    // ── 成就加成（flat add → percent，與 applyAchievementStatBonuses 一致）
+    const ach = _sumAchievementBonuses(
+        unlockedAchievements ? Object.keys(unlockedAchievements) : []
+    );
+    // flat add
+    let achAtkFinal    = atkFinal    + ach.attackAdd;
+    let achHpFinal     = hpFinal     + ach.hpMaxAdd;
+    let achSpdFinal    = spdFinal    + ach.speedAdd;
+    let achCcFinal     = ccFinal     + ach.critChanceAdd;
+    let achRFinal      = rState.r;
+    let achArFinal     = rState.ar;
+    // percent（套用在 flat add 後當下值）
+    if (ach.attackPercent)      achAtkFinal  += Math.round(achAtkFinal  * ach.attackPercent);
+    if (ach.hpMaxPercent)       achHpFinal   += Math.round(achHpFinal   * ach.hpMaxPercent);
+    if (ach.speedPercent)       achSpdFinal   = parseFloat((achSpdFinal * (1 + ach.speedPercent)).toFixed(2));
+    if (ach.attackRangePercent) achArFinal   += Math.round(achArFinal   * ach.attackRangePercent);
+    if (ach.radiusPercent) {
+        const _radd = Math.round(achRFinal * ach.radiusPercent);
+        achArFinal  = Math.max(10, achArFinal + Math.round(_radd / Math.max(achRFinal, 1) * achArFinal));
+        achRFinal   = Math.max(5,  achRFinal  + _radd);
+    }
+    // XP bonus（用於面板顯示）
+    const achFruitFinal = parseFloat(((fruitBase + ach.fruitXpAdd + fruitSkill + fruitEvo) * (1 + ach.fruitXpPercent) * xpMut).toFixed(2));
+    const achKillFinal  = parseFloat(((killBase  + killSkill) * (1 + ach.killXpPercent) * xpMut).toFixed(2));
+
     return {
         attack: {
-            final: atkFinal, base: atkBase,
+            final: achAtkFinal, base: atkBase,
             skillAdd: tfSkillAdd + terribleFangBonus,
             organAdd: atkOrganAdd + atkEvoAdd,
             mutMultiplier: atkMut,
+            achAdd: ach.attackAdd, achPercent: ach.attackPercent,
         },
         hpMax: {
-            final: hpFinal, base: hpBase,
+            final: achHpFinal, base: hpBase,
             skillAdd: hpSkillAdd,
             organAdd: hpOrganAdd + hpStartEvo,  // 包含 startEvolution HP 加成
             mutMultiplier: hpMut,
+            achAdd: ach.hpMaxAdd, achPercent: ach.hpMaxPercent,
         },
         speed: {
-            final: spdFinal, base: spdBase,
+            final: achSpdFinal, base: spdBase,
             skillAdd: spdSkillAdd,
             organAdd: spdOrganAdd,
             evoAdd: spdEvoAdd,
             mutMultiplier: spdMut,
+            achAdd: ach.speedAdd, achPercent: ach.speedPercent,
         },
         radius: {
-            final: rState.r, base: rBase, organAdd: rState.r - rBase,
+            final: achRFinal, base: rBase, organAdd: rState.r - rBase,
+            achPercent: ach.radiusPercent,
         },
         attackRange: {
-            final: rState.ar, base: arBase, organAdd: rState.ar - arBase,
+            final: achArFinal, base: arBase, organAdd: rState.ar - arBase,
+            achPercent: ach.attackRangePercent,
         },
         tenacity: {
             final: tenFinal, base: 0, organAdd: tenOrganAdd,
         },
         critChance: {
-            final: ccFinal, base: ccBase, organAdd: ccOrganAdd,
+            final: achCcFinal, base: ccBase, organAdd: ccOrganAdd,
+            achAdd: ach.critChanceAdd,
         },
         critMult: {
             final: cmFinal, base: cmBase, organAdd: cmOrganAdd,
         },
         fruitXP: {
-            final: fruitFinal, base: fruitBase,
+            final: achFruitFinal, base: fruitBase,
             skillAdd: fruitSkill, mutMultiplier: xpMut,
+            achAdd: ach.fruitXpAdd, achPercent: ach.fruitXpPercent,
         },
         killXP: {
-            final: killFinal, base: killBase,
+            final: achKillFinal, base: killBase,
             skillAdd: killSkill, mutMultiplier: xpMut,
+            achPercent: ach.killXpPercent,
+        },
+        corpseXP: {
+            achPercent: ach.corpseXpPercent,
         },
     };
 }

@@ -152,13 +152,13 @@ function checkOrganUpgrade() {
     }
 }
 
-export function showOrganSelection() {
+export function showOrganSelection(forceEvoOnly = false) {
     if (gameState.organSelectionActive) {
         gameState.pendingOrganSelections++;
         return;
     }
     // 戰鬥教學：第一教學完成、戰鬥教學尚未完成 → 鎖定只能選攻擊器官
-    if (storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED) && !storageGet(STORAGE_KEYS.TUTORIAL_COMBAT_DONE)) {
+    if (!forceEvoOnly && storageGet(STORAGE_KEYS.TUTORIAL_COMPLETED) && !storageGet(STORAGE_KEYS.TUTORIAL_COMBAT_DONE)) {
         gameState.tutorialOrganPhase = true;
     }
     const p = gameState.player;
@@ -169,7 +169,8 @@ export function showOrganSelection() {
     const slotsFull = organSlotsUsed >= p.organSlots;
     const typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF', special: '#CC99FF' };
 
-    const evoOptions = slotsFull ? checkEvolutionUnlock() : [];
+    // forceEvoOnly：強制只顯示進化選項，不假裝器官槽滿
+    const evoOptions = (forceEvoOnly || slotsFull) ? checkEvolutionUnlock() : [];
 
     const closeOverlay = () => {
         hideTooltip();
@@ -206,7 +207,12 @@ export function showOrganSelection() {
         return opts;
     }
 
-    if (!slotsFull && generateOrganOptions().length === 0 && evoOptions.length === 0) {
+    if (!slotsFull && !forceEvoOnly && generateOrganOptions().length === 0 && evoOptions.length === 0) {
+        gameState.organSelectionActive = false;
+        return;
+    }
+    // forceEvoOnly 防呆：若無任何進化選項可選，靜默跳過
+    if (forceEvoOnly && evoOptions.length === 0) {
         gameState.organSelectionActive = false;
         return;
     }
@@ -341,7 +347,7 @@ export function showOrganSelection() {
         }
     }
 
-    renderOptions(slotsFull ? [] : generateOrganOptions());
+    renderOptions((slotsFull || forceEvoOnly) ? [] : generateOrganOptions());
     document.getElementById('game-container').appendChild(overlay);
 }
 

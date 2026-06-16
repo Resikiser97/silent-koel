@@ -6,6 +6,7 @@
 // =============================================================
 import { gameState } from './gameState.js';
 import { EVOLUTION_PATHS, SKILLS } from '../config/evolution.js';
+import { MUTATION_CONFIG } from '../config/mutationConfig.js';
 import { ORGANS, HIDDEN_ORGANS } from '../config/organs.js';
 import { GAME_INFO } from '../config/gameConfig.js';
 import { t } from '../lang.js';
@@ -867,7 +868,9 @@ function _buildMutLeftColContent(leftCol) {
     exchangeHint.textContent = '目前技能點：' + curSkillPts;
     leftCol.appendChild(exchangeHint);
 
-    const canExchange = curSkillPts >= 100;
+    const _discount = gameState.player._achMutationExchangeDiscount || 0;
+    const _cost = _discount > 0 ? MUTATION_CONFIG.discountedSkillPointCost : MUTATION_CONFIG.skillPointCost;
+    const canExchange = curSkillPts >= _cost;
     const exchangeBtn = document.createElement('button');
     exchangeBtn.style.cssText = [
         'display:block', 'width:100%', 'margin-top:6px',
@@ -877,13 +880,13 @@ function _buildMutLeftColContent(leftCol) {
         'opacity:' + (canExchange ? '1' : '0.5'),
     ].join(';');
     exchangeBtn.disabled = !canExchange;
-    exchangeBtn.textContent = '100 技能點 → 10 變異點';
+    exchangeBtn.textContent = _cost + ' 技能點 → ' + MUTATION_CONFIG.mutationPointGain + ' 變異點';
     if (canExchange) {
         exchangeBtn.onclick = () => {
-            if ((gameState.skillPoints || 0) < 100) return;
-            gameState.skillPoints -= 100;
-            gameState.mutationData.points += 10;
-            gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + 10;
+            if ((gameState.skillPoints || 0) < _cost) return;
+            gameState.skillPoints -= _cost;
+            gameState.mutationData.points += MUTATION_CONFIG.mutationPointGain;
+            gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + MUTATION_CONFIG.mutationPointGain;
             storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
             saveMutationData();
             _refreshMutContentLeft(document.getElementById('mut-skill-panel'));

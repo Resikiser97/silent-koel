@@ -24,6 +24,7 @@ import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack
 import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion, showOrganSelection, handleEliteKill } from './systems/organs.js';
 import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans, showSkillTree } from './systems/evolution.js';
 import { initMutationData, applyAllMutationBonuses } from './systems/mutation.js';
+import { applyAchievementStatBonuses } from './systems/achievementBonus.js';
 import { resetPackNames, resetHyenaPackNames, updateNeutralCreatures, updateHostileCreatures } from './systems/creatures.js';
 import { initEliteOrder, updateEliteCreature } from './systems/elite.js';
 import { updateBoss, handleBossKill } from './systems/boss.js';
@@ -52,7 +53,7 @@ import {
 } from './systems/ui.js';
 import { showTutorial } from './systems/tutorial.js';
 import { disconnectChat, hideChat } from './systems/chat.js';
-import { unlockAchievement } from './systems/achievements.js';
+import { unlockAchievement, isUnlocked } from './systems/achievements.js';
 import { initAchievementTriggers } from './systems/achievementTriggers.js';
 import { resetSessionStats } from './stats/index.js';
 import {
@@ -620,7 +621,13 @@ export function initializeGame() {
 
     applySkillBonuses();
     applyEvolutionEffects();
+    applyAchievementStatBonuses(); // 成就永久加成（flat add → percent，在技能/進化之後、變異之前）
     applyAllMutationBonuses(); // 套用變異器官 Final 值加成（一次性，在所有器官效果之後）
+
+    // evo_5star 成就：開局強制觸發一次進化選擇（在數值管線跑完之後）
+    if (isUnlocked('evo_5star')) {
+        showOrganSelection(true);
+    }
 
     // 9. 初始化計時狀態
     gameState.devModeUsed = false;

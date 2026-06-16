@@ -1,0 +1,175 @@
+成就 Bonus 實作方案 Review 報告
+審查者：Claude Chat（程式碼實地核對，非猜測）
+日期：2026-06-16
+對應文件：成就bonus規劃.txt（v0.1.24.6）+ 開發者本次 Review 訊息中的完整架構提案
+審查方式：實地讀取 main.js / systems/evolution.js / systems/organs.js /
+systems/mutation.js / systems/reward.js / systems/combat.js / systems/player.js /
+systems/damage.js / config/characters.js / config/playerStatsFormula.js / config/achievements.js，
+逐項核對提案宣稱與實際代碼是否一致。
+
+==================================================
+1. 方案總評
+==================================================
+結論：可以照做，但有 3 個點需要你先決定，再交給 CC（見第 2、6 節）。
+整體架構方向（獨立模組 systems/achievementBonus.js、插入點在
+applyEvolutionEffects() 之後、applyAllMutationBonuses() 之前）跟實際代碼管線
+完全吻合，沒有發現會讓整個方案不可行的架構性問題。風險集中在「細節決定」
+而不是「架構選擇」。
+
+==================================================
+2. 必修風險（會導致 bug 或數值錯誤的點）
+==================================================
+
+風險 1：面板顯示會跟實際數值不一致（確認存在，非假設）
+config/playerStatsFormula.js 的 calcPlayerStats(charId, skills, organs,
+hiddenOrgans, mutationLevels) 是一套完全獨立、平行重算一遍角色數值的公式
+（攻擊：第168行 atkFinal = Math.round((atkBase+tfSkillAdd+terribleFangBonus+
+atkOrganAdd+atkEvoAdd)*atkMut)；HP：第178行同樣結構），函式簽名裡完全沒有
+成就（achievement）這個參數，目前也沒有任何成就相關邏輯。
+這代表：如果只在 runtime（main.js 那條管線）加成就 bonus，但不同步修改這個
+公式，成就頁面或任何用到 calcPlayerStats() 的面板顯示出來的數值會跟玩家
+實際遊戲內數值不一致（少算成就加成）。
+→ 必須在實作清單內明確列入：calcPlayerStats() 簽名加上 unlockedAchievements
+（或等價參數），並複製一份跟 runtime 一樣的加總邏輯。
+
+風險 2：XP 分類有 2 個來源無法直接歸類「果子XP / 擊殺XP」二分法
+規劃決議把全 XP 拆成「果子XP」跟「擊殺XP」兩類，對應大部分 addXP() 呼叫點
+沒問題，但實地檢查 11 個 addXP() 呼叫點裡，至少有以下 2 個不乾淨：
+- systems/combat.js 第348行附近：吃屍體（corpse-eating）持續性 XP tick
+- systems/player.js 第577行附近：寶箱/治療寶物拾取（checkTreasureCollision）給的 XP
+這兩種都不是「吃果子」也不是「擊殺怪物」，目前規劃沒有講清楚這兩種要算
+哪一類加成（或都不吃加成）。这是一個必須由你決定的分類問題，不是代碼風險，
+但若不先決定，CC 寫的時候只能自己猜，容易猜錯。
+
+風險 3：mutation_500 文字錯誤已確認，且是全文件唯一一處
+我重新逐一核對了 config/achievements.js 全部 36 個成就的 description 跟
+condition 是否一致，結果跟規劃文件第126~128行的結論相符：唯一不一致的是
+mutation_500（「我無敵了」），description 寫「累積使用500次變異技能」，
+但 condition 實際判定的是 totalMutationLevel>=500（變異等級達到500）。
+其餘 35 個成就（包含 all_achievements 的「#1~#30」字樣）逐一核對皆與
+condition 一致，沒有發現規劃文件以外的新錯字。
+
+==================================================
+3. 建議調整（架構、命名、插入點、helper 設計）
+==================================================
+
+建議 1：evo_5star 不需要新寫一個「只顯示進化選項」的 UI 函式
+systems/organs.js 的 showOrganSelection()（第150~350行）本身已經內建
+「slotsFull 時只給進化選項、不給器官選項」的分支（第168~172、209~212、
+344行），跟你規劃要做的 evo_5star 強制進化選擇畫面，UI/overlay/標題渲染
+邏輯幾乎一樣。
+建議：不要新建一個獨立的 showEvolutionChoiceOnly()，改成讓
+showOrganSelection() 多接受一個可選參數（例如 forceEvoOnly = false），
+直接重用同一份函式跑同一條渲染路徑，可以省掉一份重複邏輯，也降低未來
+兩處要分別維護的風險。
+
+建議 2：evo_5star 強制進化選擇畫面在「沒有任何進化選項可選」時要補一個
+保護判斷。showOrganSelection() 現有的「無選項提早 return」保護（第209行
+附近）目前只覆蓋 !slotsFull 那條路徑；如果重用同一函式做 evo_5star 開局
+強制觸發，理論上一開局三條進化路徑都還沒解鎖任何等級，evoOptions 不會是
+空的，實務上幾乎不會踩到，但建議還是補一個等價的空陣列保護，避免極端
+情況卡死在空畫面。
+
+建議 3：技能點換變異點「100→90」的硬編碼，目前同時存在於兩個檔案
+（systems/mutation.js 的 showMutationPanel() 內，以及 systems/evolution.js
+首頁技能樹的變異面板），互相獨立、沒有共用 config。規劃裡已經確認要新建
+config/mutationConfig.js 來承接這兩個裸數字，這個方向是對的——但要提醒：
+新增 skill_master 折扣時，兩個檔案都要同步改成讀同一份 config，否則會出現
+「在首頁看到 90，在遊戲內面板看到還是 100」這種不一致。
+
+建議 4：攻速相關的 1500（archerfish 攻擊間隔基底值，systems/player.js 的
+_archerAttack()）目前是裸數字，跟 melee 那邊讀 COMBAT_CONFIG.
+baseAttackIntervalMs 不同源。這不會造成 bug（兩邊都是讀同一個
+p.attackSpeedBonus、用同一個公式 base/(1+totalBonus)），純粹是配置债务，
+建議但非必修：把 1500 也搬進 COMBAT_CONFIG，順手做一致性清理，但不會
+擋住這次成就 bonus 的實作。
+
+建議 5：pioneer「全屬性 +5%」的「全屬性」範圍要明確定義
+規劃沒有列出 allStatsPercent 具體要套用在哪些欄位（攻擊/HP/速度/攻擊範圍/
+體型？）。建議實作時把它當作「語法糖」，在加總階段直接攤平加進
+attackPercent / hpMaxPercent / speedPercent 三個既有 bucket（不含體型跟
+攻擊範圍，因為規劃裡其他成就對體型跟攻擊範圍都是個別列出的百分比，混進
+「全屬性」容易跟其他成就的疊加方式不一致），需要你確認這個範圍是否符合
+你的設計意圖。
+
+==================================================
+4. evo_5star 專項結論
+==================================================
+- 是否可以用 event：可以，且不需要額外設計，直接重用 startGame 事件鏈即可。
+- 事件觸發點：main.js 的 startGameWithLoading()（第265行）是全遊戲唯一呼叫
+  initializeGame()（第348行）的地方，且所有 4 個 'startGame' 事件 dispatch
+  點（首頁開始 / 強制開始 / 再來一局 / 地圖選擇，分散在 systems/evolution.js
+  跟 systems/ui.js）全部都會經過這個函式。建議把 evo_5star 的觸發判斷放在
+  initializeGame() 內、套用完成就/變異等加成之後，這樣不需要在 4 個分散的
+  UI 入口分別加邏輯，一個插入點就覆蓋全部入口。
+- 是否需要專用 UI 函式：不需要。直接重用 systems/organs.js 的
+  showOrganSelection()（建議用第3節「建議1」的方式擴充一個 forceEvoOnly
+  參數），並設定 gameState.organSelectionActive = true 即可——這個 flag
+  本身已經會自動讓 main.js 的 isGamePaused() 判斷為暫停狀態
+  （第90~94行的判斷條件本來就包含 organSelectionActive），不需要額外寫
+  暫停計時器的代碼。
+
+==================================================
+5. 數值疊加順序結論
+==================================================
+規劃決議「方案A：成就加成在 base 階段疊加、吃變異倍率」這個大方向沒問題，
+但規劃裡沒講清楚「flat add 跟 percent 要怎麼互相疊加」，這裡我依據現有代碼
+的既有寫法（systems/evolution.js 的 radiusPercent 套用方式：
+add = Math.round(p.radius * radiusPercent)，是套在「當下累積值」而不是
+角色原始 base 值）給出建議順序：
+
+角色基礎值（_applyCharacterStats）
+→ 技能/器官/進化的 flat 加成（既有：applySkillBonuses + applyEvolutionEffects）
+→ 成就 flat add 加成（attackAdd / hpMaxAdd / speedAdd / critChanceAdd 等，
+  新增 applyAchievementStatBonuses()）
+→ 成就 percent 加成，套用在「上一步算出來的當下值」而不是角色原始 base 值
+  （attackPercent / hpMaxPercent / speedPercent / attackRangePercent /
+  radiusPercent / fruitXpPercent / killXpPercent 等，全部用相加合併同類型
+  再一次性套用）
+→ 變異（mutation）倍率（既有：applyAllMutationBonuses，維持最後套用，
+  跟現有「mutation 是全局最終倍率」的設計一致）
+
+理由：這個順序跟 radiusPercent 現有寫法（百分比作用在當下累積值）、以及
+mutation 一律最後套用的既有模式完全一致，不需要為了成就系統另外發明一套
+新的疊加規則，可以直接複用既有的「flat 在前、percent 在後、mutation 最後」
+心智模型。
+
+==================================================
+6. 需要修改的檔案清單（僅列出，不修改）
+==================================================
+- config/achievements.js（每個成就補上實際 bonus 數值欄位；修正 mutation_500
+  的 description 文字錯誤）
+- systems/achievementBonus.js（新建：彙整已解鎖成就 → 加總 flat/percent →
+  套用到 gameState.player，對應第5節順序）
+- main.js（initializeGame() 內，applyEvolutionEffects() 之後、
+  applyAllMutationBonuses() 之前插入 applyAchievementStatBonuses() 呼叫；
+  evo_5star 觸發判斷也建議放在這裡）
+- systems/organs.js（showOrganSelection() 擴充 forceEvoOnly 參數，供
+  evo_5star 重用；補上空 evoOptions 的保護判斷）
+- systems/reward.js（addXP() 呼叫前依「果子XP / 擊殺XP」分類套用成就 XP
+  加成——但這需要你先決定風險2提到的兩個模糊來源要算哪一類，才能動工）
+- systems/mutation.js（showMutationPanel() 的 100/10 硬編碼改讀
+  config/mutationConfig.js）
+- systems/evolution.js（首頁技能樹變異面板的 100/10 硬編碼同步改讀
+  config/mutationConfig.js；如採用建議1，showOrganSelection() 呼叫處需要
+  調整參數）
+- config/mutationConfig.js（新建，承接 100/10 折扣數值）
+- config/playerStatsFormula.js（calcPlayerStats() 簽名與內部加總邏輯，
+  補上成就加成參數，避免面板顯示跟實際數值不一致——對應風險1）
+- systems/combat.js（如果決定 baseAttackIntervalMs 配置債務一併清理，
+  屬於建議5的可選項，非必修）
+- systems/player.js（_archerAttack() 的 1500 magic number，同上，可選）
+
+==================================================
+7. 最後明確回答
+==================================================
+這份方案的架構方向可以交給 CC 實作，但建議先請你明確決定以下 3 點，
+再讓我寫 Prompt 給 CC，避免 CC 實作時自己猜：
+1. 風險2：吃屍體 XP、寶箱/拾取 XP 這兩種要算「果子XP」「擊殺XP」哪一類，
+   還是兩者都不吃成就加成？
+2. 建議1：evo_5star 是否同意重用 showOrganSelection() 加參數的做法，
+   還是你仍然希望新建獨立函式？
+3. 建議5：pioneer「全屬性 +5%」的具體範圍（是否包含體型、攻擊範圍）？
+
+這 3 點確認後，這份方案沒有發現任何架構性、會擋住實作的問題，可以直接
+進入寫 CC Prompt 階段。

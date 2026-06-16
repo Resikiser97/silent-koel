@@ -312,6 +312,9 @@ function _collectFruit(p, fruit) {
         // 無草食性：只得 1 XP（可吃但效益極低，避免刷巨人時靠果子回血）
         fruitXP = XP_CONFIG.fruit.noHerbivoreBase;
     }
+    // 成就 fruitXP bonus（flat add 先，percent 後；mutation 倍率在 addXP 內處理）
+    fruitXP += (p._achFruitXpAdd || 0);
+    if (p._achFruitXpPercent) fruitXP = Math.round(fruitXP * (1 + p._achFruitXpPercent));
     const actualFruitXP = addXP(fruitXP);
     AudioManager.play('eatFruit');
     showXPPopup(p.x, p.y, actualFruitXP);

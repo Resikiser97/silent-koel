@@ -4,6 +4,23 @@
 
 ---
 
+## v0.1.25.0 - 2026-06-16
+
+### 新增
+- 成就 Bonus 系統：36 個成就全部填入 `bonus` 欄位，解鎖後永久加成玩家數值
+- 新增 `systems/achievementBonus.js`：`applyAchievementStatBonuses()` / `getAchievementBonusTotals()`，套用管線插入 `applyEvolutionEffects()` 之後、`applyAllMutationBonuses()` 之前
+- 加成套用順序：flat add（攻擊/HP/速度/暴擊/器官槽/攻速）→ percent（攻擊/HP/速度/攻擊範圍/體型）→ 變異倍率
+- XP 三分類加成（fruitXP / killXP / corpseXP）：注入至 player.js / damage.js / boss.js / combat.js 各 XP 呼叫點，在 `addXP()` 前套用
+- evo_5star 成就：解鎖後開局強制一次進化選擇（`showOrganSelection(forceEvoOnly=true)`）
+- 新增 `config/mutationConfig.js`：集中定義技能點換變異點常數（標準100/折扣後90），skill_master 成就解鎖後生效
+- `config/playerStatsFormula.js` 加入第6參數 `unlockedAchievements`，面板顯示數值與 runtime 同步，新增 `corpseXP` 返回欄位
+- 成就面板屬性頁「成就加成」欄位改為即時顯示實際加成明細
+
+### 修正
+- `config/achievements.js` `mutation_500` description 由「累積使用500次變異技能」改為「變異等級達到500」（與實際 condition 一致）
+
+---
+
 ## v0.1.24.6 - 2026-06-16
 
 ### 重構
