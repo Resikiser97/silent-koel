@@ -1,4 +1,4 @@
-## v0.1.24.5
+## v0.1.24.6
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.24.5
+**現在版本:** v0.1.24.6
 
-**當前狀態：** XP 常數 config 化：新增 `config/xpConfig.js`，採集 / 擊殺 XP 所有 magic number 搬移至 XP_CONFIG；killXP 面板標題改為「最低擊殺 XP」；HUNTER_BONUS_CONFIG 已移除
+**當前狀態：** XP 常數 config 化完成：採集 / 擊殺 / hostile XP 所有 magic number 搬移至 XP_CONFIG（含 kill.hostile 子物件）
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.24.6：hostile 擊殺 XP 公式裸數值搬移至 XP_CONFIG.kill.hostile（base=30 / hpDivisor=50 / hpScale=10 / cap=80 / defaultHp=50）；`damage.js handleKill` 改讀 `XP_CONFIG.kill.hostile.*`；不改遊戲行為
 - v0.1.24.5：XP 常數 config 化 — 新增 `config/xpConfig.js`（`XP_CONFIG.fruit.*` / `XP_CONFIG.kill.*`）；`playerStatsFormula / player / damage` 所有 XP 裸數值改讀 XP_CONFIG；刪除 `HUNTER_BONUS_CONFIG`；`achievements.js` killXP 面板改為「最低擊殺 XP」（`minCreatureBaseXP = 20`）；i18n 新增 `statKillXpBonus / statKillXpBaseNote`；`killXP.final` 測試期望值 15→30；不改遊戲行為
 - v0.1.24.4：Magic Number 搬移第三批（B 類）— `config/achievements.js` 16 個成就新增 `condition` 欄位；`systems/achievementTriggers.js` `_getThreshold` 加入 `expectedType` 驗證 + 16 個 call site 加 null guard；新增 `config/combatConfig.js`（`baseAttackIntervalMs`）；`systems/combat.js` 改讀 `COMBAT_CONFIG`；不改遊戲行為
 - v0.1.24.3：Magic Number 搬移第二批 — `config/organs.js` COMBOS `comboCrabGloves` 新增 `effects`；`config/characters.js` koel / archerfish 新增 `specialSkillConfig` / `projectile` / `waterSpeedMultiplier`；`systems/combat.js` / `systems/player.js` 所有對應裸數值改讀 config；不改遊戲行為
