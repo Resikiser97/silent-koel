@@ -2488,14 +2488,14 @@ export function showPatchNotes() {
         'flex-shrink:0'
     ].join(';');
     const titleText = document.createElement('div');
-    titleText.style.cssText = 'font-size:18px;font-weight:bold;color:#FFD700;';
+    titleText.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;';
     titleText.textContent = t('patchNotesTitle');
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '✕';
     closeBtn.style.cssText = [
         'background:transparent', 'border:1px solid #555', 'color:#aaa',
         'border-radius:4px', 'width:28px', 'height:28px', 'cursor:pointer',
-        'font-size:14px', 'pointer-events:all', 'flex-shrink:0'
+        'font-size:17px', 'pointer-events:all', 'flex-shrink:0'
     ].join(';');
     closeBtn.onclick = () => {
         overlay.remove();
@@ -2525,7 +2525,7 @@ export function showPatchNotes() {
     const contentArea = document.createElement('div');
     contentArea.style.cssText = [
         'flex:1', 'overflow-y:auto', 'padding:16px 20px',
-        'color:white', 'font-size:14px', 'line-height:1.7'
+        'color:white', 'font-size:17px', 'line-height:1.7'
     ].join(';');
 
     let activeIdx = 0;
@@ -2538,12 +2538,12 @@ export function showPatchNotes() {
 
         // 版本標題
         const vh = document.createElement('div');
-        vh.style.cssText = 'font-size:17px;font-weight:bold;color:#FFD700;margin-bottom:4px;';
+        vh.style.cssText = 'font-size:20px;font-weight:bold;color:#FFD700;margin-bottom:4px;';
         vh.textContent = note.version;
         contentArea.appendChild(vh);
 
         const dateEl = document.createElement('div');
-        dateEl.style.cssText = 'font-size:12px;color:#666;margin-bottom:16px;';
+        dateEl.style.cssText = 'font-size:14px;color:#666;margin-bottom:16px;';
         dateEl.textContent = note.date;
         contentArea.appendChild(dateEl);
 
@@ -2556,13 +2556,13 @@ export function showPatchNotes() {
         sections.forEach(sec => {
             if (!sec.items || sec.items.length === 0) return;
             const secTitle = document.createElement('div');
-            secTitle.style.cssText = 'font-size:13px;font-weight:bold;margin-bottom:6px;margin-top:12px;color:' + sec.color + ';';
+            secTitle.style.cssText = 'font-size:16px;font-weight:bold;margin-bottom:6px;margin-top:12px;color:' + sec.color + ';';
             secTitle.textContent = sec.label;
             contentArea.appendChild(secTitle);
 
             sec.items.forEach(item => {
                 const li = document.createElement('div');
-                li.style.cssText = 'font-size:13px;color:#ccc;margin-bottom:5px;padding-left:12px;position:relative;';
+                li.style.cssText = 'font-size:16px;color:#ccc;margin-bottom:6px;padding-left:14px;position:relative;';
                 li.innerHTML = '<span style="position:absolute;left:0;color:' + sec.color + ';">•</span>' + item;
                 contentArea.appendChild(li);
             });
@@ -2581,14 +2581,14 @@ export function showPatchNotes() {
 
         const tab = document.createElement('div');
         tab.style.cssText = [
-            'padding:10px 14px', 'cursor:pointer', 'font-size:12px',
+            'padding:11px 15px', 'cursor:pointer', 'font-size:14px',
             'border-left:3px solid transparent', 'color:#aaa',
             'transition:all 0.15s', 'line-height:1.4',
             'pointer-events:all'
         ].join(';');
 
         const tabDate = document.createElement('div');
-        tabDate.style.cssText = 'font-size:11px;color:#555;margin-top:2px;';
+        tabDate.style.cssText = 'font-size:13px;color:#555;margin-top:2px;';
         tabDate.textContent = note.date;
 
         const tabVer = document.createElement('div');

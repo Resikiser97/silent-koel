@@ -1,6 +1,15 @@
-## v0.1.25.2
+## v0.1.25.3
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.25.3 - 2026-06-16
+
+### 調整
+- `systems/ui.js`：更新公告 popup 文字整體提高約 20%，讓 Patchnote 閱讀比例接近成就頁
+- `config/patchnotes.js`：玩家公告只保留 `v0.1.22.1` 以上版本，移除更早期舊公告，降低公告清單長度
+- `.codex/config.toml`：加入 `powershell_utf8 = true` 設定，協助降低 PowerShell 中文輸出亂碼
 
 ---
 

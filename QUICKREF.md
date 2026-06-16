@@ -1,4 +1,4 @@
-## v0.1.25.2
+## v0.1.25.3
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.25.2**
+- 版本：**v0.1.25.3**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -84,7 +84,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `organs.js` | ORGANS（15種普通）+ HIDDEN_ORGANS（4種）+ poisonSac |
 | `creatures.js` | CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG |
 | `evolution.js` | EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種） |
-| `patchnotes.js` | PATCH_NOTES（版本更新公告，最新置頂） |
+| `patchnotes.js` | PATCH_NOTES（版本更新公告，最新置頂；v0.1.25.3 起保留 v0.1.22.1 以上） |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
 | `achievements.js` | ACHIEVEMENTS（36 個成就定義，七類） |
 | `attributes.js` | ATTRIBUTES（5 個屬性純資料，Attribute Design v1） |

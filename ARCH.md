@@ -1,4 +1,4 @@
-## v0.1.25.2
+## v0.1.25.3
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -37,7 +37,7 @@
 | `organs.js` | ORGANS（15種）、HIDDEN_ORGANS（4種）、COMBOS、poisonSac |
 | `creatures.js` | CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG |
 | `evolution.js` | EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種） |
-| `patchnotes.js` | PATCH_NOTES 陣列，最新版本置頂 |
+| `patchnotes.js` | PATCH_NOTES 陣列，最新版本置頂；v0.1.25.3 起保留 v0.1.22.1 以上公告 |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
 | `compendium_data.js` | COMPENDIUM_DATA 圖鑑資料 |
 | `achievements.js` | ACHIEVEMENTS 陣列（36 個成就定義，v0.1.22.0；16 個新增 condition 欄位，v0.1.24.4） |
@@ -313,4 +313,4 @@ main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.25.2，成就 Bonus 面板與紅點修復；新增 readAchievements/readPatchNotes*
+*最後更新：v0.1.25.3，更新公告字級與保留範圍調整；新增 .codex powershell_utf8 設定*

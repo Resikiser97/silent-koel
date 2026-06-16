@@ -1,4 +1,4 @@
-## v0.1.25.2
+## v0.1.25.3
 
 # The Silent Koel — 模組架構說明
 
@@ -9,7 +9,7 @@ config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES, HARD_ELITE_CONFIG
 config/organs.js          ORGANS, HIDDEN_ORGANS, COMBOS
 config/creatures.js       CREATURE_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人，v0.1.0.0）
 config/evolution.js       EVOLUTION_PATHS, SKILLS
-config/patchnotes.js      PATCH_NOTES
+config/patchnotes.js      PATCH_NOTES（v0.1.25.3 起玩家公告保留 v0.1.22.1 以上）
 config/compendium_data.js COMPENDIUM_DATA（四大圖鑑分類，需在 map/normalmap.js 之後載入）
 config/characters.js      CHARACTERS（角色定義常數，v0.56.0）
 config/xpConfig.js        XP_CONFIG：採集 XP（fruit.base/foragerPerLevel/noHerbivoreBase）、擊殺 XP（kill.minCreatureBaseXP/hunterPerLevel）、hostile XP 公式（kill.hostile.*）所有常數集中定義（v0.1.24.5）

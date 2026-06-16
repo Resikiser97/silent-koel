@@ -1,4 +1,4 @@
-## v0.1.25.2
+## v0.1.25.3
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.25.2
+**現在版本:** v0.1.25.3
 
-**當前狀態：** 成就 Bonus 面板與紅點修復：屍體 XP / 攻速顯示、成就獎勵提示、成就/更新公告逐項紅點、成就頁關閉恢復聊天室完成
+**當前狀態：** 更新公告整理完成：Patchnote 字級提高、公告清單保留 v0.1.22.1 以上，並啟用 Codex PowerShell UTF-8 設定
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,12 +118,12 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.25.3：Patchnote 與工具設定整理 — 更新公告 popup 字級提高約 20%；`config/patchnotes.js` 刪除 v0.1.22.1 以下舊公告；`.codex/config.toml` 加入 `powershell_utf8 = true`
 - v0.1.25.2：成就 Bonus 面板修復 — Player Stats 顯示肉食 Lv1 屍體 XP 與角色攻速；成就詳情顯示獎勵；成就紅點改為逐格點開清除；更新公告紅點改為逐版本清除；成就頁關閉恢復首頁聊天室；成就/更新 popup 放大與格子間距調整
 - v0.1.25.1：成就 Bonus 5 bug 修復 — 特殊技能 CD 加成、面板公式 mutation 順序、精英怪 killXP 加成、首頁折扣現算、forceEvoOnly 標題；移除死碼 checkTreasureCollision
 - v0.1.25.0：成就 Bonus 系統（achievementBonus.js）上線，36 個成就 bonus 欄位全填，套用管線 evo→ach→mut，XP 三分類加成注入各呼叫點
 - v0.1.24.6：hostile 擊殺 XP 公式裸數值搬移至 XP_CONFIG.kill.hostile（base=30 / hpDivisor=50 / hpScale=10 / cap=80 / defaultHp=50）；`damage.js handleKill` 改讀 `XP_CONFIG.kill.hostile.*`；不改遊戲行為
 - v0.1.24.5：XP 常數 config 化 — 新增 `config/xpConfig.js`（`XP_CONFIG.fruit.*` / `XP_CONFIG.kill.*`）；`playerStatsFormula / player / damage` 所有 XP 裸數值改讀 XP_CONFIG；刪除 `HUNTER_BONUS_CONFIG`；`achievements.js` killXP 面板改為「最低擊殺 XP」（`minCreatureBaseXP = 20`）；i18n 新增 `statKillXpBonus / statKillXpBaseNote`；`killXP.final` 測試期望值 15→30；不改遊戲行為
-- v0.1.24.1：角色通關成就條件 data-driven — `config/achievements.js` `koel_50` / `archer_50` 加入 `condition` 欄位；`achievementTriggers.js` 移除硬寫 id 判斷，改通用迴圈掃描；新增角色成就只需加 config，不需改 systems/
 
 ### 已知問題（待修）
 - 目前無已確認且仍未解決的條目
