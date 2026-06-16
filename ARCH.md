@@ -1,4 +1,4 @@
-## v0.1.25.0
+## v0.1.25.2
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -44,7 +44,7 @@
 | `combatConfig.js` | COMBAT_CONFIG（攻擊間隔公式基底，v0.1.24.4） |
 | `mutationConfig.js` | MUTATION_CONFIG（技能點換變異點常數，v0.1.25.0） |
 | `attributes.js` | ATTRIBUTES 陣列（5 個屬性純資料，Attribute Design v1，v0.1.22.0） |
-| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)` → 11 屬性快照（含 corpseXP）；第 6 參數傳已解鎖成就 map，讓面板與 runtime 同步；不依賴任何 systems/；詳見 docs/PLAYER_STATS_FORMULA.md（v0.1.25.0） |
+| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)` → 12 屬性快照（含 attackSpeed 的 final/baseIntervalMs/intervalMs 與 corpseXP 完整 final/base/evoLevel/mutMultiplier/achPercent）；第 6 參數傳已解鎖成就 map，讓面板與 runtime 同步；不依賴任何 systems/；詳見 docs/PLAYER_STATS_FORMULA.md（v0.1.25.2） |
 
 ### lang/
 | 檔案 | 職責 |
@@ -313,4 +313,4 @@ main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.25.0，成就 Bonus 系統實作；新增 systems/achievementBonus.js、config/mutationConfig.js*
+*最後更新：v0.1.25.2，成就 Bonus 面板與紅點修復；新增 readAchievements/readPatchNotes*

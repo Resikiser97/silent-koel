@@ -6,7 +6,7 @@
 //
 // 【對外公開函式】
 //   calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)
-//     → { attack, hpMax, speed, radius, attackRange, tenacity,
+//     → { attack, attackSpeed, hpMax, speed, radius, attackRange, tenacity,
 //         critChance, critMult, fruitXP, killXP, corpseXP }
 //
 // 【參數格式】
@@ -26,6 +26,7 @@
 //   - speed 加算 startEvolution.speedBonus（omnivore 起始角色）（Fix D）
 //   - organs / hiddenOrgans 支援 array 或 object 格式（Fix 4）
 //   - mutationLevels 傳 null 不 throw（Fix 6）
+//   - corpseXP 預設用肉食性 Lv1 演示，對齊 Player Stats 首頁展示用途
 // =============================================================
 
 import { CHARACTERS }                from './characters.js';
@@ -97,6 +98,16 @@ function _startEvoEffect(char, key) {
     return n;
 }
 
+function _corpseXpForCarnivoreLevel(level) {
+    const path = EVOLUTION_PATHS.carnivore;
+    if (!path || level <= 0) return 0;
+    let n = 0;
+    for (let i = 0; i < level && i < path.levels.length; i++) {
+        n += path.levels[i].eatXP || 0;
+    }
+    return n;
+}
+
 // 加總 organMap（object 格式）所有 organ 的累積 effect，以及 hiddenMap 的平面 effect
 function _sumEffects(organMap, hiddenMap, key) {
     let n = 0;
@@ -127,6 +138,7 @@ function _sumAchievementBonuses(unlockedIds) {
         attackAdd: 0, hpMaxAdd: 0, speedAdd: 0, critChanceAdd: 0, organSlotsAdd: 0,
         attackPercent: 0, hpMaxPercent: 0, speedPercent: 0,
         attackRangePercent: 0, radiusPercent: 0,
+        attackSpeedBonus: 0, specialCdReduction: 0,
         fruitXpPercent: 0, fruitXpAdd: 0, killXpPercent: 0, corpseXpPercent: 0,
     };
     const unlockedSet = new Set(unlockedIds || []);
@@ -197,6 +209,12 @@ export function calcPlayerStats(
     // 不在此乘 mutation：等成就 flat+percent 套用後才統一乘（對齊 runtime 順序）
     const atkPreMut   = atkBase + tfSkillAdd + terribleFangBonus + atkOrganAdd + atkEvoAdd;
 
+    const atkSpdBaseMs   = char.stats.attackSpeed || 1000;
+    const atkSpdBase     = 0;
+    const atkSpdOrganAdd = _sumEffects(combinedOrganMap, hiddenMap, 'attackSpeedBonus');
+    const atkSpdEvoAdd   = _startEvoEffect(char, 'attackSpeedBonus');
+    const atkSpdPreAch   = atkSpdBase + atkSpdOrganAdd + atkSpdEvoAdd;
+
     // ── 血量上限 ───────────────────────────────────────────────
     const hpBase     = char.stats.hp;
     const hpSkillAdd = (sk.vitality || 0) * 20;
@@ -264,6 +282,7 @@ export function calcPlayerStats(
     );
     // flat add（mutation 倍率最後才套，對齊 runtime：evo → ach → mut）
     let achAtkFinal    = atkPreMut   + ach.attackAdd;
+    let achAtkSpdFinal = atkSpdPreAch + ach.attackSpeedBonus;
     let achHpFinal     = hpPreMut    + ach.hpMaxAdd;
     let achSpdFinal    = spdPreMut   + ach.speedAdd;
     let achCcFinal     = ccFinal     + ach.critChanceAdd;
@@ -284,8 +303,10 @@ export function calcPlayerStats(
     achHpFinal  = Math.round(achHpFinal  * hpMut);
     achSpdFinal = parseFloat((achSpdFinal * spdMut).toFixed(2));
     // XP bonus（用於面板顯示）
-    const achFruitFinal = parseFloat(((fruitBase + ach.fruitXpAdd + fruitSkill + fruitEvo) * (1 + ach.fruitXpPercent) * xpMut).toFixed(2));
-    const achKillFinal  = parseFloat(((killBase  + killSkill) * (1 + ach.killXpPercent) * xpMut).toFixed(2));
+    const corpseBase = _corpseXpForCarnivoreLevel(1);
+    const achFruitFinal  = parseFloat(((fruitBase + ach.fruitXpAdd + fruitSkill + fruitEvo) * (1 + ach.fruitXpPercent) * xpMut).toFixed(2));
+    const achKillFinal   = parseFloat(((killBase  + killSkill) * (1 + ach.killXpPercent) * xpMut).toFixed(2));
+    const achCorpseFinal = parseFloat((corpseBase * (1 + ach.corpseXpPercent) * xpMut).toFixed(2));
 
     return {
         attack: {
@@ -294,6 +315,14 @@ export function calcPlayerStats(
             organAdd: atkOrganAdd + atkEvoAdd,
             mutMultiplier: atkMut,
             achAdd: ach.attackAdd, achPercent: ach.attackPercent,
+        },
+        attackSpeed: {
+            final: parseFloat(achAtkSpdFinal.toFixed(2)),
+            intervalMs: Math.round(atkSpdBaseMs / (1 + achAtkSpdFinal)),
+            baseIntervalMs: atkSpdBaseMs,
+            base: atkSpdBase,
+            organAdd: parseFloat((atkSpdOrganAdd + atkSpdEvoAdd).toFixed(2)),
+            achAdd: ach.attackSpeedBonus,
         },
         hpMax: {
             final: achHpFinal, base: hpBase,
@@ -339,6 +368,8 @@ export function calcPlayerStats(
             achPercent: ach.killXpPercent,
         },
         corpseXP: {
+            final: achCorpseFinal, base: corpseBase,
+            evoLevel: 1, mutMultiplier: xpMut,
             achPercent: ach.corpseXpPercent,
         },
     };

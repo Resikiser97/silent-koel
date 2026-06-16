@@ -20,6 +20,8 @@ export const STORAGE_KEYS = {
     CHAT_POSITION:           'chatPosition',
     CHAT_SETTINGS:           'chatSettings',
     ACHIEVEMENTS:            'achievements',
+    READ_ACHIEVEMENTS:       'readAchievements',
+    READ_PATCH_NOTES:        'readPatchNotes',
     FIRST_PLAY_DATE:         'firstPlayDate',
     WIN_STREAK:              'winStreak',
     KILL_TOTAL:              'killTotal',

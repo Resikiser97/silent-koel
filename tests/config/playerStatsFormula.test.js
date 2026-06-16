@@ -30,18 +30,37 @@ describe('calcPlayerStats — 基礎', () => {
         expect(result.hpMax.mutMultiplier).toBe(2.0);
     });
 
-    it('mutationLevels.eye = 50 → fruitXP 和 killXP 都乘以 1.5', () => {
+    it('mutationLevels.eye = 50 → fruitXP、killXP、corpseXP 都乘以 1.5', () => {
         const result = calcPlayerStats('koel', {}, {}, {}, { eye: 50 });
         expect(result.fruitXP.mutMultiplier).toBe(1.5);
         expect(result.fruitXP.final).toBe(7.5);    // (5 + 0) × 1.5
         expect(result.killXP.final).toBe(30);       // (20 + 0) × 1.5
+        expect(result.corpseXP.final).toBe(7.5);    // 肉食性 Lv1 演示：5 × 1.5
     });
 
-    it('所有 10 個屬性 key 都存在且各有 final 欄位', () => {
+    it('attackSpeedBonus achievements affect attackSpeed', () => {
+        const result = calcPlayerStats('koel', {}, {}, {}, {}, {
+            kill_hunter: { unlockedAt: '2026-06-16T00:00:00.000Z' },
+            speed_kill_boss: { unlockedAt: '2026-06-16T00:00:00.000Z' },
+        });
+        expect(result.attackSpeed.final).toBeCloseTo(0.10, 10);
+        expect(result.attackSpeed.achAdd).toBeCloseTo(0.10, 10);
+        expect(result.attackSpeed.baseIntervalMs).toBe(1000);
+        expect(result.attackSpeed.intervalMs).toBe(909);
+
+        const archer = calcPlayerStats('archerfish', {}, {}, {}, {}, {
+            kill_hunter: { unlockedAt: '2026-06-16T00:00:00.000Z' },
+            speed_kill_boss: { unlockedAt: '2026-06-16T00:00:00.000Z' },
+        });
+        expect(archer.attackSpeed.baseIntervalMs).toBe(1500);
+        expect(archer.attackSpeed.intervalMs).toBe(1364);
+    });
+
+    it('所有 12 個屬性 key 都存在且各有 final 欄位', () => {
         const result = calcPlayerStats('koel', {}, {}, {}, {});
         const keys = [
-            'attack', 'hpMax', 'speed', 'radius', 'attackRange',
-            'tenacity', 'critChance', 'critMult', 'fruitXP', 'killXP',
+            'attack', 'attackSpeed', 'hpMax', 'speed', 'radius', 'attackRange',
+            'tenacity', 'critChance', 'critMult', 'fruitXP', 'killXP', 'corpseXP',
         ];
         for (const key of keys) {
             expect(result, `key="${key}" 不存在`).toHaveProperty(key);

@@ -248,7 +248,8 @@ export function _archerAttack() {
 
     // 攻速冷卻（基於 attackSpeedBonus）
     const totalBonus     = p.attackSpeedBonus || 0;
-    const attackInterval = Math.round(1500 / (1 + totalBonus));
+    const baseInterval   = CHARACTERS[gameState.selectedCharacter]?.stats?.attackSpeed || 1500;
+    const attackInterval = Math.round(baseInterval / (1 + totalBonus));
     if (now - p.attackTimer < attackInterval) return;
     p.attackTimer = now;
 

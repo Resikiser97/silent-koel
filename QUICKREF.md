@@ -1,4 +1,4 @@
-## v0.1.25.1
+## v0.1.25.2
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.25.1**
+- 版本：**v0.1.25.2**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -88,7 +88,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
 | `achievements.js` | ACHIEVEMENTS（36 個成就定義，七類） |
 | `attributes.js` | ATTRIBUTES（5 個屬性純資料，Attribute Design v1） |
-| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)` → 11 屬性快照（含 corpseXP）；第 6 參數傳入已解鎖成就 map，讓面板數值與 runtime 同步（v0.1.25.0）；詳見 `docs/PLAYER_STATS_FORMULA.md` |
+| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)` → 12 屬性快照（含 attackSpeed 的 final/baseIntervalMs/intervalMs 與 corpseXP 完整 final/base/evoLevel/mutMultiplier/achPercent）；第 6 參數傳入已解鎖成就 map，讓面板數值與 runtime 同步（v0.1.25.2）；詳見 `docs/PLAYER_STATS_FORMULA.md` |
 | `xpConfig.js` | `XP_CONFIG`：採集 XP（fruit.base / foragerPerLevel / noHerbivoreBase）、擊殺 XP（kill.minCreatureBaseXP / hunterPerLevel）、hostile XP 公式（kill.hostile.base / hpDivisor / hpScale / cap / defaultHp）所有常數集中定義 |
 | `combatConfig.js` | `COMBAT_CONFIG`（攻擊間隔公式基底，v0.1.24.4） |
 | `mutationConfig.js` | `MUTATION_CONFIG`（技能點換變異點常數：skillPointCost/discountedSkillPointCost/mutationPointGain，v0.1.25.0） |
@@ -167,8 +167,10 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `hunterSlayerUnlocked` | 是否曾擊殺黑色獵人（`'true'`，v0.1.0.0） |
 | `zoomResetVersion` | 鏡頭縮放預設值重置版本 |
 | `lastSeenPatchVersion` | 已讀取的最新版本公告 |
+| `readPatchNotes` | 已逐版本點開的公告 `{ [version]: true }`，用於逐版本紅點清除（v0.1.25.2） |
 | `chatPosition` / `chatSettings` | 聊天室位置與設定 |
 | `achievements` | 已解鎖成就 `{ [id]: { unlockedAt: ISO string } }` |
+| `readAchievements` | 已點開確認的成就 `{ [id]: true }`，首頁/成就格紅點使用（v0.1.25.2） |
 | `firstPlayDate` | 首次遊玩日期（ISO string，initializeGame 時寫入一次） |
 | `activeTitle` | 目前啟用的稱號字串（由 achievements.js 讀寫） |
 | `winStreak` | 連勝局數（死亡時歸零，勝利時+1，由 achievementTriggers 維護） |

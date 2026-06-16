@@ -1,4 +1,4 @@
-## v0.1.25.1
+## v0.1.25.2
 
 # The Silent Koel — 模組架構說明
 
@@ -16,14 +16,15 @@ config/xpConfig.js        XP_CONFIG：採集 XP（fruit.base/foragerPerLevel/noH
 config/combatConfig.js    COMBAT_CONFIG.baseAttackIntervalMs（攻擊間隔公式基底，v0.1.24.4）
 config/playerStatsFormula.js
                           calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)
-                            → { attack, hpMax, speed, radius, attackRange, tenacity,
+                            → { attack, attackSpeed, hpMax, speed, radius, attackRange, tenacity,
                                 critChance, critMult, fruitXP, killXP, corpseXP }
                           第 6 參數 unlockedAchievements（object｜null）：傳入已解鎖成就 map，讓面板顯示值與 runtime 成就加成同步（v0.1.25.0）
-                          corpseXP 返回欄位：{ achPercent } 供成就面板顯示屍體 XP 加成（v0.1.25.0）
+                          attackSpeed 返回欄位：{ final, baseIntervalMs, intervalMs, base, organAdd, achAdd }，Player Stats 顯示角色基底攻速與攻擊間隔（v0.1.25.2）
+                          corpseXP 返回欄位：{ final, base, evoLevel, mutMultiplier, achPercent }，預設肉食性 Lv1 演示（v0.1.25.2）
                           純資料模組，不 import 任何 systems/；依賴 config/characters.js / config/organs.js / config/evolution.js / config/xpConfig.js / config/achievements.js
                           支援 organs/hiddenOrgans array 或 object 兩種格式
                           詳細計算規則與限制見 docs/PLAYER_STATS_FORMULA.md
-                          測試：tests/config/playerStatsFormula.test.js（165 個測試，v0.1.23.1）
+                          測試：tests/config/playerStatsFormula.test.js（168 個測試，v0.1.25.2）
 
 lang.js                   LANG_LIST, LANG={}, _langPack(), applyLanguage(), t()
 lang/zh-TW.js             LANG['zh-TW']
@@ -885,10 +886,12 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 
 - **資料檔**：`config/patchnotes.js`，定義並匯出 ESM 常數 `PATCH_NOTES`（陣列），最新版本置頂（index 0）
 - **欄位格式**：`{ version, date, added[], fixed[], changed[] }`，沒有內容的欄位可省略
-- **`showPatchNotes()`**（`systems/ui.js`）：彈出公告面板（z-index 210），左側垂直 Tab 切換版本，右側顯示分類內容；建立 `readInSession` Set 追蹤已讀 Tab，所有未讀版本都點開後才更新 `lastSeenPatchVersion` 並消除紅點（v0.47.1 修復）
-- **`checkPatchNotesPopup()`**（`systems/ui.js`）：在 `showStartScreen()` 末尾呼叫；新玩家（無 `hasPlayedBefore`）跳過；有未讀版本（`lastSeenPatchVersion !== PATCH_NOTES[0].version`）時自動 setTimeout 400ms 彈出
-- **未讀標記**：比 `lastSeenPatchVersion` 更新的版本在 Tab 列顯示紅點（`#FF4444`，class `pn-tab-dot`）；首頁按鈕紅點 id `patch-red-dot`
+- **`showPatchNotes()`**（`systems/ui.js`）：彈出公告面板（z-index 210），左側垂直 Tab 切換版本，右側顯示分類內容；未讀狀態寫入 `readPatchNotes`，點開單一版本即清除該版本紅點（v0.1.25.2）
+- **`checkPatchNotesPopup()`**（`systems/ui.js`）：在 `showStartScreen()` 末尾呼叫；新玩家（無 `hasPlayedBefore`）跳過；`readPatchNotes` 仍有未讀版本時自動 setTimeout 400ms 彈出
+- **未讀標記**：未讀版本在 Tab 列顯示紅點（`#FF4444`，class `pn-tab-dot`）；首頁按鈕紅點 id `patch-red-dot`；相容舊 `lastSeenPatchVersion`
 - **首頁按鈕**：`#patch-notes-btn`，位置 `top:96px left:20px`（故事書按鈕正下方），點擊呼叫 `showPatchNotes()`
+- **成就紅點**：已解鎖但尚未點開的成就寫入 `readAchievements` 判斷；首頁成就按鈕紅點 id `achievement-red-dot`，成就格子逐格點開後清除（v0.1.25.2）
+- **成就詳情獎勵**：右側詳情會顯示每個成就的 `bonus` 數值；未解鎖與 hidden 顯示 `???` 的成就也顯示可取得獎勵（v0.1.25.2）
 
 ---
 

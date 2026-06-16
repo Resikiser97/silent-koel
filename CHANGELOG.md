@@ -1,6 +1,23 @@
-## v0.1.25.1
+## v0.1.25.2
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.25.2 - 2026-06-16
+
+### 修復
+- `config/playerStatsFormula.js`：`corpseXP` 改為完整計算欄位（預設肉食性 Lv1 演示），回傳 `final/base/evoLevel/mutMultiplier/achPercent`，成就面板可顯示屍體 XP 數值
+- `config/playerStatsFormula.js` / `systems/achievements.js`：Player Stats 新增攻速欄位，依角色 `stats.attackSpeed` 顯示噪鵑/阿奇爾不同攻擊間隔，並在 breakdown 中拆出成就加成
+- `systems/player.js`：阿奇爾攻擊冷卻移除寫死 `1500`，改讀角色設定的 `stats.attackSpeed`
+- `systems/achievements.js`：成就頁新增未讀紅點；已解鎖成就需逐格點開後才標記已讀，首頁成就按鈕紅點會在全部已讀後消失
+- `systems/achievements.js`：成就詳情新增獎勵顯示；未解鎖與 hidden 顯示 `???` 的成就也會顯示可取得的數值獎勵
+- `systems/ui.js`：更新公告紅點改為逐版本清除，點開哪個版本就清除該版本紅點，不再要求一次點完全部未讀版本
+- `systems/achievements.js` / `systems/ui.js`：成就頁關閉後會在首頁恢復聊天室，避免開成就後聊天室消失
+- 成就頁與更新公告 popup 放大至約 80% 螢幕；成就頁內容等比例放大，3×3 格子間距調整為上下左右對稱，右側屬性字級降低以減少捲動
+
+### 文件同步
+- 新增 `readAchievements` / `readPatchNotes` localStorage key 說明；同步 `calcPlayerStats` 的 `attackSpeed` 與 `corpseXP` 完整回傳欄位
 
 ---
 

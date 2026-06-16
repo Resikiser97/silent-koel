@@ -35,7 +35,7 @@ import { spawnFruit } from './spawning.js';
 import { getDayNightPhaseIndex } from './daynight.js';
 import { buildSkillTreeOverlay, showSkillTree, saveLastRunOrgans } from './evolution.js';
 import { buildChatUI, initChat, showChat, hideChat, _esc, loadChatSettings, openChatLogin, syncTitleToServer } from './chat.js';
-import { showAchievements } from './achievements.js';
+import { showAchievements, hasUnreadAchievements } from './achievements.js';
 import { showLeaderboard, _diffKey } from './leaderboard.js';
 import { fetchTop10 } from '../config/supabase.js';
 import { getRankIcon } from './utils.js';
@@ -47,6 +47,7 @@ import {
     storageSet,
     storageRemove,
     storageGetJSON,
+    storageSetJSON,
     getSettings,
     saveSettingsToStorage
 } from '../storage/index.js';
@@ -2225,8 +2226,7 @@ export function showStartScreen() {
     patchBtn.innerHTML = '<div style="font-size:28px;line-height:1;">📋</div><div style="font-size:11px;color:#FFF5DC;letter-spacing:1px;margin-top:3px;">更新</div>';
     // B12: 未讀版本時顯示紅點
     if (typeof PATCH_NOTES !== 'undefined' && PATCH_NOTES.length > 0) {
-        const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
-        if (lastSeen !== PATCH_NOTES[0].version) {
+        if (_hasUnreadPatchNotes(PATCH_NOTES)) {
             const redDot = document.createElement('div');
             redDot.id = 'patch-red-dot';
             redDot.style.cssText = 'position:absolute;top:6px;right:8px;width:10px;height:10px;background:#ff3333;border-radius:50%;border:1.5px solid #fff;';
@@ -2302,6 +2302,12 @@ export function showStartScreen() {
         z-index: 201;
     `;
     achievementBtn.innerHTML = '<div style="font-size:28px;line-height:1;">🏆</div><div style="font-size:9px;color:#FFF5DC;letter-spacing:0.5px;margin-top:2px;text-align:center;line-height:1.4;">' + t('achievementBtn') + '</div>';
+    if (hasUnreadAchievements()) {
+        const redDot = document.createElement('div');
+        redDot.id = 'achievement-red-dot';
+        redDot.style.cssText = 'position:absolute;top:6px;right:8px;width:10px;height:10px;background:#ff3333;border-radius:50%;border:1.5px solid #fff;';
+        achievementBtn.appendChild(redDot);
+    }
     achievementBtn.onmouseenter = () => {
         achievementBtn.style.background = 'rgba(255, 220, 130, 0.28)';
         achievementBtn.style.transform = 'scale(1.08)';
@@ -2318,7 +2324,8 @@ export function showStartScreen() {
         showAchievements({
             isLoggedIn: chatSettings.loggedIn,
             onTitleSync: async (title) => { await syncTitleToServer(title); },
-            onShowLogin: () => { openChatLogin(); }
+            onShowLogin: () => { openChatLogin(); },
+            onClose: () => { showChat(); }
         });
     };
 
@@ -2418,13 +2425,43 @@ export function showSplashScreen() {
 // 版本更新公告系統
 // =============================================================
 
+function _getReadPatchNotes(notes) {
+    const read = storageGetJSON(STORAGE_KEYS.READ_PATCH_NOTES) || {};
+    const hasPerVersionRead = Object.keys(read).length > 0;
+    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
+    if (!hasPerVersionRead && lastSeen && Array.isArray(notes)) {
+        const lastSeenIdx = notes.findIndex(n => n.version === lastSeen);
+        if (lastSeenIdx >= 0) {
+            for (let i = lastSeenIdx; i < notes.length; i++) {
+                read[notes[i].version] = true;
+            }
+        }
+    }
+    return read;
+}
+
+function _hasUnreadPatchNotes(notes) {
+    if (!Array.isArray(notes) || notes.length === 0) return false;
+    const read = _getReadPatchNotes(notes);
+    return notes.some(note => !read[note.version]);
+}
+
+function _markPatchNoteRead(version, notes) {
+    if (!version) return;
+    const read = _getReadPatchNotes(notes);
+    read[version] = true;
+    storageSetJSON(STORAGE_KEYS.READ_PATCH_NOTES, read);
+    if (Array.isArray(notes) && notes.length > 0 && notes.every(note => read[note.version])) {
+        storageSet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION, notes[0].version);
+    }
+}
+
 export function showPatchNotes() {
     applyDeviceMode();
     if (document.getElementById('patch-notes-overlay')) return;
 
-    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
-    // 不立即標記已讀，改為追蹤本次已讀的版本 Tab
-    const readInSession = new Set();
+    const notes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
+    let readPatchNotes = _getReadPatchNotes(notes);
 
     const overlay = document.createElement('div');
     overlay.id = 'patch-notes-overlay';
@@ -2438,7 +2475,7 @@ export function showPatchNotes() {
     const panel = document.createElement('div');
     panel.style.cssText = [
         'background:#131f13', 'border:1px solid #3a5a3a', 'border-radius:10px',
-        'width:92%', 'max-width:620px', 'max-height:85vh',
+        'width:80%', 'height:80%', 'max-width:none', 'max-height:80vh',
         'display:flex', 'flex-direction:column', 'overflow:hidden',
         'box-shadow:0 8px 40px rgba(0,0,0,0.7)'
     ].join(';');
@@ -2479,18 +2516,9 @@ export function showPatchNotes() {
         'border-right:1px solid #2a4a2a', 'padding:8px 0'
     ].join(';');
 
-    // 當所有未讀 Tab 都被點開後，消除紅點並更新 lastSeenPatchVersion
-    function _checkAllRead() {
-        if (_unreadNotes.length === 0) return;
-        const allRead = _unreadNotes.every(n => readInSession.has(n.version));
-        if (allRead) {
-            if (notes.length > 0) {
-                storageSet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION, notes[0].version);
-            }
-            const _rd = document.getElementById('patch-red-dot');
-            if (_rd) _rd.remove();
-            tabCol.querySelectorAll('.pn-tab-dot').forEach(d => d.remove());
-        }
+    function _refreshPatchRedDot() {
+        const _rd = document.getElementById('patch-red-dot');
+        if (_rd && !_hasUnreadPatchNotes(notes)) _rd.remove();
     }
 
     // 內容區（右側）
@@ -2500,12 +2528,7 @@ export function showPatchNotes() {
         'color:white', 'font-size:14px', 'line-height:1.7'
     ].join(';');
 
-    const notes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
     let activeIdx = 0;
-
-    // 計算未讀版本列表（比 lastSeen 更新的版本）
-    const _lastSeenIdx = notes.findIndex(n => n.version === lastSeen);
-    const _unreadNotes  = _lastSeenIdx === -1 ? notes.slice() : notes.slice(0, _lastSeenIdx);
 
     function renderContent(idx) {
         activeIdx = idx;
@@ -2554,12 +2577,7 @@ export function showPatchNotes() {
     }
 
     notes.forEach((note, idx) => {
-        const isUnread = note.version !== lastSeen &&
-            notes.indexOf(note) < notes.findIndex(n => n.version === lastSeen) ||
-            lastSeen === '';
-        // 判斷是否為未讀（比 lastSeen 更新的版本）
-        const lastSeenIdx = notes.findIndex(n => n.version === lastSeen);
-        const unread = lastSeenIdx === -1 ? true : idx < lastSeenIdx;
+        const unread = !readPatchNotes[note.version];
 
         const tab = document.createElement('div');
         tab.style.cssText = [
@@ -2591,8 +2609,11 @@ export function showPatchNotes() {
         tab.appendChild(tabVer);
         tab.appendChild(tabDate);
         tab.onclick = () => {
-            readInSession.add(note.version);
-            _checkAllRead();
+            _markPatchNoteRead(note.version, notes);
+            readPatchNotes = _getReadPatchNotes(notes);
+            const dot = tab.querySelector('.pn-tab-dot');
+            if (dot) dot.remove();
+            _refreshPatchRedDot();
             renderContent(idx);
         };
         tabCol.appendChild(tab);
@@ -2607,8 +2628,11 @@ export function showPatchNotes() {
 
     // 預設顯示第一個（最新版本），並將第一個版本標記為已讀
     if (notes.length > 0) {
-        readInSession.add(notes[0].version);
-        _checkAllRead();
+        _markPatchNoteRead(notes[0].version, notes);
+        readPatchNotes = _getReadPatchNotes(notes);
+        const firstDot = tabCol.querySelector('.pn-tab-dot');
+        if (firstDot) firstDot.remove();
+        _refreshPatchRedDot();
         renderContent(0);
     }
 }
@@ -2617,8 +2641,7 @@ export function checkPatchNotesPopup() {
     // 新玩家不彈出
     if (!storageGet(STORAGE_KEYS.HAS_PLAYED_BEFORE)) return;
     if (typeof PATCH_NOTES === 'undefined' || PATCH_NOTES.length === 0) return;
-    const lastSeen = storageGet(STORAGE_KEYS.LAST_SEEN_PATCH_VERSION) || '';
-    if (lastSeen === PATCH_NOTES[0].version) return;
+    if (!_hasUnreadPatchNotes(PATCH_NOTES)) return;
     // 有未讀版本，自動彈出
     setTimeout(() => showPatchNotes(), 400);
 }
