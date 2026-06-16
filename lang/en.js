@@ -21,7 +21,7 @@ LANG['en'] = {
         lbSubmitOk:     '✅ Score uploaded!',
         lbSubmitFail:   '❌ Upload failed, check your connection',
         lbAnonymous:    'Anonymous',
-        lbTop10Title:  '🏆 Leaderboard TOP 10',
+        lbTop10Title:  '🏆 Leaderboard TOP 5',
         lbLoading:     'Loading...',
         lbError:       'Failed to load leaderboard',
         lbVictory:     '🏆 Victory',

@@ -2488,14 +2488,14 @@ export function showPatchNotes() {
         'flex-shrink:0'
     ].join(';');
     const titleText = document.createElement('div');
-    titleText.style.cssText = 'font-size:22px;font-weight:bold;color:#FFD700;';
+    titleText.style.cssText = gameState.isMobile ? 'font-size:18px;font-weight:bold;color:#FFD700;' : 'font-size:22px;font-weight:bold;color:#FFD700;';
     titleText.textContent = t('patchNotesTitle');
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '✕';
     closeBtn.style.cssText = [
         'background:transparent', 'border:1px solid #555', 'color:#aaa',
         'border-radius:4px', 'width:28px', 'height:28px', 'cursor:pointer',
-        'font-size:17px', 'pointer-events:all', 'flex-shrink:0'
+        gameState.isMobile ? 'font-size:14px' : 'font-size:17px', 'pointer-events:all', 'flex-shrink:0'
     ].join(';');
     closeBtn.onclick = () => {
         overlay.remove();
@@ -2525,7 +2525,7 @@ export function showPatchNotes() {
     const contentArea = document.createElement('div');
     contentArea.style.cssText = [
         'flex:1', 'overflow-y:auto', 'padding:16px 20px',
-        'color:white', 'font-size:17px', 'line-height:1.7'
+        'color:white', gameState.isMobile ? 'font-size:14px' : 'font-size:17px', 'line-height:1.7'
     ].join(';');
 
     let activeIdx = 0;
@@ -2538,12 +2538,12 @@ export function showPatchNotes() {
 
         // 版本標題
         const vh = document.createElement('div');
-        vh.style.cssText = 'font-size:20px;font-weight:bold;color:#FFD700;margin-bottom:4px;';
+        vh.style.cssText = gameState.isMobile ? 'font-size:17px;font-weight:bold;color:#FFD700;margin-bottom:4px;' : 'font-size:20px;font-weight:bold;color:#FFD700;margin-bottom:4px;';
         vh.textContent = note.version;
         contentArea.appendChild(vh);
 
         const dateEl = document.createElement('div');
-        dateEl.style.cssText = 'font-size:14px;color:#666;margin-bottom:16px;';
+        dateEl.style.cssText = gameState.isMobile ? 'font-size:12px;color:#666;margin-bottom:16px;' : 'font-size:14px;color:#666;margin-bottom:16px;';
         dateEl.textContent = note.date;
         contentArea.appendChild(dateEl);
 
@@ -2556,13 +2556,15 @@ export function showPatchNotes() {
         sections.forEach(sec => {
             if (!sec.items || sec.items.length === 0) return;
             const secTitle = document.createElement('div');
-            secTitle.style.cssText = 'font-size:16px;font-weight:bold;margin-bottom:6px;margin-top:12px;color:' + sec.color + ';';
+            secTitle.style.cssText = (gameState.isMobile ? 'font-size:13px;' : 'font-size:16px;') + 'font-weight:bold;margin-bottom:6px;margin-top:12px;color:' + sec.color + ';';
             secTitle.textContent = sec.label;
             contentArea.appendChild(secTitle);
 
             sec.items.forEach(item => {
                 const li = document.createElement('div');
-                li.style.cssText = 'font-size:16px;color:#ccc;margin-bottom:6px;padding-left:14px;position:relative;';
+                li.style.cssText = gameState.isMobile
+                    ? 'font-size:13px;color:#ccc;margin-bottom:5px;padding-left:12px;position:relative;'
+                    : 'font-size:16px;color:#ccc;margin-bottom:6px;padding-left:14px;position:relative;';
                 li.innerHTML = '<span style="position:absolute;left:0;color:' + sec.color + ';">•</span>' + item;
                 contentArea.appendChild(li);
             });
@@ -2580,7 +2582,12 @@ export function showPatchNotes() {
         const unread = !readPatchNotes[note.version];
 
         const tab = document.createElement('div');
-        tab.style.cssText = [
+        tab.style.cssText = gameState.isMobile ? [
+            'padding:10px 14px', 'cursor:pointer', 'font-size:12px',
+            'border-left:3px solid transparent', 'color:#aaa',
+            'transition:all 0.15s', 'line-height:1.4',
+            'pointer-events:all'
+        ].join(';') : [
             'padding:11px 15px', 'cursor:pointer', 'font-size:14px',
             'border-left:3px solid transparent', 'color:#aaa',
             'transition:all 0.15s', 'line-height:1.4',
@@ -2588,7 +2595,7 @@ export function showPatchNotes() {
         ].join(';');
 
         const tabDate = document.createElement('div');
-        tabDate.style.cssText = 'font-size:13px;color:#555;margin-top:2px;';
+        tabDate.style.cssText = gameState.isMobile ? 'font-size:11px;color:#555;margin-top:2px;' : 'font-size:13px;color:#555;margin-top:2px;';
         tabDate.textContent = note.date;
 
         const tabVer = document.createElement('div');

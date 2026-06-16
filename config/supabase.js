@@ -90,10 +90,11 @@ export async function fetchDefeatRecords(limit, difficulty) {
 }
 
 export async function fetchTop10(difficulty) {
+    // 名稱沿用 fetchTop10，但首頁側欄 TOP 榜實際只取前 5 名（手機/桌機一致）
     const diffFilter = difficulty ? '&difficulty=eq.' + difficulty : '';
     return supabaseQuery(
         'leaderboard', 'GET', null,
-        '?select=name,score,play_time,is_victory,version_order,character' + diffFilter + '&order=version_order.desc,is_victory.desc,play_time.asc,boss_kill_time.asc&limit=10'
+        '?select=name,score,play_time,is_victory,version_order,character' + diffFilter + '&order=version_order.desc,is_victory.desc,play_time.asc,boss_kill_time.asc&limit=5'
     );
 }
 

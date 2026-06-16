@@ -22,6 +22,7 @@ import { ACHIEVEMENTS } from '../config/achievements.js';
 import { CHARACTERS } from '../config/characters.js';
 import { calcPlayerStats } from '../config/playerStatsFormula.js';
 import { t } from '../lang.js';
+import { gameState } from './gameState.js'; // 僅讀取 isMobile，gameState.js 為無依賴 leaf module，不會造成循環 import
 
 const ACTIVE_TITLE_KEY = 'activeTitle';
 
@@ -183,7 +184,11 @@ export function showAchievements(opts = {}) {
     }
 
     const panel = document.createElement('div');
-    panel.style.cssText = [
+    panel.style.cssText = gameState.isMobile ? [
+        'background:#1c1c1c', 'border:1px solid #555', 'border-radius:10px',
+        'padding:14px 14px', 'width:94%', 'height:88%', 'zoom:1',
+        'max-width:none', 'max-height:88vh', 'overflow-y:auto', 'box-sizing:border-box'
+    ].join(';') : [
         'background:#1c1c1c', 'border:1px solid #555', 'border-radius:10px',
         'padding:18px 20px', 'width:68%', 'height:68%', 'zoom:1.18',
         'max-width:none', 'max-height:68vh', 'overflow-y:auto', 'box-sizing:border-box'
@@ -222,16 +227,24 @@ export function showAchievements(opts = {}) {
     headerRow.appendChild(titleBtnRow);
     panel.appendChild(headerRow);
 
-    // ── Body（左格子 + 右說明）───────────────────────────────
+    // ── Body（左格子 + 右說明；手機版改直向堆疊）─────────────
     const body = document.createElement('div');
-    body.style.cssText = 'display:flex;gap:16px;align-items:stretch;min-height:0;height:calc(100% - 44px);';
+    body.style.cssText = gameState.isMobile
+        ? 'display:flex;flex-direction:column;gap:10px;align-items:stretch;min-height:0;height:calc(100% - 40px);'
+        : 'display:flex;gap:16px;align-items:stretch;min-height:0;height:calc(100% - 44px);';
 
-    // 左側格子區
+    // 左側格子區（手機版：滿寬、grid 高度用 vh 給定值，不再靠 aspect-ratio 跟 max-height 互相打架）
     const leftCol = document.createElement('div');
-    leftCol.style.cssText = 'flex:0 0 min(46%, calc((100% - 48px) * 0.90));min-width:340px;max-width:min(46%, calc((100% - 48px) * 0.90));display:flex;flex-direction:column;justify-content:center;gap:8px;padding:8px 12px;box-sizing:border-box;min-height:0;';
+    leftCol.style.cssText = gameState.isMobile
+        ? 'flex:0 0 auto;width:100%;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding:4px 4px;box-sizing:border-box;min-height:0;min-width:0;'
+        : 'flex:0 0 min(46%, calc((100% - 48px) * 0.90));min-width:340px;max-width:min(46%, calc((100% - 48px) * 0.90));display:flex;flex-direction:column;justify-content:center;gap:8px;padding:8px 12px;box-sizing:border-box;min-height:0;';
 
     const grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:12px;margin:0 auto;width:100%;aspect-ratio:1 / 1;max-height:calc(100% - 42px);';
+    // 手機版：grid 高度用 vh 給一個明確值，9 格用 minmax(0,1fr) 等比例分配，不會互相重疊；
+    // 桌機版維持原本 aspect-ratio 正方形格子
+    grid.style.cssText = gameState.isMobile
+        ? 'display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:8px;margin:0 auto;width:100%;max-width:100%;height:30vh;box-sizing:border-box;'
+        : 'display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:12px;margin:0 auto;width:100%;aspect-ratio:1 / 1;max-height:calc(100% - 42px);';
     leftCol.appendChild(grid);
 
     // 分頁控制列
@@ -251,9 +264,11 @@ export function showAchievements(opts = {}) {
     pageRow.appendChild(nextPageBtn);
     leftCol.appendChild(pageRow);
 
-    // 右側說明欄
+    // 右側說明欄（手機版：堆疊在下方，寬度滿版、留白縮減）
     const rightCol = document.createElement('div');
-    rightCol.style.cssText = 'flex:1;min-width:0;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:16px 18px;min-height:220px;box-sizing:border-box;font-size:15px;line-height:1.6;overflow-y:auto;';
+    rightCol.style.cssText = gameState.isMobile
+        ? 'flex:1;width:100%;min-width:0;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:12px 14px;min-height:140px;box-sizing:border-box;font-size:15px;line-height:1.5;overflow-y:auto;'
+        : 'flex:1;min-width:0;background:rgba(255,255,255,0.04);border:1px solid #333;border-radius:6px;padding:16px 18px;min-height:220px;box-sizing:border-box;font-size:15px;line-height:1.6;overflow-y:auto;';
 
     body.appendChild(leftCol);
     body.appendChild(rightCol);
@@ -399,7 +414,15 @@ export function showAchievements(opts = {}) {
             const isHidden = (a.category === 'hidden');
 
             const cell = document.createElement('div');
-            cell.style.cssText = [
+            // 手機版：填滿自己的 grid 格子（width/height:100%），不用 aspect-ratio 強制正方形，
+            // 避免跟 grid 的 vh 高度互相打架造成格子重疊；溢出文字直接裁切
+            cell.style.cssText = gameState.isMobile ? [
+                'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
+                'width:100%', 'height:100%', 'overflow:hidden', 'border-radius:8px', 'cursor:pointer',
+                'border:2px solid ' + (isSelected ? '#FFD700' : (isUnlockedA ? '#555' : '#333')),
+                'background:' + (isUnlockedA ? 'rgba(255,215,0,0.08)' : 'rgba(40,40,40,0.8)'),
+                'transition:all 0.15s', 'user-select:none', 'box-sizing:border-box'
+            ].join(';') : [
                 'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
                 'width:100%', 'aspect-ratio:1 / 1', 'border-radius:8px', 'cursor:pointer',
                 'border:2px solid ' + (isSelected ? '#FFD700' : (isUnlockedA ? '#555' : '#333')),
@@ -408,16 +431,16 @@ export function showAchievements(opts = {}) {
             ].join(';');
 
             const iconEl = document.createElement('div');
-            iconEl.style.cssText = 'font-size:31px;line-height:1;';
+            iconEl.style.cssText = gameState.isMobile ? 'font-size:22px;line-height:1;' : 'font-size:31px;line-height:1;';
             if (isUnlockedA) {
                 iconEl.textContent = '🏆';
             } else {
                 iconEl.textContent = '？';
-                iconEl.style.cssText += 'color:#555;font-weight:bold;font-size:26px;';
+                iconEl.style.cssText += gameState.isMobile ? 'color:#555;font-weight:bold;font-size:19px;' : 'color:#555;font-weight:bold;font-size:26px;';
             }
 
             const nameEl2 = document.createElement('div');
-            nameEl2.style.cssText = 'font-size:12px;color:' + (isUnlockedA ? '#FFD700' : '#555') + ';text-align:center;line-height:1.25;margin-top:5px;max-width:92%;overflow:hidden;';
+            nameEl2.style.cssText = (gameState.isMobile ? 'font-size:11px;' : 'font-size:12px;') + 'color:' + (isUnlockedA ? '#FFD700' : '#555') + ';text-align:center;line-height:1.25;margin-top:5px;max-width:92%;overflow:hidden;';
             if (isUnlockedA) {
                 nameEl2.textContent = a.name;
             } else if (isHidden) {

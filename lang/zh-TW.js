@@ -22,7 +22,7 @@ LANG['zh-TW'] = {
         lbSubmitOk:     '✅ 分數已上傳！',
         lbSubmitFail:   '❌ 上傳失敗，請檢查網路連線',
         lbAnonymous:    '匿名',
-        lbTop10Title:  '🏆 排行榜 TOP 10',
+        lbTop10Title:  '🏆 排行榜 TOP 5',
         lbLoading:     '讀取中...',
         lbError:       '無法讀取排行榜',
         lbVictory:     '🏆 勝利',
