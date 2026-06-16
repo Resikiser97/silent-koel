@@ -107,6 +107,7 @@ export const gameState = {
     eliteCreature: null,
     eliteJustKilled: false,
     eliteOrder: [],
+    bossBiome: null,
     alphaCreature: null,
     topBarTarget: null,
     topBarFadeTimer: 0,

@@ -1,3 +1,16 @@
+## v0.1.25.6 - 2026-06-17
+
+### 修復
+- `systems/chat.js`：聊天訊息間距微調，時間／lv／【GM】改為 margin-right:0px，稱號保留 5px 與名字保持距離
+- `systems/chat.js`：`syncTitleToServer()` 將 `saveChatSettings` 移到 try 區塊之前，確保 Supabase 失敗時本地仍能正確儲存稱號；query 改用 `.toLowerCase()` 避免帳號大小寫不符導致 Supabase 更新零筆資料
+- `systems/boss.js`：Easy / Normal 地圖 Boss 生態不再由玩家當下腳下生態決定，改為在遊戲開始時以 Seed（`mapSeed + 12345` 偏移，避免與精英怪序列重疊）隨機選定並存入 `gameState.bossBiome`，Hard 地圖不受影響
+
+### 新增
+- `config/playerStatsFormula.js` / `systems/achievements.js`：Player Stats 面板 XP 分類加入「採集範圍」欄位，顯示 body size（體型）＋器官加成＋技能加成的合計有效採集距離
+- `systems/hud.js` / `systems/mobile.js`：特殊技能（閃現）按鈕加入圓角 + 黑色外框；Ready 狀態背景加深（rgba 0.55），冷卻中背景淡化（rgba 0.15），易於辨識是否可用
+
+---
+
 ## v0.1.25.5 - 2026-06-16
 
 ### 修復

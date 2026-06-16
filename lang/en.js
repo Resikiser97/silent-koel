@@ -118,6 +118,7 @@ LANG['en'] = {
         statTenacity: 'Tenacity',
         statCritChance: 'Crit Rate',
         statCritDamage: 'Crit Dmg',
+        statCollectRange: 'Collect Range',
         statFruitXp: 'Fruit XP',
         statKillXp: 'Kill XP',
         statKillXpBonus: 'Min Kill XP',

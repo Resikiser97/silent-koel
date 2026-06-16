@@ -1,4 +1,4 @@
-## v0.1.25.5
+## v0.1.25.6
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.25.5
+**現在版本:** v0.1.25.6
 
-**當前狀態：** 修正聊天室訊息間距（時間／lv 標籤／【GM】／稱號／暱稱統一用 margin-right:3px）；修正選擇稱號後發言不即時套用的 bug（syncTitleToServer 補 saveChatSettings 本地同步）
+**當前狀態：** Boss biome 改由 Seed 決定（Easy/Normal）；Player Stats 加採集範圍欄位；特殊技能按鈕加圓角邊框與 Ready/CD 視覺區分；聊天稱號 Supabase 大小寫修復
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.25.6：Boss biome 改由 Seed 決定（Easy/Normal，`initBossBiome()` + `gameState.bossBiome`）；Player Stats XP 區加「採集範圍」欄（體型+器官+技能合計）；特殊技能按鈕加圓角邊框、Ready/CD 視覺區分；聊天稱號 toLowerCase 修復
 - v0.1.25.5：聊天室間距與稱號同步修復 — `chat.js` 時間／lv／【GM】／稱號／暱稱間距統一改用 margin-right:3px，移除手動插入空白字元（_buildMsgHTML、renderChat 展開版置頂、_parseName）；`syncTitleToServer()` 補上 saveChatSettings() 本地同步，稱號選後立即生效
 - v0.1.25.4：手機版 UI 修復 — `achievements.js` 成就面板手機版改直向堆疊（移除 leftCol 寫死 min-width:340px 與 zoom:1.18），修復手機完全無法閱讀的問題；`ui.js` 更新公告手機字級退回 v0.1.25.3 放大前數值；`config/supabase.js` 首頁排行榜側欄 TOP10 改 TOP5（手機桌機一致）
 - v0.1.25.3：Patchnote 與工具設定整理 — 更新公告 popup 字級提高約 20%；`config/patchnotes.js` 刪除 v0.1.22.1 以下舊公告；`.codex/config.toml` 加入 `powershell_utf8 = true`

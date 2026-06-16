@@ -1447,10 +1447,25 @@ export function drawGame() {
         ctx.fillStyle = 'white';
         const _dashKeyLabel = (gameState.settings.keys.dash || 'f').toUpperCase();
         if (dashCD <= 0) {
-            ctx.globalAlpha = 0.15;
+            ctx.beginPath();
+            ctx.roundRect(dashL, dashT, dashW, dashH, 6);
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = 'white';
             ctx.font = getGameFont(28, false);
             ctx.fillText('💨 ' + _dashKeyLabel, dashCX, dashCY);
         } else {
+            ctx.beginPath();
+            ctx.roundRect(dashL, dashT, dashW, dashH, 6);
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
             // 圖示（暗）
             ctx.globalAlpha = 0.08;
             ctx.font = getGameFont(28, false);

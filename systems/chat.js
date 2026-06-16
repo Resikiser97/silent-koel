@@ -1345,7 +1345,7 @@ function _formatChatTime(isoStr) {
 function _buildMsgHTML(msg) {
     const { lvTagHtml, gmLabel, titleHtml, nameHtml } = _parseName(msg);
     return '<div style="margin-bottom:2px;word-break:break-all;line-height:1.4;">' +
-        '<span style="color:rgba(255,255,255,0.5);font-size:10px;margin-right:3px;">[' +
+        '<span style="color:rgba(255,255,255,0.5);font-size:10px;margin-right:0px;">[' +
         _formatChatTime(msg.created_at) + ']</span>' +
         lvTagHtml +
         gmLabel + titleHtml + nameHtml + '：' +
@@ -1388,7 +1388,7 @@ export function renderChat() {
         if (pinnedMsg) {
             const { lvTagHtml, gmLabel, titleHtml, nameHtml } = _parseName(pinnedMsg);
             expandedPinned.innerHTML =
-                '📌 <span style="color:rgba(255,255,255,0.5);font-size:10px;margin-right:3px;">[' +
+                '📌 <span style="color:rgba(255,255,255,0.5);font-size:10px;margin-right:0px;">[' +
                 _formatChatTime(pinnedMsg.created_at) + ']</span>' +
                 lvTagHtml +
                 gmLabel + titleHtml + nameHtml + '：' +
@@ -1444,12 +1444,12 @@ function _parseName(msg) {
     const name      = (parts.length >= 2 ? parts[1] : parts[0]) || '匿名者';
     const titleStr  = parts[2] || '';
     const lvNum     = parseInt((lvTag || '').replace(/\D/g, '')) || 0;
-    const lvTagHtml = '<span style="' + _lvColor(lvNum) + 'font-size:13px;font-weight:bold;margin-right:3px;">' + _esc(lvTag) + '</span>';
+    const lvTagHtml = '<span style="' + _lvColor(lvNum) + 'font-size:13px;font-weight:bold;margin-right:0px;">' + _esc(lvTag) + '</span>';
     const gmLabel   = msg.is_gm
-        ? '<span style="color:#4B9CD3;font-weight:bold;margin-right:3px;">【GM】</span>'
+        ? '<span style="color:#4B9CD3;font-weight:bold;margin-right:0px;">【GM】</span>'
         : '';
     const titleHtml = titleStr
-        ? '<span style="color:#88CCFF;margin-right:3px;">[' + _esc(titleStr) + ']</span>'
+        ? '<span style="color:#88CCFF;margin-right:5px;">[' + _esc(titleStr) + ']</span>'
         : '';
     const nameHtml  = msg.is_gm
         ? '<span style="color:#FFD700;">' + _esc(name) + '</span>'
@@ -1519,17 +1519,17 @@ export function openChatLogin() {
 export async function syncTitleToServer(title) {
     const settings = loadChatSettings();
     if (!settings.loggedIn || !settings.playerName) return;
+    saveChatSettings({ ...settings, title: title || '' });
     try {
         if (_sbClient) {
             await _sbClient.from('chat_users')
                 .update({ title: title || '' })
-                .eq('username', settings.playerName);
+                .eq('username', settings.playerName.toLowerCase());
         } else {
             await supabaseQuery('chat_users', 'PATCH',
                 { title: title || '' },
-                '?username=eq.' + encodeURIComponent(settings.playerName)
+                '?username=eq.' + encodeURIComponent(settings.playerName.toLowerCase())
             );
         }
-        saveChatSettings({ ...settings, title: title || '' });
     } catch(e) {}
 }

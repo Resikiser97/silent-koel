@@ -897,6 +897,22 @@ function _drawBossDebuffIcons(boss, barX, barY, barW) {
     ctx.restore();
 }
 
+export function initBossBiome() {
+    const features = gameState.currentMap && gameState.currentMap.features;
+    if (features && features.hunterBoss) {
+        gameState.bossBiome = null; // Hard map：由 _spawnHunterBoss 處理
+        return;
+    }
+    const seed = gameState.mapSeed || Math.random() * 65536;
+    let s = seed + 12345; // 與 initEliteOrder 的 seed 序列錯開
+    function seededRand() {
+        s = (s * 9301 + 49297) % 233280;
+        return s / 233280;
+    }
+    const biomes = ['forest', 'ocean', 'desert'];
+    gameState.bossBiome = biomes[Math.floor(seededRand() * biomes.length)];
+}
+
 export function spawnBoss() {
     // 困難地圖：直接生成黑色獵人
     const features = gameState.currentMap && gameState.currentMap.features;
@@ -905,7 +921,7 @@ export function spawnBoss() {
         return;
     }
 
-    const playerBiome = getBiome(gameState.player.x, gameState.player.y);
+    const playerBiome = gameState.bossBiome || getBiome(gameState.player.x, gameState.player.y);
     const baseCfg = BOSS_CONFIG[playerBiome] || BOSS_CONFIG.forest;
     // 若當前地圖有地圖專屬 Boss 設定，合併覆蓋（速度/HP/傷害/半徑/名稱）
     const mapBossArr = gameState.currentMap && gameState.currentMap.bosses;

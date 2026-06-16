@@ -120,6 +120,7 @@ LANG['zh-TW'] = {
         statTenacity: '韌性',
         statCritChance: '暴擊率',
         statCritDamage: '暴擊傷害',
+        statCollectRange: '採集範圍',
         statFruitXp: '採集XP',
         statKillXp: '獵人XP',
         statKillXpBonus: '最低擊殺 XP',

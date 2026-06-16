@@ -670,6 +670,15 @@ export function showAchievements(opts = {}) {
                     st.critMult.organAdd ? t('statOrgan') + st.critMult.organAdd.toFixed(2) : '',
                 ]));
 
+            // 採集範圍
+            makeRow(xpArea, t('statCollectRange'),
+                String(st.collectRange.final) + 'px',
+                brkStr([
+                    '體型' + st.collectRange.radiusFinal,
+                    st.collectRange.organAdd ? t('statOrgan') + st.collectRange.organAdd : '',
+                    st.collectRange.skillAdd ? t('statSkill') + st.collectRange.skillAdd : '',
+                ]));
+
             // 採集 XP
             makeRow(xpArea, t('statFruitXp'),
                 '+' + st.fruitXP.final + t('unitPerFruit'),

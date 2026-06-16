@@ -27,7 +27,7 @@ import { initMutationData, applyAllMutationBonuses } from './systems/mutation.js
 import { applyAchievementStatBonuses } from './systems/achievementBonus.js';
 import { resetPackNames, resetHyenaPackNames, updateNeutralCreatures, updateHostileCreatures } from './systems/creatures.js';
 import { initEliteOrder, updateEliteCreature } from './systems/elite.js';
-import { updateBoss, handleBossKill } from './systems/boss.js';
+import { updateBoss, handleBossKill, initBossBiome } from './systems/boss.js';
 import { updateDayNightCycle } from './systems/daynight.js';
 import { updateMinimapFog, drawGame, updateUI } from './systems/hud.js';
 import {
@@ -454,6 +454,7 @@ export function initializeGame() {
     }
     gameState.mapSeed = Math.random() * 65536;
     if (typeof initEliteOrder === 'function') initEliteOrder();
+    initBossBiome();
 
     gameState.spawnProtectUntil    = 0;
     if (typeof resetPackNames === 'function') resetPackNames();

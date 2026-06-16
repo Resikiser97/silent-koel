@@ -250,6 +250,9 @@ export function calcPlayerStats(
     }
 
     // ── 韌性 ──────────────────────────────────────────────────
+    const pickupOrganAdd = _sumEffects(combinedOrganMap, hiddenMap, 'pickupRangeAdd');
+    const pickupSkillAdd = (sk.collectionAddiction || 0) * 10;
+
     const tenOrganAdd = _sumEffects(combinedOrganMap, {}, 'tenacityAdd'); // hiddenOrgans 無韌性
     const tenFinal    = Math.min(1, tenOrganAdd);
 
@@ -371,6 +374,12 @@ export function calcPlayerStats(
             final: achCorpseFinal, base: corpseBase,
             evoLevel: 1, mutMultiplier: xpMut,
             achPercent: ach.corpseXpPercent,
+        },
+        collectRange: {
+            final: achRFinal + pickupOrganAdd + pickupSkillAdd,
+            radiusFinal: achRFinal,
+            organAdd: pickupOrganAdd,
+            skillAdd: pickupSkillAdd,
         },
     };
 }

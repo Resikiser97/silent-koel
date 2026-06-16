@@ -274,10 +274,25 @@ export function _renderMobileOverlay() {
             jctx.textBaseline = 'middle';
             jctx.fillStyle = 'white';
             if (dashCD <= 0) {
-                jctx.globalAlpha = 0.15;
+                jctx.beginPath();
+                jctx.roundRect(dashL, dashT, dashW, dashH, 6);
+                jctx.fillStyle = 'rgba(0,0,0,0.55)';
+                jctx.fill();
+                jctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                jctx.lineWidth = 1;
+                jctx.stroke();
+                jctx.globalAlpha = 0.5;
+                jctx.fillStyle = 'white';
                 jctx.font = '40px Arial';
                 jctx.fillText('💨', dashCX, dashCY);
             } else {
+                jctx.beginPath();
+                jctx.roundRect(dashL, dashT, dashW, dashH, 6);
+                jctx.fillStyle = 'rgba(0,0,0,0.15)';
+                jctx.fill();
+                jctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                jctx.lineWidth = 1;
+                jctx.stroke();
                 jctx.globalAlpha = 0.08;
                 jctx.font = '40px Arial';
                 jctx.fillText('💨', dashCX, dashCY);
@@ -338,10 +353,25 @@ export function _renderMobileOverlay() {
             jctx.textBaseline = 'middle';
             jctx.fillStyle = 'white';
             if (dashCD <= 0) {
-                jctx.globalAlpha = 0.15;
+                jctx.beginPath();
+                jctx.roundRect(dashL, dashT, dashW, dashH, 6);
+                jctx.fillStyle = 'rgba(0,0,0,0.55)';
+                jctx.fill();
+                jctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                jctx.lineWidth = 1;
+                jctx.stroke();
+                jctx.globalAlpha = 0.5;
+                jctx.fillStyle = 'white';
                 jctx.font = '40px Arial';
                 jctx.fillText('💨', dashCX, dashCY);
             } else {
+                jctx.beginPath();
+                jctx.roundRect(dashL, dashT, dashW, dashH, 6);
+                jctx.fillStyle = 'rgba(0,0,0,0.15)';
+                jctx.fill();
+                jctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                jctx.lineWidth = 1;
+                jctx.stroke();
                 jctx.globalAlpha = 0.08;
                 jctx.font = '40px Arial';
                 jctx.fillText('💨', dashCX, dashCY);
