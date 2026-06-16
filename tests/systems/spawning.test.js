@@ -6,7 +6,6 @@ vi.mock('../../systems/gameState.js', () => ({
         trees: [],
         neutralCreatures: [],
         hostileCreatures: [],
-        treasures: [],
         currentPhaseIndex: 0,
         currentMap: null,
         spawnProtectUntil: 0,

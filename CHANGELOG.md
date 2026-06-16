@@ -1,6 +1,24 @@
-## v0.1.24.6
+## v0.1.25.1
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.25.1 - 2026-06-16
+
+### 修復
+- `systems/player.js`：特殊技能 CD 加成補上 `_achSpecialCdReduction` 套用（阿奇爾衝刺 + 噪鵑閃現各一處）
+- `config/playerStatsFormula.js`：攻擊/HP/速度面板公式改為「先套成就 flat+percent → 最後才乘 mutation 倍率」，對齊 runtime 套用順序
+- `systems/organs.js`：精英怪擊殺 XP（Hunter 精英 + 一般精英兩個分支）補上 `_achKillXpPercent` 加成套用
+- `systems/evolution.js` / `systems/mutation.js`：首頁變異面板折扣改從 `storageGetJSON(ACHIEVEMENTS)` 現算，不再依賴可能過期的 `player._achMutationExchangeDiscount`
+- `systems/organs.js`：`forceEvoOnly` 時標題正確顯示「選擇進化」而非「選擇器官」
+
+### 清理
+- 全面移除舊寶箱系統死碼：`systems/spawning.js` 的 `spawnTreasure()`、`systems/hud.js` 的 `drawTreasures()`、`systems/gameState.js` 的 `treasures: []`、`main.js` 初始化的兩處 `gameState.treasures = []`；測試 mock 與 ui.js 舊注釋一併清除
+
+### 文件同步
+- 版本號同步至 v0.1.25.1：`CHANGELOG.md` / `MAIN.md` / `project_summary.md` / `QUICKREF.md` / `config/gameConfig.js` 5 個來源對齊（原先停在 v0.1.24.5~v0.1.25.0）
+- `calcPlayerStats` 函式簽名更新為 6 參數，新增 `unlockedAchievements` 說明；回傳物件補記 `corpseXP` 欄位；同步更新 `MAIN.md`、`QUICKREF.md`、`ARCH.md`、`config/playerStatsFormula.js` file header
 
 ---
 

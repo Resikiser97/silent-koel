@@ -19,7 +19,7 @@ import { handleKeyDown, handleKeyUp, _updateMouseWorld } from './systems/input.j
 import { initAudio, stopIntroTheme, AudioManager } from './systems/audio.js';
 import { _joyPaused } from './systems/mobile.js';
 import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from './systems/spawning.js';
-import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, checkTreasureCollision, updatePassiveOrgans, updateProjectiles, _getArcherShootDir, _archerAttack } from './systems/player.js';
+import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, updatePassiveOrgans, updateProjectiles, _getArcherShootDir, _archerAttack } from './systems/player.js';
 import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack, setRangedAttackCallback } from './systems/combat.js';
 import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion, showOrganSelection, handleEliteKill } from './systems/organs.js';
 import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans, showSkillTree } from './systems/evolution.js';
@@ -121,7 +121,6 @@ export function updateGameLogic() {
     if (gameState.eliteCreature && gameState.eliteCreature.hp > 0) updateEliteCreature();
     updatePassiveOrgans();
     updateStatusEffects();
-    checkTreasureCollision();
     updateCorpseEating();
     updateBoneEating();
     updateProjectiles();   // 阿奇爾子彈飛行 + 碰撞偵測
@@ -399,7 +398,6 @@ export function initializeGame() {
     gameState.fruits              = [];
     gameState.corpses             = [];
     gameState.bones               = [];
-    gameState.treasures           = [];
     gameState.brainShockwaves     = [];
     gameState.venomPuddles        = [];   // 蠍王定點毒霧陣列
     gameState.projectiles         = [];   // 阿奇爾子彈陣列
@@ -493,10 +491,9 @@ export function initializeGame() {
         spawnFruitFromTree(tree);
     }
 
-    // 4+5. 生成生態生物（草系＋肉系）並初始化屍體、骨骼、寶物陣列
+    // 4+5. 生成生態生物（草系＋肉系）並初始化屍體、骨骼陣列
     gameState.corpses = [];
     gameState.bones   = [];
-    gameState.treasures = [];
     spawnBiomeCreatures();
 
     // 6. 設定事件監聽器

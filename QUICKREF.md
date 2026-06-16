@@ -1,4 +1,4 @@
-## v0.1.25.0
+## v0.1.25.1
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.25.0**
+- 版本：**v0.1.25.1**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -88,7 +88,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
 | `achievements.js` | ACHIEVEMENTS（36 個成就定義，七類） |
 | `attributes.js` | ATTRIBUTES（5 個屬性純資料，Attribute Design v1） |
-| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)` → 10 屬性快照（純資料，不依賴 runtime）；詳見 `docs/PLAYER_STATS_FORMULA.md` |
+| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)` → 11 屬性快照（含 corpseXP）；第 6 參數傳入已解鎖成就 map，讓面板數值與 runtime 同步（v0.1.25.0）；詳見 `docs/PLAYER_STATS_FORMULA.md` |
 | `xpConfig.js` | `XP_CONFIG`：採集 XP（fruit.base / foragerPerLevel / noHerbivoreBase）、擊殺 XP（kill.minCreatureBaseXP / hunterPerLevel）、hostile XP 公式（kill.hostile.base / hpDivisor / hpScale / cap / defaultHp）所有常數集中定義 |
 | `combatConfig.js` | `COMBAT_CONFIG`（攻擊間隔公式基底，v0.1.24.4） |
 | `mutationConfig.js` | `MUTATION_CONFIG`（技能點換變異點常數：skillPointCost/discountedSkillPointCost/mutationPointGain，v0.1.25.0） |

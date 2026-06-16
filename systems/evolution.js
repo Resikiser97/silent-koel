@@ -12,6 +12,7 @@ import { GAME_INFO } from '../config/gameConfig.js';
 import { t } from '../lang.js';
 import { applyOrganEffects, applyHiddenOrganEffects } from './organs.js';
 import { saveMutationData, getMutationUpgradeCost, upgradeMutation, initMutationSkills, _syncMutationSkillPoints, _saveMutationSkills } from './mutation.js';
+import { getAchievementBonusTotals } from './achievementBonus.js';
 import { showTooltip, hideTooltip, buildEndGameOverlay } from './ui.js';
 import { pausePlayTimer } from './gameFlow.js';
 import { showScoreSubmitPopup } from './leaderboard.js';
@@ -868,7 +869,8 @@ function _buildMutLeftColContent(leftCol) {
     exchangeHint.textContent = '目前技能點：' + curSkillPts;
     leftCol.appendChild(exchangeHint);
 
-    const _discount = gameState.player._achMutationExchangeDiscount || 0;
+    const _unlocked = storageGetJSON(STORAGE_KEYS.ACHIEVEMENTS) || {};
+    const _discount = getAchievementBonusTotals(Object.keys(_unlocked)).mutationExchangeDiscountPercent || 0;
     const _cost = _discount > 0 ? MUTATION_CONFIG.discountedSkillPointCost : MUTATION_CONFIG.skillPointCost;
     const canExchange = curSkillPts >= _cost;
     const exchangeBtn = document.createElement('button');

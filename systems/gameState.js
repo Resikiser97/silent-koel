@@ -75,7 +75,6 @@ export const gameState = {
     xpThreshold: 100,
     organSelectionActive: false,
     pendingOrganSelections: 0,
-    treasures: [],
     devInput: '',
     devMode: false,
     devModeUsed: false,

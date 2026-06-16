@@ -1,20 +1,21 @@
 // =============================================================
 // 玩家屬性公式 — calcPlayerStats
 // 純資料模組，不 import 任何 systems/
-// 依賴：config/characters.js, config/organs.js, config/evolution.js
+// 依賴：config/characters.js, config/organs.js, config/evolution.js, config/xpConfig.js, config/achievements.js
 // =============================================================
 //
 // 【對外公開函式】
-//   calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)
+//   calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)
 //     → { attack, hpMax, speed, radius, attackRange, tenacity,
-//         critChance, critMult, fruitXP, killXP }
+//         critChance, critMult, fruitXP, killXP, corpseXP }
 //
 // 【參數格式】
-//   charId          : string — CHARACTERS key（'koel' | 'archerfish' …）
-//   skills          : { vitality, agility, forager, hunter, terribleFang, … } 各欄位為等級數字
-//   organs          : { [organId]: level } 或 [{id, level}]（runtime array 或 localStorage object 皆可）
-//   hiddenOrgans    : { [organId]: any } 或 [{id, …}]（存在即套用，無等級）
-//   mutationLevels  : { fang, tail, wing, eye }  缺省 0；可傳 null
+//   charId               : string — CHARACTERS key（'koel' | 'archerfish' …）
+//   skills               : { vitality, agility, forager, hunter, terribleFang, … } 各欄位為等級數字
+//   organs               : { [organId]: level } 或 [{id, level}]（runtime array 或 localStorage object 皆可）
+//   hiddenOrgans         : { [organId]: any } 或 [{id, …}]（存在即套用，無等級）
+//   mutationLevels       : { fang, tail, wing, eye }  缺省 0；可傳 null
+//   unlockedAchievements : object｜null — 已解鎖成就 map（{ [id]: { unlockedAt } }）；傳入後面板顯示值與 runtime 成就加成同步（v0.1.25.0）
 //
 // 【計算規則】
 //   - startOrgans（CHARACTERS config）永遠套用；savedOrgans 若有相同 ID 則跳過（Fix 2）
@@ -193,9 +194,8 @@ export function calcPlayerStats(
     const atkOrganAdd = _sumEffects(combinedOrganMap, hiddenMap, 'attackAdd');
     const atkEvoAdd   = _startEvoEffect(char, 'attackAdd'); // Fix A：carnivore 只取最高級
     const atkMut      = 1 + (mut.fang || 0) * 0.01;
-    const atkFinal    = Math.round(
-        (atkBase + tfSkillAdd + terribleFangBonus + atkOrganAdd + atkEvoAdd) * atkMut
-    );
+    // 不在此乘 mutation：等成就 flat+percent 套用後才統一乘（對齊 runtime 順序）
+    const atkPreMut   = atkBase + tfSkillAdd + terribleFangBonus + atkOrganAdd + atkEvoAdd;
 
     // ── 血量上限 ───────────────────────────────────────────────
     const hpBase     = char.stats.hp;
@@ -203,7 +203,7 @@ export function calcPlayerStats(
     const hpStartEvo = _startEvoEffect(char, 'hpMaxAdd');    // koel herbivore Lv1 = +30
     const hpOrganAdd = _sumEffects(combinedOrganMap, hiddenMap, 'hpMaxAdd');
     const hpMut      = 1 + (mut.tail || 0) * 0.01;
-    const hpFinal    = Math.round((hpBase + hpSkillAdd + hpStartEvo + hpOrganAdd) * hpMut);
+    const hpPreMut   = hpBase + hpSkillAdd + hpStartEvo + hpOrganAdd;
 
     // ── 速度 ──────────────────────────────────────────────────
     const spdBase     = char.stats.speed;
@@ -211,7 +211,7 @@ export function calcPlayerStats(
     const spdOrganAdd = _sumEffects(combinedOrganMap, hiddenMap, 'speedAdd');
     const spdEvoAdd   = _startEvoEffect(char, 'speedBonus'); // Fix D：omnivore startEvolution 速度加成
     const spdMut      = 1 + (mut.wing || 0) * 0.01;
-    const spdFinal    = parseFloat(((spdBase + spdSkillAdd + spdOrganAdd + spdEvoAdd) * spdMut).toFixed(2));
+    const spdPreMut   = spdBase + spdSkillAdd + spdOrganAdd + spdEvoAdd;
 
     // ── 體型 + 攻擊範圍（Fix 1：逐級套用 radiusAdd）──────────
     const rState = { r: char.stats.radius, ar: char.stats.attackRange };
@@ -262,10 +262,10 @@ export function calcPlayerStats(
     const ach = _sumAchievementBonuses(
         unlockedAchievements ? Object.keys(unlockedAchievements) : []
     );
-    // flat add
-    let achAtkFinal    = atkFinal    + ach.attackAdd;
-    let achHpFinal     = hpFinal     + ach.hpMaxAdd;
-    let achSpdFinal    = spdFinal    + ach.speedAdd;
+    // flat add（mutation 倍率最後才套，對齊 runtime：evo → ach → mut）
+    let achAtkFinal    = atkPreMut   + ach.attackAdd;
+    let achHpFinal     = hpPreMut    + ach.hpMaxAdd;
+    let achSpdFinal    = spdPreMut   + ach.speedAdd;
     let achCcFinal     = ccFinal     + ach.critChanceAdd;
     let achRFinal      = rState.r;
     let achArFinal     = rState.ar;
@@ -279,6 +279,10 @@ export function calcPlayerStats(
         achArFinal  = Math.max(10, achArFinal + Math.round(_radd / Math.max(achRFinal, 1) * achArFinal));
         achRFinal   = Math.max(5,  achRFinal  + _radd);
     }
+    // 最後套 mutation 倍率（對齊 runtime 順序：evo → ach → mut）
+    achAtkFinal = Math.round(achAtkFinal * atkMut);
+    achHpFinal  = Math.round(achHpFinal  * hpMut);
+    achSpdFinal = parseFloat((achSpdFinal * spdMut).toFixed(2));
     // XP bonus（用於面板顯示）
     const achFruitFinal = parseFloat(((fruitBase + ach.fruitXpAdd + fruitSkill + fruitEvo) * (1 + ach.fruitXpPercent) * xpMut).toFixed(2));
     const achKillFinal  = parseFloat(((killBase  + killSkill) * (1 + ach.killXpPercent) * xpMut).toFixed(2));

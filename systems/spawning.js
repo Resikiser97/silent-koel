@@ -1,7 +1,6 @@
 // =============================================================
 // 生成系統 - spawnFruitFromTree / spawnFruit / moveCreature
-//            spawnBiomeCreatures / spawnTreasure
-//            spawnCreatureAtEdgeBiome / updateCreatureSpawning
+//            spawnBiomeCreatures / spawnCreatureAtEdgeBiome / updateCreatureSpawning
 //            _randomPointInBiome / _makeHerbCreature / _makeCarnCreature
 // （generateTrees 已移至 systems/map.js）
 // =============================================================
@@ -171,13 +170,6 @@ export function moveCreature(entity, newX, newY, bounds = { width: MAP_WIDTH, he
     entity.y = ((newY % bounds.height) + bounds.height) % bounds.height;
 }
 
-export function spawnTreasure() {
-    gameState.treasures.push({
-        x: Math.random() * (MAP_WIDTH  - 60) + 30,
-        y: Math.random() * (MAP_HEIGHT - 60) + 30,
-        radius: 8
-    });
-}
 
 // ── 補充生成：在指定生態區生成一隻草系或肉系生物
 export function spawnCreatureAtEdgeBiome(biome, type) {

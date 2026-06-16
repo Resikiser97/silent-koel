@@ -223,7 +223,7 @@ export function showOrganSelection(forceEvoOnly = false) {
 
     const title = document.createElement('div');
     title.style.cssText = 'color:#FFD700;font-size:22px;font-weight:bold;margin-bottom:6px;text-shadow:1px 1px 4px black;';
-    title.textContent = slotsFull ? t('chooseEvo') : t('chooseOrgan');
+    title.textContent = (forceEvoOnly || slotsFull) ? t('chooseEvo') : t('chooseOrgan');
     overlay.appendChild(title);
 
     const slotInfo = document.createElement('div');
@@ -522,7 +522,10 @@ export function handleEliteKill(elite) {
             );
             if (drops.length > 0) showHiddenOrganSelection(drops); // 先開隱藏器官
         }
-        addXP(hunterXP); // 後加 XP，升級走 pendingOrganSelections++ 排隊
+        const _hp = gameState.player;
+        let _hunterXP = hunterXP;
+        if (_hp._achKillXpPercent) _hunterXP = Math.round(_hunterXP * (1 + _hp._achKillXpPercent));
+        addXP(_hunterXP); // 後加 XP，升級走 pendingOrganSelections++ 排隊
         gameState.eliteCreature   = null;
         gameState.eliteJustKilled = true;
         const nextDayTime = 600 - (gameState.currentPhaseIndex + 1) * 75;
@@ -534,7 +537,8 @@ export function handleEliteKill(elite) {
         return;
     }
 
-    const xp = elite.xp;
+    let xp = elite.xp;
+    if (gameState.player._achKillXpPercent) xp = Math.round(xp * (1 + gameState.player._achKillXpPercent));
 
     // 精英怪死亡掉落：1個1倍屍體 + 4具白骨（圓形散落）
     spawnLootCircle(elite.x, elite.y, [

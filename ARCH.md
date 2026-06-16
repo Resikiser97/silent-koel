@@ -44,7 +44,7 @@
 | `combatConfig.js` | COMBAT_CONFIG（攻擊間隔公式基底，v0.1.24.4） |
 | `mutationConfig.js` | MUTATION_CONFIG（技能點換變異點常數，v0.1.25.0） |
 | `attributes.js` | ATTRIBUTES 陣列（5 個屬性純資料，Attribute Design v1，v0.1.22.0） |
-| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)` → 10 屬性快照；純資料模組，不依賴任何 systems/，只 import characters.js / organs.js / evolution.js；詳見 docs/PLAYER_STATS_FORMULA.md（v0.1.23.1） |
+| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)` → 11 屬性快照（含 corpseXP）；第 6 參數傳已解鎖成就 map，讓面板與 runtime 同步；不依賴任何 systems/；詳見 docs/PLAYER_STATS_FORMULA.md（v0.1.25.0） |
 
 ### lang/
 | 檔案 | 職責 |
@@ -72,7 +72,7 @@
 | `audio.js` | AudioManager、initAudio、preloadAllSfxBuffers |
 | `camera.js` | worldToScreen、updateCamera、wrappedDistance、wrappedDelta |
 | `input.js` | handleKeyDown、handleKeyUp、_updateMouseWorld |
-| `spawning.js` | 生物/果子/樹木生成邏輯、moveCreature |
+| `spawning.js` | 生物/果子生成邏輯、moveCreature |
 | `player.js` | 玩家移動、碰撞、攻擊（含阿奇爾射水）、Boss 死亡事件 dispatch |
 | `feedback.js` | showFloatingText（Canvas 浮動文字）、showXPPopup（從 combat.js / player.js 抽出，v0.1.20.0） |
 | `reward.js` | addXP、checkLevelUp（升級 dispatch CustomEvent('levelUp')）（從 player.js 抽出，v0.1.20.1） |
@@ -181,7 +181,7 @@ main.js
 |------|------|------|
 | `canvasWidth / canvasHeight` | number | 邏輯解析度（桌機 1600×900） |
 | `player` | object | 玩家完整狀態（位置、器官、進化、技能、阿奇爾專用欄位等） |
-| `trees / fruits / treasures` | array | 地圖物件 |
+| `trees / fruits` | array | 地圖物件 |
 | `neutralCreatures / hostileCreatures / corpses / bones` | array | 生物 |
 | `projectiles` | array | 子彈（阿奇爾射水） |
 | `floatTexts` | array | Canvas 批次浮動文字 |

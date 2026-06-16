@@ -1,7 +1,7 @@
 // =============================================================
 // 玩家系統 - updatePlayerMovement / playerDash / checkFruitCollision
 //            updateTreeFruitProduction / showXPPopup
-//            checkTreasureCollision / updatePassiveOrgans
+//            updatePassiveOrgans
 //            checkXPMilestone
 //            updateProjectiles / findBestPerceptionPath
 //            _checkProjectileHit（子彈系統）
@@ -337,7 +337,7 @@ export function playerDash() {
         p.archerDashActive = true;
         p.archerDashEnd    = now + _archerSC.dashDuration;
         p.archerDashSpeed  = dashSpeedAdd;
-        p.dashCooldown     = _archerSC.dashCD;
+        p.dashCooldown     = Math.round(_archerSC.dashCD * (1 - (p._achSpecialCdReduction || 0)));
 
         const dir = p.lastMoveDir;
         gameState.dashEffect = {
@@ -373,7 +373,7 @@ export function playerDash() {
 
     p.x = targetX;
     p.y = targetY;
-    p.dashCooldown      = _koelSC.dashCD;
+    p.dashCooldown      = Math.round(_koelSC.dashCD * (1 - (p._achSpecialCdReduction || 0)));
     p.dashInvincible    = true;
     p.dashInvincibleEnd = Date.now() + _koelSC.dashInvincible;
 
@@ -568,18 +568,6 @@ export function updateTreeFruitProduction(deltaTime) {
         if (tree.fruitTimer >= interval) {
             tree.fruitTimer = 0;
             spawnFruitFromTree(tree);
-        }
-    }
-}
-
-export function checkTreasureCollision() {
-    const p = gameState.player;
-    for (let i = gameState.treasures.length - 1; i >= 0; i--) {
-        const t = gameState.treasures[i];
-        if (wrappedDistance(p.x, p.y, t.x, t.y) < p.radius + t.radius) {
-            const actualXP = addXP(50);
-            showXPPopup(p.x, p.y, actualXP);
-            gameState.treasures.splice(i, 1);
         }
     }
 }

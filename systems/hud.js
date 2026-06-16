@@ -22,15 +22,13 @@ import { showMutationPanel } from './mutation.js';
 //   - updateUI()：每幀更新 DOM HUD（HP條/XP條/時間/日夜狀態）
 //   - drawTopBarUI()：玩家附近有精英/Boss/巨人化/Alpha時顯示上方血條
 //   - drawMinimap()：右上角小地圖，含霧、生物點、日月圖示
-//   - drawTreasures()：繪製地圖上的寶物
 //   - drawProjectiles()：繪製子彈（阿奇爾射水）
 //   - updateMinimapFog()：更新小地圖霧效
 //
 // 繪製順序（drawGame 內部）：
 //   1. 地形（drawTerrain）
 //   2. 樹木
-//   3. 寶物（drawTreasures）
-//   4. 屍體（drawCorpses）
+//   3. 屍體（drawCorpses）
 //   5. 中立生物（drawNeutralCreatures）
 //   6. 敵意生物（drawHostileCreatures）
 //   7. 教學木樁（7c，tutorialStump）
@@ -1002,11 +1000,9 @@ export function drawGame() {
         ctx.fill();
     });
 
-    // 4. 繪製寶物
-    drawTreasures();
     const _t3 = gameState.devMode ? performance.now() : 0;
 
-    // 5. 繪製屍體（在生物之下）
+    // 4. 繪製屍體（在生物之下）
     drawCorpses();
     drawCorpseEatingBars();
 
@@ -1858,17 +1854,3 @@ function resetFogFrameCount() {
 }
 
 
-function drawTreasures() {
-    for (const t of gameState.treasures) {
-        const s = worldToScreen(t.x, t.y);
-        if (s.x < -50 || s.x > VIEW_W + 50 || s.y < -50 || s.y > VIEW_H + 50) continue;
-        ctx.fillStyle = 'gold';
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, t.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#CC8800';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.lineWidth = 1;
-    }
-}

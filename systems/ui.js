@@ -9,12 +9,12 @@
 //           getOrganDisplayName / buildEvoLevelDesc / showCompendium
 //           showMapSelect / showStartScreen / showSplashScreen
 //           showPatchNotes / checkPatchNotesPopup / buildEndGameOverlay
-// （drawGame / updateUI / drawTopBarUI / drawMinimap / drawTreasures 已移至 systems/hud.js）
+// （drawGame / updateUI / drawTopBarUI / drawMinimap 已移至 systems/hud.js）
 // =============================================================
 
 // _lbDifficulty / _top10Difficulty / _diffKey() 已移至 systems/leaderboard.js
 
-// drawGame() / updateUI() / drawTopBarUI() / drawMinimap() / drawTreasures() 已移至 systems/hud.js
+// drawGame() / updateUI() / drawTopBarUI() / drawMinimap() 已移至 systems/hud.js
 
 // ── Tooltip 全域變數
 import { gameState, DEFAULT_SETTINGS } from './gameState.js';
@@ -126,7 +126,7 @@ export function showAlphaAnnouncement(name) {
     setTimeout(() => el.remove(), 3000);
 }
 
-// drawGame() / updateUI() / drawTopBarUI() / drawMinimap() / drawTreasures() 已移至 systems/hud.js
+// drawGame() / updateUI() / drawTopBarUI() / drawMinimap() 已移至 systems/hud.js
 
 
 // =============================================================

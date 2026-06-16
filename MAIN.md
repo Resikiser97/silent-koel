@@ -1,4 +1,4 @@
-## v0.1.24.5
+## v0.1.25.1
 
 # The Silent Koel — 模組架構說明
 
@@ -15,10 +15,12 @@ config/characters.js      CHARACTERS（角色定義常數，v0.56.0）
 config/xpConfig.js        XP_CONFIG：採集 XP（fruit.base/foragerPerLevel/noHerbivoreBase）、擊殺 XP（kill.minCreatureBaseXP/hunterPerLevel）、hostile XP 公式（kill.hostile.*）所有常數集中定義（v0.1.24.5）
 config/combatConfig.js    COMBAT_CONFIG.baseAttackIntervalMs（攻擊間隔公式基底，v0.1.24.4）
 config/playerStatsFormula.js
-                          calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)
+                          calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)
                             → { attack, hpMax, speed, radius, attackRange, tenacity,
-                                critChance, critMult, fruitXP, killXP }
-                          純資料模組，不 import 任何 systems/；依賴 config/characters.js / config/organs.js / config/evolution.js / config/xpConfig.js
+                                critChance, critMult, fruitXP, killXP, corpseXP }
+                          第 6 參數 unlockedAchievements（object｜null）：傳入已解鎖成就 map，讓面板顯示值與 runtime 成就加成同步（v0.1.25.0）
+                          corpseXP 返回欄位：{ achPercent } 供成就面板顯示屍體 XP 加成（v0.1.25.0）
+                          純資料模組，不 import 任何 systems/；依賴 config/characters.js / config/organs.js / config/evolution.js / config/xpConfig.js / config/achievements.js
                           支援 organs/hiddenOrgans array 或 object 兩種格式
                           詳細計算規則與限制見 docs/PLAYER_STATS_FORMULA.md
                           測試：tests/config/playerStatsFormula.test.js（165 個測試，v0.1.23.1）
@@ -45,7 +47,7 @@ systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCa
                           _updateCameraZoom（視野縮放，重構自 _updateMobileCameraZoom，v0.58.0）
                           updateCamera：alwaysCenter 設定為 true 時 edgeThreshold=0.5，角色永遠居中（v0.57.5）
 systems/input.js          handleKeyDown, handleKeyUp, _calcMouseWorld, _updateMouseWorld（含設定介面按鍵 handler refs）
-systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature, spawnTreasure
+systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature
                           _randomPointInBiome, _makeHerbCreature, _makeCarnCreature
                           spawnBiomeCreatures（開局設 spawnProtectUntil +3s，中心保護區不生肉食怪，v0.0.66.2）
                           spawnCreatureAtEdgeBiome
@@ -59,8 +61,7 @@ systems/reward.js         addXP（XP 累加，含技能加成）
 systems/loot.js           _spawnBone（push 白骨到 gameState.bones）
                           （Stage F 批次 2：從 combat.js 抽出，v0.1.20.1）
 systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction
-                          checkTreasureCollision, updatePassiveOrgans
-                          checkXPMilestone
+                          updatePassiveOrgans, checkXPMilestone
                           findBestPerceptionPath
                           playerDash（閃現技能：瞬移+無敵+冷卻，v0.53.0）
                           _collectFruit（果子吸收 XP 共用函式，v0.54.0；v0.57.6 加入草食性判斷：ev.herbivore >= 1 才套正常 XP 計算，否則固定 1 XP）
@@ -149,7 +150,7 @@ systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）
                           _letterboxScale（當前縮放比例 export，v0.1.14.0）
 systems/hud.js            drawGame, updateUI, resetUICache, resetPerceptionCache, drawTopBarUI
-                          drawMinimap（含所有 _minimap 變數 + _minimapAlpha/FadeTimer/StopTimer 透明度計時器，v0.0.66.1）, drawTreasures
+                          drawMinimap（含所有 _minimap 變數 + _minimapAlpha/FadeTimer/StopTimer 透明度計時器，v0.0.66.1）
                           drawProjectiles（子彈繪製）, updateMinimapFog（小地圖霧效更新）
                           _drawArcherfish（夜晚三角光圈 + F技紅色三角框，v0.57.4）
 systems/ui.js             showTooltip, hideTooltip, showMapSelect

@@ -18,6 +18,7 @@ import {
     storageSetJSON
 } from '../storage/index.js';
 import { MUTATION_CONFIG } from '../config/mutationConfig.js';
+import { getAchievementBonusTotals } from './achievementBonus.js';
 
 export const DEFAULT_MUTATION_DATA = {
     levels: { fang: 0, tail: 0, wing: 0, eye: 0 },
@@ -379,7 +380,8 @@ export function showMutationPanel() {
     exchangeHint.textContent = t('mutationExchangeHint', { n: gameState.skillPoints || 0 });
     panel.appendChild(exchangeHint);
 
-    const _discount = gameState.player._achMutationExchangeDiscount || 0;
+    const _unlocked = storageGetJSON(STORAGE_KEYS.ACHIEVEMENTS) || {};
+    const _discount = getAchievementBonusTotals(Object.keys(_unlocked)).mutationExchangeDiscountPercent || 0;
     const _cost = _discount > 0 ? MUTATION_CONFIG.discountedSkillPointCost : MUTATION_CONFIG.skillPointCost;
     const exchangeBtn = document.createElement('button');
     exchangeBtn.style.cssText = [
