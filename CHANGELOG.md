@@ -1,3 +1,11 @@
+## v0.1.25.5 - 2026-06-16
+
+### 修復
+- `systems/chat.js`：修正聊天訊息中時間／lv 標籤／【GM】／稱號／暱稱間距不一致問題，統一用 margin-right:3px 控制間距，移除手動插入空白字元（_buildMsgHTML、renderChat 展開版置頂訊息、_parseName）
+- `systems/chat.js`：`syncTitleToServer()` 補上 `saveChatSettings()`，稱號更新伺服器成功後同步寫回本地 localStorage，選擇稱號後立即生效，不需重新登入
+
+---
+
 ## v0.1.25.3
 
 # CHANGELOG — 只吃不叫的噪鵑

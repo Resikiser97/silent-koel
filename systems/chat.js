@@ -1345,9 +1345,9 @@ function _formatChatTime(isoStr) {
 function _buildMsgHTML(msg) {
     const { lvTagHtml, gmLabel, titleHtml, nameHtml } = _parseName(msg);
     return '<div style="margin-bottom:2px;word-break:break-all;line-height:1.4;">' +
-        '<span style="color:rgba(255,255,255,0.5);font-size:10px;">[' +
+        '<span style="color:rgba(255,255,255,0.5);font-size:10px;margin-right:3px;">[' +
         _formatChatTime(msg.created_at) + ']</span>' +
-        lvTagHtml + ' ' +
+        lvTagHtml +
         gmLabel + titleHtml + nameHtml + '：' +
         (msg.is_gm ? '<span style="color:#FFD700;">' + _parseColorTags(_esc(msg.content)) + '</span>' : _parseColorTags(_esc(msg.content), isVipPlayer(msg))) +
         '</div>';
@@ -1388,9 +1388,9 @@ export function renderChat() {
         if (pinnedMsg) {
             const { lvTagHtml, gmLabel, titleHtml, nameHtml } = _parseName(pinnedMsg);
             expandedPinned.innerHTML =
-                '📌 <span style="color:rgba(255,255,255,0.5);font-size:10px;">[' +
+                '📌 <span style="color:rgba(255,255,255,0.5);font-size:10px;margin-right:3px;">[' +
                 _formatChatTime(pinnedMsg.created_at) + ']</span>' +
-                lvTagHtml + ' ' +
+                lvTagHtml +
                 gmLabel + titleHtml + nameHtml + '：' +
                 (pinnedMsg.is_gm ? '<span style="color:#FFD700;">' + _parseColorTags(_esc(pinnedMsg.content)) + '</span>' : _parseColorTags(_esc(pinnedMsg.content), isVipPlayer(pinnedMsg)));
             expandedPinned.style.display = 'block';
@@ -1446,10 +1446,10 @@ function _parseName(msg) {
     const lvNum     = parseInt((lvTag || '').replace(/\D/g, '')) || 0;
     const lvTagHtml = '<span style="' + _lvColor(lvNum) + 'font-size:13px;font-weight:bold;margin-right:3px;">' + _esc(lvTag) + '</span>';
     const gmLabel   = msg.is_gm
-        ? '<span style="color:#4B9CD3;font-weight:bold;">【GM】</span>'
+        ? '<span style="color:#4B9CD3;font-weight:bold;margin-right:3px;">【GM】</span>'
         : '';
     const titleHtml = titleStr
-        ? '<span style="color:#88CCFF;">[' + _esc(titleStr) + ']</span>'
+        ? '<span style="color:#88CCFF;margin-right:3px;">[' + _esc(titleStr) + ']</span>'
         : '';
     const nameHtml  = msg.is_gm
         ? '<span style="color:#FFD700;">' + _esc(name) + '</span>'
@@ -1530,5 +1530,6 @@ export async function syncTitleToServer(title) {
                 '?username=eq.' + encodeURIComponent(settings.playerName)
             );
         }
+        saveChatSettings({ ...settings, title: title || '' });
     } catch(e) {}
 }
