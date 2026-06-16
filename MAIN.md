@@ -12,7 +12,7 @@ config/evolution.js       EVOLUTION_PATHS, SKILLS
 config/patchnotes.js      PATCH_NOTES
 config/compendium_data.js COMPENDIUM_DATA（四大圖鑑分類，需在 map/normalmap.js 之後載入）
 config/characters.js      CHARACTERS（角色定義常數，v0.56.0）
-config/xpConfig.js        XP_CONFIG：採集 XP（fruit.base/foragerPerLevel/noHerbivoreBase）與擊殺 XP（kill.minCreatureBaseXP/hunterPerLevel）所有常數集中定義（v0.1.24.5）
+config/xpConfig.js        XP_CONFIG：採集 XP（fruit.base/foragerPerLevel/noHerbivoreBase）、擊殺 XP（kill.minCreatureBaseXP/hunterPerLevel）、hostile XP 公式（kill.hostile.*）所有常數集中定義（v0.1.24.5）
 config/combatConfig.js    COMBAT_CONFIG.baseAttackIntervalMs（攻擊間隔公式基底，v0.1.24.4）
 config/playerStatsFormula.js
                           calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels)

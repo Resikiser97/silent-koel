@@ -1,6 +1,14 @@
-## v0.1.24.5
+## v0.1.24.6
 
 # CHANGELOG — 只吃不叫的噪鵑
+
+---
+
+## v0.1.24.6 - 2026-06-16
+
+### 重構
+- `config/xpConfig.js`：`XP_CONFIG.kill` 新增 `hostile` 子物件（`base=30 / hpDivisor=50 / hpScale=10 / cap=80 / defaultHp=50`），集中定義 hostile 擊殺 XP 公式所有常數
+- `systems/damage.js`：`handleKill` hostile XP 公式裸數值（80、30、50、10）改讀 `XP_CONFIG.kill.hostile.*`；不改變任何 XP 數值結果
 
 ---
 

@@ -18,5 +18,12 @@ export const XP_CONFIG = {
     kill: {
         minCreatureBaseXP: 20, // 目前所有 creature 擊殺 XP 的最低基準；中立怪固定使用此值
         hunterPerLevel: 10,    // 獵人本能技能每級 XP 加成
+        hostile: {
+            base: 30,          // hostile 擊殺 XP 基礎值
+            hpDivisor: 50,     // HP 比例分母
+            hpScale: 10,       // HP 比例乘數
+            cap: 80,           // hostile 擊殺 XP 上限
+            defaultHp: 50,     // 生物無 maxHp 時的預設值
+        },
     },
 };

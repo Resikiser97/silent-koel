@@ -144,7 +144,10 @@ export function handleKill(c, isHostile) {
     const index = sourceArray.indexOf(c);
     if (index !== -1) sourceArray.splice(index, 1);
     gameState.corpses.push({ x: c.x, y: c.y, radius: c.radius, spawnTime: now });
-    const baseXP = isHostile ? Math.min(80, 30 + Math.round((c.maxHp || 50) / 50 * 10)) : XP_CONFIG.kill.minCreatureBaseXP;
+    const h = XP_CONFIG.kill.hostile;
+    const baseXP = isHostile
+        ? Math.min(h.cap, h.base + Math.round(((c.maxHp || h.defaultHp) / h.hpDivisor) * h.hpScale))
+        : XP_CONFIG.kill.minCreatureBaseXP;
     const rawXP = baseXP + (gameState.playerSkills.hunter || 0) * XP_CONFIG.kill.hunterPerLevel;
     const actualXP = addXP(rawXP);
     showXPPopup(p.x, p.y, actualXP);
