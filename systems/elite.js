@@ -81,21 +81,19 @@ function _spawnHunterElite(nightNum, eliteType) {
     const tier = map.elites[nightNum - 1];
     const meta = _HUNTER_ELITE_META[eliteType];
     const star = _HUNTER_ELITE_STARS[nightNum - 1] || _HUNTER_ELITE_STARS[0];
-    const isHardMap = !!(map.features && map.features.hardElites);
 
-    // 困難地圖：固定數值；Easy/Normal 地圖：依地圖 elites 倍率動態計算
-    const strengthMult = (!isHardMap && gameState.currentMap && gameState.currentMap.creatureStrength)
-        ? (gameState.currentMap.creatureStrength.hostile.hpMultiplier || 1)
-        : 1;
-    const hp = isHardMap
-        ? cfg.hp
-        : Math.round(ELITE_CONFIG.base.hp * tier.hpMultiplier * strengthMult);
-    const damage = isHardMap
-        ? cfg.damage
-        : Math.round(ELITE_CONFIG.base.damage * tier.damageMultiplier);
-    const speed  = isHardMap
-        ? (tier.speed || 3.9)
-        : (ELITE_CONFIG.base.speed + tier.speedBonus);
+    // 地圖難度倍率（三難度統一套用，不分困難/非困難）
+    const strength  = (map && map.creatureStrength && map.creatureStrength.hostile) || {};
+    const hpMult     = strength.hpMultiplier    || 1;
+    const speedMult  = strength.speedMultiplier || 1;
+
+    // 隼族（Falcon）強度差異化：HP ×0.7、傷害 ×1.3；犬族維持 ×1（不影響速度）
+    const speciesHpMult  = eliteType.includes('Falcon') ? 0.7 : 1;
+    const speciesDmgMult = eliteType.includes('Falcon') ? 1.3 : 1;
+
+    const hp     = Math.round(ELITE_CONFIG.base.hp * tier.hpMultiplier * hpMult * speciesHpMult);
+    const damage = Math.round(ELITE_CONFIG.base.damage * tier.damageMultiplier * speciesDmgMult);
+    const speed  = ELITE_CONFIG.base.speed * 3 * speedMult + tier.speedBonus;
 
     const r = cfg.radius;
     const edge = Math.floor(Math.random() * 4);
@@ -199,7 +197,9 @@ export function spawnEliteCreature(nightNum) {
 
 // ── Hunter 精英怪死亡獎勵（不含 addXP，xp 由呼叫端決定時機）
 export function _handleHunterEliteKill(elite) {
-    const rewards = HUNTER_ELITE_REWARDS[elite.starTier] || HUNTER_ELITE_REWARDS[1];
+    const difficulty = (gameState.currentMap && gameState.currentMap.difficulty) || 'easy';
+    const table   = HUNTER_ELITE_REWARDS[difficulty] || HUNTER_ELITE_REWARDS.easy;
+    const rewards = table[elite.starTier] || table[1];
     gameState.skillPoints += rewards.skillPts;
     storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + rewards.mutPts;
@@ -437,7 +437,7 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
     if (cfg.type === 'melee') {
         if (dist <= elite.attackRange) {
             if (now - elite.attackCooldown >= cfg.attackCooldown) {
-                applyDamageToPlayer(cfg.damage, elite);
+                applyDamageToPlayer(elite.damage, elite);
                 elite.attackCooldown = now;
                 AudioManager.play('dogAttack');
                 // 毒霧犬附帶毒效果（poisonStacks 疊加）

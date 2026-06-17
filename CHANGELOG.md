@@ -1,3 +1,34 @@
+## v0.1.25.9 - 2026-06-17
+
+### 修復
+- `map/normalmap.js`：精英怪 hpMultiplier 調整（第1夜 5→6、第2夜 10→12、第3夜 20→18），使普通難度三夜 HP 對齊公式（450/900/1350）
+- `map/hardmap.js`：精英怪 hpMultiplier 調整（第1夜 8→7、第2夜 15→14、第3夜 25→21），使困難難度三夜 HP 對齊公式（犬 875/1750/2625、隼 613/1225/1838）
+- `systems/elite.js`：`_spawnHunterElite()` 移除困難地圖固定數值分支（`isHardMap` 判斷），三難度統一使用「依夜晚倍率＋地圖難度倍率」公式計算 HP/傷害/速度；速度公式由 `base.speed + speedBonus` 改為 `base.speed * 3 * speedMult + speedBonus`，困難難度現在正確套用地圖 speedMultiplier
+- `systems/elite.js`：新增犬／隼差異化倍率（隼族 HP ×0.7、傷害 ×1.3，犬族不變），透過 `eliteType.includes('Falcon')` 判斷物種，不寫死 id 字串
+- `systems/elite.js`：`_updateHunterEliteChase()` 犬族近戰攻擊由 `cfg.damage`（固定值）改為 `elite.damage`（公式計算值），確保實際傷害與生成數值一致
+- `systems/elite.js`：`_handleHunterEliteKill()` 獎勵查表從單層 `HUNTER_ELITE_REWARDS[starTier]` 改為依 `gameState.currentMap.difficulty` 查三張子表
+- `config/creatures.js`：`HUNTER_ELITE_REWARDS` 從單層星級表重構為三難度子表（easy/normal/hard），簡單難度不給變異點（mutPts: 0）
+- `config/gameConfig.js`：`HARD_ELITE_CONFIG` 的 `hp`/`damage` 欄位加上廢棄說明，標註實際強度由公式決定
+- `config/compendium_data.js`：「⭐精英怪」條目全面同步——結構引用由 `HUNTER_ELITE_REWARDS[n]` 改為三難度子表（easy/normal/hard）；新增傷害欄位顯示；困難難度改為動態計算公式值（`hDogHp/hDogDmg/hFalconHp/hFalconDmg`）取代舊的 `hc.specterDog.hp` 等固定值引用；三段（簡單/普通/困難）擊殺獎勵分開顯示
+
+### 數值對照（修正後）
+| 難度 | 夜晚 | HP | 傷害 | 速度 |
+|---|---|---|---|---|
+| 簡單 | ★ | 250 | 12 | 3.3 |
+| 簡單 | ★★ | 375 | 14 | 3.5 |
+| 簡單 | ★★★ | 500 | 16 | 3.7 |
+| 普通 | ★ | 450 | 12 | 4.8 |
+| 普通 | ★★ | 900 | 17 | 5.2 |
+| 普通 | ★★★ | 1350 | 23 | 6.0 |
+| 困難（犬） | ★ | 875 | 16 | 6.5 |
+| 困難（犬） | ★★ | 1750 | 24 | 7.0 |
+| 困難（犬） | ★★★ | 2625 | 32 | 8.0 |
+| 困難（隼） | ★ | 613 | 21 | 6.5 |
+| 困難（隼） | ★★ | 1225 | 31 | 7.0 |
+| 困難（隼） | ★★★ | 1838 | 42 | 8.0 |
+
+---
+
 ## v0.1.25.8 - 2026-06-17
 
 ### 新增

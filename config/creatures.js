@@ -23,12 +23,24 @@ export const ELITE_CONFIG = {
     ]
 };
 
-// 靜音獵隊（犬/隼）精英怪擊殺獎勵，依星級（1/2/3）給予
-// 來源：systems/elite.js _handleHunterEliteKill，搬至此處供 compendium_data.js 動態引用
+// 靜音獵隊（犬/隼）精英怪擊殺獎勵，依難度（easy/normal/hard）× 星級（1/2/3）
+// 注意：簡單難度故意不給變異點（mutPts: 0），這是設計決策非漏寫
 export const HUNTER_ELITE_REWARDS = {
-    1: { xp: 200, skillPts: 2, mutPts: 1 },
-    2: { xp: 350, skillPts: 3, mutPts: 2 },
-    3: { xp: 500, skillPts: 4, mutPts: 3 },
+    easy: {
+        1: { xp: 200, skillPts: 1, mutPts: 0 },
+        2: { xp: 350, skillPts: 2, mutPts: 0 },
+        3: { xp: 500, skillPts: 3, mutPts: 0 },
+    },
+    normal: {
+        1: { xp: 200, skillPts: 2, mutPts: 1 },
+        2: { xp: 350, skillPts: 3, mutPts: 2 },
+        3: { xp: 500, skillPts: 4, mutPts: 3 },
+    },
+    hard: {
+        1: { xp: 200, skillPts: 3, mutPts: 2 },
+        2: { xp: 350, skillPts: 4, mutPts: 3 },
+        3: { xp: 500, skillPts: 5, mutPts: 4 },
+    },
 };
 
 // 靜音獵隊精英怪毒抗（0 = 無抗性）

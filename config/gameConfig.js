@@ -6,7 +6,7 @@ export const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
-    version:      'v0.1.25.8',
+    version:      'v0.1.25.9',
     SAVE_VERSION: '1.1'
 };
 
@@ -23,7 +23,9 @@ export const CORPSE_EXPIRE_MS     = 60000;  // 屍體消失時間 (ms)
 export const BONE_EXPIRE_MS       = 180000; // 白骨消失時間 (ms)
 export const ARCHER_BULLET_SPEED  = 9;      // 阿奇爾子彈速度
 
-// 靜音獵隊精英怪數值（困難地圖）
+// 靜音獵隊精英怪身份屬性（打法/技能/外觀，與難度無關）
+// ⚠️ hp / damage 已不用於戰鬥數值計算，僅供歷史參考
+//    實際強度依 map.elites[].hpMultiplier / damageMultiplier ＋犬隼差異化倍率計算（v0.1.25.9）
 export const HARD_ELITE_CONFIG = {
     specterDog:   { hp: 480,  damage: 20, attackCooldown: 1200, radius: 14, type: 'melee' },
     shadowDog:    { hp: 900,  damage: 30, attackCooldown:  900, radius: 14, type: 'melee' },

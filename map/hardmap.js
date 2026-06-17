@@ -25,9 +25,9 @@ export const HARD_MAP = {
     aggroRangeOverride: 600,
 
     elites: [
-        { night: 1, hpMultiplier:  8, speedBonus: 0.5, damageMultiplier: 2.0 },
-        { night: 2, hpMultiplier: 15, speedBonus: 1.0, damageMultiplier: 3.0 },
-        { night: 3, hpMultiplier: 25, speedBonus: 2.0, damageMultiplier: 4.0 },
+        { night: 1, hpMultiplier:  7, speedBonus: 0.5, damageMultiplier: 2.0 },
+        { night: 2, hpMultiplier: 14, speedBonus: 1.0, damageMultiplier: 3.0 },
+        { night: 3, hpMultiplier: 21, speedBonus: 2.0, damageMultiplier: 4.0 },
     ],
 
     bosses: [

@@ -275,26 +275,39 @@ export const COMPENDIUM_DATA = (function () {
                         content: (function () {
                             const eStr  = EASY_MAP.elites   || [];
                             const nStr  = NORMAL_MAP.elites || [];
+                            const hStr  = HARD_MAP.elites   || [];
                             const eHpM  = EASY_MAP.creatureStrength.hostile.hpMultiplier;
                             const nHpM  = NORMAL_MAP.creatureStrength.hostile.hpMultiplier;
+                            const hHpM  = HARD_MAP.creatureStrength.hostile.hpMultiplier;
                             const bHp2  = ELITE_CONFIG.base.hp;
-                            const eHp   = [0,1,2].map(function(i){ return bHp2 * (eStr[i] ? eStr[i].hpMultiplier : 1) * eHpM; });
-                            const nHp   = [0,1,2].map(function(i){ return bHp2 * (nStr[i] ? nStr[i].hpMultiplier : 1) * nHpM; });
-                            const r1    = HUNTER_ELITE_REWARDS[1], r2 = HUNTER_ELITE_REWARDS[2], r3 = HUNTER_ELITE_REWARDS[3];
+                            const bDmg  = ELITE_CONFIG.base.damage;
+                            const eHp   = [0,1,2].map(function(i){ return Math.round(bHp2 * (eStr[i] ? eStr[i].hpMultiplier : 1) * eHpM); });
+                            const nHp   = [0,1,2].map(function(i){ return Math.round(bHp2 * (nStr[i] ? nStr[i].hpMultiplier : 1) * nHpM); });
+                            const eDmg  = [0,1,2].map(function(i){ return Math.round(bDmg * (eStr[i] ? eStr[i].damageMultiplier : 1)); });
+                            const nDmg  = [0,1,2].map(function(i){ return Math.round(bDmg * (nStr[i] ? nStr[i].damageMultiplier : 1)); });
+                            const hDogHp     = [0,1,2].map(function(i){ return Math.round(bHp2 * (hStr[i] ? hStr[i].hpMultiplier : 1) * hHpM); });
+                            const hDogDmg    = [0,1,2].map(function(i){ return Math.round(bDmg * (hStr[i] ? hStr[i].damageMultiplier : 1)); });
+                            const hFalconHp  = hDogHp.map(function(v){ return Math.round(v * 0.7); });
+                            const hFalconDmg = hDogDmg.map(function(v){ return Math.round(v * 1.3); });
+                            const eR1 = HUNTER_ELITE_REWARDS.easy[1],   eR2 = HUNTER_ELITE_REWARDS.easy[2],   eR3 = HUNTER_ELITE_REWARDS.easy[3];
+                            const nR1 = HUNTER_ELITE_REWARDS.normal[1], nR2 = HUNTER_ELITE_REWARDS.normal[2], nR3 = HUNTER_ELITE_REWARDS.normal[3];
+                            const hR1 = HUNTER_ELITE_REWARDS.hard[1],   hR2 = HUNTER_ELITE_REWARDS.hard[2],   hR3 = HUNTER_ELITE_REWARDS.hard[3];
                             const pr    = Math.round(HUNTER_ELITE_POISON_RESIST * 100);
                             const hc    = HARD_ELITE_CONFIG;
                             const zhTW =
                                 '精英怪是每個夜晚出現的特殊強敵，擊殺後立即結束當夜，有 50% 機率獲得隱藏器官。畫面頂部顯示血條與方向箭頭。靜音獵隊精英怪毒抗 ' + pr + '%（不受毒傷影響）。★／★★／★★★ 在本條目中一律代表「出場夜晚順序」（第1夜／第2夜／第3夜），所有難度通用，不代表強弱排名。\n\n' +
                                 '【簡單 / 普通難度 — 靜音獵隊犬族】\n' +
                                 '每局開始時，幽靈犬、暗影犬、毒霧犬三者的出場順序由本局隨機決定，不是固定的「幽靈犬＝第一夜」。三犬本身數值相同，強弱完全取決於落在哪一夜。\n' +
-                                '★ 第一夜：簡單 HP ' + eHp[0] + '／普通 HP ' + nHp[0] + '，擊殺 +' + r1.xp + ' XP、+' + r1.skillPts + ' 技能點、+' + r1.mutPts + ' 變異點。\n' +
-                                '★★ 第二夜：簡單 HP ' + eHp[1] + '／普通 HP ' + nHp[1] + '，擊殺 +' + r2.xp + ' XP、+' + r2.skillPts + ' 技能點、+' + r2.mutPts + ' 變異點。\n' +
-                                '★★★ 第三夜：簡單 HP ' + eHp[2] + '／普通 HP ' + nHp[2] + '，擊殺 +' + r3.xp + ' XP、+' + r3.skillPts + ' 技能點、+' + r3.mutPts + ' 變異點。\n' +
-                                '普通難度下精英怪具備回血特性，簡單難度不回血。擊殺獎勵（XP/技能點/變異點）兩難度相同，只看星級。\n\n' +
+                                '★ 第一夜：簡單 HP' + eHp[0] + '／傷害' + eDmg[0] + '，擊殺+' + eR1.xp + 'XP／+' + eR1.skillPts + '技能點；普通 HP' + nHp[0] + '／傷害' + nDmg[0] + '，擊殺+' + nR1.xp + 'XP／+' + nR1.skillPts + '技能點／+' + nR1.mutPts + '變異點。\n' +
+                                '★★ 第二夜：簡單 HP' + eHp[1] + '／傷害' + eDmg[1] + '，擊殺+' + eR2.xp + 'XP／+' + eR2.skillPts + '技能點；普通 HP' + nHp[1] + '／傷害' + nDmg[1] + '，擊殺+' + nR2.xp + 'XP／+' + nR2.skillPts + '技能點／+' + nR2.mutPts + '變異點。\n' +
+                                '★★★ 第三夜：簡單 HP' + eHp[2] + '／傷害' + eDmg[2] + '，擊殺+' + eR3.xp + 'XP／+' + eR3.skillPts + '技能點；普通 HP' + nHp[2] + '／傷害' + nDmg[2] + '，擊殺+' + nR3.xp + 'XP／+' + nR3.skillPts + '技能點／+' + nR3.mutPts + '變異點。\n' +
+                                '簡單難度擊殺不給變異點。普通難度下精英怪具備回血特性，簡單難度不回血。\n\n' +
                                 '【困難難度 — 靜音獵隊混合隊伍】\n' +
-                                '開局時隨機決定整局使用犬族或隼族（各 50%），全局不混搭。星級同樣代表出場順序（第1夜★、第2夜★★、第3夜★★★），但困難難度三隻的數值天生不同，哪一隻落在哪一夜也是開局隨機洗牌決定——所以★／★★／★★★不是固定對應某個數字，而是「這局可能是以下三者之一」：\n' +
-                                '犬族（近戰）三選一：幽靈犬 HP' + hc.specterDog.hp + '／傷害' + hc.specterDog.damage + '，暗影犬 HP' + hc.shadowDog.hp + '／傷害' + hc.shadowDog.damage + '，毒霧犬 HP' + hc.venomDog.hp + '／傷害' + hc.venomDog.damage + '。\n' +
-                                '隼族（遠程）三選一：幽靈隼 HP' + hc.specterFalcon.hp + '／傷害' + hc.specterFalcon.damage + '，暗影隼 HP' + hc.shadowFalcon.hp + '／傷害' + hc.shadowFalcon.damage + '，毒霧隼 HP' + hc.venomFalcon.hp + '／傷害' + hc.venomFalcon.damage + '。\n' +
+                                '開局時隨機決定整局使用犬族或隼族（各 50%），全局不混搭；幽靈／暗影／毒霧三個身份落在哪一夜，同樣是開局隨機洗牌決定。身份只影響打法與技能，不影響血量／傷害——同一夜、同一族別（犬或隼）下，三個身份的血量傷害完全相同：\n' +
+                                '★ 第一夜：犬 HP' + hDogHp[0] + '／傷害' + hDogDmg[0] + '；隼 HP' + hFalconHp[0] + '／傷害' + hFalconDmg[0] + '，擊殺+' + hR1.xp + 'XP／+' + hR1.skillPts + '技能點／+' + hR1.mutPts + '變異點。\n' +
+                                '★★ 第二夜：犬 HP' + hDogHp[1] + '／傷害' + hDogDmg[1] + '；隼 HP' + hFalconHp[1] + '／傷害' + hFalconDmg[1] + '，擊殺+' + hR2.xp + 'XP／+' + hR2.skillPts + '技能點／+' + hR2.mutPts + '變異點。\n' +
+                                '★★★ 第三夜：犬 HP' + hDogHp[2] + '／傷害' + hDogDmg[2] + '；隼 HP' + hFalconHp[2] + '／傷害' + hFalconDmg[2] + '，擊殺+' + hR3.xp + 'XP／+' + hR3.skillPts + '技能點／+' + hR3.mutPts + '變異點。\n' +
+                                '隼的血量約為犬的 7 成、攻擊約為犬的 1.3 倍。\n' +
                                 '技能（固定跟隨身份，與星級／出場夜晚無關）：\n' +
                                 '幽靈犬：一般近戰攻擊，無特殊技能。\n' +
                                 '暗影犬：一般近戰攻擊，無特殊技能。\n' +
@@ -307,14 +320,16 @@ export const COMPENDIUM_DATA = (function () {
                                 'Elites are powerful special enemies that appear each night — defeating one ends the current night early with a 50% chance to drop a Hidden Organ. A health bar and direction arrow appear at the top of the screen. Silent Hunter Elites have ' + pr + '% poison resistance. Star tiers (★ / ★★ / ★★★) always represent night-appearance order (Night 1 / Night 2 / Night 3) across every difficulty — never relative power.\n\n' +
                                 '[Easy / Normal — Silent Hunter Dog Squad]\n' +
                                 'At the start of each run, the order in which Specter Dog, Shadow Dog, and Venom Dog appear is decided randomly — it is not fixed as "Specter Dog = Night 1." All three dogs share the same base stats; actual strength depends purely on which night they are assigned to.\n' +
-                                '★ Night 1: Easy HP ' + eHp[0] + ' / Normal HP ' + nHp[0] + ' — kill rewards +' + r1.xp + ' XP, +' + r1.skillPts + ' skill pts, +' + r1.mutPts + ' mutation pt.\n' +
-                                '★★ Night 2: Easy HP ' + eHp[1] + ' / Normal HP ' + nHp[1] + ' — kill rewards +' + r2.xp + ' XP, +' + r2.skillPts + ' skill pts, +' + r2.mutPts + ' mutation pts.\n' +
-                                '★★★ Night 3: Easy HP ' + eHp[2] + ' / Normal HP ' + nHp[2] + ' — kill rewards +' + r3.xp + ' XP, +' + r3.skillPts + ' skill pts, +' + r3.mutPts + ' mutation pts.\n' +
-                                'In Normal mode Elites regenerate HP; in Easy mode they do not. Kill rewards (XP / skill pts / mutation pts) are the same for both difficulties — only the star tier matters.\n\n' +
+                                '★ Night 1: Easy HP ' + eHp[0] + ' / dmg ' + eDmg[0] + ', kill +' + eR1.xp + ' XP / +' + eR1.skillPts + ' skill pt; Normal HP ' + nHp[0] + ' / dmg ' + nDmg[0] + ', kill +' + nR1.xp + ' XP / +' + nR1.skillPts + ' skill pt / +' + nR1.mutPts + ' mutation pt.\n' +
+                                '★★ Night 2: Easy HP ' + eHp[1] + ' / dmg ' + eDmg[1] + ', kill +' + eR2.xp + ' XP / +' + eR2.skillPts + ' skill pts; Normal HP ' + nHp[1] + ' / dmg ' + nDmg[1] + ', kill +' + nR2.xp + ' XP / +' + nR2.skillPts + ' skill pts / +' + nR2.mutPts + ' mutation pts.\n' +
+                                '★★★ Night 3: Easy HP ' + eHp[2] + ' / dmg ' + eDmg[2] + ', kill +' + eR3.xp + ' XP / +' + eR3.skillPts + ' skill pts; Normal HP ' + nHp[2] + ' / dmg ' + nDmg[2] + ', kill +' + nR3.xp + ' XP / +' + nR3.skillPts + ' skill pts / +' + nR3.mutPts + ' mutation pts.\n' +
+                                'Easy kills grant no mutation points. In Normal mode Elites regenerate HP; in Easy mode they do not.\n\n' +
                                 '[Hard — Silent Hunter Mixed Squad]\n' +
-                                'At run start, a coin-flip determines whether the entire run uses the Dog squad or the Falcon squad (50/50); the two never mix within a run. The star tier still marks appearance order (Night 1 ★, Night 2 ★★, Night 3 ★★★), but in Hard mode each individual has its own fixed stats, and which one lands on which night is shuffled at run start — so ★ / ★★ / ★★★ do not map to one fixed number; each night slot could be any of the three.\n' +
-                                'Dog squad (melee) — one of three: Specter Dog HP ' + hc.specterDog.hp + ' / dmg ' + hc.specterDog.damage + ', Shadow Dog HP ' + hc.shadowDog.hp + ' / dmg ' + hc.shadowDog.damage + ', Venom Dog HP ' + hc.venomDog.hp + ' / dmg ' + hc.venomDog.damage + '.\n' +
-                                'Falcon squad (ranged) — one of three: Specter Falcon HP ' + hc.specterFalcon.hp + ' / dmg ' + hc.specterFalcon.damage + ', Shadow Falcon HP ' + hc.shadowFalcon.hp + ' / dmg ' + hc.shadowFalcon.damage + ', Venom Falcon HP ' + hc.venomFalcon.hp + ' / dmg ' + hc.venomFalcon.damage + '.\n' +
+                                'At run start, a coin-flip determines whether the entire run uses the Dog squad or the Falcon squad (50/50); the two never mix within a run. Which of Specter / Shadow / Venom lands on which night is also shuffled at run start. Identity only affects playstyle and skills, never HP or damage — within the same night and the same squad (Dog or Falcon), all three identities share identical HP and damage:\n' +
+                                '★ Night 1: Dog HP ' + hDogHp[0] + ' / dmg ' + hDogDmg[0] + '; Falcon HP ' + hFalconHp[0] + ' / dmg ' + hFalconDmg[0] + ', kill +' + hR1.xp + ' XP / +' + hR1.skillPts + ' skill pts / +' + hR1.mutPts + ' mutation pts.\n' +
+                                '★★ Night 2: Dog HP ' + hDogHp[1] + ' / dmg ' + hDogDmg[1] + '; Falcon HP ' + hFalconHp[1] + ' / dmg ' + hFalconDmg[1] + ', kill +' + hR2.xp + ' XP / +' + hR2.skillPts + ' skill pts / +' + hR2.mutPts + ' mutation pts.\n' +
+                                '★★★ Night 3: Dog HP ' + hDogHp[2] + ' / dmg ' + hDogDmg[2] + '; Falcon HP ' + hFalconHp[2] + ' / dmg ' + hFalconDmg[2] + ', kill +' + hR3.xp + ' XP / +' + hR3.skillPts + ' skill pts / +' + hR3.mutPts + ' mutation pts.\n' +
+                                "Falcons have roughly 70% of a Dog's HP and 130% of a Dog's damage.\n" +
                                 'Skills (tied to identity, independent of star tier / night):\n' +
                                 'Specter Dog: standard melee attack, no special skill.\n' +
                                 'Shadow Dog: standard melee attack, no special skill.\n' +

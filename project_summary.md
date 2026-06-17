@@ -1,4 +1,4 @@
-## v0.1.25.8
+## v0.1.25.9
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.25.8
+**現在版本:** v0.1.25.9
 
-**當前狀態：** 圖鑑大幅更新（v0.1.25.8）：修正 undefined/NaN（ESM import）、精英怪條目全面重寫（毒抗0%、出場隨機、真實獎勵數字、困難犬隼說明）、新增角色/成就/排行榜/Boss機制條目、HUNTER_ELITE_REWARDS config 化
+**當前狀態：** 精英怪數值機制全面修正（v0.1.25.9）：困難難度改用公式計算（不再固定數值）、犬隼差異化倍率、HUNTER_ELITE_REWARDS 依難度拆分三張表
 
 **下一步：**
 1. Stage F 批次 3b：拆 evolution / organs / ui 循環
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.25.9：精英怪數值機制全面修正 — 困難難度 HP/傷害/速度改用與簡單/普通相同的倍率公式（移除 `isHardMap` 固定數值分支）；速度公式補入地圖 `speedMultiplier`；新增隼族差異化（HP×0.7、傷害×1.3）；`HUNTER_ELITE_REWARDS` 拆分為 easy/normal/hard 三張表；犬族近戰傷害改用公式值
 - v0.1.25.8：圖鑑 ESM import 修復（移除 `typeof` 全域偵測，改為明確 import `BOSS_CONFIG`/`ELITE_CONFIG`/`EVOLUTION_PATHS`/`EASY_MAP`/`NORMAL_MAP`/`HARD_MAP`，修正 Boss/精英怪數值 undefined/NaN）；新增「角色」（噪鵑/阿奇爾）、「成就與永久加成」、「排行榜與名人堂」、「Boss出現機制」條目；補採集範圍、9種技能列表、F鍵中性描述
 - v0.1.25.7：圖鑑（遊戲說明／器官圖鑑／進化系統）桌機版左側目錄點擊條目捲動歸零修復（`_captureSidebarScroll`/`_restoreSidebarScroll`）；變異器官面板 `showMutationPanel()` 改為骨架建立一次+`refresh()`就地更新，消除同類捲動歸零問題；圖鑑桌機面板尺寸改 isMobile 感知（`width:82%; max-width:1040px; height:86%; max-height:86vh`）；故事書第一章四分頁誤標一～四章統一修正為「第一章」，第二章三分頁誤標「第三章」修正為「第二章」
 - v0.1.25.6：Boss biome 改由 Seed 決定（Easy/Normal，`initBossBiome()` + `gameState.bossBiome`）；Player Stats XP 區加「採集範圍」欄（體型+器官+技能合計）；特殊技能按鈕加圓角邊框、Ready/CD 視覺區分；聊天稱號 toLowerCase 修復

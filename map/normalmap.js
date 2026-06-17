@@ -29,9 +29,9 @@ export const NORMAL_MAP = {
     aggroRangeOverride: 400,
 
     elites: [
-        { night: 1, hpMultiplier:   5, speedBonus: 0.3, damageMultiplier: 1.5 },
-        { night: 2, hpMultiplier:  10, speedBonus: 0.7, damageMultiplier: 2.1 },
-        { night: 3, hpMultiplier:  20, speedBonus: 1.5, damageMultiplier: 2.9 },
+        { night: 1, hpMultiplier:  6, speedBonus: 0.3, damageMultiplier: 1.5 },
+        { night: 2, hpMultiplier: 12, speedBonus: 0.7, damageMultiplier: 2.1 },
+        { night: 3, hpMultiplier: 18, speedBonus: 1.5, damageMultiplier: 2.9 },
     ],
 
     bosses: [
