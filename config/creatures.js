@@ -127,21 +127,45 @@ export const BOSS_CONFIG = {
         radius: 25, hp: 500,  speed: 3.0, damage: 15, aggroRange: 99999, attackRange: 30,
         color: '#3B1E08', colorChasing: '#2A0D00', glowColor: '#8B4513',
         spawnX: null, spawnY: null,
-        poisonResist: 0.3
+        poisonResist: 0.3,
+        melee: { windupMs: 120, activeMs: 220, recoveryMs: 980, enragedRecoveryReductionMs: 500 }
     },
     ocean: {
         name: '🌊 大白鯊',  label: '🦈🌊大白鯊',
         radius: 30, hp: 600,  speed: 3.9, damage: 18, aggroRange: 99999, attackRange: 35,
         color: '#003388', colorChasing: '#001A44', glowColor: '#1a3a5c',
         spawnX: 6500, spawnY: 6500,
-        poisonResist: 0.3
+        poisonResist: 0.3,
+        melee: { windupMs: 120, activeMs: 220, recoveryMs: 860 },
+        charge: {
+            triggerIntervalMs: 4000,
+            triggerRange: 500,
+            warningMs: 600,
+            durationMs: 800,
+            speedMultiplier: 4,
+            maxDistance: 1000,
+            cooldownMs: 2500,
+            damageMultiplier: 2,
+            hitRangeBonus: 10
+        }
     },
     desert: {
         name: '🏜️ 沙漠蠍王', label: '🦂🏜️蠍王',
         radius: 28, hp: 550,  speed: 3.6, damage: 20, aggroRange: 99999, attackRange: 32,
         color: '#8B7355', colorChasing: '#5C4A2A', glowColor: '#8B6914',
         spawnX: 2000, spawnY: 2000,
-        poisonResist: 0.5
+        poisonResist: 0.5,
+        melee: { windupMs: 100, activeMs: 250, recoveryMs: 1000 },
+        venom: {
+            cooldownMs: 5000,
+            warningMs: 500,
+            radius: 150,
+            durationMs: 4000,
+            tickMs: 1000,
+            damageMultiplier: 0.3,
+            poisonDps: 8,
+            poisonDurationMs: 3000
+        }
     },
     hunter: {
         name: '🎯 黑色獵人', label: '🎯 黑色獵人',

@@ -1,4 +1,4 @@
-﻿## v0.1.26.1
+﻿## v0.1.27.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.26.1**
+- 版本：**v0.1.27.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -82,7 +82,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `gameConfig.js` | GAME_INFO（版本號、SAVE_VERSION）、GAME_TIMING、AUDIO_FILES（含黑色獵人分離腳步音效 hunterFootstep1/2）、FIXED_DELTA |
 | `characters.js` | CHARACTERS（角色定義常數） |
 | `organs.js` | ORGANS（15種普通）+ HIDDEN_ORGANS（4種）+ poisonSac |
-| `creatures.js` | CREATURE_CONFIG、CREATURE_AI_CONFIG（生物分離、近戰前後搖、鬣狗 pack/隊長焦點數值）、ELITE_CONFIG、BOSS_CONFIG |
+| `creatures.js` | CREATURE_CONFIG、CREATURE_AI_CONFIG（生物分離、近戰前後搖、鬣狗 pack/隊長焦點數值）、ELITE_CONFIG、BOSS_CONFIG（三普通 Boss 近戰節奏、鯊魚衝刺、蠍王毒霧數值） |
 | `evolution.js` | EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種） |
 | `patchnotes.js` | PATCH_NOTES（版本更新公告，最新置頂；v0.1.25.3 起保留 v0.1.22.1 以上） |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
@@ -121,7 +121,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `evolution.js` | buildSkillTreeOverlay / upgradeSkill / applyEvolutionEffects |
 | `creatures.js` | updateNeutralCreatures / updateHostileCreatures / _tryMeleeAttack / _bodyMeleeRange（半徑 + max(attackRange, 目標半徑) + rangeBuffer） / _applyCreatureSeparation / notifyCreatureHitByPlayer |
 | `elite.js` | spawnEliteCreature / updateEliteCreature |
-| `boss.js` | spawnBoss / updateBoss / showVictory |
+| `boss.js` | spawnBoss / updateBoss / showVictory / _bossMeleeRange / _bossMeleeProfile / _sharkChargeDistance |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
 | `daynight.js` | getDayNightPhaseIndex(timeRemaining) / updateDayNightCycle |
 | `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息 / username 小寫正規化+GOBLINNEST 過濾） |
@@ -197,3 +197,4 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | gameLoop | 絕對不能出現字面上的 `\n` 字符 |
 | 版本號格式 | 四段 `v0.x.y.z`；排行榜 `version_order` 取第二段 x，同一個 x 的記錄互相競爭（x 升版時排行榜重置） |
 | 容器 `innerHTML = ''` 重建會讓捲動歸零 | 任何左側目錄/列表類 UI 若每次互動都整個清空重建容器，`scrollTop` 會被歸零造成畫面回彈；正確做法是重繪前用 `_captureSidebarScroll()` 存 `scrollTop`，重繪後用 `_restoreSidebarScroll()` 還原（見 `systems/ui.js` 圖鑑三分頁，v0.1.25.7）；同類面板更好的作法是面板骨架只建立一次，互動時呼叫內部 `refresh()` 就地更新（見 `systems/mutation.js` `showMutationPanel()`） |
+

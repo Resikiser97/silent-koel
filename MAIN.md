@@ -1,4 +1,4 @@
-﻿## v0.1.26.1
+﻿## v0.1.27.0
 
 # The Silent Koel — 模組架構說明
 
@@ -7,7 +7,7 @@
 ```
 config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES（含黑色獵人 hunterFootstep1/2 分離腳步音效，v0.1.26.1）, HARD_ELITE_CONFIG
 config/organs.js          ORGANS, HIDDEN_ORGANS, COMBOS
-config/creatures.js       CREATURE_CONFIG, CREATURE_AI_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人；生物分離/近戰前後搖/鬣狗 pack 數值集中於 CREATURE_AI_CONFIG）
+config/creatures.js       CREATURE_CONFIG, CREATURE_AI_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人；三普通 Boss 近戰節奏/鯊魚衝刺/蠍王毒霧數值；生物分離/近戰前後搖/鬣狗 pack 數值集中於 CREATURE_AI_CONFIG）
                           HUNTER_ELITE_REWARDS, HUNTER_ELITE_POISON_RESIST（靜音獵隊獎勵與毒抗，v0.1.25.8）
 config/evolution.js       EVOLUTION_PATHS, SKILLS
 config/patchnotes.js      PATCH_NOTES（v0.1.25.3 起玩家公告保留 v0.1.22.1 以上）
@@ -124,7 +124,7 @@ systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCrea
                           _fireEliteFalconProjectile, _fireVenomFalconShot, _updateEliteVenomPuddle
                           _updateHunterEliteChase, _drawHunterElite
                           _HUNTER_ELITE_META, _HUNTER_ELITE_STAR（顯示常數；_HUNTER_ELITE_REWARDS 已搬至 config/creatures.js，elite.js 改 import 使用）
-systems/boss.js           spawnBoss, updateBoss, showVictory
+systems/boss.js           spawnBoss, updateBoss, showVictory, _bossMeleeRange, _bossMeleeProfile, _sharkChargeDistance
                           handleBossKill（統一 Boss 死亡路由，支援黑色獵人多管血條，v0.1.0.0）
                           _spawnHunterBoss, _updateHunterBoss（黑色獵人 Boss 系統；腳步音效分離為 2500ms / 1000ms 雙節奏，v0.1.26.1）
                           _triggerHunterPhaseCheck, _showHunterDialogue（形態切換/台詞，v0.1.0.0）
@@ -1065,3 +1065,4 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 ### script 標籤位置
 `main.js` 以 `<script type="module" src="./main.js">` 單一標籤載入（位於 `index.html` body 末端）。
 其餘所有檔案透過 ESM `import` 引入，不使用獨立 `<script src>` 標籤。
+

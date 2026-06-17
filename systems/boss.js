@@ -7,8 +7,8 @@
 import { gameState, ctx } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H, getBiome } from './map.js';
 import { worldToScreen, wrappedDistance, wrappedDelta } from './camera.js';
-import { GAME_INFO, GAME_TIMING } from '../config/gameConfig.js';
-import { BOSS_CONFIG, BOSS_BAR_COLORS, BOSS_BAR_NEXT_COLORS } from '../config/creatures.js';
+import { GAME_INFO, GAME_TIMING, FIXED_DELTA } from '../config/gameConfig.js';
+import { BOSS_CONFIG, BOSS_BAR_COLORS, BOSS_BAR_NEXT_COLORS, CREATURE_AI_CONFIG } from '../config/creatures.js';
 import { AudioManager } from './audio.js';
 import { moveCreature } from './spawning.js';
 import { applyDamageToPlayer } from './damage.js';
@@ -71,6 +71,135 @@ const BOSS_COLORS = {
 };
 
 // ── Boss 主繪製分派 ───────────────────────────────────────────
+function _bossConfig(boss) {
+    return BOSS_CONFIG[boss.biome] || BOSS_CONFIG.forest;
+}
+
+export function _bossMeleeProfile(boss) {
+    const cfg = _bossConfig(boss);
+    const base = cfg.melee || CREATURE_AI_CONFIG.meleeAttack.default;
+    if (boss.biome !== 'forest' || !boss._enraged) return base;
+    return {
+        ...base,
+        recoveryMs: Math.max(0, (base.recoveryMs || 0) - (base.enragedRecoveryReductionMs || 0))
+    };
+}
+
+export function _bossMeleeRange(boss, target, attackRangeOverride) {
+    const bossRadius = boss.radius || 0;
+    const targetRadius = target?.radius || 0;
+    const attackRange = attackRangeOverride ?? boss.attackRange ?? 0;
+    return bossRadius + Math.max(attackRange, targetRadius) + CREATURE_AI_CONFIG.meleeAttack.rangeBuffer;
+}
+
+function _resetBossMeleeAttack(boss) {
+    boss._meleeState = null;
+    boss._meleeWindupEnd = 0;
+    boss._meleeActiveEnd = 0;
+    boss._meleeRecoveryEnd = 0;
+    boss._meleeHasHit = false;
+}
+
+function _trackBossMeleeTarget(boss, target, profile) {
+    if (!boss._meleeTarget) return;
+    const dx = boss._meleeTarget.x - target.x;
+    const dy = boss._meleeTarget.y - target.y;
+    boss._meleeTarget.x = target.x + dx * 0.85;
+    boss._meleeTarget.y = target.y + dy * 0.85;
+    const { dx: mx, dy: my } = wrappedDelta(boss.x, boss.y, target.x, target.y);
+    const dist = Math.sqrt(mx * mx + my * my);
+    if (dist <= 1) return;
+    const moveMult = profile.windupMoveMult ?? CREATURE_AI_CONFIG.meleeAttack.windupMoveMult;
+    moveCreature(boss, boss.x + (mx / dist) * _effSpeed(boss) * moveMult, boss.y + (my / dist) * _effSpeed(boss) * moveMult);
+}
+
+function _tryBossMeleeAttack(boss, target, distance, attackRange, now, onHit) {
+    const profile = _bossMeleeProfile(boss);
+    const hitGraceRange = attackRange + CREATURE_AI_CONFIG.meleeAttack.hitGraceBuffer;
+
+    if (boss._meleeState === 'recovering') {
+        if (now >= (boss._meleeRecoveryEnd || 0)) _resetBossMeleeAttack(boss);
+        return true;
+    }
+
+    if (boss._meleeState === 'preparing' || boss._meleeState === 'striking') {
+        if (distance > hitGraceRange) {
+            _resetBossMeleeAttack(boss);
+            return false;
+        }
+        if (boss._meleeState === 'preparing') {
+            _trackBossMeleeTarget(boss, target, profile);
+            if (now >= (boss._meleeWindupEnd || 0)) boss._meleeState = 'striking';
+            return true;
+        }
+        if (now >= (boss._meleeActiveEnd || 0)) {
+            if (!boss._meleeHasHit && distance <= hitGraceRange) {
+                boss._meleeHasHit = true;
+                boss._meleeFlashUntil = now + CREATURE_AI_CONFIG.meleeAttack.strikeFlashMs;
+                onHit();
+            }
+            boss._meleeState = 'recovering';
+            boss._meleeRecoveryEnd = now + profile.recoveryMs;
+        }
+        return true;
+    }
+
+    if (distance > attackRange) return false;
+    boss._meleeState = 'preparing';
+    boss._meleeWindupEnd = now + profile.windupMs;
+    boss._meleeActiveEnd = boss._meleeWindupEnd + profile.activeMs;
+    boss._meleeRecoveryEnd = boss._meleeActiveEnd + profile.recoveryMs;
+    boss._meleeHasHit = false;
+    boss._meleeTarget = { x: target.x, y: target.y };
+    boss.attackCooldown = now;
+    return true;
+}
+
+function _chargeConfig(boss) {
+    return _bossConfig(boss).charge || {};
+}
+
+export function _sharkChargeDistance(boss) {
+    const cfg = _chargeConfig(boss);
+    const durationMs = cfg.durationMs || 800;
+    const frames = Math.max(1, durationMs / FIXED_DELTA);
+    const uncapped = _effSpeed(boss) * (cfg.speedMultiplier || 4) * frames;
+    return Math.min(uncapped, cfg.maxDistance || uncapped);
+}
+
+function _sharkChargeStepSpeed(boss) {
+    const cfg = _chargeConfig(boss);
+    const frames = Math.max(1, (cfg.durationMs || 800) / FIXED_DELTA);
+    return _sharkChargeDistance(boss) / frames;
+}
+
+function _drawBossMeleeTelegraph(boss, sx, sy) {
+    if (!boss._meleeState) return;
+    const now = Date.now();
+    if (boss._meleeState === 'recovering' && now >= (boss._meleeRecoveryEnd || 0)) return;
+    const r = _bossMeleeRange(boss, gameState.player, boss.attackRange) * (gameState.cameraZoom || 1);
+    let color = 'rgba(255, 80, 80, 0.55)';
+    let width = 3;
+    if (boss._meleeState === 'striking') {
+        color = 'rgba(255, 255, 255, 0.75)';
+        width = 4;
+    } else if (boss._meleeState === 'recovering') {
+        color = 'rgba(180, 180, 180, 0.32)';
+        width = 2;
+    }
+    if (boss._meleeFlashUntil && now < boss._meleeFlashUntil) {
+        color = 'rgba(255, 255, 255, 0.95)';
+        width = 5;
+    }
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+}
+
 export function drawBossShape(ctx, boss, sx, sy) {
     ctx.save();
     ctx.translate(sx, sy);
@@ -746,6 +875,7 @@ export function drawBoss() {
     if (boss.biome === 'ocean') _drawSharkChargeArrow(boss);
 
     // Boss 形狀（純 Canvas）
+    _drawBossMeleeTelegraph(boss, s.x, s.y);
     drawBossShape(ctx, boss, s.x, s.y);
 
     // 毒霧特效（蠍王：警告光圈 + 定點毒霧圓，在形狀後繪製）
@@ -1321,16 +1451,17 @@ export function updateBoss() {
 
     // ── 大白鯊 衝刺攻擊
     if (boss.biome === 'ocean') {
+        const chargeCfg = _chargeConfig(boss);
         if (boss._chargeState === 'charging') {
             // 衝刺移動
             boss.x = ((boss.x + boss._chargeVx + MAP_WIDTH)  % MAP_WIDTH);
             boss.y = ((boss.y + boss._chargeVy + MAP_HEIGHT) % MAP_HEIGHT);
             const toPlayer = wrappedDistance(boss.x, boss.y, p.x, p.y);
-            if (toPlayer < boss.attackRange + 10) {
-                applyDamageToPlayer(Math.round(boss.damage * 1.5), boss);
+            if (toPlayer < boss.attackRange + (chargeCfg.hitRangeBonus || 10)) {
+                applyDamageToPlayer(Math.round(boss.damage * (chargeCfg.damageMultiplier || 2)), boss);
                 boss.attackCooldown = now;
             }
-            if (now - (boss._chargeStartTime || 0) > 800) {
+            if (now - (boss._chargeStartTime || 0) > (chargeCfg.durationMs || 800)) {
                 boss._chargeState = 'cooldown';
                 boss._chargeTimer = now;
                 boss._chargeArrow = null;  // 衝刺結束，清除箭頭
@@ -1338,30 +1469,30 @@ export function updateBoss() {
             return; // 衝刺中跳過普通邏輯
         } else if (boss._chargeState === 'warning') {
             // 警告階段：0.6秒後開始衝刺
-            if (now - (boss._chargeWarningStart || 0) > 600) {
+            if (now - (boss._chargeWarningStart || 0) > (chargeCfg.warningMs || 600)) {
                 boss._chargeState = 'charging';
                 boss._chargeStartTime = now;
                 const angle = Math.atan2(
                     boss._chargeTarget.y - boss.y,
                     boss._chargeTarget.x - boss.x
                 );
-                const chargeSpeed = _effSpeed(boss) * 4;
+                const chargeSpeed = _sharkChargeStepSpeed(boss);
                 boss._chargeVx = Math.cos(angle) * chargeSpeed;
                 boss._chargeVy = Math.sin(angle) * chargeSpeed;
             }
             return;
         } else if (boss._chargeState === 'cooldown') {
-            if (now - (boss._chargeTimer || 0) > 1500) boss._chargeState = null;
+            if (now - (boss._chargeTimer || 0) > (chargeCfg.cooldownMs || 2500)) boss._chargeState = null;
         } else {
             // 觸發衝刺
             if (!boss._chargeTimer) boss._chargeTimer = now;
-            if (now - boss._chargeTimer > 4000 && dist < 500) {
+            if (!boss._meleeState && now - boss._chargeTimer > (chargeCfg.triggerIntervalMs || 4000) && dist < (chargeCfg.triggerRange || 500)) {
                 boss._chargeState = 'warning';
                 boss._chargeWarningStart = now;
                 boss._chargeTarget = { x: p.x, y: p.y };
                 // 鎖定箭頭：方向+實際衝刺距離（speed×4×0.8s×60fps）
                 const _cAngle = Math.atan2(p.y - boss.y, p.x - boss.x);
-                const _cDist  = boss.speed * 4 * 0.8 * 60;
+                const _cDist  = _sharkChargeDistance(boss);
                 boss._chargeArrow = { angle: _cAngle, dist: _cDist, fromX: boss.x, fromY: boss.y };
             }
         }
@@ -1369,11 +1500,12 @@ export function updateBoss() {
 
     // ── 沙漠蠍王：毒霧 + 沙暴
     if (boss.biome === 'desert') {
+        const venomCfg = _bossConfig(boss).venom || {};
         // 毒液投擲：每5秒鎖定玩家位置，不限距離
         if (!boss._venomTimer) boss._venomTimer = now;
-        if (now - boss._venomTimer > 5000) {
+        if (now - boss._venomTimer > (venomCfg.cooldownMs || 5000)) {
             boss._venomTimer = now;
-            boss._venomWarning = { x: p.x, y: p.y, startTime: now, duration: 600 };
+            boss._venomWarning = { x: p.x, y: p.y, startTime: now, duration: venomCfg.warningMs || 500 };
         }
         // 警告600ms後在鎖定位置生成定點毒霧
         if (boss._venomWarning && now - boss._venomWarning.startTime >= boss._venomWarning.duration) {
@@ -1381,10 +1513,13 @@ export function updateBoss() {
             gameState.venomPuddles.push({
                 x:         boss._venomWarning.x,
                 y:         boss._venomWarning.y,
-                radius:    150,
+                radius:    venomCfg.radius || 150,
                 startTime: now,
-                duration:  4000,
-                dmgPerSec: Math.round(boss.damage * 0.3),
+                duration:  venomCfg.durationMs || 4000,
+                dmgPerSec: Math.round(boss.damage * (venomCfg.damageMultiplier || 0.3)),
+                poisonDps: venomCfg.poisonDps || 8,
+                poisonDuration: venomCfg.poisonDurationMs || 3000,
+                tickMs:    venomCfg.tickMs || 1000,
                 lastTick:  now,
             });
             boss._venomWarning = null;
@@ -1401,10 +1536,12 @@ export function updateBoss() {
                     gameState.venomPuddles.splice(_vi, 1);
                     continue;
                 }
-                if (now - puddle.lastTick >= 1000) {
+                if (now - puddle.lastTick >= (puddle.tickMs || 1000)) {
                     puddle.lastTick = now;
                     if (wrappedDistance(puddle.x, puddle.y, p.x, p.y) < puddle.radius) {
                         applyDamageToPlayer(puddle.dmgPerSec, boss);
+                        if (!p.poisonStacks) p.poisonStacks = [];
+                        p.poisonStacks.push({ dmg: puddle.poisonDps || 8, endTime: now + (puddle.poisonDuration || 3000) });
                         showFloatingText(p.x, p.y - 30, t('venomFloat') || '☠ 毒霧', '#aa00cc', 16);
                     }
                 }
@@ -1434,6 +1571,28 @@ export function updateBoss() {
         boss.state = 'patrolling';
     }
     if (boss.state === 'chasing') {
+        const meleeRange = _bossMeleeRange(boss, p, boss.attackRange);
+        const meleeBusy = _tryBossMeleeAttack(boss, p, dist, meleeRange, now, () => {
+            let dmg = boss.damage;
+            let isCrit = false;
+            if (boss.biome === 'forest' && Math.random() < 0.25) {
+                dmg = Math.round(dmg * 1.5);
+                isCrit = true;
+            }
+            applyDamageToPlayer(dmg, boss);
+            boss.attackCooldown = now;
+            if (boss.biome === 'forest') {
+                boss.lastAttackCrit = isCrit;
+                if (isCrit) showFloatingText(p.x, p.y - 40, 'Xç†Šçˆªï¼', '#ff8800', 18);
+                const atkPeriod = 450 / 1.9;
+                boss.lastAttackLeg = Math.sin(now / atkPeriod) > 0 ? 'left' : 'right';
+            }
+        });
+        if (!meleeBusy) {
+            const angle = Math.atan2(dy, dx);
+            moveCreature(boss, boss.x + Math.cos(angle) * _effSpeed(boss), boss.y + Math.sin(angle) * _effSpeed(boss));
+        }
+        return;
         if (dist <= boss.attackRange) {
             if (now - boss.attackCooldown >= 1500) {
                 let dmg = boss.damage;

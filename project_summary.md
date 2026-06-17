@@ -1,4 +1,4 @@
-﻿## v0.1.26.1
+﻿## v0.1.27.0
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,13 +12,13 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.26.1
+**現在版本:** v0.1.27.0
 
-**當前狀態：** 主線精英怪數值機制修正已保留；生物戰鬥手感第一版完成；近戰命中距離已統一為「怪物半徑 + max(怪物 attackRange, 目標半徑) + rangeBuffer」，黑色獵人 Boss 腳步音效已拆為 2500ms / 1000ms 雙節奏。
+**當前狀態：** 主線精英怪數值機制修正已保留；一般生物、三犬精英與三普通 Boss 已接入近戰前中後搖；三普通 Boss 技能數值已集中到 BOSS_CONFIG，鯊魚衝刺與蠍王毒霧完成新節奏調整。
 
 **下一步：**
 1. 實機微調鬣狗包圍圈距離、隊長焦點、Alpha regroup 與三犬精英攻擊手感
-2. Boss 近戰前中後搖評估
+2. Boss 攻擊手感實機測試與下一輪技能調整
 3. Stage F 批次 3b：拆 evolution / organs / ui 循環
 4. 地獄難度地圖
 **開發工具：**
@@ -119,6 +119,7 @@
 
 ### 最近完成的工作
 ### 最近完成的工作
+- v0.1.27.0：三普通 Boss 攻擊節奏改版 — `BOSS_CONFIG` 新增黑熊/大白鯊/沙漠蠍王 melee 設定，`boss.js` 新增 `_bossMeleeRange()`、`_bossMeleeProfile()`、`_sharkChargeDistance()`，三王普攻改為前搖/命中窗/後搖流程並使用體型命中距離公式；黑熊狂暴後後搖 -500ms；大白鯊衝刺距離 cap 1000px、CD 2500ms、傷害 ×2；蠍王毒霧警告 500ms，tick 命中追加 8 DPS / 3 秒毒 debuff；新增 `tests/systems/boss.test.js` 回歸測試
 - v0.1.26.1：黑色獵人 Boss 腳步聲節奏與近戰距離公式調整 — `AUDIO_FILES` 新增 `hunterFootstep1` / `hunterFootstep2` 分別對應 `hunter_footstep_1.mp3` 與 `hunter_footstep_2.mp3`；`_updateHunterBoss()` 改用兩個獨立 timer，第一個腳步聲每 2500ms 播放一次、第二個腳步聲每 1000ms 播放一次；`_bodyMeleeRange()` 與 `_eliteDogMeleeRange()` 改為「怪物半徑 + max(怪物 attackRange, 目標半徑) + rangeBuffer」，命中寬限另加 `hitGraceBuffer`；草食生物補上 `attackRange: 20`；補 `achievements/damage` 測試 mock 與近戰距離公式回歸測試
 - v0.1.26.0：生物 AI 手感第一版與隊伍行為第二階段 — `CREATURE_AI_CONFIG` 集中生物分離、近戰前中後搖、鬣狗 pack/包圍、Alpha regroup、三犬精英近戰節奏數值；所有近戰生物攻擊改走 `_tryMeleeAttack()`，前搖可取消、Strike window 結束才做命中判定並閃光、後搖作為攻擊 CD；新增 `_applyCreatureSeparation()` 比例制分離；鬣狗 1~3 隻試探、4+ 隻包圍左右/後方並保留前方缺口，改為 2 隻主攻擊者、本地連通隊伍計數、隊伍人數越多包圍圈越大，玩家攻擊任一鬣狗會觸發本地隊長/pack focus 集火玩家；巨人隊伍低血/離隊成員會往 Alpha 或高血核心 regroup，巨人/Alpha 被玩家攻擊後 5000ms 內會短暫激怒並轉向玩家；三犬精英近戰加入前中後搖與體型命中範圍，傷害沿用主線精英數值公式；草食反擊不追擊離開攻擊距離的玩家
 - v0.1.25.9：精英怪數值機制全面修正 — 困難難度 HP/傷害/速度改用與簡單/普通相同的倍率公式（移除 `isHardMap` 固定數值分支）；速度公式補入地圖 `speedMultiplier`；新增隼族差異化（HP×0.7、傷害×1.3）；`HUNTER_ELITE_REWARDS` 拆分為 easy/normal/hard 三張表；犬族近戰傷害改用公式值
@@ -179,3 +180,4 @@
 - 遊戲幣系統（角色購買）
 - 故事模式第一章：反攻人族淨音軍
 - Steam 版本
+

@@ -1,4 +1,15 @@
-﻿## v0.1.26.1 - 2026-06-17
+﻿## v0.1.27.0 - 2026-06-17
+
+### 新增
+- `config/creatures.js` / `systems/boss.js`：三個普通 Boss（黑熊、大白鯊、沙漠蠍王）近戰普攻接入前搖、命中窗、後搖三段式流程，命中距離改用「Boss 半徑 + max(Boss attackRange, 玩家半徑) + rangeBuffer」，命中寬限另加 `hitGraceBuffer`；黑熊 120/220/980ms、狂暴後後搖 -500ms，大白鯊 120/220/860ms，沙漠蠍王 100/250/1000ms
+
+### 調整
+- `config/creatures.js` / `systems/boss.js`：大白鯊衝刺改為讀取集中設定，實際衝刺距離上限 1000px、衝刺後 CD 2500ms、衝刺傷害 ×2，衝刺命中距離維持 `attackRange + 10`
+- `config/creatures.js` / `systems/boss.js`：沙漠蠍王毒霧警告縮短為 500ms，毒霧維持每秒 tick 一次，命中玩家時額外套用 8 DPS、3 秒的毒 debuff
+- `tests/systems/boss.test.js`：新增 Boss 近戰節奏、體型命中距離、黑熊狂暴後搖與大白鯊衝刺距離 cap 回歸測試
+
+---
+## v0.1.26.1 - 2026-06-17
 
 ### 調整
 - `config/gameConfig.js` / `systems/boss.js`：黑色獵人 Boss 腳步音效拆分為兩個獨立播放節奏，`hunter_footstep_1` 每 2500ms 觸發一次、`hunter_footstep_2` 每 1000ms 觸發一次，取代原本混合隨機腳步聲每 600ms 播放的行為，降低腳步聲過密與吵雜感
@@ -3106,3 +3117,4 @@
 - 畫面 UI：HP 條、XP 條、時間顯示、日夜狀態
 - `gameState` 全局狀態管理物件
 - `requestAnimationFrame` 主遊戲循環
+
