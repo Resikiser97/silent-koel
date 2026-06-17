@@ -600,7 +600,7 @@ export function showAchievements(opts = {}) {
                     st.attack.achPercent ? t('achievementBonusSource') + '+' + _fmtPct(st.attack.achPercent) : '',
                 ], st.attack.mutMultiplier));
 
-            // æ”»é€Ÿ
+            // 攻速
             makeRow(statsArea, t('statAttackSpeed'), '+' + _fmtPct(st.attackSpeed.final),
                 brkStr([
                     t('statBase') + _fmtPct(st.attackSpeed.base),

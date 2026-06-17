@@ -23,1095 +23,1095 @@
 
 ## v0.1.25.9 - 2026-06-17
 
-### ä¿®å¾©
-- `map/normalmap.js`ï¼šç²¾è‹±æ€ª hpMultiplier èª¿æ•´ï¼ˆç¬¬1å¤œ 5â†’6ã€ç¬¬2å¤œ 10â†’12ã€ç¬¬3å¤œ 20â†’18ï¼‰ï¼Œä½¿æ™®é€šé›£åº¦ä¸‰å¤œ HP å°é½Šå…¬å¼ï¼ˆ450/900/1350ï¼‰
-- `map/hardmap.js`ï¼šç²¾è‹±æ€ª hpMultiplier èª¿æ•´ï¼ˆç¬¬1å¤œ 8â†’7ã€ç¬¬2å¤œ 15â†’14ã€ç¬¬3å¤œ 25â†’21ï¼‰ï¼Œä½¿å›°é›£é›£åº¦ä¸‰å¤œ HP å°é½Šå…¬å¼ï¼ˆçŠ¬ 875/1750/2625ã€éš¼ 613/1225/1838ï¼‰
-- `systems/elite.js`ï¼š`_spawnHunterElite()` ç§»é™¤å›°é›£åœ°åœ–å›ºå®šæ•¸å€¼åˆ†æ”¯ï¼ˆ`isHardMap` åˆ¤æ–·ï¼‰ï¼Œä¸‰é›£åº¦çµ±ä¸€ä½¿ç”¨ã€Œä¾å¤œæ™šå€çŽ‡ï¼‹åœ°åœ–é›£åº¦å€çŽ‡ã€å…¬å¼è¨ˆç®— HP/å‚·å®³/é€Ÿåº¦ï¼›é€Ÿåº¦å…¬å¼ç”± `base.speed + speedBonus` æ”¹ç‚º `base.speed * 3 * speedMult + speedBonus`ï¼Œå›°é›£é›£åº¦ç¾åœ¨æ­£ç¢ºå¥—ç”¨åœ°åœ– speedMultiplier
-- `systems/elite.js`ï¼šæ–°å¢žçŠ¬ï¼éš¼å·®ç•°åŒ–å€çŽ‡ï¼ˆéš¼æ— HP Ã—0.7ã€å‚·å®³ Ã—1.3ï¼ŒçŠ¬æ—ä¸è®Šï¼‰ï¼Œé€éŽ `eliteType.includes('Falcon')` åˆ¤æ–·ç‰©ç¨®ï¼Œä¸å¯«æ­» id å­—ä¸²
-- `systems/elite.js`ï¼š`_updateHunterEliteChase()` çŠ¬æ—è¿‘æˆ°æ”»æ“Šç”± `cfg.damage`ï¼ˆå›ºå®šå€¼ï¼‰æ”¹ç‚º `elite.damage`ï¼ˆå…¬å¼è¨ˆç®—å€¼ï¼‰ï¼Œç¢ºä¿å¯¦éš›å‚·å®³èˆ‡ç”Ÿæˆæ•¸å€¼ä¸€è‡´
-- `systems/elite.js`ï¼š`_handleHunterEliteKill()` çŽå‹µæŸ¥è¡¨å¾žå–®å±¤ `HUNTER_ELITE_REWARDS[starTier]` æ”¹ç‚ºä¾ `gameState.currentMap.difficulty` æŸ¥ä¸‰å¼µå­è¡¨
-- `config/creatures.js`ï¼š`HUNTER_ELITE_REWARDS` å¾žå–®å±¤æ˜Ÿç´šè¡¨é‡æ§‹ç‚ºä¸‰é›£åº¦å­è¡¨ï¼ˆeasy/normal/hardï¼‰ï¼Œç°¡å–®é›£åº¦ä¸çµ¦è®Šç•°é»žï¼ˆmutPts: 0ï¼‰
-- `config/gameConfig.js`ï¼š`HARD_ELITE_CONFIG` çš„ `hp`/`damage` æ¬„ä½åŠ ä¸Šå»¢æ£„èªªæ˜Žï¼Œæ¨™è¨»å¯¦éš›å¼·åº¦ç”±å…¬å¼æ±ºå®š
-- `config/compendium_data.js`ï¼šã€Œâ­ç²¾è‹±æ€ªã€æ¢ç›®å…¨é¢åŒæ­¥â€”â€”çµæ§‹å¼•ç”¨ç”± `HUNTER_ELITE_REWARDS[n]` æ”¹ç‚ºä¸‰é›£åº¦å­è¡¨ï¼ˆeasy/normal/hardï¼‰ï¼›æ–°å¢žå‚·å®³æ¬„ä½é¡¯ç¤ºï¼›å›°é›£é›£åº¦æ”¹ç‚ºå‹•æ…‹è¨ˆç®—å…¬å¼å€¼ï¼ˆ`hDogHp/hDogDmg/hFalconHp/hFalconDmg`ï¼‰å–ä»£èˆŠçš„ `hc.specterDog.hp` ç­‰å›ºå®šå€¼å¼•ç”¨ï¼›ä¸‰æ®µï¼ˆç°¡å–®/æ™®é€š/å›°é›£ï¼‰æ“Šæ®ºçŽå‹µåˆ†é–‹é¡¯ç¤º
+### 修復
+- `map/normalmap.js`：精英怪 hpMultiplier 調整（第1夜 5→6、第2夜 10→12、第3夜 20→18），使普通難度三夜 HP 對齊公式（450/900/1350）
+- `map/hardmap.js`：精英怪 hpMultiplier 調整（第1夜 8→7、第2夜 15→14、第3夜 25→21），使困難難度三夜 HP 對齊公式（犬 875/1750/2625、隼 613/1225/1838）
+- `systems/elite.js`：`_spawnHunterElite()` 移除困難地圖固定數值分支（`isHardMap` 判斷），三難度統一使用「依夜晚倍率＋地圖難度倍率」公式計算 HP/傷害/速度；速度公式由 `base.speed + speedBonus` 改為 `base.speed * 3 * speedMult + speedBonus`，困難難度現在正確套用地圖 speedMultiplier
+- `systems/elite.js`：新增犬／隼差異化倍率（隼族 HP ×0.7、傷害 ×1.3，犬族不變），透過 `eliteType.includes('Falcon')` 判斷物種，不寫死 id 字串
+- `systems/elite.js`：`_updateHunterEliteChase()` 犬族近戰攻擊由 `cfg.damage`（固定值）改為 `elite.damage`（公式計算值），確保實際傷害與生成數值一致
+- `systems/elite.js`：`_handleHunterEliteKill()` 獎勵查表從單層 `HUNTER_ELITE_REWARDS[starTier]` 改為依 `gameState.currentMap.difficulty` 查三張子表
+- `config/creatures.js`：`HUNTER_ELITE_REWARDS` 從單層星級表重構為三難度子表（easy/normal/hard），簡單難度不給變異點（mutPts: 0）
+- `config/gameConfig.js`：`HARD_ELITE_CONFIG` 的 `hp`/`damage` 欄位加上廢棄說明，標註實際強度由公式決定
+- `config/compendium_data.js`：「⭐精英怪」條目全面同步——結構引用由 `HUNTER_ELITE_REWARDS[n]` 改為三難度子表（easy/normal/hard）；新增傷害欄位顯示；困難難度改為動態計算公式值（`hDogHp/hDogDmg/hFalconHp/hFalconDmg`）取代舊的 `hc.specterDog.hp` 等固定值引用；三段（簡單/普通/困難）擊殺獎勵分開顯示
 
-### æ•¸å€¼å°ç…§ï¼ˆä¿®æ­£å¾Œï¼‰
-| é›£åº¦ | å¤œæ™š | HP | å‚·å®³ | é€Ÿåº¦ |
+### 數值對照（修正後）
+| 難度 | 夜晚 | HP | 傷害 | 速度 |
 |---|---|---|---|---|
-| ç°¡å–® | â˜… | 250 | 12 | 3.3 |
-| ç°¡å–® | â˜…â˜… | 375 | 14 | 3.5 |
-| ç°¡å–® | â˜…â˜…â˜… | 500 | 16 | 3.7 |
-| æ™®é€š | â˜… | 450 | 12 | 4.8 |
-| æ™®é€š | â˜…â˜… | 900 | 17 | 5.2 |
-| æ™®é€š | â˜…â˜…â˜… | 1350 | 23 | 6.0 |
-| å›°é›£ï¼ˆçŠ¬ï¼‰ | â˜… | 875 | 16 | 6.5 |
-| å›°é›£ï¼ˆçŠ¬ï¼‰ | â˜…â˜… | 1750 | 24 | 7.0 |
-| å›°é›£ï¼ˆçŠ¬ï¼‰ | â˜…â˜…â˜… | 2625 | 32 | 8.0 |
-| å›°é›£ï¼ˆéš¼ï¼‰ | â˜… | 613 | 21 | 6.5 |
-| å›°é›£ï¼ˆéš¼ï¼‰ | â˜…â˜… | 1225 | 31 | 7.0 |
-| å›°é›£ï¼ˆéš¼ï¼‰ | â˜…â˜…â˜… | 1838 | 42 | 8.0 |
+| 簡單 | ★ | 250 | 12 | 3.3 |
+| 簡單 | ★★ | 375 | 14 | 3.5 |
+| 簡單 | ★★★ | 500 | 16 | 3.7 |
+| 普通 | ★ | 450 | 12 | 4.8 |
+| 普通 | ★★ | 900 | 17 | 5.2 |
+| 普通 | ★★★ | 1350 | 23 | 6.0 |
+| 困難（犬） | ★ | 875 | 16 | 6.5 |
+| 困難（犬） | ★★ | 1750 | 24 | 7.0 |
+| 困難（犬） | ★★★ | 2625 | 32 | 8.0 |
+| 困難（隼） | ★ | 613 | 21 | 6.5 |
+| 困難（隼） | ★★ | 1225 | 31 | 7.0 |
+| 困難（隼） | ★★★ | 1838 | 42 | 8.0 |
 
 ---
 
 ## v0.1.25.8 - 2026-06-17
 
-### æ–°å¢ž
-- `config/compendium_data.js`ï¼šåœ–é‘‘æ–°å¢žã€Œè§’è‰²ã€æ¢ç›®ï¼ˆå™ªéµ‘ / é˜¿å¥‡çˆ¾ï¼šèµ·å§‹é€²åŒ–ã€èµ·å§‹å™¨å®˜ã€æ”»é€Ÿã€FæŠ€ï¼‰
-- `config/compendium_data.js`ï¼šåœ–é‘‘æ–°å¢žã€Œæˆå°±èˆ‡æ°¸ä¹…åŠ æˆã€æ¢ç›®ï¼ˆ36æˆå°±ã€è·¨å±€åŠ æˆç¨®é¡žã€ç´…é»žæ©Ÿåˆ¶ã€å…¥å£ï¼‰
-- `config/compendium_data.js`ï¼šåœ–é‘‘æ–°å¢žã€ŒæŽ’è¡Œæ¦œèˆ‡åäººå ‚ã€æ¢ç›®ï¼ˆæŽ’è¡Œæ¦œã€è¶£å‘³æ¦œã€åäººå ‚ã€TOP5å´æ¬„ï¼‰
-- `config/compendium_data.js`ï¼šåœ–é‘‘æ–°å¢žã€ŒBoss å‡ºç¾æ©Ÿåˆ¶ã€æ¢ç›®ï¼ˆEasy/Normal ç¬¬å››å¤œ Boss é–‹å±€éš¨æ©Ÿï¼‰
-- `config/compendium_data.js`ï¼šã€Œå™¨å®˜ç³»çµ±ã€è£œæŽ¡é›†ç¯„åœèªªæ˜Žï¼›ã€ŒæŠ€èƒ½æ¨¹ã€è£œå…¨ 9 ç¨®æŠ€èƒ½åç¨±ï¼›ã€ŒåŸºæœ¬æ“ä½œã€Féµæ”¹ç‚ºä¾è§’è‰²èªªæ˜Ž
+### 新增
+- `config/compendium_data.js`：圖鑑新增「角色」條目（噪鵑 / 阿奇爾：起始進化、起始器官、攻速、F技）
+- `config/compendium_data.js`：圖鑑新增「成就與永久加成」條目（36成就、跨局加成種類、紅點機制、入口）
+- `config/compendium_data.js`：圖鑑新增「排行榜與名人堂」條目（排行榜、趣味榜、名人堂、TOP5側欄）
+- `config/compendium_data.js`：圖鑑新增「Boss 出現機制」條目（Easy/Normal 第四夜 Boss 開局隨機）
+- `config/compendium_data.js`：「器官系統」補採集範圍說明；「技能樹」補全 9 種技能名稱；「基本操作」F鍵改為依角色說明
 
-### ä¿®å¾©
-- `config/compendium_data.js`ï¼šç§»é™¤ `typeof X !== 'undefined'` å…¨åŸŸåµæ¸¬å¯«æ³•ï¼Œæ”¹ç‚ºæ˜Žç¢º ESM importï¼ˆ`BOSS_CONFIG` / `ELITE_CONFIG` / `EVOLUTION_PATHS` / `EASY_MAP` / `NORMAL_MAP` / `HARD_MAP`ï¼‰ï¼Œä¿®æ­£ Boss / ç²¾è‹±æ€ªæ•¸å€¼é¡¯ç¤º undefined / NaN
-- `config/compendium_data.js`ï¼šç²¾è‹±æ€ªæ¢ç›®ï¼ˆ`id: 'elite'`ï¼‰å…¨é¢é‡å¯«ï¼šä¿®æ­£æ¯’æŠ—ï¼ˆ20%â†’0%ï¼‰ã€ä¿®æ­£å‡ºå ´æ©Ÿåˆ¶ï¼ˆä¸‰çŠ¬é †åºé–‹å±€éš¨æ©Ÿï¼Œéžå›ºå®šï¼‰ã€ä¿®æ­£æ“Šæ®ºçŽå‹µæ•¸å­—ã€è£œå……å›°é›£é›£åº¦çŠ¬éš¼å„è‡ªå›ºå®šæ•¸å€¼èˆ‡æŠ€èƒ½èªªæ˜Ž
-- `config/creatures.js`ï¼šæ–°å¢ž `HUNTER_ELITE_REWARDS`ã€`HUNTER_ELITE_POISON_RESIST` exportï¼Œä¾›åœ–é‘‘å‹•æ…‹å¼•ç”¨
-- `systems/elite.js`ï¼šç§»é™¤æœ¬åœ° `_HUNTER_ELITE_REWARDS` å¸¸æ•¸ï¼Œæ”¹ import `HUNTER_ELITE_REWARDS`ï¼›`poisonResist` æ”¹ç”¨ `HUNTER_ELITE_POISON_RESIST`
+### 修復
+- `config/compendium_data.js`：移除 `typeof X !== 'undefined'` 全域偵測寫法，改為明確 ESM import（`BOSS_CONFIG` / `ELITE_CONFIG` / `EVOLUTION_PATHS` / `EASY_MAP` / `NORMAL_MAP` / `HARD_MAP`），修正 Boss / 精英怪數值顯示 undefined / NaN
+- `config/compendium_data.js`：精英怪條目（`id: 'elite'`）全面重寫：修正毒抗（20%→0%）、修正出場機制（三犬順序開局隨機，非固定）、修正擊殺獎勵數字、補充困難難度犬隼各自固定數值與技能說明
+- `config/creatures.js`：新增 `HUNTER_ELITE_REWARDS`、`HUNTER_ELITE_POISON_RESIST` export，供圖鑑動態引用
+- `systems/elite.js`：移除本地 `_HUNTER_ELITE_REWARDS` 常數，改 import `HUNTER_ELITE_REWARDS`；`poisonResist` 改用 `HUNTER_ELITE_POISON_RESIST`
 ---
 
 ## v0.1.25.7 - 2026-06-17
 
-### ä¿®å¾©
-- `systems/ui.js`ï¼šåœ–é‘‘ï¼ˆéŠæˆ²èªªæ˜Žï¼å™¨å®˜åœ–é‘‘ï¼é€²åŒ–ç³»çµ±ï¼‰æ¡Œæ©Ÿç‰ˆå·¦å´ç›®éŒ„é»žæ“Šæ¢ç›®æ™‚ï¼ŒåŽŸæœ¬å› æ•´å€‹å®¹å™¨ `innerHTML` æ¸…ç©ºé‡å»ºå°Žè‡´æ²å‹•ä½ç½®æ­¸é›¶ã€ç•«é¢å¾€ä¸Šå½ˆï¼Œæ–°å¢ž `_captureSidebarScroll` / `_restoreSidebarScroll` åœ¨é‡ç¹ªå‰å¾Œä¿å­˜èˆ‡é‚„åŽŸ `scrollTop`ï¼Œä¸‰å€‹åˆ†é çš„ `_renderGuide` / `_renderOrgans` / `_renderEvo` åŒæ­¥å¥—ç”¨ï¼›å·²ç”¨ Chrome å¯¦æ©Ÿæ¸¬è©¦ç¢ºèªä¸‰å€‹åˆ†é çš†ä¸å†å›žå½ˆ
-- `systems/mutation.js`ï¼š`showMutationPanel()` ç”±ã€Œæ¯æ¬¡å‡ç´š/å…Œæ›éƒ½æ•´å€‹æ‘§æ¯€é‡å»ºé¢æ¿ã€æ”¹ç‚ºã€Œé¢æ¿éª¨æž¶åªå»ºç«‹ä¸€æ¬¡ï¼Œå…§éƒ¨ç”¨ `refresh()` å‡½å¼å°±åœ°æ›´æ–°æ•¸å€¼èˆ‡æŒ‰éˆ•ç‹€æ…‹ã€ï¼Œæ¶ˆé™¤åŒæ¨£çš„æ²å‹•æ­¸é›¶å•é¡Œï¼Œä¸¦é¿å…ä¸å¿…è¦çš„ DOM é‡å»º
-- `systems/ui.js`ï¼šåœ–é‘‘æ¡Œæ©Ÿç‰ˆé¢æ¿å°ºå¯¸æ”¹ç‚º isMobile æ„ŸçŸ¥ï¼ˆ`width:82%; max-width:1040px; height:86%; max-height:86vh`ï¼‰ï¼Œä¸å†æ²¿ç”¨æ‰‹æ©Ÿç‰ˆå°ºå¯¸é€ æˆæ¡Œæ©Ÿé¡¯ç¤ºéŽå°/æ¯”ä¾‹ä¸å”èª¿
-- `systems/ui.js`ï¼š`_getGuideStoryPages()` æ•…äº‹é é¢å…§éƒ¨ä¸»æ¨™é¡Œä¿®æ­£ â€” ç¬¬ä¸€ç« å››å€‹åˆ†é ï¼ˆç ´æ›‰ï¼å­¤å…’ï¼è›»è®Šï¼è©¦ç…‰ï¼‰åŽŸæœ¬åˆ†åˆ¥èª¤æ¨™ç‚ºç¬¬ä¸€ï½žå››ç« ï¼Œçµ±ä¸€ä¿®æ­£ç‚ºã€Œç¬¬ä¸€ç« ã€ï¼›ç¬¬äºŒç« ä¸‰å€‹åˆ†é åŽŸæœ¬èª¤æ¨™ç‚ºã€Œç¬¬ä¸‰ç« ã€ï¼Œä¿®æ­£ç‚ºã€Œç¬¬äºŒç« ã€
+### 修復
+- `systems/ui.js`：圖鑑（遊戲說明／器官圖鑑／進化系統）桌機版左側目錄點擊條目時，原本因整個容器 `innerHTML` 清空重建導致捲動位置歸零、畫面往上彈，新增 `_captureSidebarScroll` / `_restoreSidebarScroll` 在重繪前後保存與還原 `scrollTop`，三個分頁的 `_renderGuide` / `_renderOrgans` / `_renderEvo` 同步套用；已用 Chrome 實機測試確認三個分頁皆不再回彈
+- `systems/mutation.js`：`showMutationPanel()` 由「每次升級/兌換都整個摧毀重建面板」改為「面板骨架只建立一次，內部用 `refresh()` 函式就地更新數值與按鈕狀態」，消除同樣的捲動歸零問題，並避免不必要的 DOM 重建
+- `systems/ui.js`：圖鑑桌機版面板尺寸改為 isMobile 感知（`width:82%; max-width:1040px; height:86%; max-height:86vh`），不再沿用手機版尺寸造成桌機顯示過小/比例不協調
+- `systems/ui.js`：`_getGuideStoryPages()` 故事頁面內部主標題修正 — 第一章四個分頁（破曉／孤兒／蛻變／試煉）原本分別誤標為第一～四章，統一修正為「第一章」；第二章三個分頁原本誤標為「第三章」，修正為「第二章」
 
 ---
 
 ## v0.1.25.6 - 2026-06-17
 
-### ä¿®å¾©
-- `systems/chat.js`ï¼šèŠå¤©è¨Šæ¯é–“è·å¾®èª¿ï¼Œæ™‚é–“ï¼lvï¼ã€GMã€‘æ”¹ç‚º margin-right:0pxï¼Œç¨±è™Ÿä¿ç•™ 5px èˆ‡åå­—ä¿æŒè·é›¢
-- `systems/chat.js`ï¼š`syncTitleToServer()` å°‡ `saveChatSettings` ç§»åˆ° try å€å¡Šä¹‹å‰ï¼Œç¢ºä¿ Supabase å¤±æ•—æ™‚æœ¬åœ°ä»èƒ½æ­£ç¢ºå„²å­˜ç¨±è™Ÿï¼›query æ”¹ç”¨ `.toLowerCase()` é¿å…å¸³è™Ÿå¤§å°å¯«ä¸ç¬¦å°Žè‡´ Supabase æ›´æ–°é›¶ç­†è³‡æ–™
-- `systems/boss.js`ï¼šEasy / Normal åœ°åœ– Boss ç”Ÿæ…‹ä¸å†ç”±çŽ©å®¶ç•¶ä¸‹è…³ä¸‹ç”Ÿæ…‹æ±ºå®šï¼Œæ”¹ç‚ºåœ¨éŠæˆ²é–‹å§‹æ™‚ä»¥ Seedï¼ˆ`mapSeed + 12345` åç§»ï¼Œé¿å…èˆ‡ç²¾è‹±æ€ªåºåˆ—é‡ç–Šï¼‰éš¨æ©Ÿé¸å®šä¸¦å­˜å…¥ `gameState.bossBiome`ï¼ŒHard åœ°åœ–ä¸å—å½±éŸ¿
+### 修復
+- `systems/chat.js`：聊天訊息間距微調，時間／lv／【GM】改為 margin-right:0px，稱號保留 5px 與名字保持距離
+- `systems/chat.js`：`syncTitleToServer()` 將 `saveChatSettings` 移到 try 區塊之前，確保 Supabase 失敗時本地仍能正確儲存稱號；query 改用 `.toLowerCase()` 避免帳號大小寫不符導致 Supabase 更新零筆資料
+- `systems/boss.js`：Easy / Normal 地圖 Boss 生態不再由玩家當下腳下生態決定，改為在遊戲開始時以 Seed（`mapSeed + 12345` 偏移，避免與精英怪序列重疊）隨機選定並存入 `gameState.bossBiome`，Hard 地圖不受影響
 
-### æ–°å¢ž
-- `config/playerStatsFormula.js` / `systems/achievements.js`ï¼šPlayer Stats é¢æ¿ XP åˆ†é¡žåŠ å…¥ã€ŒæŽ¡é›†ç¯„åœã€æ¬„ä½ï¼Œé¡¯ç¤º body sizeï¼ˆé«”åž‹ï¼‰ï¼‹å™¨å®˜åŠ æˆï¼‹æŠ€èƒ½åŠ æˆçš„åˆè¨ˆæœ‰æ•ˆæŽ¡é›†è·é›¢
-- `systems/hud.js` / `systems/mobile.js`ï¼šç‰¹æ®ŠæŠ€èƒ½ï¼ˆé–ƒç¾ï¼‰æŒ‰éˆ•åŠ å…¥åœ“è§’ + é»‘è‰²å¤–æ¡†ï¼›Ready ç‹€æ…‹èƒŒæ™¯åŠ æ·±ï¼ˆrgba 0.55ï¼‰ï¼Œå†·å»ä¸­èƒŒæ™¯æ·¡åŒ–ï¼ˆrgba 0.15ï¼‰ï¼Œæ˜“æ–¼è¾¨è­˜æ˜¯å¦å¯ç”¨
+### 新增
+- `config/playerStatsFormula.js` / `systems/achievements.js`：Player Stats 面板 XP 分類加入「採集範圍」欄位，顯示 body size（體型）＋器官加成＋技能加成的合計有效採集距離
+- `systems/hud.js` / `systems/mobile.js`：特殊技能（閃現）按鈕加入圓角 + 黑色外框；Ready 狀態背景加深（rgba 0.55），冷卻中背景淡化（rgba 0.15），易於辨識是否可用
 
 ---
 
 ## v0.1.25.5 - 2026-06-16
 
-### ä¿®å¾©
-- `systems/chat.js`ï¼šä¿®æ­£èŠå¤©è¨Šæ¯ä¸­æ™‚é–“ï¼lv æ¨™ç±¤ï¼ã€GMã€‘ï¼ç¨±è™Ÿï¼æš±ç¨±é–“è·ä¸ä¸€è‡´å•é¡Œï¼Œçµ±ä¸€ç”¨ margin-right:3px æŽ§åˆ¶é–“è·ï¼Œç§»é™¤æ‰‹å‹•æ’å…¥ç©ºç™½å­—å…ƒï¼ˆ_buildMsgHTMLã€renderChat å±•é–‹ç‰ˆç½®é ‚è¨Šæ¯ã€_parseNameï¼‰
-- `systems/chat.js`ï¼š`syncTitleToServer()` è£œä¸Š `saveChatSettings()`ï¼Œç¨±è™Ÿæ›´æ–°ä¼ºæœå™¨æˆåŠŸå¾ŒåŒæ­¥å¯«å›žæœ¬åœ° localStorageï¼Œé¸æ“‡ç¨±è™Ÿå¾Œç«‹å³ç”Ÿæ•ˆï¼Œä¸éœ€é‡æ–°ç™»å…¥
+### 修復
+- `systems/chat.js`：修正聊天訊息中時間／lv 標籤／【GM】／稱號／暱稱間距不一致問題，統一用 margin-right:3px 控制間距，移除手動插入空白字元（_buildMsgHTML、renderChat 展開版置頂訊息、_parseName）
+- `systems/chat.js`：`syncTitleToServer()` 補上 `saveChatSettings()`，稱號更新伺服器成功後同步寫回本地 localStorage，選擇稱號後立即生效，不需重新登入
 
 ---
 
 ## v0.1.25.3
 
-# CHANGELOG â€” åªåƒä¸å«çš„å™ªéµ‘
+# CHANGELOG — 只吃不叫的噪鵑
 
 ---
 
 ## v0.1.25.4 - 2026-06-16
 
-### ä¿®å¾©
-- `systems/achievements.js`ï¼šæˆå°±é¢æ¿æ‰‹æ©Ÿç‰ˆæ”¹ç‚ºç›´å‘å †ç–Šï¼ˆæ ¼å­åœ¨ä¸Šã€å±¬æ€§/è©³æƒ…èªªæ˜Žåœ¨ä¸‹ï¼‰ï¼Œç§»é™¤ leftCol å¯«æ­»çš„ `min-width:340px` èˆ‡æ‰‹æ©Ÿç‰ˆ `zoom:1.18`ï¼Œä¿®å¾©æ‰‹æ©Ÿç‰ˆå®Œå…¨ç„¡æ³•é–±è®€çš„å•é¡Œ
-- `systems/ui.js`ï¼šæ›´æ–°å…¬å‘Š popup æ–‡å­—æ‰‹æ©Ÿç‰ˆé€€å›ž v0.1.25.3 æ”¾å¤§å‰çš„åŽŸå§‹å­—ç´šï¼Œæ¡Œæ©Ÿç¶­æŒç›®å‰æ”¾å¤§ç‰ˆä¸è®Š
+### 修復
+- `systems/achievements.js`：成就面板手機版改為直向堆疊（格子在上、屬性/詳情說明在下），移除 leftCol 寫死的 `min-width:340px` 與手機版 `zoom:1.18`，修復手機版完全無法閱讀的問題
+- `systems/ui.js`：更新公告 popup 文字手機版退回 v0.1.25.3 放大前的原始字級，桌機維持目前放大版不變
 
-### èª¿æ•´
-- `config/supabase.js`ã€`systems/ui.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼šé¦–é æŽ’è¡Œæ¦œå´æ¬„ç”± TOP10 æ”¹ç‚º TOP5ï¼Œæ‰‹æ©Ÿèˆ‡æ¡Œæ©Ÿè¡Œç‚ºä¸€è‡´
+### 調整
+- `config/supabase.js`、`systems/ui.js`、`lang/zh-TW.js`、`lang/en.js`：首頁排行榜側欄由 TOP10 改為 TOP5，手機與桌機行為一致
 
 ---
 
 ## v0.1.25.3 - 2026-06-16
 
-### èª¿æ•´
-- `systems/ui.js`ï¼šæ›´æ–°å…¬å‘Š popup æ–‡å­—æ•´é«”æé«˜ç´„ 20%ï¼Œè®“ Patchnote é–±è®€æ¯”ä¾‹æŽ¥è¿‘æˆå°±é 
-- `config/patchnotes.js`ï¼šçŽ©å®¶å…¬å‘Šåªä¿ç•™ `v0.1.22.1` ä»¥ä¸Šç‰ˆæœ¬ï¼Œç§»é™¤æ›´æ—©æœŸèˆŠå…¬å‘Šï¼Œé™ä½Žå…¬å‘Šæ¸…å–®é•·åº¦
-- `.codex/config.toml`ï¼šåŠ å…¥ `powershell_utf8 = true` è¨­å®šï¼Œå”åŠ©é™ä½Ž PowerShell ä¸­æ–‡è¼¸å‡ºäº‚ç¢¼
+### 調整
+- `systems/ui.js`：更新公告 popup 文字整體提高約 20%，讓 Patchnote 閱讀比例接近成就頁
+- `config/patchnotes.js`：玩家公告只保留 `v0.1.22.1` 以上版本，移除更早期舊公告，降低公告清單長度
+- `.codex/config.toml`：加入 `powershell_utf8 = true` 設定，協助降低 PowerShell 中文輸出亂碼
 
 ---
 
 ## v0.1.25.2 - 2026-06-16
 
-### ä¿®å¾©
-- `config/playerStatsFormula.js`ï¼š`corpseXP` æ”¹ç‚ºå®Œæ•´è¨ˆç®—æ¬„ä½ï¼ˆé è¨­è‚‰é£Ÿæ€§ Lv1 æ¼”ç¤ºï¼‰ï¼Œå›žå‚³ `final/base/evoLevel/mutMultiplier/achPercent`ï¼Œæˆå°±é¢æ¿å¯é¡¯ç¤ºå±é«” XP æ•¸å€¼
-- `config/playerStatsFormula.js` / `systems/achievements.js`ï¼šPlayer Stats æ–°å¢žæ”»é€Ÿæ¬„ä½ï¼Œä¾è§’è‰² `stats.attackSpeed` é¡¯ç¤ºå™ªéµ‘/é˜¿å¥‡çˆ¾ä¸åŒæ”»æ“Šé–“éš”ï¼Œä¸¦åœ¨ breakdown ä¸­æ‹†å‡ºæˆå°±åŠ æˆ
-- `systems/player.js`ï¼šé˜¿å¥‡çˆ¾æ”»æ“Šå†·å»ç§»é™¤å¯«æ­» `1500`ï¼Œæ”¹è®€è§’è‰²è¨­å®šçš„ `stats.attackSpeed`
-- `systems/achievements.js`ï¼šæˆå°±é æ–°å¢žæœªè®€ç´…é»žï¼›å·²è§£éŽ–æˆå°±éœ€é€æ ¼é»žé–‹å¾Œæ‰æ¨™è¨˜å·²è®€ï¼Œé¦–é æˆå°±æŒ‰éˆ•ç´…é»žæœƒåœ¨å…¨éƒ¨å·²è®€å¾Œæ¶ˆå¤±
-- `systems/achievements.js`ï¼šæˆå°±è©³æƒ…æ–°å¢žçŽå‹µé¡¯ç¤ºï¼›æœªè§£éŽ–èˆ‡ hidden é¡¯ç¤º `???` çš„æˆå°±ä¹Ÿæœƒé¡¯ç¤ºå¯å–å¾—çš„æ•¸å€¼çŽå‹µ
-- `systems/ui.js`ï¼šæ›´æ–°å…¬å‘Šç´…é»žæ”¹ç‚ºé€ç‰ˆæœ¬æ¸…é™¤ï¼Œé»žé–‹å“ªå€‹ç‰ˆæœ¬å°±æ¸…é™¤è©²ç‰ˆæœ¬ç´…é»žï¼Œä¸å†è¦æ±‚ä¸€æ¬¡é»žå®Œå…¨éƒ¨æœªè®€ç‰ˆæœ¬
-- `systems/achievements.js` / `systems/ui.js`ï¼šæˆå°±é é—œé–‰å¾Œæœƒåœ¨é¦–é æ¢å¾©èŠå¤©å®¤ï¼Œé¿å…é–‹æˆå°±å¾ŒèŠå¤©å®¤æ¶ˆå¤±
-- æˆå°±é èˆ‡æ›´æ–°å…¬å‘Š popup æ”¾å¤§è‡³ç´„ 80% èž¢å¹•ï¼›æˆå°±é å…§å®¹ç­‰æ¯”ä¾‹æ”¾å¤§ï¼Œ3Ã—3 æ ¼å­é–“è·èª¿æ•´ç‚ºä¸Šä¸‹å·¦å³å°ç¨±ï¼Œå³å´å±¬æ€§å­—ç´šé™ä½Žä»¥æ¸›å°‘æ²å‹•
+### 修復
+- `config/playerStatsFormula.js`：`corpseXP` 改為完整計算欄位（預設肉食性 Lv1 演示），回傳 `final/base/evoLevel/mutMultiplier/achPercent`，成就面板可顯示屍體 XP 數值
+- `config/playerStatsFormula.js` / `systems/achievements.js`：Player Stats 新增攻速欄位，依角色 `stats.attackSpeed` 顯示噪鵑/阿奇爾不同攻擊間隔，並在 breakdown 中拆出成就加成
+- `systems/player.js`：阿奇爾攻擊冷卻移除寫死 `1500`，改讀角色設定的 `stats.attackSpeed`
+- `systems/achievements.js`：成就頁新增未讀紅點；已解鎖成就需逐格點開後才標記已讀，首頁成就按鈕紅點會在全部已讀後消失
+- `systems/achievements.js`：成就詳情新增獎勵顯示；未解鎖與 hidden 顯示 `???` 的成就也會顯示可取得的數值獎勵
+- `systems/ui.js`：更新公告紅點改為逐版本清除，點開哪個版本就清除該版本紅點，不再要求一次點完全部未讀版本
+- `systems/achievements.js` / `systems/ui.js`：成就頁關閉後會在首頁恢復聊天室，避免開成就後聊天室消失
+- 成就頁與更新公告 popup 放大至約 80% 螢幕；成就頁內容等比例放大，3×3 格子間距調整為上下左右對稱，右側屬性字級降低以減少捲動
 
-### æ–‡ä»¶åŒæ­¥
-- æ–°å¢ž `readAchievements` / `readPatchNotes` localStorage key èªªæ˜Žï¼›åŒæ­¥ `calcPlayerStats` çš„ `attackSpeed` èˆ‡ `corpseXP` å®Œæ•´å›žå‚³æ¬„ä½
+### 文件同步
+- 新增 `readAchievements` / `readPatchNotes` localStorage key 說明；同步 `calcPlayerStats` 的 `attackSpeed` 與 `corpseXP` 完整回傳欄位
 
 ---
 
 ## v0.1.25.1 - 2026-06-16
 
-### ä¿®å¾©
-- `systems/player.js`ï¼šç‰¹æ®ŠæŠ€èƒ½ CD åŠ æˆè£œä¸Š `_achSpecialCdReduction` å¥—ç”¨ï¼ˆé˜¿å¥‡çˆ¾è¡åˆº + å™ªéµ‘é–ƒç¾å„ä¸€è™•ï¼‰
-- `config/playerStatsFormula.js`ï¼šæ”»æ“Š/HP/é€Ÿåº¦é¢æ¿å…¬å¼æ”¹ç‚ºã€Œå…ˆå¥—æˆå°± flat+percent â†’ æœ€å¾Œæ‰ä¹˜ mutation å€çŽ‡ã€ï¼Œå°é½Š runtime å¥—ç”¨é †åº
-- `systems/organs.js`ï¼šç²¾è‹±æ€ªæ“Šæ®º XPï¼ˆHunter ç²¾è‹± + ä¸€èˆ¬ç²¾è‹±å…©å€‹åˆ†æ”¯ï¼‰è£œä¸Š `_achKillXpPercent` åŠ æˆå¥—ç”¨
-- `systems/evolution.js` / `systems/mutation.js`ï¼šé¦–é è®Šç•°é¢æ¿æŠ˜æ‰£æ”¹å¾ž `storageGetJSON(ACHIEVEMENTS)` ç¾ç®—ï¼Œä¸å†ä¾è³´å¯èƒ½éŽæœŸçš„ `player._achMutationExchangeDiscount`
-- `systems/organs.js`ï¼š`forceEvoOnly` æ™‚æ¨™é¡Œæ­£ç¢ºé¡¯ç¤ºã€Œé¸æ“‡é€²åŒ–ã€è€Œéžã€Œé¸æ“‡å™¨å®˜ã€
+### 修復
+- `systems/player.js`：特殊技能 CD 加成補上 `_achSpecialCdReduction` 套用（阿奇爾衝刺 + 噪鵑閃現各一處）
+- `config/playerStatsFormula.js`：攻擊/HP/速度面板公式改為「先套成就 flat+percent → 最後才乘 mutation 倍率」，對齊 runtime 套用順序
+- `systems/organs.js`：精英怪擊殺 XP（Hunter 精英 + 一般精英兩個分支）補上 `_achKillXpPercent` 加成套用
+- `systems/evolution.js` / `systems/mutation.js`：首頁變異面板折扣改從 `storageGetJSON(ACHIEVEMENTS)` 現算，不再依賴可能過期的 `player._achMutationExchangeDiscount`
+- `systems/organs.js`：`forceEvoOnly` 時標題正確顯示「選擇進化」而非「選擇器官」
 
-### æ¸…ç†
-- å…¨é¢ç§»é™¤èˆŠå¯¶ç®±ç³»çµ±æ­»ç¢¼ï¼š`systems/spawning.js` çš„ `spawnTreasure()`ã€`systems/hud.js` çš„ `drawTreasures()`ã€`systems/gameState.js` çš„ `treasures: []`ã€`main.js` åˆå§‹åŒ–çš„å…©è™• `gameState.treasures = []`ï¼›æ¸¬è©¦ mock èˆ‡ ui.js èˆŠæ³¨é‡‹ä¸€ä½µæ¸…é™¤
+### 清理
+- 全面移除舊寶箱系統死碼：`systems/spawning.js` 的 `spawnTreasure()`、`systems/hud.js` 的 `drawTreasures()`、`systems/gameState.js` 的 `treasures: []`、`main.js` 初始化的兩處 `gameState.treasures = []`；測試 mock 與 ui.js 舊注釋一併清除
 
-### æ–‡ä»¶åŒæ­¥
-- ç‰ˆæœ¬è™ŸåŒæ­¥è‡³ v0.1.25.1ï¼š`CHANGELOG.md` / `MAIN.md` / `project_summary.md` / `QUICKREF.md` / `config/gameConfig.js` 5 å€‹ä¾†æºå°é½Šï¼ˆåŽŸå…ˆåœåœ¨ v0.1.24.5~v0.1.25.0ï¼‰
-- `calcPlayerStats` å‡½å¼ç°½åæ›´æ–°ç‚º 6 åƒæ•¸ï¼Œæ–°å¢ž `unlockedAchievements` èªªæ˜Žï¼›å›žå‚³ç‰©ä»¶è£œè¨˜ `corpseXP` æ¬„ä½ï¼›åŒæ­¥æ›´æ–° `MAIN.md`ã€`QUICKREF.md`ã€`ARCH.md`ã€`config/playerStatsFormula.js` file header
+### 文件同步
+- 版本號同步至 v0.1.25.1：`CHANGELOG.md` / `MAIN.md` / `project_summary.md` / `QUICKREF.md` / `config/gameConfig.js` 5 個來源對齊（原先停在 v0.1.24.5~v0.1.25.0）
+- `calcPlayerStats` 函式簽名更新為 6 參數，新增 `unlockedAchievements` 說明；回傳物件補記 `corpseXP` 欄位；同步更新 `MAIN.md`、`QUICKREF.md`、`ARCH.md`、`config/playerStatsFormula.js` file header
 
 ---
 
 ## v0.1.25.0 - 2026-06-16
 
-### æ–°å¢ž
-- æˆå°± Bonus ç³»çµ±ï¼š36 å€‹æˆå°±å…¨éƒ¨å¡«å…¥ `bonus` æ¬„ä½ï¼Œè§£éŽ–å¾Œæ°¸ä¹…åŠ æˆçŽ©å®¶æ•¸å€¼
-- æ–°å¢ž `systems/achievementBonus.js`ï¼š`applyAchievementStatBonuses()` / `getAchievementBonusTotals()`ï¼Œå¥—ç”¨ç®¡ç·šæ’å…¥ `applyEvolutionEffects()` ä¹‹å¾Œã€`applyAllMutationBonuses()` ä¹‹å‰
-- åŠ æˆå¥—ç”¨é †åºï¼šflat addï¼ˆæ”»æ“Š/HP/é€Ÿåº¦/æš´æ“Š/å™¨å®˜æ§½/æ”»é€Ÿï¼‰â†’ percentï¼ˆæ”»æ“Š/HP/é€Ÿåº¦/æ”»æ“Šç¯„åœ/é«”åž‹ï¼‰â†’ è®Šç•°å€çŽ‡
-- XP ä¸‰åˆ†é¡žåŠ æˆï¼ˆfruitXP / killXP / corpseXPï¼‰ï¼šæ³¨å…¥è‡³ player.js / damage.js / boss.js / combat.js å„ XP å‘¼å«é»žï¼Œåœ¨ `addXP()` å‰å¥—ç”¨
-- evo_5star æˆå°±ï¼šè§£éŽ–å¾Œé–‹å±€å¼·åˆ¶ä¸€æ¬¡é€²åŒ–é¸æ“‡ï¼ˆ`showOrganSelection(forceEvoOnly=true)`ï¼‰
-- æ–°å¢ž `config/mutationConfig.js`ï¼šé›†ä¸­å®šç¾©æŠ€èƒ½é»žæ›è®Šç•°é»žå¸¸æ•¸ï¼ˆæ¨™æº–100/æŠ˜æ‰£å¾Œ90ï¼‰ï¼Œskill_master æˆå°±è§£éŽ–å¾Œç”Ÿæ•ˆ
-- `config/playerStatsFormula.js` åŠ å…¥ç¬¬6åƒæ•¸ `unlockedAchievements`ï¼Œé¢æ¿é¡¯ç¤ºæ•¸å€¼èˆ‡ runtime åŒæ­¥ï¼Œæ–°å¢ž `corpseXP` è¿”å›žæ¬„ä½
-- æˆå°±é¢æ¿å±¬æ€§é ã€Œæˆå°±åŠ æˆã€æ¬„ä½æ”¹ç‚ºå³æ™‚é¡¯ç¤ºå¯¦éš›åŠ æˆæ˜Žç´°
+### 新增
+- 成就 Bonus 系統：36 個成就全部填入 `bonus` 欄位，解鎖後永久加成玩家數值
+- 新增 `systems/achievementBonus.js`：`applyAchievementStatBonuses()` / `getAchievementBonusTotals()`，套用管線插入 `applyEvolutionEffects()` 之後、`applyAllMutationBonuses()` 之前
+- 加成套用順序：flat add（攻擊/HP/速度/暴擊/器官槽/攻速）→ percent（攻擊/HP/速度/攻擊範圍/體型）→ 變異倍率
+- XP 三分類加成（fruitXP / killXP / corpseXP）：注入至 player.js / damage.js / boss.js / combat.js 各 XP 呼叫點，在 `addXP()` 前套用
+- evo_5star 成就：解鎖後開局強制一次進化選擇（`showOrganSelection(forceEvoOnly=true)`）
+- 新增 `config/mutationConfig.js`：集中定義技能點換變異點常數（標準100/折扣後90），skill_master 成就解鎖後生效
+- `config/playerStatsFormula.js` 加入第6參數 `unlockedAchievements`，面板顯示數值與 runtime 同步，新增 `corpseXP` 返回欄位
+- 成就面板屬性頁「成就加成」欄位改為即時顯示實際加成明細
 
-### ä¿®æ­£
-- `config/achievements.js` `mutation_500` description ç”±ã€Œç´¯ç©ä½¿ç”¨500æ¬¡è®Šç•°æŠ€èƒ½ã€æ”¹ç‚ºã€Œè®Šç•°ç­‰ç´šé”åˆ°500ã€ï¼ˆèˆ‡å¯¦éš› condition ä¸€è‡´ï¼‰
+### 修正
+- `config/achievements.js` `mutation_500` description 由「累積使用500次變異技能」改為「變異等級達到500」（與實際 condition 一致）
 
 ---
 
 ## v0.1.24.6 - 2026-06-16
 
-### é‡æ§‹
-- `config/xpConfig.js`ï¼š`XP_CONFIG.kill` æ–°å¢ž `hostile` å­ç‰©ä»¶ï¼ˆ`base=30 / hpDivisor=50 / hpScale=10 / cap=80 / defaultHp=50`ï¼‰ï¼Œé›†ä¸­å®šç¾© hostile æ“Šæ®º XP å…¬å¼æ‰€æœ‰å¸¸æ•¸
-- `systems/damage.js`ï¼š`handleKill` hostile XP å…¬å¼è£¸æ•¸å€¼ï¼ˆ80ã€30ã€50ã€10ï¼‰æ”¹è®€ `XP_CONFIG.kill.hostile.*`ï¼›ä¸æ”¹è®Šä»»ä½• XP æ•¸å€¼çµæžœ
+### 重構
+- `config/xpConfig.js`：`XP_CONFIG.kill` 新增 `hostile` 子物件（`base=30 / hpDivisor=50 / hpScale=10 / cap=80 / defaultHp=50`），集中定義 hostile 擊殺 XP 公式所有常數
+- `systems/damage.js`：`handleKill` hostile XP 公式裸數值（80、30、50、10）改讀 `XP_CONFIG.kill.hostile.*`；不改變任何 XP 數值結果
 
 ---
 
 ## v0.1.24.5 - 2026-06-16
 
-### é‡æ§‹
-- æ–°å¢ž `config/xpConfig.js`ï¼š`XP_CONFIG`ï¼Œé›†ä¸­å®šç¾©æŽ¡é›† XPï¼ˆ`fruit.base / foragerPerLevel / noHerbivoreBase`ï¼‰èˆ‡æ“Šæ®º XPï¼ˆ`kill.minCreatureBaseXP / hunterPerLevel`ï¼‰æ‰€æœ‰å¸¸æ•¸
-- `config/playerStatsFormula.js`ï¼š`fruitBase / fruitSkill / killBase / killSkill` æ”¹è®€ `XP_CONFIG`
-- `systems/player.js`ï¼š`_collectFruit` æŽ¡é›† XP è¨ˆç®—æ”¹è®€ `XP_CONFIG.fruit.*`
-- `systems/damage.js`ï¼š`handleKill / handleGiantKill / handleKillerKill` hunter åŠ æˆèˆ‡ä¸­ç«‹æ€ªåŸºæº–å€¼æ”¹è®€ `XP_CONFIG.kill.*`
-- `config/creatures.js`ï¼šåˆªé™¤ `HUNTER_BONUS_CONFIG`ï¼Œç§»é™¤ `GIANT_CONFIG / KILLER_CONFIG` çš„ `hunterBonus` æ¬„ä½ï¼ˆhunter åŠ æˆçµ±ä¸€ç”± `XP_CONFIG` ç®¡ç†ï¼‰
-- `systems/achievements.js`ï¼šæ“Šæ®º XP é¢æ¿æ¨™é¡Œæ”¹ç‚º `statKillXpBonus`ï¼ˆæœ€ä½Žæ“Šæ®º XPï¼‰ï¼Œbreakdown åŠ æ³¨ `statKillXpBaseNote`ï¼ˆæœ€ä½Žç”Ÿç‰©åŸºç¤Žï¼‰
-- `lang/zh-TW.js` + `lang/en.js`ï¼šæ–°å¢ž `statKillXpBonus / statKillXpBaseNote` i18n key
-- `tests/config/playerStatsFormula.test.js`ï¼š`killXP.final` æœŸæœ›å€¼æ›´æ–°ç‚º `30`ï¼ˆ`killBase` 20 Ã— `xpMut` 1.5ï¼‰
-- ä¸æ”¹è®Šä»»ä½•éŠæˆ² XP æ•¸å€¼èˆ‡è¡Œç‚º
+### 重構
+- 新增 `config/xpConfig.js`：`XP_CONFIG`，集中定義採集 XP（`fruit.base / foragerPerLevel / noHerbivoreBase`）與擊殺 XP（`kill.minCreatureBaseXP / hunterPerLevel`）所有常數
+- `config/playerStatsFormula.js`：`fruitBase / fruitSkill / killBase / killSkill` 改讀 `XP_CONFIG`
+- `systems/player.js`：`_collectFruit` 採集 XP 計算改讀 `XP_CONFIG.fruit.*`
+- `systems/damage.js`：`handleKill / handleGiantKill / handleKillerKill` hunter 加成與中立怪基準值改讀 `XP_CONFIG.kill.*`
+- `config/creatures.js`：刪除 `HUNTER_BONUS_CONFIG`，移除 `GIANT_CONFIG / KILLER_CONFIG` 的 `hunterBonus` 欄位（hunter 加成統一由 `XP_CONFIG` 管理）
+- `systems/achievements.js`：擊殺 XP 面板標題改為 `statKillXpBonus`（最低擊殺 XP），breakdown 加注 `statKillXpBaseNote`（最低生物基礎）
+- `lang/zh-TW.js` + `lang/en.js`：新增 `statKillXpBonus / statKillXpBaseNote` i18n key
+- `tests/config/playerStatsFormula.test.js`：`killXP.final` 期望值更新為 `30`（`killBase` 20 × `xpMut` 1.5）
+- 不改變任何遊戲 XP 數值與行為
 
 ---
 
 ## v0.1.24.4 - 2026-06-16
 
-### é‡æ§‹
-- `config/achievements.js`ï¼š16 å€‹æˆå°±æ–°å¢ž `condition` æ¬„ä½ï¼ˆ`type` / `threshold`ï¼‰ï¼Œçµ±ä¸€å®šç¾©è§¸ç™¼æ¢ä»¶ï¼›type å‘½åè¦å‰‡ï¼š`*Max` å¾Œç¶´è¡¨ç¤º `<= threshold`ï¼Œ`nightOwlHour` è¡¨ç¤º `hour >= 0 && hour < threshold`ï¼Œå…¶é¤˜ç‚º `>= threshold`
-- `systems/achievementTriggers.js`ï¼šæ–°å¢ž `_getThreshold(id)` helperï¼Œæ‰€æœ‰ listener è£¡çš„è£¸æ•¸å€¼æ”¹è®€ `_getThreshold(id)`ï¼ˆæ¶µè“‹ 16 å€‹æˆå°±è§¸ç™¼é»žï¼‰
-- æ–°å¢ž `config/combatConfig.js`ï¼š`COMBAT_CONFIG.baseAttackIntervalMs = 1000`ï¼Œé›†ä¸­å®šç¾©æ”»æ“Šé–“éš”å…¬å¼åŸºåº•
-- `systems/combat.js`ï¼šæ”»æ“Šé–“éš”è¨ˆç®—æ”¹è®€ `COMBAT_CONFIG.baseAttackIntervalMs`ï¼Œæ–°å¢ž `import { COMBAT_CONFIG }`
-- ä¸æ”¹è®Šä»»ä½•éŠæˆ²æ•¸å€¼èˆ‡è¡Œç‚º
+### 重構
+- `config/achievements.js`：16 個成就新增 `condition` 欄位（`type` / `threshold`），統一定義觸發條件；type 命名規則：`*Max` 後綴表示 `<= threshold`，`nightOwlHour` 表示 `hour >= 0 && hour < threshold`，其餘為 `>= threshold`
+- `systems/achievementTriggers.js`：新增 `_getThreshold(id)` helper，所有 listener 裡的裸數值改讀 `_getThreshold(id)`（涵蓋 16 個成就觸發點）
+- 新增 `config/combatConfig.js`：`COMBAT_CONFIG.baseAttackIntervalMs = 1000`，集中定義攻擊間隔公式基底
+- `systems/combat.js`：攻擊間隔計算改讀 `COMBAT_CONFIG.baseAttackIntervalMs`，新增 `import { COMBAT_CONFIG }`
+- 不改變任何遊戲數值與行為
 
 ---
 
 ## v0.1.24.3 - 2026-06-16
 
-### é‡æ§‹
-- `config/organs.js` COMBOS `comboCrabGloves` æ–°å¢ž `effects: { bleedMultiplier: 2, healReduction: 0.5 }`
-- `config/characters.js` koel æ–°å¢ž `specialSkillConfig`ï¼ˆdashDistMultiplier / dashDistMax / dashCD / dashInvincible / dashEffectDurationï¼‰
-- `config/characters.js` archerfish æ–°å¢ž `specialSkillConfig`ï¼ˆdashSpeedAdd / dashDuration / dashCD / dashStunDuration / chargeMax / chargeInterval / chargeConsumeIntervalï¼‰ã€`projectile`ï¼ˆradius / rangeMultiplier / minShootDistanceï¼‰ã€`waterSpeedMultiplier`
-- `systems/combat.js`ï¼šmouthOrgan slow å€çŽ‡/duration æ”¹è®€ `ORGANS.mouthOrgan.levels[2].effects.onHitSlow`ï¼›comboCrabGloves bleedMultiplier / healReduction æ”¹è®€ COMBOS effectsï¼›poisonSac sacDur æ”¹è®€ `ORGANS.poisonSac.levels[0].effects.poisonSacDur`
-- `systems/player.js`ï¼šåŒæ­¥ mouthOrgan slow config åŒ–ï¼›é˜¿å¥‡çˆ¾æ‰€æœ‰ dash/charge/projectile/waterSpeed è£¸æ•¸å€¼æ”¹è®€ `CHARACTERS[id]`ï¼›å™ªéµ‘ dash è£¸æ•¸å€¼æ”¹è®€ `CHARACTERS[id].specialSkillConfig`
-- ä¸æ”¹è®Šä»»ä½•éŠæˆ²æ•¸å€¼èˆ‡è¡Œç‚º
+### 重構
+- `config/organs.js` COMBOS `comboCrabGloves` 新增 `effects: { bleedMultiplier: 2, healReduction: 0.5 }`
+- `config/characters.js` koel 新增 `specialSkillConfig`（dashDistMultiplier / dashDistMax / dashCD / dashInvincible / dashEffectDuration）
+- `config/characters.js` archerfish 新增 `specialSkillConfig`（dashSpeedAdd / dashDuration / dashCD / dashStunDuration / chargeMax / chargeInterval / chargeConsumeInterval）、`projectile`（radius / rangeMultiplier / minShootDistance）、`waterSpeedMultiplier`
+- `systems/combat.js`：mouthOrgan slow 倍率/duration 改讀 `ORGANS.mouthOrgan.levels[2].effects.onHitSlow`；comboCrabGloves bleedMultiplier / healReduction 改讀 COMBOS effects；poisonSac sacDur 改讀 `ORGANS.poisonSac.levels[0].effects.poisonSacDur`
+- `systems/player.js`：同步 mouthOrgan slow config 化；阿奇爾所有 dash/charge/projectile/waterSpeed 裸數值改讀 `CHARACTERS[id]`；噪鵑 dash 裸數值改讀 `CHARACTERS[id].specialSkillConfig`
+- 不改變任何遊戲數值與行為
 
 ---
 
 ## v0.1.24.2 - 2026-06-16
 
-### é‡æ§‹
-- `config/creatures.js`ï¼šæ–°å¢ž `HUNTER_BONUS_CONFIG`ã€`GIANT_CONFIG`ã€`KILLER_CONFIG` ä¸‰å€‹ exportï¼Œé›†ä¸­å®šç¾©å·¨äºº / Alpha / æ®ºæ‰‹åŒ–ç³»çµ±çš„ XPã€lootã€è®Šç•°é»žèˆ‡æ©ŸçŽ‡æ•¸å€¼
-- `systems/damage.js`ï¼š`handleGiantKill` / `handleKillerKill` ä¸­æ‰€æœ‰è£¸æ•¸å€¼æ”¹è®€ä¸Šè¿° configï¼›ä¸æ”¹è®Šä»»ä½•éŠæˆ²è¡Œç‚º
-- æ–°å¢ž `import { GIANT_CONFIG, KILLER_CONFIG } from '../config/creatures.js'`
+### 重構
+- `config/creatures.js`：新增 `HUNTER_BONUS_CONFIG`、`GIANT_CONFIG`、`KILLER_CONFIG` 三個 export，集中定義巨人 / Alpha / 殺手化系統的 XP、loot、變異點與機率數值
+- `systems/damage.js`：`handleGiantKill` / `handleKillerKill` 中所有裸數值改讀上述 config；不改變任何遊戲行為
+- 新增 `import { GIANT_CONFIG, KILLER_CONFIG } from '../config/creatures.js'`
 
 ---
 
 ## v0.1.24.1
 
-# CHANGELOG â€” åªåƒä¸å«çš„å™ªéµ‘
+# CHANGELOG — 只吃不叫的噪鵑
 
 ---
 
 ## v0.1.24.1 - 2026-06-15
 
-### é‡æ§‹
-- `config/achievements.js`ï¼š`koel_50` / `archer_50` æ–°å¢ž `condition` æ¬„ä½ï¼ˆ`type: 'characterClearCount'`, `characterId`, `threshold`ï¼‰
-- `systems/achievementTriggers.js`ï¼šç§»é™¤è§’è‰² id ç¡¬å¯«åˆ¤æ–·ï¼Œæ”¹ç‚ºé€šç”¨è¿´åœˆæŽƒæ `ACHIEVEMENTS` ä¸­æ‰€æœ‰ `condition.type === 'characterClearCount'` æˆå°±ï¼›æ–°å¢ž `import { ACHIEVEMENTS } from '../config/achievements.js'`
-- æ–°å¢žè§’è‰²æˆå°±åªéœ€åœ¨ `config/achievements.js` åŠ  `condition` æ¬„ä½ï¼Œä¸éœ€æ”¹ `systems/`
+### 重構
+- `config/achievements.js`：`koel_50` / `archer_50` 新增 `condition` 欄位（`type: 'characterClearCount'`, `characterId`, `threshold`）
+- `systems/achievementTriggers.js`：移除角色 id 硬寫判斷，改為通用迴圈掃描 `ACHIEVEMENTS` 中所有 `condition.type === 'characterClearCount'` 成就；新增 `import { ACHIEVEMENTS } from '../config/achievements.js'`
+- 新增角色成就只需在 `config/achievements.js` 加 `condition` 欄位，不需改 `systems/`
 
 ---
 
 ## v0.1.24.0
 
-# CHANGELOG â€” åªåƒä¸å«çš„å™ªéµ‘
+# CHANGELOG — 只吃不叫的噪鵑
 
 ---
 
 ## v0.1.24.0 - 2026-06-15
 
-### é‡æ§‹
-- `config/characters.js`ï¼škoel / archerfish æ–°å¢ž `sfx` æ¬„ä½ï¼ˆhurt / attackNormal / attackCritï¼‰
-- `systems/damage.js`ï¼šç§»é™¤ `archerfish` id ç¡¬å¯«åˆ¤æ–·ï¼Œæ”¹è®€ `CHARACTERS[id].sfx.hurt`
-- `systems/combat.js`ï¼šç§»é™¤ `archerfish` id ç¡¬å¯«åˆ¤æ–·ï¼Œæ”¹è®€ `CHARACTERS[id].sfx.attackCrit / .attackNormal`
-- `systems/player.js`ï¼šç§»é™¤ `archerfish` id ç¡¬å¯«åˆ¤æ–·ï¼Œæ”¹è®€ `CHARACTERS[id].sfx.attackNormal`
+### 重構
+- `config/characters.js`：koel / archerfish 新增 `sfx` 欄位（hurt / attackNormal / attackCrit）
+- `systems/damage.js`：移除 `archerfish` id 硬寫判斷，改讀 `CHARACTERS[id].sfx.hurt`
+- `systems/combat.js`：移除 `archerfish` id 硬寫判斷，改讀 `CHARACTERS[id].sfx.attackCrit / .attackNormal`
+- `systems/player.js`：移除 `archerfish` id 硬寫判斷，改讀 `CHARACTERS[id].sfx.attackNormal`
 
 ---
 
 ## v0.1.23.2 - 2026-06-15
 
-### ä¿®å¾©
-- `systems/achievements.js`ï¼šUI ç¡¬å¯«ä¸­æ–‡æ–‡å­—å…¨æ•¸æ”¹ç‚º `t('key')` å¼•ç”¨ï¼ˆå…± 25 å€‹ lang keyï¼‰
-- `lang/zh-TW.js` / `lang/en.js`ï¼šæ–°å¢ž stat*ï¼ˆ16 å€‹ï¼‰ã€achievementHidden/PageFmt/CountFmt/ProgressFmt/DaysFmt/DetailTitleï¼ˆ6 å€‹ï¼‰ã€statPanelTitle/unitPerFruit/unitPerKillï¼ˆ3 å€‹ï¼‰ï¼Œå…± 25 å€‹ key
+### 修復
+- `systems/achievements.js`：UI 硬寫中文文字全數改為 `t('key')` 引用（共 25 個 lang key）
+- `lang/zh-TW.js` / `lang/en.js`：新增 stat*（16 個）、achievementHidden/PageFmt/CountFmt/ProgressFmt/DaysFmt/DetailTitle（6 個）、statPanelTitle/unitPerFruit/unitPerKill（3 個），共 25 個 key
 
 ---
 
 ## v0.1.23.1 - 2026-06-15
 
-### ä¿®å¾©
-- `config/playerStatsFormula.js`ï¼šFix C â€” savedOrgans å·²å« fang æ™‚ terribleFang fangBonus ä¸å†é›™ç®—ï¼ˆåŽŸæœ¬åªæŽ’é™¤ startOrgansï¼‰
-- `config/playerStatsFormula.js`ï¼šFix D â€” speed è¨ˆç®—è£œå…¥ `_startEvoEffect(char, 'speedBonus')`ï¼ˆomnivore startEvolution é€Ÿåº¦åŠ æˆåŽŸæœ¬æœªå¥—ç”¨ï¼‰
+### 修復
+- `config/playerStatsFormula.js`：Fix C — savedOrgans 已含 fang 時 terribleFang fangBonus 不再雙算（原本只排除 startOrgans）
+- `config/playerStatsFormula.js`：Fix D — speed 計算補入 `_startEvoEffect(char, 'speedBonus')`（omnivore startEvolution 速度加成原本未套用）
 
-### æ–°å¢ž
-- `docs/PLAYER_STATS_FORMULA.md`ï¼š`calcPlayerStats` å®Œæ•´åƒè€ƒæ‰‹å†Šï¼ˆæ¦‚è¦½ã€è³‡æ–™ä¾†æºå°ç…§è¡¨ã€è¨ˆç®—é †åºã€å·²çŸ¥é™åˆ¶ã€å¼•ç”¨ç¯„ä¾‹ï¼‰
+### 新增
+- `docs/PLAYER_STATS_FORMULA.md`：`calcPlayerStats` 完整參考手冊（概覽、資料來源對照表、計算順序、已知限制、引用範例）
 
-### æ¸¬è©¦
-- `tests/config/playerStatsFormula.test.js`ï¼šæ–°å¢ž Fix C / Fix D æ¸¬è©¦ï¼Œå…± 165 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- `tests/config/playerStatsFormula.test.js`：新增 Fix C / Fix D 測試，共 165 個測試全數通過
 
 ---
 
 ## v0.1.23.0 - 2026-06-15
 
-### æ–°å¢ž
-- `systems/achievementTriggers.js`ï¼šPhase D æˆå°±è§¸ç™¼æŽ¥å…¥ï¼Œ`initAchievementTriggers()` ç›£è½ 20+ å€‹ CustomEventï¼Œä¸ import ä»»ä½• SCC æ¨¡çµ„
-- `storage/index.js`ï¼šæ–°å¢ž `WIN_STREAK` / `KILL_TOTAL` / `KILL_KILLER_TOTAL` / `KILL_GIANT_TOTAL` å››å€‹ localStorage key
-- `systems/damage.js`ï¼šæ–°å¢ž `playerDamaged` / `gameOver` / `killCountUpdated`ï¼ˆnormal / killer / giantï¼‰dispatchï¼›æ–°å¢ž storage import ä»¥ç´¯ç©æ“Šæ®ºè¨ˆæ•¸
-- `systems/tutorial.js`ï¼šæ•™å­¸å®Œæˆå¾Œ dispatch `tutorialCompleted`
-- `systems/boss.js`ï¼š`showVictory()` dispatch `gameVictory`ï¼ˆå« difficulty / playTime / bossKillTime / character / bossType / tookDamage / regenedThisRunï¼‰
-- `systems/player.js`ï¼šå›žè¡€æ™‚ dispatch `playerRegen`ï¼›æžœå¯¦è¨ˆæ•¸éžå¢žå¾Œ dispatch `fruitCollected`
-- `systems/evolution.js`ï¼šé€²åŒ–å‡ç­‰ dispatch `evolutionLevelUp`ï¼›æŠ€èƒ½å‡ç´š dispatch `skillUpgraded`ï¼›è®Šç•°å‡ç´š dispatch `mutationLevelChanged`
-- `systems/organs.js`ï¼š`applyOrganEffects()` æœ«å°¾ dispatch `organUnlocked`
-- `systems/combat.js`ï¼š`_addBoneMaterial()` dispatch `boneMaterialUpdated`
-- `systems/chat.js`ï¼šç™»å…¥æˆåŠŸä¸” `is_pioneer=true` æ™‚ dispatch `pioneerConfirmed`
-- `systems/achievements.js`ï¼š`unlockAchievement()` æœ«å°¾è‡ªå‹•æª¢æŸ¥ `all_achievements`ï¼›`showAchievements()` é–‹å•Ÿæ™‚è‡ªå‹•åˆ¤æ–· `veteran_days`
-- `main.js`ï¼šimport `initAchievementTriggers` / `unlockAchievement`ï¼›é¦–æ¬¡éŠçŽ©å¯«å…¥ `first_play`ï¼›æ¯å±€é‡ç½® `tookDamageThisRun` / `regenedThisRun`ï¼›ç›£è½ `playerDamaged` / `playerRegen` è¨­å®š flagï¼›dispatch `gameStarted`
+### 新增
+- `systems/achievementTriggers.js`：Phase D 成就觸發接入，`initAchievementTriggers()` 監聽 20+ 個 CustomEvent，不 import 任何 SCC 模組
+- `storage/index.js`：新增 `WIN_STREAK` / `KILL_TOTAL` / `KILL_KILLER_TOTAL` / `KILL_GIANT_TOTAL` 四個 localStorage key
+- `systems/damage.js`：新增 `playerDamaged` / `gameOver` / `killCountUpdated`（normal / killer / giant）dispatch；新增 storage import 以累積擊殺計數
+- `systems/tutorial.js`：教學完成後 dispatch `tutorialCompleted`
+- `systems/boss.js`：`showVictory()` dispatch `gameVictory`（含 difficulty / playTime / bossKillTime / character / bossType / tookDamage / regenedThisRun）
+- `systems/player.js`：回血時 dispatch `playerRegen`；果實計數遞增後 dispatch `fruitCollected`
+- `systems/evolution.js`：進化升等 dispatch `evolutionLevelUp`；技能升級 dispatch `skillUpgraded`；變異升級 dispatch `mutationLevelChanged`
+- `systems/organs.js`：`applyOrganEffects()` 末尾 dispatch `organUnlocked`
+- `systems/combat.js`：`_addBoneMaterial()` dispatch `boneMaterialUpdated`
+- `systems/chat.js`：登入成功且 `is_pioneer=true` 時 dispatch `pioneerConfirmed`
+- `systems/achievements.js`：`unlockAchievement()` 末尾自動檢查 `all_achievements`；`showAchievements()` 開啟時自動判斷 `veteran_days`
+- `main.js`：import `initAchievementTriggers` / `unlockAchievement`；首次遊玩寫入 `first_play`；每局重置 `tookDamageThisRun` / `regenedThisRun`；監聽 `playerDamaged` / `playerRegen` 設定 flag；dispatch `gameStarted`
 
-### æ¸¬è©¦
-- æ–°å¢ž `tests/systems/achievementTriggers.test.js`ï¼š14 å€‹æ¸¬è©¦ï¼ˆinitAchievementTriggers / gameVictory / levelUp / mutationLevelChanged / killCountUpdated / win_streakï¼‰
-- `npm test`ï¼š18 å€‹æ¸¬è©¦æª”ã€146 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- 新增 `tests/systems/achievementTriggers.test.js`：14 個測試（initAchievementTriggers / gameVictory / levelUp / mutationLevelChanged / killCountUpdated / win_streak）
+- `npm test`：18 個測試檔、146 個測試全數通過
 
 ---
 
 ## v0.1.22.1 - 2026-06-14
 
-### æ–°å¢ž
-- `systems/achievements.js`ï¼šæ–°å¢ž `showAchievements(opts)` æˆå°± Overlay UIï¼ˆ3Ã—3 æ ¼å­ã€4 é ç¿»é ã€å³å´èªªæ˜Žæ¬„ã€hidden æˆå°±æœªè§£éŽ–é¡¯ç¤º ???ï¼‰
-- `systems/ui.js`ï¼šé¦–é å·¦å´æ–°å¢žã€Œæˆå°±ã€å°ŽèˆªæŒ‰éˆ•ï¼ˆDiscord æŒ‰éˆ•ä¸‹æ–¹ï¼Œé¢¨æ ¼ä¸€è‡´ï¼‰ï¼Œé»žæ“Šå‘¼å« `showAchievements()`
-- `systems/chat.js`ï¼šæ–°å¢ž `openChatLogin()` / `syncTitleToServer(title)` å…©å€‹ exportï¼ˆç¨±è™Ÿ UI ä½¿ç”¨ï¼‰
-- `lang/zh-TW.js` / `lang/en.js`ï¼šæ–°å¢ž achievementTitle / achievementBtn / achievementUnlocked / achievementHowTo / achievementDaysPlayed / achievementProgress ç­‰ 11 å€‹ lang key
-- æˆå°± Overlay å³ä¸Šè§’ [ç¨±è™Ÿ â–¾] æŒ‰éˆ•ï¼šå·²ç™»å…¥å¯é¸æ“‡ç¨±è™Ÿï¼ˆactive é¡¯ç¤º âœ“ï¼Œå†é»žå–æ¶ˆï¼‰ï¼Œæœªç™»å…¥é¡¯ç¤ºç™»å…¥æç¤ºï¼›é¸æ“‡å¾ŒåŒæ­¥è‡³ Supabase `chat_users.title`
+### 新增
+- `systems/achievements.js`：新增 `showAchievements(opts)` 成就 Overlay UI（3×3 格子、4 頁翻頁、右側說明欄、hidden 成就未解鎖顯示 ???）
+- `systems/ui.js`：首頁左側新增「成就」導航按鈕（Discord 按鈕下方，風格一致），點擊呼叫 `showAchievements()`
+- `systems/chat.js`：新增 `openChatLogin()` / `syncTitleToServer(title)` 兩個 export（稱號 UI 使用）
+- `lang/zh-TW.js` / `lang/en.js`：新增 achievementTitle / achievementBtn / achievementUnlocked / achievementHowTo / achievementDaysPlayed / achievementProgress 等 11 個 lang key
+- 成就 Overlay 右上角 [稱號 ▾] 按鈕：已登入可選擇稱號（active 顯示 ✓，再點取消），未登入顯示登入提示；選擇後同步至 Supabase `chat_users.title`
 
 ---
 
 ## v0.1.22.0 - 2026-06-14
 
-### æ–°å¢ž
-- `config/achievements.js`ï¼š36 å€‹æˆå°±å®šç¾©ï¼ˆbeginner / clear / boss / collect / character / growth / hidden ä¸ƒé¡žï¼‰ï¼Œç´”è³‡æ–™ export
-- `systems/achievements.js`ï¼šæˆå°±ç³»çµ±è®€å¯«å…¥å£ï¼ˆunlockAchievement / isUnlocked / getUnlockedAchievements / getActiveTitle / setActiveTitleï¼‰
-- `config/attributes.js`ï¼š5 å€‹ Attribute ç´”è³‡æ–™å®šç¾©ï¼ˆvenom / specter / shadow / sniper / shotgunï¼‰ï¼Œå°æ‡‰ docs/MODULAR_ATTRIBUTE_DESIGN.md Phase B
-- `storage/index.js`ï¼šæ–°å¢ž `ACHIEVEMENTS` / `FIRST_PLAY_DATE` å…©å€‹ localStorage key
-- `main.js`ï¼šé¦–æ¬¡éŠçŽ©æ™‚å¯«å…¥ `FIRST_PLAY_DATE`ï¼ˆISO date stringï¼‰
-- `systems/chat.js`ï¼šæ–°å¢ž `_validateUsername()`ï¼ˆé•·åº¦ 1~20ã€è‹±æ•¸å­—é™åˆ¶ã€leet-speak GOBLINNEST éŽæ¿¾ï¼‰ï¼›chatLogin æ‰€æœ‰è·¯å¾‘ username ä¸€å¾‹ toLowerCase æ­£è¦åŒ–ï¼›_collectLocalData åŠ å…¥ ACHIEVEMENTS / FIRST_PLAY_DATE
+### 新增
+- `config/achievements.js`：36 個成就定義（beginner / clear / boss / collect / character / growth / hidden 七類），純資料 export
+- `systems/achievements.js`：成就系統讀寫入口（unlockAchievement / isUnlocked / getUnlockedAchievements / getActiveTitle / setActiveTitle）
+- `config/attributes.js`：5 個 Attribute 純資料定義（venom / specter / shadow / sniper / shotgun），對應 docs/MODULAR_ATTRIBUTE_DESIGN.md Phase B
+- `storage/index.js`：新增 `ACHIEVEMENTS` / `FIRST_PLAY_DATE` 兩個 localStorage key
+- `main.js`：首次遊玩時寫入 `FIRST_PLAY_DATE`（ISO date string）
+- `systems/chat.js`：新增 `_validateUsername()`（長度 1~20、英數字限制、leet-speak GOBLINNEST 過濾）；chatLogin 所有路徑 username 一律 toLowerCase 正規化；_collectLocalData 加入 ACHIEVEMENTS / FIRST_PLAY_DATE
 
-### æ¸¬è©¦
-- æ–°å¢ž `tests/systems/achievements.test.js`ï¼š17 å€‹æ¸¬è©¦ï¼ˆunlock / idempotent / isUnlocked / getActiveTitle / setActiveTitle / id ä¸é‡è¤‡ / title æ•¸é‡ï¼‰
-- æ–°å¢ž `tests/config/attributes.test.js`ï¼š7 å€‹æ¸¬è©¦ï¼ˆid ä¸é‡è¤‡ / ability id ä¸é‡è¤‡ / å¿…å¡«æ¬„ä½ / appliesTo ä¸ç‚ºç©ºï¼‰
-- `npm test`ï¼š17 å€‹æ¸¬è©¦æª”ã€132 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- 新增 `tests/systems/achievements.test.js`：17 個測試（unlock / idempotent / isUnlocked / getActiveTitle / setActiveTitle / id 不重複 / title 數量）
+- 新增 `tests/config/attributes.test.js`：7 個測試（id 不重複 / ability id 不重複 / 必填欄位 / appliesTo 不為空）
+- `npm test`：17 個測試檔、132 個測試全數通過
 
 ---
 
 ## v0.1.21.3 - 2026-06-14
 
-### ä¿®å¾©
-- `systems/damage.js`ï¼š`handleKill()` ç¾åœ¨æœƒå¾ž `hostileCreatures` / `neutralCreatures` ç§»é™¤å·²æ“Šæ®ºç”Ÿç‰©ï¼Œä¸¦ä¿ç•™åŠ å…¥ `corpses` çš„æ—¢æœ‰æµç¨‹
-- `systems/damage.js`ï¼š`handleKill()` æ“Šæ®º `isElite` ç”Ÿç‰©æ™‚ dispatch `CustomEvent('eliteKilled', { detail: { killer } })`
+### 修復
+- `systems/damage.js`：`handleKill()` 現在會從 `hostileCreatures` / `neutralCreatures` 移除已擊殺生物，並保留加入 `corpses` 的既有流程
+- `systems/damage.js`：`handleKill()` 擊殺 `isElite` 生物時 dispatch `CustomEvent('eliteKilled', { detail: { killer } })`
 
-### æ¸¬è©¦
-- æ–°å¢ž `tests/systems/damage.test.js`ï¼šæ°¸ä¹…å›žæ­¸ä¿è­· `handleKill`ã€`eliteKilled`ã€`bossKilled`ã€`applyDamageToPlayer`ã€`showSkillTree` dispatchã€`setRangedAttackCallback`
-- `npm test`ï¼š15 å€‹æ¸¬è©¦æª”ã€114 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽï¼ˆå«åŽŸæœ‰ 103 å€‹ regressionï¼‰
+### 測試
+- 新增 `tests/systems/damage.test.js`：永久回歸保護 `handleKill`、`eliteKilled`、`bossKilled`、`applyDamageToPlayer`、`showSkillTree` dispatch、`setRangedAttackCallback`
+- `npm test`：15 個測試檔、114 個測試全數通過（含原有 103 個 regression）
 
 ---
 
 ## v0.1.21.2 - 2026-06-14
 
-### æ¸…ç†
-- `systems/boss.js`ï¼šç§»é™¤ dead import `storageGetJSON`
-- `systems/combat.js`ï¼šç§»é™¤ dead import `getGameFont`ã€`spawnLootCircle`ã€`showXPPopup`ã€`incrementStat`ã€`addMutationPoints`
-- `systems/elite.js`ï¼šç§»é™¤ dead import `storageGet`ã€`storageRemove`ã€`storageGetJSON`ã€`storageSetJSON`
-- `systems/evolution.js`ï¼šç§»é™¤ dead import `showOrganSelection`ã€`showHiddenOrganSelection`ã€`getOrganSlotsUsed`ã€`applyMutationEffects`ã€`resumePlayTimer`
-- `systems/hud.js`ï¼šç§»é™¤ dead import `drawArrow`ã€`showFloatingText`
-- `systems/leaderboard.js`ï¼šç§»é™¤ dead import `fetchTop10`
-- `systems/mutation.js`ï¼šç§»é™¤ dead import `storageRemove`
-- `systems/organs.js`ï¼šç§»é™¤ dead import `SKILLS`ã€`showFloatingText`ã€`getGameFont`ã€`storageRemove`ã€`storageGetJSON`ã€`storageSetJSON`
-- `systems/player.js`ï¼šç§»é™¤ dead import `VIEW_W`ã€`VIEW_H`ã€`getOrganCumulative`ã€`applyOrganEffects`
-- `systems/tutorial.js`ï¼šç§»é™¤ dead import `storageGet`ã€`storageRemove`ã€`storageGetJSON`ã€`storageSetJSON`
+### 清理
+- `systems/boss.js`：移除 dead import `storageGetJSON`
+- `systems/combat.js`：移除 dead import `getGameFont`、`spawnLootCircle`、`showXPPopup`、`incrementStat`、`addMutationPoints`
+- `systems/elite.js`：移除 dead import `storageGet`、`storageRemove`、`storageGetJSON`、`storageSetJSON`
+- `systems/evolution.js`：移除 dead import `showOrganSelection`、`showHiddenOrganSelection`、`getOrganSlotsUsed`、`applyMutationEffects`、`resumePlayTimer`
+- `systems/hud.js`：移除 dead import `drawArrow`、`showFloatingText`
+- `systems/leaderboard.js`：移除 dead import `fetchTop10`
+- `systems/mutation.js`：移除 dead import `storageRemove`
+- `systems/organs.js`：移除 dead import `SKILLS`、`showFloatingText`、`getGameFont`、`storageRemove`、`storageGetJSON`、`storageSetJSON`
+- `systems/player.js`：移除 dead import `VIEW_W`、`VIEW_H`、`getOrganCumulative`、`applyOrganEffects`
+- `systems/tutorial.js`：移除 dead import `storageGet`、`storageRemove`、`storageGetJSON`、`storageSetJSON`
 
-### æ¸¬è©¦
-- `npm test`ï¼š103/103 é€šéŽ
+### 測試
+- `npm test`：103/103 通過
 
 ---
 
 ## v0.1.21.1 - 2026-06-14
 
-### ä¿®å¾©
-- `systems/damage.js`ï¼šç§»é™¤ `import { handleEliteKill } from './organs.js'`ï¼Œè§£é™¤ Layer 1 â†’ Layer 2 é•è¦
-- `systems/damage.js`ï¼šåˆºç”²åå‚·æ“Šæ®ºç²¾è‹±æ€ªæ”¹ dispatch `CustomEvent('eliteKilled', { detail: { killer } })`
-- `main.js`ï¼šæ–°å¢ž `eliteKilled` event listenerï¼ˆâ†’ `handleEliteKill(e.detail.killer)`ï¼‰ï¼›`handleEliteKill` åŠ å…¥ organs.js import æ¸…å–®
+### 修復
+- `systems/damage.js`：移除 `import { handleEliteKill } from './organs.js'`，解除 Layer 1 → Layer 2 違規
+- `systems/damage.js`：刺甲反傷擊殺精英怪改 dispatch `CustomEvent('eliteKilled', { detail: { killer } })`
+- `main.js`：新增 `eliteKilled` event listener（→ `handleEliteKill(e.detail.killer)`）；`handleEliteKill` 加入 organs.js import 清單
 
-### æ–‡ä»¶
-- `MAIN.md`ï¼šç‰ˆæœ¬è™Ÿ + æ–°å¢ž feedback.js / reward.js / loot.js / damage.js æ¨¡çµ„æ®µè½ï¼›ä¿®æ­£ combat.js / player.js æ®µè½
-- `QUICKREF.md`ï¼šç‰ˆæœ¬è™Ÿ + è£œ feedback.js / reward.js / loot.js æ¢ç›®
-- `ARCH.md`ï¼šç‰ˆæœ¬è™Ÿ + damage.js ä¾è³´è¡¨ç§»é™¤ organs.js + æ¨¡çµ„æ¸…å–®è£œé½Š
-- `docs/events.md`ï¼šæ–°å¢ž eliteKilled äº‹ä»¶è¨˜éŒ„
+### 文件
+- `MAIN.md`：版本號 + 新增 feedback.js / reward.js / loot.js / damage.js 模組段落；修正 combat.js / player.js 段落
+- `QUICKREF.md`：版本號 + 補 feedback.js / reward.js / loot.js 條目
+- `ARCH.md`：版本號 + damage.js 依賴表移除 organs.js + 模組清單補齊
+- `docs/events.md`：新增 eliteKilled 事件記錄
 
-### æ¸¬è©¦
-- `npm test`ï¼š14 å€‹æ¸¬è©¦æª”ã€103 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- `npm test`：14 個測試檔、103 個測試全數通過
 
 ---
 
 ## v0.1.21.0 - 2026-06-14
 
-### é‡æ§‹
-- Stage F 3aï¼šæ–°å»º `systems/damage.js`ï¼Œæ‰¿è¼‰ `applyDamageToPlayer`ã€`handleKill`ã€`handleGiantKill`ã€`handleKillerKill`ï¼ˆprivateï¼‰
-- `boss.js`ã€`player.js`ã€`elite.js`ã€`creatures.js` çš„ `applyDamageToPlayer`/`handleKill`/`handleGiantKill` import æ”¹ç‚º `damage.js`
-- `combat.js` ç§»é™¤ `import { handleBossKill } from './boss.js'`ï¼Œ4 å€‹ Boss æ­»äº¡å‘¼å«é»žæ”¹ dispatch `CustomEvent('bossKilled')`
-- `combat.js` ç§»é™¤ `import { _archerAttack } from './player.js'`ï¼Œæ”¹ç”¨ callback injectionï¼ˆ`setRangedAttackCallback`ï¼‰
-- `main.js` æ–°å¢ž `setRangedAttackCallback(_archerAttack)` åˆå§‹åŒ–å‘¼å«
-- `tests/systems/creatures.test.js` mock ç”± `combat.js` æ”¹ç‚º `damage.js`
-- è§£é™¤å¾ªç’°ä¾è³´ #11ï¼ˆboss â†” combatï¼‰ã€#6ï¼ˆcombat â†” playerï¼‰ç›´æŽ¥é›™å‘ import
+### 重構
+- Stage F 3a：新建 `systems/damage.js`，承載 `applyDamageToPlayer`、`handleKill`、`handleGiantKill`、`handleKillerKill`（private）
+- `boss.js`、`player.js`、`elite.js`、`creatures.js` 的 `applyDamageToPlayer`/`handleKill`/`handleGiantKill` import 改為 `damage.js`
+- `combat.js` 移除 `import { handleBossKill } from './boss.js'`，4 個 Boss 死亡呼叫點改 dispatch `CustomEvent('bossKilled')`
+- `combat.js` 移除 `import { _archerAttack } from './player.js'`，改用 callback injection（`setRangedAttackCallback`）
+- `main.js` 新增 `setRangedAttackCallback(_archerAttack)` 初始化呼叫
+- `tests/systems/creatures.test.js` mock 由 `combat.js` 改為 `damage.js`
+- 解除循環依賴 #11（boss ↔ combat）、#6（combat ↔ player）直接雙向 import
 
-### æ¸¬è©¦
-- `npm test`ï¼š14 å€‹æ¸¬è©¦æª”ã€103 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- `npm test`：14 個測試檔、103 個測試全數通過
 
 ---
 
 ## v0.1.20.1 - 2026-06-14
 
-### é‡æ§‹
-- Stage F æ‰¹æ¬¡ 2 ç¬¬äºŒæ³¢ï¼šæ–°å»º `systems/reward.js`ï¼Œå°‡ `addXP` / `checkLevelUp` å¾ž `player.js` æ¬å‡º
-- æ–°å»º `systems/loot.js`ï¼Œå°‡ `_spawnBone` å¾ž `combat.js` æ¬å‡º
-- `boss.js`ã€`combat.js`ã€`organs.js`ã€`ui.js` çš„ `addXP` import æ”¹ç‚º `reward.js`
-- `evolution.js`ï¼šç§»é™¤ `addXP` dead importï¼ˆfrom player.jsï¼‰
-- `player.js`ï¼šç§»é™¤ `addXP` / `checkLevelUp` å®šç¾©ï¼Œç§»é™¤ `handleBossKill` importï¼›Boss æ­»äº¡æ”¹ dispatch `CustomEvent('bossKilled')`
-- `reward.js`ï¼šå‡ç´šå¾Œæ”¹ dispatch `CustomEvent('levelUp')` å–ä»£ç›´æŽ¥å‘¼å« `showOrganSelection()`
-- `utils.js`ï¼š`_spawnBone` import æ”¹ç‚º `loot.js`ï¼ˆç§»é™¤ combat.js åå‘ä¾è³´ï¼‰
-- `combat.js`ï¼š`_spawnBone` import æ”¹ç‚º `loot.js`ï¼Œç§»é™¤æœ¬åœ°å®šç¾©
-- `main.js`ï¼šæ–°å¢ž `levelUp`ï¼ˆâ†’ showOrganSelectionï¼‰ã€`bossKilled`ï¼ˆâ†’ handleBossKillï¼‰event listener
-- è§£é™¤å¾ªç’°ä¾è³´ #6ï¼ˆcombat â†” playerï¼ŒaddXP å´ï¼‰ã€#7ï¼ˆorgans â†” playerï¼ŒaddXP å´ï¼‰ã€#12ï¼ˆboss â†” playerï¼‰ã€#14ï¼ˆcombat â†” utilsï¼‰
+### 重構
+- Stage F 批次 2 第二波：新建 `systems/reward.js`，將 `addXP` / `checkLevelUp` 從 `player.js` 搬出
+- 新建 `systems/loot.js`，將 `_spawnBone` 從 `combat.js` 搬出
+- `boss.js`、`combat.js`、`organs.js`、`ui.js` 的 `addXP` import 改為 `reward.js`
+- `evolution.js`：移除 `addXP` dead import（from player.js）
+- `player.js`：移除 `addXP` / `checkLevelUp` 定義，移除 `handleBossKill` import；Boss 死亡改 dispatch `CustomEvent('bossKilled')`
+- `reward.js`：升級後改 dispatch `CustomEvent('levelUp')` 取代直接呼叫 `showOrganSelection()`
+- `utils.js`：`_spawnBone` import 改為 `loot.js`（移除 combat.js 反向依賴）
+- `combat.js`：`_spawnBone` import 改為 `loot.js`，移除本地定義
+- `main.js`：新增 `levelUp`（→ showOrganSelection）、`bossKilled`（→ handleBossKill）event listener
+- 解除循環依賴 #6（combat ↔ player，addXP 側）、#7（organs ↔ player，addXP 側）、#12（boss ↔ player）、#14（combat ↔ utils）
 
-### æ¸¬è©¦
-- `npm test`ï¼š14 å€‹æ¸¬è©¦æª”ã€103 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- `npm test`：14 個測試檔、103 個測試全數通過
 
 ---
 
 ## v0.1.20.0 - 2026-06-14
 
-### é‡æ§‹
-- Stage F æ‰¹æ¬¡ 2 ç¬¬ä¸€æ³¢ï¼šæ–°å»º `systems/feedback.js`ï¼Œå°‡ `showFloatingText`ï¼ˆfrom `combat.js`ï¼‰èˆ‡ `showXPPopup`ï¼ˆfrom `player.js`ï¼‰æ¬ç§»è‡³æ­¤
-- `boss.js`ã€`creatures.js`ã€`elite.js`ã€`hud.js`ã€`mutation.js`ã€`organs.js`ã€`player.js`ã€`combat.js` çš„æµ®å‹•æ–‡å­— import æ”¹ç‚º `feedback.js`
-- `evolution.js`ï¼šç§»é™¤ `showFloatingText` dead importï¼ˆfrom combatï¼‰
-- `combat.js`ï¼šçŽ©å®¶æ­»äº¡æ™‚ `showSkillTree()` æ”¹ç‚º `CustomEvent('showSkillTree')` dispatch
-- `main.js`ï¼šæ–°å¢ž `showSkillTree` event listener
-- è§£é™¤å¾ªç’°ä¾è³´ #9ï¼ˆcombat â†” evolutionï¼‰ã€#13ï¼ˆcombat â†” mutation çš„ feedback å´ï¼‰
+### 重構
+- Stage F 批次 2 第一波：新建 `systems/feedback.js`，將 `showFloatingText`（from `combat.js`）與 `showXPPopup`（from `player.js`）搬移至此
+- `boss.js`、`creatures.js`、`elite.js`、`hud.js`、`mutation.js`、`organs.js`、`player.js`、`combat.js` 的浮動文字 import 改為 `feedback.js`
+- `evolution.js`：移除 `showFloatingText` dead import（from combat）
+- `combat.js`：玩家死亡時 `showSkillTree()` 改為 `CustomEvent('showSkillTree')` dispatch
+- `main.js`：新增 `showSkillTree` event listener
+- 解除循環依賴 #9（combat ↔ evolution）、#13（combat ↔ mutation 的 feedback 側）
 
-### æ¸¬è©¦
-- `npm test`ï¼š14 å€‹æ¸¬è©¦æª”ã€103 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- `npm test`：14 個測試檔、103 個測試全數通過
 
 ---
 
 ## v0.1.19.0 - 2026-06-14
 
-### é‡æ§‹
-- Stage F æ‰¹æ¬¡ 1ï¼šæ–°å¢ž `systems/gameFlow.js`ï¼Œå°‡ `pausePlayTimer` / `resumePlayTimer` å¾ž `main.js` æŠ½å‡ºä¸¦ç”± `main.js` re-export
-- `boss.js`ã€`organs.js`ã€`evolution.js`ã€`tutorial.js` æ”¹ç”± `systems/gameFlow.js` import timer æŽ§åˆ¶å‡½å¼
-- `ui.js` / `evolution.js` æ”¹ç”¨ `CustomEvent('startGame')` é€šçŸ¥ `main.js` å•Ÿå‹•éŠæˆ²ï¼Œç§»é™¤å° `main.js` çš„åå‘ import
-- è§£é™¤ Stage F å¯©è¨ˆä¸­ 5 å€‹é«˜åš´é‡åº¦ `main.js` åå‘å¾ªç’°ä¾è³´
-- `docs/stage-d-audit*.md` å·²å®Œæˆä¸¦æ­¸æª”è‡³ `docs/history/`
+### 重構
+- Stage F 批次 1：新增 `systems/gameFlow.js`，將 `pausePlayTimer` / `resumePlayTimer` 從 `main.js` 抽出並由 `main.js` re-export
+- `boss.js`、`organs.js`、`evolution.js`、`tutorial.js` 改由 `systems/gameFlow.js` import timer 控制函式
+- `ui.js` / `evolution.js` 改用 `CustomEvent('startGame')` 通知 `main.js` 啟動遊戲，移除對 `main.js` 的反向 import
+- 解除 Stage F 審計中 5 個高嚴重度 `main.js` 反向循環依賴
+- `docs/stage-d-audit*.md` 已完成並歸檔至 `docs/history/`
 
-### æ¸¬è©¦
-- `npm.cmd test`ï¼š14 å€‹æ¸¬è©¦æª”ã€103 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- `npm.cmd test`：14 個測試檔、103 個測試全數通過
 
 ---
 
 ## v0.1.18.3 - 2026-06-14
 
-### æ¸¬è©¦
-- tests/systems/audio.test.jsï¼šè£œå…… _mobileFadeScale fade çµæŸé‚Šç•Œ caseï¼ˆnow >= end â†’ 1ï¼‰ï¼Œå…± 103 å€‹æ¸¬è©¦å…¨æ•¸é€šéŽ
+### 測試
+- tests/systems/audio.test.js：補充 _mobileFadeScale fade 結束邊界 case（now >= end → 1），共 103 個測試全數通過
 
 ---
 
 ## v0.1.18.2 - 2026-06-14
 
-### é‡æ§‹
-- Stage Dï¼šsystems/creatures.js â€” `_effSpeed(c)` åŠ å…¥ `now = Date.now()` åƒæ•¸ï¼›`_shouldFleeFromGiant`ã€`_getHyenaPackBonus`ã€`_hyenaWheelPosition` åŠ  `export`ï¼›`_hyenaWheelPosition` åŠ å…¥ `now = Date.now()` åƒæ•¸
-- Stage Dï¼šsystems/audio.js â€” ç§»é™¤ dead import `getSettings`ï¼›`_mobileFadeScale()` åŠ å…¥ `now = Date.now(), isMobile = gameState.isMobile` åƒæ•¸ï¼›`_playSfxBuffer(key)` åŠ å…¥ `random = Math.random` åƒæ•¸
+### 重構
+- Stage D：systems/creatures.js — `_effSpeed(c)` 加入 `now = Date.now()` 參數；`_shouldFleeFromGiant`、`_getHyenaPackBonus`、`_hyenaWheelPosition` 加 `export`；`_hyenaWheelPosition` 加入 `now = Date.now()` 參數
+- Stage D：systems/audio.js — 移除 dead import `getSettings`；`_mobileFadeScale()` 加入 `now = Date.now(), isMobile = gameState.isMobile` 參數；`_playSfxBuffer(key)` 加入 `random = Math.random` 參數
 
-### æ¸¬è©¦
-- tests/systems/creatures.test.jsï¼šæ–°å¢ž 9 å€‹å–®å…ƒæ¸¬è©¦ï¼ˆ_effSpeed Ã— 3ã€_shouldFleeFromGiant Ã— 3ã€_getHyenaPackBonus Ã— 2ã€_hyenaWheelPosition Ã— 1ï¼‰
-- tests/systems/audio.test.jsï¼šæ–°å¢ž 6 å€‹å–®å…ƒæ¸¬è©¦ï¼ˆ_mobileFadeScale Ã— 4ã€_playSfxBuffer Ã— 2ï¼‰
+### 測試
+- tests/systems/creatures.test.js：新增 9 個單元測試（_effSpeed × 3、_shouldFleeFromGiant × 3、_getHyenaPackBonus × 2、_hyenaWheelPosition × 1）
+- tests/systems/audio.test.js：新增 6 個單元測試（_mobileFadeScale × 4、_playSfxBuffer × 2）
 
 ---
 
 ## v0.1.18.1
 
-# CHANGELOG â€” åªåƒä¸å«çš„å™ªéµ‘
+# CHANGELOG — 只吃不叫的噪鵑
 
 ---
 
 ## v0.1.18.1 - 2026-06-14
 
-### é‡æ§‹
-- Stage Dï¼šsystems/spawning.js â€” `moveCreature` åŠ å…¥ `bounds` å¯é¸åƒæ•¸ï¼›`_randomPointInBiome` / `_makeHerbCreature` åŠ å…¥ `deps` å¯é¸åƒæ•¸ï¼ˆrandomã€nowã€getBiomeã€width/heightï¼‰ï¼Œå‘¼å«é»žè¡Œç‚ºä¸è®Š
-- Stage Dï¼šsystems/input.js â€” æŠ½å‡ºç´”å‡½å¼ `_calcMouseWorld(clientX, clientY, rect, canvasSize, camera, bounds)` ä¸¦ exportï¼›`_updateMouseWorld` æ”¹ç‚ºå‘¼å«æ­¤ç´”å‡½å¼
+### 重構
+- Stage D：systems/spawning.js — `moveCreature` 加入 `bounds` 可選參數；`_randomPointInBiome` / `_makeHerbCreature` 加入 `deps` 可選參數（random、now、getBiome、width/height），呼叫點行為不變
+- Stage D：systems/input.js — 抽出純函式 `_calcMouseWorld(clientX, clientY, rect, canvasSize, camera, bounds)` 並 export；`_updateMouseWorld` 改為呼叫此純函式
 
-### æ¸¬è©¦
-- tests/systems/spawning.test.jsï¼šæ–°å¢ž 5 å€‹å–®å…ƒæ¸¬è©¦ï¼ˆmoveCreature wrap é‚Šç•Œï¼šæ­£å¸¸åº§æ¨™ã€è² åº§æ¨™ã€è¶…å‡ºå³é‚Šç•Œã€å‰›å¥½ç­‰æ–¼é‚Šç•Œã€é è¨­å°ºå¯¸ï¼‰
-- tests/systems/input.test.jsï¼šæ–°å¢ž 4 å€‹å–®å…ƒæ¸¬è©¦ï¼ˆ_calcMouseWorld åº§æ¨™è½‰æ›ã€å³é‚Šç•Œ wrapã€è²  world wrapï¼‰
+### 測試
+- tests/systems/spawning.test.js：新增 5 個單元測試（moveCreature wrap 邊界：正常座標、負座標、超出右邊界、剛好等於邊界、預設尺寸）
+- tests/systems/input.test.js：新增 4 個單元測試（_calcMouseWorld 座標轉換、右邊界 wrap、負 world wrap）
 
 ---
 
 ## v0.1.18.0 - 2026-06-14
 
-### æ–°å¢ž
-- Stage Dï¼šsystems/daynight.js â€” å°‡ `getDayNightPhaseIndex()` é‡æ§‹ç‚ºç´”å‡½å¼ï¼ˆåƒæ•¸æ³¨å…¥ `timeRemaining`ï¼‰ï¼Œå‘¼å«é»ž `updateDayNightCycle()` èˆ‡ `devToggleDayNight()` åŒæ­¥æ›´æ–°
-- tests/systems/daynight.test.jsï¼šæ–°å¢ž 8 å€‹å–®å…ƒæ¸¬è©¦ï¼Œæ¶µè“‹å„ phase è‡¨ç•Œé»žã€é‚Šç•Œå€¼ï¼ˆ0/600/è¶…é™ï¼‰èˆ‡å›žå‚³åž‹åˆ¥
+### 新增
+- Stage D：systems/daynight.js — 將 `getDayNightPhaseIndex()` 重構為純函式（參數注入 `timeRemaining`），呼叫點 `updateDayNightCycle()` 與 `devToggleDayNight()` 同步更新
+- tests/systems/daynight.test.js：新增 8 個單元測試，涵蓋各 phase 臨界點、邊界值（0/600/超限）與回傳型別
 
 ---
 
 ## v0.1.17.1 - 2026-06-14
 
-### ä¿®å¾©
-- systems/hud.jsï¼šä¿®å¾©æ¯’ debuff åœ–ç¤ºæ°¸ä¸é¡¯ç¤ºå•é¡Œï¼Œæ”¹å¾ž `poisonStacks[]` åˆ¤æ–·æ˜¯å¦æœ‰æ¯’ç‹€æ…‹ï¼ˆåŽŸæœ¬è®€å»¢æ£„çš„ `poisonEndTime`ï¼‰
-- systems/boss.jsï¼šåŒä¸Šï¼ŒBoss è¡€æ¢ä¸‹æ–¹æ¯’åœ–ç¤ºæ”¹ç”¨ `poisonStacks[]` åˆ¤æ–·
-- config/supabase.jsï¼š`fetchHallOfFameMyRank` æ”¹ç‚ºå…©æ¬¡é«˜æ•ˆ queryï¼ˆå…ˆå–è‡ªå·±åˆ†æ•¸ï¼Œå† HEAD count è¨ˆç®—æŽ’åï¼‰ï¼Œé¿å…æ‹‰æ•´å¼µ table
+### 修復
+- systems/hud.js：修復毒 debuff 圖示永不顯示問題，改從 `poisonStacks[]` 判斷是否有毒狀態（原本讀廢棄的 `poisonEndTime`）
+- systems/boss.js：同上，Boss 血條下方毒圖示改用 `poisonStacks[]` 判斷
+- config/supabase.js：`fetchHallOfFameMyRank` 改為兩次高效 query（先取自己分數，再 HEAD count 計算排名），避免拉整張 table
 
-### æ–°å¢ž
-- systems/leaderboard.js + config/supabase.jsï¼šè¶£å‘³æŽ’è¡Œæ¦œæ–°å¢žã€ŒðŸ¦´ ç™½éª¨ç²¾ã€é¡žåˆ¥ï¼ˆbone_count æœ€å¤šï¼‰
+### 新增
+- systems/leaderboard.js + config/supabase.js：趣味排行榜新增「🦴 白骨精」類別（bone_count 最多）
 
-### èª¿æ•´
-- systems/leaderboard.jsï¼šæŽ’è¡Œæ¦œé–‹å•Ÿé è¨­é¡¯ç¤ºåäººå ‚ Showcase
-- systems/leaderboard.jsï¼š[é›£åº¦][ç¨®é¡ž][åäººå ‚] ä¸‰å€‹æŒ‰éˆ•åœ¨æ‰€æœ‰ view æ°¸é é¡¯ç¤ºï¼Œå°Žèˆªé‚è¼¯çµ±ä¸€ï¼ˆcurrentView: leaderboard / fun / hofï¼‰
-- systems/leaderboard.jsï¼šè¶£å‘³æŽ’è¡Œæ¦œåµŒå…¥ä¸»æŽ’è¡Œæ¦œ overlayï¼Œä¸å†è·³æ–°è¦–çª—
+### 調整
+- systems/leaderboard.js：排行榜開啟預設顯示名人堂 Showcase
+- systems/leaderboard.js：[難度][種類][名人堂] 三個按鈕在所有 view 永遠顯示，導航邏輯統一（currentView: leaderboard / fun / hof）
+- systems/leaderboard.js：趣味排行榜嵌入主排行榜 overlay，不再跳新視窗
 
 ---
 
 ## v0.1.17.0 - 2026-06-14
 
-### æ–°å¢ž
-- systems/leaderboard.jsï¼šæäº¤åˆ†æ•¸æ™‚æ–°å¢ž `bone_count`ï¼ˆç™½éª¨ç´ ï¼‰æ¬„ä½åˆ° `leaderboard` table
-- systems/leaderboard.js + config/supabase.jsï¼šæ–°å¢žåäººå ‚ï¼ˆhall_of_fameï¼‰ç³»çµ±
-  - ç™»å…¥çŽ©å®¶æäº¤åˆ†æ•¸å¾Œè‡ªå‹• upsert åäººå ‚è³‡æ–™ï¼ˆç´¯è¨ˆé€šé—œæ¬¡æ•¸ Ã— é›£åº¦ã€è§’è‰²ï¼Œè®Šç•°ç­‰ç´šï¼‰
-  - `supabaseUpsert()` â€” REST resolution=merge-duplicates è¼”åŠ©å‡½å¼
-  - `fetchHallOfFameShowcase()` â€” å„é¡žåˆ¥ Top1ï¼ˆShowcase 2Ã—3 ç”¨ï¼‰
-  - `fetchHallOfFameTop10(category)` â€” æŸé¡žåˆ¥ Top 10
-  - `fetchHallOfFameMyRank(username, category)` â€” ç™»å…¥çŽ©å®¶æŽ’å
-- systems/leaderboard.jsï¼šæŽ’è¡Œæ¦œåŠ å…¥ã€ŒðŸ›ï¸ åäººå ‚ã€Tab
-  - Showcase 2Ã—3ï¼šå›°é›£é€šé—œ / è®Šç•°ç­‰ç´š / æ™®é€šé€šé—œ / ç°¡å–®é€šé—œ / å™ªéµ‘é€šé—œ / é˜¿å¥‡çˆ¾é€šé—œ
-  - é»žæ“Šæ ¼å­å±•é–‹ Top 10 è©³ç´°æ¸…å–®ï¼Œé¡¯ç¤ºæŽ’å / çŽ©å®¶åç¨± / æ•¸å€¼ / ç‰ˆæœ¬ / æ—¥æœŸ
-  - ç™»å…¥çŽ©å®¶åº•éƒ¨é¡¯ç¤ºå€‹äººæŽ’åï¼Œæœªç™»å…¥æç¤ºç™»å…¥
+### 新增
+- systems/leaderboard.js：提交分數時新增 `bone_count`（白骨素）欄位到 `leaderboard` table
+- systems/leaderboard.js + config/supabase.js：新增名人堂（hall_of_fame）系統
+  - 登入玩家提交分數後自動 upsert 名人堂資料（累計通關次數 × 難度、角色，變異等級）
+  - `supabaseUpsert()` — REST resolution=merge-duplicates 輔助函式
+  - `fetchHallOfFameShowcase()` — 各類別 Top1（Showcase 2×3 用）
+  - `fetchHallOfFameTop10(category)` — 某類別 Top 10
+  - `fetchHallOfFameMyRank(username, category)` — 登入玩家排名
+- systems/leaderboard.js：排行榜加入「🏛️ 名人堂」Tab
+  - Showcase 2×3：困難通關 / 變異等級 / 普通通關 / 簡單通關 / 噪鵑通關 / 阿奇爾通關
+  - 點擊格子展開 Top 10 詳細清單，顯示排名 / 玩家名稱 / 數值 / 版本 / 日期
+  - 登入玩家底部顯示個人排名，未登入提示登入
 
-### èª¿æ•´
-- systems/leaderboard.jsï¼šä¸€èˆ¬æŽ’è¡Œæ¦œæ”¹ç‚º Top 100 å¯æ²å‹•åˆ—è¡¨ï¼Œç§»é™¤ç¿»é æŒ‰éˆ•
+### 調整
+- systems/leaderboard.js：一般排行榜改為 Top 100 可捲動列表，移除翻頁按鈕
 
 ---
 
 ## v0.1.16.3 - 2026-06-14
 
-### ä¿®å¾©
-- package.json / scripts / vercel.json: ä¿®å¾© Vercel Vite build åªéƒ¨ç½² `dist/` å°Žè‡´ç·šä¸Š `sounds/*.mp3` 404ã€æ‰‹æ©Ÿç‰ˆç„¡éŸ³æ•ˆçš„å•é¡Œï¼›`npm run build` ç¾åœ¨æœƒè¤‡è£½ `sounds/` åˆ° `dist/sounds/`ï¼ŒVercel å’Œ itch.io å…±ç”¨åŒä¸€å¥—éŸ³æ•ˆè·¯å¾‘ã€‚
+### 修復
+- package.json / scripts / vercel.json: 修復 Vercel Vite build 只部署 `dist/` 導致線上 `sounds/*.mp3` 404、手機版無音效的問題；`npm run build` 現在會複製 `sounds/` 到 `dist/sounds/`，Vercel 和 itch.io 共用同一套音效路徑。
 
 ---
 
 ## v0.1.16.2 - 2026-06-14
 
-### ä¿®å¾©
-- systems/audio.jsï¼šä¿®å¾© iOS æ‰‹æ©Ÿç‰ˆå®Œå…¨ç„¡éŸ³æ•ˆå•é¡Œä¸‰å€‹æ ¹æœ¬åŽŸå› ï¼špreloadAllSfxBuffers åœ¨ AudioContext å»ºç«‹å‰è·³éŽé è¼‰ã€unlock() éŒ¯èª¤å®Œå…¨éœé»˜ã€Intro éŸ³æ¨‚ä¸ç­‰ unlock å°±æ’­æ”¾
-- systems/mutation.jsï¼šä¿®å¾©è®Šç•°å™¨å®˜å‡ç´šç´…é»žåœ¨é»žæ•¸ä¸è¶³æ™‚ä»ç„¶äº®èµ·çš„å•é¡Œï¼ˆaddMutationPoints åˆ¤æ–·æ”¹ç‚º total Ã— 10.01 + spï¼‰
-- systems/chat.jsï¼šä¿®å¾©é›²ç«¯å­˜æª”åŒæ­¥åˆ¤æ–·å…¬å¼éŒ¯èª¤ï¼ˆ_calcProgressScore æ”¹ç‚º total Ã— 10.01 + spï¼‰
-- systems/combat.js / player.jsï¼šä¿®å¾©æ”»æ“Šå¤šéš»ç›¸é„°æ€ªç‰©æ™‚å‚·å®³æ•¸å­—è¢«åˆä½µé¡¯ç¤ºçš„å•é¡Œï¼ˆåŠ å…¥ noMerge æ©Ÿåˆ¶ï¼‰
-- systems/creatures.js / spawning.jsï¼šä¿®å¾©è‚‰é£Ÿæ€ªæ®ºæ‰‹åŒ–å¾Œç¹¼çºŒåƒå±é«” HP è¢«é‡ç®—ç‚ºéŒ¯èª¤å€¼çš„å•é¡Œï¼ˆçµ±ä¸€æˆé•·å…¬å¼ï¼Œå¼•å…¥ scaledBase èˆ‡ killerHpBonusï¼‰
+### 修復
+- systems/audio.js：修復 iOS 手機版完全無音效問題三個根本原因：preloadAllSfxBuffers 在 AudioContext 建立前跳過預載、unlock() 錯誤完全靜默、Intro 音樂不等 unlock 就播放
+- systems/mutation.js：修復變異器官升級紅點在點數不足時仍然亮起的問題（addMutationPoints 判斷改為 total × 10.01 + sp）
+- systems/chat.js：修復雲端存檔同步判斷公式錯誤（_calcProgressScore 改為 total × 10.01 + sp）
+- systems/combat.js / player.js：修復攻擊多隻相鄰怪物時傷害數字被合併顯示的問題（加入 noMerge 機制）
+- systems/creatures.js / spawning.js：修復肉食怪殺手化後繼續吃屍體 HP 被重算為錯誤值的問題（統一成長公式，引入 scaledBase 與 killerHpBonus）
 
-### èª¿æ•´
-- systems/combat.jsï¼šæµ®å‹•æ–‡å­—æŒçºŒæ™‚é–“å¾ž 700ms å»¶é•·è‡³ 1200ms
+### 調整
+- systems/combat.js：浮動文字持續時間從 700ms 延長至 1200ms
 
-### æ–°å¢žï¼ˆé–‹ç™¼å·¥å…·ï¼‰
-- systems/gameState.js / ui.js / main.js / index.html / creatures.js / elite.js / boss.jsï¼šDev Mode æ–°å¢ž â¤ï¸ HP æ•¸å­—é¡¯ç¤ºèˆ‡ ðŸ§  AI ç‹€æ…‹é¡¯ç¤ºé–‹é—œ
+### 新增（開發工具）
+- systems/gameState.js / ui.js / main.js / index.html / creatures.js / elite.js / boss.js：Dev Mode 新增 ❤️ HP 數字顯示與 🧠 AI 狀態顯示開關
 
 ---
 
 ## v0.1.16.1 - 2026-06-14
 
-### ä¿®å¾©
-- systems/mobile.jsï¼šä¿®å¾© iOS æ‰‹æ©Ÿç‰ˆå®Œå…¨ç„¡éŸ³æ•ˆå•é¡Œï¼Œtouchstart handler é ‚éƒ¨è£œä¸Š AudioManager.unlock()
-- systems/hud.jsï¼šä¿®å¾© Boss ä¸Šæ–¹è¡€æ¢çš„ debuff åœ–ç¤ºé å·¦å°é½Šï¼ˆix æ”¹ç‚ºå›ºå®š x+8ï¼‰
-- systems/mutation.jsï¼šä¿®å¾©è®Šç•°å™¨å®˜ç´…é»žåœ¨å¾ž localStorage è¼‰å…¥èˆŠå­˜æª”å¾Œä»æ®˜ç•™é¡¯ç¤ºçš„å•é¡Œ
-- systems/creatures.jsï¼šä¿®å¾©é¬£ç‹—åœåœˆæŠ–å‹•ï¼Œæ”¹ç‚ºè·é›¢é æ™‚è¡å‘ç›®æ¨™é»žã€è·é›¢è¿‘æ™‚æ²¿åˆ‡ç·šç¹žåœˆ
-- systems/hud.jsï¼šä¿®å¾©æ‰‹æ©Ÿç‰ˆå…¬å‘Šä½ç½®ï¼ˆæ”¹ç‚º VIEW_H * 0.45ï¼‰
-- systems/hud.jsï¼šæ‰‹æ©Ÿç‰ˆ GameInfo å¼·åˆ¶å…©è¡Œé¡¯ç¤ºï¼ˆè¡Œ1ï¼šç”Ÿæ…‹+æ™‚é–“ï¼Œè¡Œ2ï¼šé›£åº¦+æ—¥å¤œï¼‰
-- systems/hud.jsï¼šæ‰‹æ©Ÿç‰ˆ Boss HP Bar æœ€å¯¬é™åˆ¶ç‚ºç•«é¢å¯¬åº¦ 55%
+### 修復
+- systems/mobile.js：修復 iOS 手機版完全無音效問題，touchstart handler 頂部補上 AudioManager.unlock()
+- systems/hud.js：修復 Boss 上方血條的 debuff 圖示靠左對齊（ix 改為固定 x+8）
+- systems/mutation.js：修復變異器官紅點在從 localStorage 載入舊存檔後仍殘留顯示的問題
+- systems/creatures.js：修復鬣狗圍圈抖動，改為距離遠時衝向目標點、距離近時沿切線繞圈
+- systems/hud.js：修復手機版公告位置（改為 VIEW_H * 0.45）
+- systems/hud.js：手機版 GameInfo 強制兩行顯示（行1：生態+時間，行2：難度+日夜）
+- systems/hud.js：手機版 Boss HP Bar 最寬限制為畫面寬度 55%
 
 ---
 
 ## v0.1.16.0 - 2026-06-13
 
-### ä¿®å¾©
-- systems/elite.js (A1)ï¼šä¿®å¾©æ¯’éœ§éš¼ puddle è¨ˆæ•¸ä¸åŒæ­¥å•é¡Œï¼Œé”ä¸Šé™å¾Œæ¯’éœ§ç‚®ç¾åœ¨èƒ½æ­£å¸¸ç™¼å°„
-- systems/mutation.js (A3)ï¼šè®Šç•°å™¨å®˜ç´…é»žæç¤ºæ”¹ç‚ºé»žæ•¸è¶³å¤ å‡ç´šè‡³å°‘ä¸€å€‹æŠ€èƒ½æ™‚æ‰é¡¯ç¤º
+### 修復
+- systems/elite.js (A1)：修復毒霧隼 puddle 計數不同步問題，達上限後毒霧炮現在能正常發射
+- systems/mutation.js (A3)：變異器官紅點提示改為點數足夠升級至少一個技能時才顯示
 
-### èª¿æ•´
-- systems/creatures.js (A4)ï¼šé¬£ç‹—åœæ”»ç§»é™¤ `wheelDist > 4` åœæ­¢æ¢ä»¶ï¼ŒæŒçºŒç¹žåœˆç§»å‹•
-- systems/creatures.js (A4)ï¼šé¬£ç‹—æ”»æ“Šå†·å»èˆ‡è»Œé“æ—‹è½‰é€Ÿåº¦ä¾é›£åº¦ speedMultiplier å‹•æ…‹è¨ˆç®—ï¼ˆEasy 1000ms / Normal ~667ms / Hard 500msï¼‰
-- systems/creatures.js (A5a)ï¼šå·¨äººéšŠå“¡è·Ÿéš¨é–¾å€¼æ”¹ç‚º `packFollowRange Ã— 0.75`ï¼Œé–¾å€¼ä»¥å…§è‡ªç”±æ¼«éŠï¼›ç§»é™¤éšŠé•·ç­‰å¾…é‚è¼¯ï¼›åŠ å…¥æˆå“¡éš¨æ©Ÿåç§»é‡
-- systems/creatures.js (A5b)ï¼šå·¨äººå¡ä½åµæ¸¬ï¼šé€£çºŒ 1 ç§’ä½ç§» < 0.5px å¼·åˆ¶åˆ‡å›ž wandering ä¸¦è¨­æ–°éš¨æ©Ÿæ–¹å‘
-- systems/creatures.js (A5c)ï¼šAlpha `packFollowRange` å¾ž 1000 å‡è‡³ 1500
-- systems/hud.js / boss.js (A6)ï¼šBoss è¡€æ¢é¡è‰²å…±ç”¨å¸¸æ•¸ï¼Œçµ±ä¸€å„ Boss è¦–è¦ºé¢¨æ ¼
-- systems/hud.js / ui.js (A7+B4)ï¼šç²¾è‹±æ€ªèˆ‡ Boss å‡ºç¾å…¬å‘ŠåŠ å…¥ç‰©ç¨®ä»£è¡¨è‰²ï¼›æ‰‹æ©Ÿç‰ˆå…¬å‘Šä½ç½®æ”¹è‡³ç•«é¢ä¸Šæ–¹
-- systems/hud.js (B1)ï¼šBoss æŽ§åˆ¶ç‹€æ…‹æŒ‡ç¤ºæ”¹ç‚ºé å·¦å°é½Šè¡€æ¢
-- systems/hud.js / mobile.js (B2)ï¼šæ‰‹æ©Ÿç‰ˆå°åœ°åœ–é è¨­ç¸®å°ï¼›GameInfo æ¬„ä½éŽé•·æ™‚è‡ªå‹•æ›è¡Œ
-- systems/hud.js (B3)ï¼šé»‘è‰²çµäººå°è©žå­—å¹•ä½ç½®èª¿æ•´è‡³ç•«é¢ä¸­å¤®åä¸‹
+### 調整
+- systems/creatures.js (A4)：鬣狗圍攻移除 `wheelDist > 4` 停止條件，持續繞圈移動
+- systems/creatures.js (A4)：鬣狗攻擊冷卻與軌道旋轉速度依難度 speedMultiplier 動態計算（Easy 1000ms / Normal ~667ms / Hard 500ms）
+- systems/creatures.js (A5a)：巨人隊員跟隨閾值改為 `packFollowRange × 0.75`，閾值以內自由漫遊；移除隊長等待邏輯；加入成員隨機偏移量
+- systems/creatures.js (A5b)：巨人卡住偵測：連續 1 秒位移 < 0.5px 強制切回 wandering 並設新隨機方向
+- systems/creatures.js (A5c)：Alpha `packFollowRange` 從 1000 升至 1500
+- systems/hud.js / boss.js (A6)：Boss 血條顏色共用常數，統一各 Boss 視覺風格
+- systems/hud.js / ui.js (A7+B4)：精英怪與 Boss 出現公告加入物種代表色；手機版公告位置改至畫面上方
+- systems/hud.js (B1)：Boss 控制狀態指示改為靠左對齊血條
+- systems/hud.js / mobile.js (B2)：手機版小地圖預設縮小；GameInfo 欄位過長時自動換行
+- systems/hud.js (B3)：黑色獵人台詞字幕位置調整至畫面中央偏下
 
 ---
 
 ## v0.1.15.1 - 2026-06-13
 
-### æ–°å¢ž
-- Vite æ‰“åŒ… pipelineï¼š`npm run build:itch` ç”¢å‡º `silent-koel-itch.zip` ä¾› itch.io ä¸Šå‚³
-- `vite.config.js`ï¼š`base: './'`ï¼Œbundle è¼¸å‡ºåˆ°æ ¹ç›®éŒ„ `index.js`ï¼ˆéž `assets/` å­ç›®éŒ„ï¼‰
-- `scripts/pack-itch.js`ï¼šè¤‡è£½éŸ³æ•ˆè³‡æ–™å¤¾ + ç”¨ archiver ç”¢ç”Ÿ zip
-- `itch.md`ï¼šitch.io éƒ¨ç½² SOP èˆ‡ CDN è¸©å‘ç´€éŒ„ï¼ˆä¾› Claude Chat åƒè€ƒï¼‰
+### 新增
+- Vite 打包 pipeline：`npm run build:itch` 產出 `silent-koel-itch.zip` 供 itch.io 上傳
+- `vite.config.js`：`base: './'`，bundle 輸出到根目錄 `index.js`（非 `assets/` 子目錄）
+- `scripts/pack-itch.js`：複製音效資料夾 + 用 archiver 產生 zip
+- `itch.md`：itch.io 部署 SOP 與 CDN 踩坑紀錄（供 Claude Chat 參考）
 
-### èª¿æ•´
-- éŸ³æ•ˆè³‡æ–™å¤¾ `Sound MP3/` æ”¹åç‚º `sounds/`ï¼Œå­ç›®éŒ„ `New sound/` æ”¹åç‚º `new/`
-- `config/gameConfig.js` çš„ `AUDIO_FILES` æ‰€æœ‰è·¯å¾‘åŒæ­¥æ›´æ–°ï¼ˆ`Sound MP3/New sound/` â†’ `sounds/new/`ï¼‰
-- åˆªé™¤èˆŠçš„ `Sound MP3/` è³‡æ–™å¤¾ï¼ˆitch.io CDN å°å«ç©ºæ ¼ç›®éŒ„åå›žå‚³ 403ï¼‰
+### 調整
+- 音效資料夾 `Sound MP3/` 改名為 `sounds/`，子目錄 `New sound/` 改名為 `new/`
+- `config/gameConfig.js` 的 `AUDIO_FILES` 所有路徑同步更新（`Sound MP3/New sound/` → `sounds/new/`）
+- 刪除舊的 `Sound MP3/` 資料夾（itch.io CDN 對含空格目錄名回傳 403）
 
 ---
 
 ## v0.1.15.0 - 2026-06-09
 
-### æ–°å¢ž
-- å„åœ°åœ–é…ç½®åŠ å…¥ `difficulty` æ¬„ä½ï¼ˆ'easy' / 'normal' / 'hard'ï¼‰ï¼Œä¾›ç³»çµ±åˆ¤æ–·é›£åº¦ä½¿ç”¨
+### 新增
+- 各地圖配置加入 `difficulty` 欄位（'easy' / 'normal' / 'hard'），供系統判斷難度使用
 
-### èª¿æ•´
-- æ®ºæ‰‹åŒ–å…¬å¼å¸¶å…¥é›£åº¦å€çŽ‡ï¼šè¡€é‡ = baseHp Ã— é›£åº¦å€çŽ‡ Ã— 2ï¼Œæ”»æ“Š = baseDamage Ã— é›£åº¦å€çŽ‡ Ã— 1.5ï¼Œé€Ÿåº¦ä¸è®Šï¼ˆä¿ç•™ç”Ÿæˆæ™‚çš„é›£åº¦é€Ÿåº¦ï¼Œé æ®ºæ‰‹ç­‰ç´šè‡ªç„¶ç´¯åŠ ï¼‰
-- æ®ºæ‰‹åŒ–å¾Œæ¯ç´šæˆé•·ï¼ˆkillerCorpseEatenï¼‰ä¹Ÿå¸¶å…¥é›£åº¦å€çŽ‡ï¼Œé¿å…æ™®é€š/å›°é›£æˆé•·é€Ÿåº¦ç›¸åŒ
-- æ“Šæ®ºæ®ºæ‰‹è®Šç•°é»žçŽå‹µï¼šæ™®é€š +1ï¼Œå›°é›£ +2
-- æ“Šæ®ºæ™®é€šå·¨äººè®Šç•°é»žçŽå‹µï¼šæ™®é€šæ¨¡å¼ +1ï¼Œå›°é›£æ¨¡å¼ +3
-- æ“Šæ®º Alpha è®Šç•°é»žçŽå‹µï¼šæ™®é€šæ¨¡å¼ +2ï¼Œå›°é›£æ¨¡å¼ +5ï¼ˆé¡å¤– 20% æ©ŸçŽ‡ +2~6 ç¶­æŒä¸è®Šï¼‰
+### 調整
+- 殺手化公式帶入難度倍率：血量 = baseHp × 難度倍率 × 2，攻擊 = baseDamage × 難度倍率 × 1.5，速度不變（保留生成時的難度速度，靠殺手等級自然累加）
+- 殺手化後每級成長（killerCorpseEaten）也帶入難度倍率，避免普通/困難成長速度相同
+- 擊殺殺手變異點獎勵：普通 +1，困難 +2
+- 擊殺普通巨人變異點獎勵：普通模式 +1，困難模式 +3
+- 擊殺 Alpha 變異點獎勵：普通模式 +2，困難模式 +5（額外 20% 機率 +2~6 維持不變）
 
 ---
 
 ## v0.1.14.4 - 2026-06-08
 
-### ä¿®å¾©
-- main.jsï¼šè£œä¸Š HARD_MAP importï¼Œä¿®å¾©å›°é›£æ¨¡å¼ postGame reload å¾Œé›£åº¦é‚„åŽŸé‚è¼¯å¤±æ•ˆ
-- systems/hud.jsï¼šå°åœ°åœ–é›£åº¦æ¨™ç±¤è£œä¸Šå›°é›£åˆ†æ”¯ï¼ˆðŸ’€ å›°é›£ï¼‰ï¼Œä¹‹å‰å›°é›£åœ°åœ–ä¸€å¾‹é¡¯ç¤ºã€ŒðŸŒ¿ ç°¡å–®ã€
+### 修復
+- main.js：補上 HARD_MAP import，修復困難模式 postGame reload 後難度還原邏輯失效
+- systems/hud.js：小地圖難度標籤補上困難分支（💀 困難），之前困難地圖一律顯示「🌿 簡單」
 
 ---
 
 ## v0.1.14.3 - 2026-06-08
 
-### ä¿®å¾©
-- systems/boss.jsï¼šä¿®å¾©é»‘è‰²çµäººæ¯ç®¡æ“Šç ´å¾Œ +30 ç§’å°Žè‡´ phaseIndex é€€å›žå¶æ•¸ã€è§¸ç™¼æ—¥å¤œåˆ‡æ›çš„å•é¡Œï¼›åŠ æ™‚å¾Œçš„ timeRemaining ä¸Šé™å¤¾åœ¨ phase 7 å¤©èŠ±æ¿ï¼ˆ75 ç§’ï¼‰
-- systems/hud.jsï¼šè£œä¸Šé»‘è‰²çµäººé ‚éƒ¨ HUD è¡€æ¢çš„ Hunter å°ˆå±¬é¡¯ç¤ºâ€”â€”ä¾ barsRemaining é¡¯ç¤ºå°æ‡‰éšŽæ®µé¡è‰²ã€ä¸‹ä¸€ç®¡é è¦½ï¼ˆ20% é€æ˜Žï¼‰ã€å‰©é¤˜ç®¡æ•¸ xN æ¨™ç±¤
+### 修復
+- systems/boss.js：修復黑色獵人每管擊破後 +30 秒導致 phaseIndex 退回偶數、觸發日夜切換的問題；加時後的 timeRemaining 上限夾在 phase 7 天花板（75 秒）
+- systems/hud.js：補上黑色獵人頂部 HUD 血條的 Hunter 專屬顯示——依 barsRemaining 顯示對應階段顏色、下一管預覽（20% 透明）、剩餘管數 xN 標籤
 
 ---
 
 ## v0.1.14.2 - 2026-06-08
 
-### ä¿®å¾©
-- systems/creatures.jsï¼šç§»é™¤è‰é£Ÿæ€§ Lv4/Lv5 å·¨äººä¸æ”»æ“ŠçŽ©å®¶çš„éŒ¯èª¤æ¢ä»¶ï¼ˆgiantHerbLv < 4ï¼‰ï¼Œå·¨äººæ°¸é å°‡çŽ©å®¶åˆ—ç‚ºå¯é¸ç›®æ¨™
-- systems/creatures.jsï¼šä¿®å¾©å·¨äººåˆ°é”æžœå­æ—å¾Œå¡æ­»éœ‡å‹•çš„å•é¡Œï¼›è£œä¸Šåƒæžœå­ç¢°æ’žåˆ¤æ–·ï¼Œåˆ°é”å¾Œç«‹åˆ»ç§»é™¤æžœå­ä¸¦æ¸…é™¤ç›®æ¨™
-- systems/utils.jsï¼šdrawArrow() åŠ ä¸Šé»‘è‰²åè‰² outlineï¼ˆstroke åœ¨ fill å‰ï¼‰ï¼Œé¿å…ç®­é ­åœ¨ç›¸ä¼¼åœ°å½¢é¡è‰²ä¸‹éš±æ²’
-- main.jsï¼šä¿®å¾©ã€Œå†ä¾†ä¸€æ¬¡ã€é›£åº¦æ¢å¾©é‚è¼¯ç¼ºå°‘ hard åˆ†æ”¯çš„å•é¡Œï¼›è£œä¸Šä¸‰ç¨®é›£åº¦å®Œæ•´åˆ¤æ–·
-- .claude/instructions.mdï¼šåŠ å…¥é›£åº¦ä¿ç•™è¦å‰‡ï¼Œè¦æ±‚å†ä¾†ä¸€æ¬¡æµç¨‹å¿…é ˆå¯«å…¥ LAST_DIFFICULTYï¼Œä¸”é›£åº¦æ¢å¾©å¿…é ˆè¦†è“‹ä¸‰å€‹åˆ†æ”¯
+### 修復
+- systems/creatures.js：移除草食性 Lv4/Lv5 巨人不攻擊玩家的錯誤條件（giantHerbLv < 4），巨人永遠將玩家列為可選目標
+- systems/creatures.js：修復巨人到達果子旁後卡死震動的問題；補上吃果子碰撞判斷，到達後立刻移除果子並清除目標
+- systems/utils.js：drawArrow() 加上黑色反色 outline（stroke 在 fill 前），避免箭頭在相似地形顏色下隱沒
+- main.js：修復「再來一次」難度恢復邏輯缺少 hard 分支的問題；補上三種難度完整判斷
+- .claude/instructions.md：加入難度保留規則，要求再來一次流程必須寫入 LAST_DIFFICULTY，且難度恢復必須覆蓋三個分支
 
 ---
 
 ## v0.1.14.1 - 2026-06-08
 
-### æ–‡ä»¶
-- config/compendium_data.jsï¼šè£œä¸Šè‰é£Ÿæ€§ Lv4/5 å·¨äººåŒ–å‚·å®³ -15%/-30% æç¤ºï¼Œä¸¦è£œå…… Lv2 èµ·æžœå­ XP å¢žåŠ èªªæ˜Ž
+### 文件
+- config/compendium_data.js：補上草食性 Lv4/5 巨人化傷害 -15%/-30% 提示，並補充 Lv2 起果子 XP 增加說明
 
-### ä¿®å¾©
-- systems/mobile.jsï¼šä¿®å¾©æ‰‹æ©Ÿç‰ˆ Letterbox ç¸®æ”¾å°Žè‡´ç•«é¢éŽå°çš„å•é¡Œï¼›æ¢å¾© isMobile åˆ†æ”¯â€”â€”æ‰‹æ©Ÿç‰ˆä»ä½¿ç”¨å¡«æ»¿èž¢å¹•é‚è¼¯ï¼ˆMOBILE_GAME_SCALE Ã— viewportï¼‰ï¼Œé›»è…¦ç‰ˆä¿ç•™ Letterboxï¼ˆMath.minï¼‰
-- systems/evolution.jsï¼šä¿®å¾©å¾žé¦–é é€²å…¥æŠ€èƒ½æ¨¹ã€åˆ‡åˆ°è®Šç•°é å¾ŒæŒ‰é—œé–‰ï¼ŒèŠå¤©å®¤æ²’æœ‰æ¢å¾©é¡¯ç¤ºçš„å•é¡Œ
-- index.html / systems/ui.jsï¼šé–‹ç™¼è€…å·¥å…·é¢æ¿æ”¹ç‚ºéŠæˆ²å®¹å™¨å…§å¯æ‹–æ‹½é¢æ¿ï¼Œé è¨­é¡¯ç¤ºåœ¨å°åœ°åœ–è³‡è¨Šä¸‹æ–¹ï¼Œä¸¦é™åˆ¶ä¸è¶…å‡º 1600Ã—900 éŠæˆ²å®¹å™¨
+### 修復
+- systems/mobile.js：修復手機版 Letterbox 縮放導致畫面過小的問題；恢復 isMobile 分支——手機版仍使用填滿螢幕邏輯（MOBILE_GAME_SCALE × viewport），電腦版保留 Letterbox（Math.min）
+- systems/evolution.js：修復從首頁進入技能樹、切到變異頁後按關閉，聊天室沒有恢復顯示的問題
+- index.html / systems/ui.js：開發者工具面板改為遊戲容器內可拖拽面板，預設顯示在小地圖資訊下方，並限制不超出 1600×900 遊戲容器
 
 ---
 
 ## v0.1.14.0 - 2026-06-07
 
-### æ–°å¢ž
-- systems/mobile.jsï¼šçµ±ä¸€ Letterbox ç¸®æ”¾ï¼ˆé›»è…¦ç‰ˆ + æ‰‹æ©Ÿç‰ˆå…±ç”¨ï¼‰ï¼Œscale = Math.min(vw/1600, vh/900)ï¼›ç§»é™¤ isMobile åˆ†æ”¯ï¼Œä¸å†å‘¼å« _setViewSize æ”¹è®Šé‚è¼¯è§£æžåº¦ï¼›export _letterboxScale ä¾›å…¶ä»–æ¨¡çµ„ä½¿ç”¨ï¼›MOBILE_GAME_SCALE æ¨™è¨˜ç‚º deprecated ä¿ç•™
-- systems/chat.jsï¼šæ‰€æœ‰ chat panels å¾ž document.body ç§»å…¥ #game-containerï¼Œposition:fixed æ”¹ç‚º position:absoluteï¼Œåº§æ¨™ä»¥ 1600Ã—900 é‚è¼¯ç©ºé–“ç‚ºåŸºæº–ï¼›drag bounds æ”¹ç”¨ 1600/900ï¼›settings panel å®šä½æ”¹ç”¨ offsetLeft/offsetTopï¼›æ‰‹æ©Ÿç‰ˆç™¾åˆ†æ¯” layout æ”¹ç‚ºé‚è¼¯åƒç´ ï¼ˆleft:80px, right:80px, bottom:45/89pxï¼‰ï¼›éµç›¤é«˜åº¦åµæ¸¬é™¤ä»¥ _letterboxScale
+### 新增
+- systems/mobile.js：統一 Letterbox 縮放（電腦版 + 手機版共用），scale = Math.min(vw/1600, vh/900)；移除 isMobile 分支，不再呼叫 _setViewSize 改變邏輯解析度；export _letterboxScale 供其他模組使用；MOBILE_GAME_SCALE 標記為 deprecated 保留
+- systems/chat.js：所有 chat panels 從 document.body 移入 #game-container，position:fixed 改為 position:absolute，座標以 1600×900 邏輯空間為基準；drag bounds 改用 1600/900；settings panel 定位改用 offsetLeft/offsetTop；手機版百分比 layout 改為邏輯像素（left:80px, right:80px, bottom:45/89px）；鍵盤高度偵測除以 _letterboxScale
 
 ---
 
 ## v0.1.13.7 - 2026-06-07
 
-### ä¿®å¾©
-- index.htmlï¼šè£œä¸Š mobile viewport ç¸®æ”¾é™åˆ¶èˆ‡ viewport-fit=coverï¼Œä¸¦åŠ å…¥ 100dvh fallbackã€Safe Area paddingã€touch-action:noneã€overflow:hiddenï¼Œé¿å…æ‰‹æ©Ÿç€è¦½å™¨å·¥å…·åˆ—èˆ‡ç³»çµ±å®‰å…¨å€é®æ“‹éŠæˆ²ç•«é¢
-- systems/mobile.jsï¼šæ‰‹æ©Ÿç¸®æ”¾ã€æ”»æ“Šå€ã€é–ƒç¾å€èˆ‡æ–æ¡¿ canvas æ”¹ç”¨ visualViewport å‹•æ…‹å°ºå¯¸ï¼Œä¸¦ç›£è½ visualViewport resizeï¼Œè®“ç€è¦½å™¨å·¥å…·åˆ—æ”¶åˆæ™‚è§¸æŽ§å€åŸŸä¿æŒå°é½Š
+### 修復
+- index.html：補上 mobile viewport 縮放限制與 viewport-fit=cover，並加入 100dvh fallback、Safe Area padding、touch-action:none、overflow:hidden，避免手機瀏覽器工具列與系統安全區遮擋遊戲畫面
+- systems/mobile.js：手機縮放、攻擊區、閃現區與搖桿 canvas 改用 visualViewport 動態尺寸，並監聽 visualViewport resize，讓瀏覽器工具列收合時觸控區域保持對齊
 
 ---
 
 ## v0.1.13.6 - 2026-06-07
 
-### ä¿®å¾©
-- systems/evolution.jsï¼šè£œä¸Šéºæ¼çš„ _saveMutationSkills importï¼Œä¿®å¾©è®Šç•°æŠ€èƒ½å‡ç´šå¾Œæœªå¯«å…¥ localStorage çš„å•é¡Œ
-- systems/evolution.jsï¼šç§»é™¤ typeof _saveMutationSkills å®ˆè¡›ï¼Œæ”¹ç‚ºç›´æŽ¥å‘¼å«
+### 修復
+- systems/evolution.js：補上遺漏的 _saveMutationSkills import，修復變異技能升級後未寫入 localStorage 的問題
+- systems/evolution.js：移除 typeof _saveMutationSkills 守衛，改為直接呼叫
 
 ---
 
 ## v0.1.13.5 - 2026-06-07
 
-### èª¿æ•´
-- .claude/instructions.mdï¼šPatchnote åˆ¤æ–·ç§»è‡³ Step 6ï¼Œä¿®æ­£ commit å‰å¿…é ˆç­‰ç¢ºèªçš„æµç¨‹
-- .claude/skills/patchnote.mdï¼šStep 4 åŠ å…¥æ˜Žç¢ºåœæ­¢ç­‰å¾…è¦å‰‡ï¼Œç¢ºä¿ Patchnote èˆ‡ä»£ç¢¼åŒä¸€ commit
+### 調整
+- .claude/instructions.md：Patchnote 判斷移至 Step 6，修正 commit 前必須等確認的流程
+- .claude/skills/patchnote.md：Step 4 加入明確停止等待規則，確保 Patchnote 與代碼同一 commit
 
 ---
 
 ## v0.1.13.4 - 2026-06-07
 
-### èª¿æ•´
-- config/patchnotes.jsï¼šæ–°å¢ž v0.1.13.3 çŽ©å®¶å…¬å‘Šæ¢ç›®ï¼ˆå‡ç´šå¡æ­»ã€forceStart å¡æ­»ã€æ‰‹æ©Ÿè§¸æŽ§ä¿®å¾©ï¼‰
+### 調整
+- config/patchnotes.js：新增 v0.1.13.3 玩家公告條目（升級卡死、forceStart 卡死、手機觸控修復）
 
 ---
 
 ## v0.1.13.3 - 2026-06-07
 
-### ä¿®å¾©
-- systems/evolution.jsï¼šå‡ç´šå›žæ†¶å™¨å®˜å¾Œä¸å†é‡å»ºæ•´å€‹ overlay è·³å›žä¸»æŠ€èƒ½æ¨¹ï¼Œæ”¹ç‚ºåªåˆ·æ–°è®Šç•°é¢æ¿å·¦å³æ¬„
-- systems/evolution.jsï¼šforceStart è·¯å¾‘é—œé–‰è®Šç•°æŠ€èƒ½æ¨¹å¾Œä¸å†ç§»é™¤ overlayï¼ˆæ”¹ç‚ºåˆ‡å›žä¸»æŠ€èƒ½æ¨¹ï¼Œè®“çŽ©å®¶å¾žã€Œé–‹å§‹éŠæˆ²ã€æŒ‰éˆ•æ­£å¸¸é€²å…¥ï¼Œè§£æ±ºå¡æ­»å•é¡Œï¼‰
-- systems/evolution.jsï¼šè®Šç•°æŠ€èƒ½å‡ç´šæŒ‰éˆ•åŠ å…¥ touchstart äº‹ä»¶ï¼Œä¿®å¾©æ‰‹æ©Ÿç‰ˆè§¸æŽ§å‡ç´šç„¡æ•ˆ
+### 修復
+- systems/evolution.js：升級回憶器官後不再重建整個 overlay 跳回主技能樹，改為只刷新變異面板左右欄
+- systems/evolution.js：forceStart 路徑關閉變異技能樹後不再移除 overlay（改為切回主技能樹，讓玩家從「開始遊戲」按鈕正常進入，解決卡死問題）
+- systems/evolution.js：變異技能升級按鈕加入 touchstart 事件，修復手機版觸控升級無效
 
 ---
 
 ## v0.1.13.2 - 2026-06-07
 
-### èª¿æ•´
-- DOC_INTEGRITY.mdï¼šé€²åº¦æ›´æ–°ï¼ˆproject_summary æ›´æ–°å®Œæˆç§»è‡³å·²å®Œæˆï¼‰ã€æ¸…é™¤éŽæœŸå·²çŸ¥å•é¡Œæ¢ç›®
-- project_summary.mdï¼šæ¯’å‚·æ©Ÿåˆ¶ã€ç²¾è‹±æ€ªç³»çµ±ã€å·¨äºº/Alphaã€é¬£ç‹—ç¾¤é«”ç³»çµ±æè¿°æ›´æ–°è‡³ç¾è¡Œå¯¦ä½œ
+### 調整
+- DOC_INTEGRITY.md：進度更新（project_summary 更新完成移至已完成）、清除過期已知問題條目
+- project_summary.md：毒傷機制、精英怪系統、巨人/Alpha、鬣狗群體系統描述更新至現行實作
 
 ---
 
 ## v0.1.13.1 - 2026-06-07
 
-### èª¿æ•´
-- åˆªé™¤æ ¹ç›®éŒ„ SKILL_FILEHEADER.mdã€SKILL_MAGICCODE.mdï¼ˆå…§å®¹å·²ç§»è‡³ .claude/skills/ï¼‰
-- æ–°å»º .claude/skills/ ä¸‹äº”å€‹ Skill æª”æ¡ˆï¼šdoc-auditã€file-headerã€magic-codeã€patchnoteã€compendium
-- .claude/instructions.mdï¼šsync-docs æ–°å¢ž Step 1.2ï¼ˆPatchnote åˆ¤æ–·ï¼‰ã€åœ–é‘‘ç¶­è­· SOP ç²¾ç°¡ç‚º 3 è¡Œã€è®€å–æ¸…å–®åŠ å…¥ç¬¬ 7 æ¢ï¼ˆç¢ºèªå¯ç”¨ Skillï¼‰
+### 調整
+- 刪除根目錄 SKILL_FILEHEADER.md、SKILL_MAGICCODE.md（內容已移至 .claude/skills/）
+- 新建 .claude/skills/ 下五個 Skill 檔案：doc-audit、file-header、magic-code、patchnote、compendium
+- .claude/instructions.md：sync-docs 新增 Step 1.2（Patchnote 判斷）、圖鑑維護 SOP 精簡為 3 行、讀取清單加入第 7 條（確認可用 Skill）
 
 ---
 
 ## v0.1.13.0 - 2026-06-07
 
-### æ–°å¢ž/ä¿®å¾©
-- systems/combat.js `addMutationPoints` æ”¹ç‚ºæ­£å¼å‘¼å« mutation.js å¯¦ä½œï¼Œç§»é™¤ stubï¼›å·¨äººåŒ–/Alpha/æ®ºæ‰‹åŒ–æ“Šæ®ºç¾åœ¨æ‰çœŸæ­£çµ¦äºˆè®Šç•°é»ž
+### 新增/修復
+- systems/combat.js `addMutationPoints` 改為正式呼叫 mutation.js 實作，移除 stub；巨人化/Alpha/殺手化擊殺現在才真正給予變異點
 
-### èª¿æ•´
-- QUICKREF.mdï¼šä¿®æ­£ 11 è™•éŽæœŸæè¿°ï¼ˆESM è¼‰å…¥ã€localStorage key è£œé½Šï¼‰
-- systems/hud.jsï¼šç§»é™¤ `console.log && false` dead code
-- systems/creatures.jsï¼šç§»é™¤ç„¡å‘¼å«ç«¯çš„ `_drawDirectionArrow()` æ¸¬è©¦å‡½å¼
+### 調整
+- QUICKREF.md：修正 11 處過期描述（ESM 載入、localStorage key 補齊）
+- systems/hud.js：移除 `console.log && false` dead code
+- systems/creatures.js：移除無呼叫端的 `_drawDirectionArrow()` 測試函式
 
 ---
 
 ## v0.1.12.0 - 2026-06-07
 
-### æ–°å¢ž
-- æ–°å»º DOC_INTEGRITY.mdï¼šæ–‡ä»¶å®Œæ•´æ€§è¦ç¯„èˆ‡é€²åº¦ï¼Œå«å„ªå…ˆç´šè¡¨ã€å¼·åˆ¶è¦å‰‡ã€å·²çŸ¥éŽæœŸæ¸…å–®
-- æ–°å»º ARCH.mdï¼šæž¶æ§‹èªªæ˜Žï¼ˆä»£ç¢¼å„ªå…ˆï¼‰ï¼Œå«æ¨¡çµ„æ¸…å–®ã€ESM çµæ§‹ã€gameState æ¬„ä½è¡¨ã€å¾ªç’°ä¾è³´æ¸…å–®
-- æ–°å»º .claude/skills/doc-audit.mdï¼šdoc-audit Skillï¼Œå«åŸ·è¡Œæ­¥é©Ÿèˆ‡è¼¸å‡ºæ ¼å¼
+### 新增
+- 新建 DOC_INTEGRITY.md：文件完整性規範與進度，含優先級表、強制規則、已知過期清單
+- 新建 ARCH.md：架構說明（代碼優先），含模組清單、ESM 結構、gameState 欄位表、循環依賴清單
+- 新建 .claude/skills/doc-audit.md：doc-audit Skill，含執行步驟與輸出格式
 
-### èª¿æ•´
-- .claude/instructions.mdï¼šåŠ å…¥é–‹å§‹ä»»å‹™å‰å¿…è®€å€å¡Šã€æ–‡ä»¶åŒæ­¥å¼·åˆ¶è¦å‰‡ã€ç‰ˆæœ¬è™Ÿè¦å‰‡ï¼›ESM è¦å‰‡ä¿®æ­£ï¼ˆç§»é™¤ã€Œä¸ä½¿ç”¨ ES Modulesã€èˆŠæè¿°ï¼‰ï¼›è®€å–æ¸…å–®æ›´æ–°åŠ å…¥ DOC_INTEGRITY.md å’Œ ARCH.md
-- MAIN.mdï¼šä¿®æ­£ 6 è™•éŽæœŸ ESM æè¿°ï¼ˆã€Œå…¨åŸŸä½œç”¨åŸŸã€â†’ ESM import/exportï¼›ã€Œå‚³çµ± script æ¨™ç±¤ã€â†’ type="module"ï¼›ã€Œå…¨åŸŸå¸¸æ•¸ã€â†’ ESM åŒ¯å‡ºå¸¸æ•¸ï¼‰
+### 調整
+- .claude/instructions.md：加入開始任務前必讀區塊、文件同步強制規則、版本號規則；ESM 規則修正（移除「不使用 ES Modules」舊描述）；讀取清單更新加入 DOC_INTEGRITY.md 和 ARCH.md
+- MAIN.md：修正 6 處過期 ESM 描述（「全域作用域」→ ESM import/export；「傳統 script 標籤」→ type="module"；「全域常數」→ ESM 匯出常數）
 
 ---
 
 ## v0.1.11.0 - 2026-06-07
 
-### æ–°å¢ž
-- systems/elite.js æ¯’éœ§éš¼æ–°å¢žé›™æŠ€èƒ½ç³»çµ±ï¼š
-  - æ”»æ“Šä¸€ï¼ˆæ¯’ç‰†ä¸‰é€£ç‚®ï¼‰ï¼šåŒæ™‚ç™¼å°„ 3 é¡†æ¯’éœ§å½ˆï¼Œè½é»žå½¢æˆåž‚ç›´å°è·¯ç‰†ï¼ˆçŽ©å®¶æ­£å¾Œæ–¹ + å·¦å³å„ 200pxï¼‰
-  - æ”»æ“ŠäºŒï¼ˆæ¯’ç‰™å›žæ—‹ï¼‰ï¼šç™¼å°„ 3 æ ¹å›žæ—‹æ¯’ç‰™ï¼ˆä¸­Â±25Â°ï¼‰ï¼Œåˆ°æœ€å¤§å°„ç¨‹å¾ŒæŠ˜è¿”ï¼Œå‘½ä¸­æ–½æ¯’ç–Šå±¤
-  - é›™ CD ç³»çµ±ï¼šæ¯’ç‰† 3000+500msã€æ¯’ç‰™ 2500+500msï¼›åŒæ™‚ ready æ¯’ç‰†å„ªå…ˆï¼›å…±ç”¨æ‡²ç½° +200msï¼›èµ·æ‰‹å¿…ç™¼æ¯’ç‰†
-- systems/combat.js æ¯’å‚·æ”¹ç‚º poisonStacks ç–ŠåŠ ç³»çµ±ï¼šæ¯å±¤ç¨ç«‹è¨ˆæ™‚ã€æ¯ç§’ç¨ç«‹é¡¯ç¤º -N æµ®å‹•æ–‡å­—ï¼›æ–°æ¯’ä¸è¦†è“‹èˆŠæ¯’
-- systems/elite.js æ¯’éœ§çŠ¬å’¬å‚·ã€æ¯’éœ§è½åœ°å‡æ”¹ç”¨ poisonStacks ç–ŠåŠ æ–½æ¯’
+### 新增
+- systems/elite.js 毒霧隼新增雙技能系統：
+  - 攻擊一（毒牆三連炮）：同時發射 3 顆毒霧彈，落點形成垂直封路牆（玩家正後方 + 左右各 200px）
+  - 攻擊二（毒牙回旋）：發射 3 根回旋毒牙（中±25°），到最大射程後折返，命中施毒疊層
+  - 雙 CD 系統：毒牆 3000+500ms、毒牙 2500+500ms；同時 ready 毒牆優先；共用懲罰 +200ms；起手必發毒牆
+- systems/combat.js 毒傷改為 poisonStacks 疊加系統：每層獨立計時、每秒獨立顯示 -N 浮動文字；新毒不覆蓋舊毒
+- systems/elite.js 毒霧犬咬傷、毒霧落地均改用 poisonStacks 疊加施毒
 
-### ä¿®å¾©
-- systems/elite.js å¹½éˆéš¼è“„åŠ›æœŸé–“æ¯å¹€è¿½è¹¤çŽ©å®¶å³æ™‚ä½ç½®ï¼Œç´…ç·šæº–å¿ƒè·Ÿè‘—ç§»å‹•
-- systems/elite.js å¹½éˆéš¼è§’åº¦è¨ˆç®—æ”¹ç”¨ wrappedDeltaï¼Œä¿®æ­£è·‘å‡ºé‚Šç•Œæ™‚æ–¹å‘åç§»
-- systems/elite.js æ¯’ç‰†ä¸‰ç‚®è½é»žä¿®æ­£ï¼šä»¥çŽ©å®¶ç‚ºåœ“å¿ƒå±•é–‹ï¼Œä¸å†ä»¥éš¼ç‚ºåœ“å¿ƒ
+### 修復
+- systems/elite.js 幽靈隼蓄力期間每幀追蹤玩家即時位置，紅線準心跟著移動
+- systems/elite.js 幽靈隼角度計算改用 wrappedDelta，修正跑出邊界時方向偏移
+- systems/elite.js 毒牆三炮落點修正：以玩家為圓心展開，不再以隼為圓心
 
-### å…¶ä»–æ”¹å‹•ï¼ˆé¬£ç‹—è»Šè¼ªæˆ°ã€BossUIé‡å¯«ã€è¿·éœ§ä¿®å¾©ã€éŸ³çˆ†ä¿®å¾©ã€è®Šç•°å™¨å®˜å­˜æª”ä¿®å¾©ï¼‰
-- systems/creatures.js é¬£ç‹—è»Šè¼ªæˆ° AI èª¿æ•´
-- systems/hud.js Boss è¡€æ¢ UI é‡å¯«
-- systems/spawning.js è¿·éœ§ç”Ÿæˆä¿®å¾©
-- systems/audio.js éŸ³çˆ†ä¿®å¾©
-- systems/mutation.js è®Šç•°å™¨å®˜å­˜æª”ä¿®å¾©
-- systems/ui.js è¨­å®šè¼”åŠ©åŠŸèƒ½ç§»é™¤æ–°æ‰‹æ•™å­¸ Hint èªªæ˜Žæ–‡å­—
+### 其他改動（鬣狗車輪戰、BossUI重寫、迷霧修復、音爆修復、變異器官存檔修復）
+- systems/creatures.js 鬣狗車輪戰 AI 調整
+- systems/hud.js Boss 血條 UI 重寫
+- systems/spawning.js 迷霧生成修復
+- systems/audio.js 音爆修復
+- systems/mutation.js 變異器官存檔修復
+- systems/ui.js 設定輔助功能移除新手教學 Hint 說明文字
 
 ---
 
 ## v0.1.10.0 - 2026-06-07
 
-### æ–°å¢ž/é‡å¯«
-- systems/creatures.js å·¨äºº/Alpha ç³»çµ±å®Œæ•´é‡å¯«ï¼š
-  - å·¨äººåŒ–å¾Œä¸å†å¼·åˆ¶æˆç‚ºéšŠé•·ï¼Œæ”¹ç‚ºã€Œç„¡éšŠä¼ç¨ç«‹å·¨äººã€
-  - å…©éš»ç„¡éšŠä¼ç¨ç«‹å·¨äººï¼ˆåŒæ—åŒç”Ÿæ…‹ï¼‰è·é›¢ â‰¤ 300px ç›¸é‡ â†’ HP è¼ƒé«˜è€…å‡æ ¼ Alphaï¼ˆæ¯3ç§’æŽƒæï¼‰
-  - Alpha æ­»å¾ŒæŽƒæå…¨åœ–ï¼šéšŠä¼ â‰¥ 2 éš»çš„å·¨äººéšŠé•·ä¸­ HP æœ€é«˜è€…ç¹¼æ‰¿ç‚ºæ–° Alpha
-  - åªæœ‰ã€ŒéšŠä¼ â‰¥ 2 éš»ï¼ˆå«éšŠé•·ï¼‰çš„å·¨äººéšŠé•·ã€æ‰èƒ½è¢«é¸ç‚º Alphaï¼ˆå–®äººéšŠä¼ä¸è§¸ç™¼ï¼‰
-- systems/creatures.js å·¨äººå¡æ­»ä¿®å¾©ï¼š
-  - _seekingFruit åƒåˆ°æžœå­å¾Œè‹¥ hp > maxHp * 0.5 ç«‹åˆ»é€€å‡ºï¼Œä¸ç¹¼çºŒæ‰¾æžœå­
-  - _seekingFruit é–‹å§‹è¨ˆæ™‚ _seekingFruitStartï¼Œè¶…éŽ 5 ç§’å¼·åˆ¶é€€å‡º
-  - ä¸åŒéšŠä¼å·¨äººè·é›¢ < (radius + å°æ–¹radius + 20) æ™‚æ–½åŠ æŽ¨é–‹åŠ› 2px
+### 新增/重寫
+- systems/creatures.js 巨人/Alpha 系統完整重寫：
+  - 巨人化後不再強制成為隊長，改為「無隊伍獨立巨人」
+  - 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px 相遇 → HP 較高者升格 Alpha（每3秒掃描）
+  - Alpha 死後掃描全圖：隊伍 ≥ 2 隻的巨人隊長中 HP 最高者繼承為新 Alpha
+  - 只有「隊伍 ≥ 2 隻（含隊長）的巨人隊長」才能被選為 Alpha（單人隊伍不觸發）
+- systems/creatures.js 巨人卡死修復：
+  - _seekingFruit 吃到果子後若 hp > maxHp * 0.5 立刻退出，不繼續找果子
+  - _seekingFruit 開始計時 _seekingFruitStart，超過 5 秒強制退出
+  - 不同隊伍巨人距離 < (radius + 對方radius + 20) 時施加推開力 2px
 
 ---
 
 ## v0.1.9.0 - 2026-06-07
 
-### æ–°å¢ž
-- main.js æ–°å¢ž Loading ç•«é¢å•Ÿå‹•æµç¨‹ï¼ŒéŠæˆ²æ­£å¼åˆå§‹åŒ–å‰é¡¯ç¤ºå…¨é»‘è¼‰å…¥ç•«é¢ã€ç‰ˆæœ¬è™Ÿã€ä½œè€…èˆ‡éŸ³æ•ˆé è¼‰é€²åº¦æ¢
-- systems/audio.js æ–°å¢ž `preloadAllSfxBuffers(onProgress)`ï¼Œåœ¨ AudioContext å¯ç”¨æ™‚é è¼‰æ‰€æœ‰éžéŸ³æ¨‚éŸ³æ•ˆ AudioBufferï¼Œå®Œæˆå¾Œæ‰æ·¡å‡º Loading ä¸¦å•Ÿå‹•éŠæˆ²
-- systems/ui.js / systems/evolution.js çš„é–‹å§‹éŠæˆ²å…¥å£æ”¹èµ° `startGameWithLoading()`ï¼Œç¢ºä¿é¦–é ã€æ•…äº‹å°Žå¼•ã€æŠ€èƒ½æ¨¹é–‹å§‹éƒ½æœƒå…ˆé¡¯ç¤º Loading
+### 新增
+- main.js 新增 Loading 畫面啟動流程，遊戲正式初始化前顯示全黑載入畫面、版本號、作者與音效預載進度條
+- systems/audio.js 新增 `preloadAllSfxBuffers(onProgress)`，在 AudioContext 可用時預載所有非音樂音效 AudioBuffer，完成後才淡出 Loading 並啟動遊戲
+- systems/ui.js / systems/evolution.js 的開始遊戲入口改走 `startGameWithLoading()`，確保首頁、故事導引、技能樹開始都會先顯示 Loading
 
 ---
 
 ## v0.1.8.2 - 2026-06-07
 
-### ä¿®å¾©
-- systems/daynight.js ç™½å¤©ç²¾è‹±æ€ªæ¶ˆæ•£æ™‚åŒæ­¥æ¸…é™¤ä¸Šæ–¹è¡€æ¢è¿½è¹¤ç‹€æ…‹ï¼Œé¿å… UI æ®˜ç•™
-- systems/hud.js ä¸Šæ–¹è¡€æ¢ä½ç½®æ”¹ç‚ºåŒæ™‚é¿é–‹å·¦ä¸Šè§’ UI èˆ‡å³ä¸Šè§’å°åœ°åœ–ï¼Œä¿®æ­£æ‰‹æ©Ÿç‰ˆè¡€æ¢å¡åœ¨å…©è€…ä¸­é–“
-- systems/hud.js ä¸Šæ–¹è¡€æ¢åç¨±å„ªå…ˆä½¿ç”¨ target.labelï¼Œä¿®æ­£ç²¾è‹±æ€ªæ­»äº¡æ·¡å‡ºæœŸé–“é¡¯ç¤ºã€ŒæœªçŸ¥ã€
+### 修復
+- systems/daynight.js 白天精英怪消散時同步清除上方血條追蹤狀態，避免 UI 殘留
+- systems/hud.js 上方血條位置改為同時避開左上角 UI 與右上角小地圖，修正手機版血條卡在兩者中間
+- systems/hud.js 上方血條名稱優先使用 target.label，修正精英怪死亡淡出期間顯示「未知」
 
 ---
 
 ## v0.1.8.1 - 2026-06-07
 
-### ä¿®å¾©
-- systems/creatures.js é¬£ç‹—éšŠåä½ç½®ç§»åˆ°ç”Ÿç‰©åœ“åœˆä¸‹æ–¹ï¼ˆ+14pxï¼‰ï¼Œä¿®æ­£éšŠåèˆ‡åå­—è¦–è¦ºé‡ç–Šå°Žè‡´çš„åå­—åç§»å•é¡Œ
+### 修復
+- systems/creatures.js 鬣狗隊名位置移到生物圓圈下方（+14px），修正隊名與名字視覺重疊導致的名字偏移問題
 
 ---
 
 ## v0.1.8.0 - 2026-06-07
 
-### æ–°å¢ž
-- config/patchnotes.js è£œå…… v0.1.3.3 ~ v0.1.7.2 æ‰€æœ‰ç‰ˆæœ¬çš„çŽ©å®¶å…¬å‘Šï¼Œåˆä½µç‚º v0.1.8.0 å…¬å‘Šæ¢ç›®
+### 新增
+- config/patchnotes.js 補充 v0.1.3.3 ~ v0.1.7.2 所有版本的玩家公告，合併為 v0.1.8.0 公告條目
 
-### ç‰ˆæœ¬ç®¡ç†
-- GAME_INFO.version å‡è‡³ v0.1.8.0
+### 版本管理
+- GAME_INFO.version 升至 v0.1.8.0
 
 ---
 
 ## v0.1.7.2 - 2026-06-07
 
-### ä¿®å¾©
-- æ¯’éœ§éš¼æ”»æ“Š 3 æ¬¡å¾Œå¡æ­»ï¼špuddle éŽæœŸæ™‚éžæ¸› `_venomPuddleCount`ï¼Œelite.js åŠ å…¥ç¨ç«‹ puddle å‚·å®³ tick + éŽæœŸæ¸…ç†ï¼Œä¸å†ä¾è³´ boss.js desert è·¯å¾‘
-- å¹½éˆéš¼ä¸æ”»æ“Šï¼šaggroRange æ“´å¤§ï¼ˆspecterFalcon 1400 / shadowFalcon 900 / venomFalcon 1050ï¼‰ï¼Œæä¾›è¿½æ“Šç·©è¡å€
-- å¹½éˆéš¼è“„åŠ›ä¸­çŽ©å®¶è·‘å‡ºå°„ç¨‹å¾Œ falcon å‡çµï¼šè“„åŠ›é€²è¡Œä¸­ï¼ˆ`_aimTarget` å­˜åœ¨ï¼‰å…è¨±è·¨è¶Š attackRange å®Œæˆå°„æ“Šï¼›å­å½ˆ maxRange æ”¹ç‚º `attackRange Ã— 2`
-- é»‘è‰²çµäºº Phase 1/3 è“„åŠ›å¾Œä¸é–‹æ§ï¼š`aiming` state åŠ å…¥ chasing/strafing æ¢ä»¶ï¼Œç¢ºä¿å¾ŒçºŒå¹€ç¹¼çºŒåŸ·è¡Œè“„åŠ›å®Œæˆé‚è¼¯
-- é»‘è‰²çµäººä¸æ”»æ“Šï¼šPhase 1 triggerRange 1500â†’1800ï¼ŒPhase 2 æ”»æ“Šè§¸ç™¼è·é›¢ 800â†’1000
+### 修復
+- 毒霧隼攻擊 3 次後卡死：puddle 過期時遞減 `_venomPuddleCount`，elite.js 加入獨立 puddle 傷害 tick + 過期清理，不再依賴 boss.js desert 路徑
+- 幽靈隼不攻擊：aggroRange 擴大（specterFalcon 1400 / shadowFalcon 900 / venomFalcon 1050），提供追擊緩衝區
+- 幽靈隼蓄力中玩家跑出射程後 falcon 凍結：蓄力進行中（`_aimTarget` 存在）允許跨越 attackRange 完成射擊；子彈 maxRange 改為 `attackRange × 2`
+- 黑色獵人 Phase 1/3 蓄力後不開槍：`aiming` state 加入 chasing/strafing 條件，確保後續幀繼續執行蓄力完成邏輯
+- 黑色獵人不攻擊：Phase 1 triggerRange 1500→1800，Phase 2 攻擊觸發距離 800→1000
 
-### é‡æ§‹ï¼ˆCodexï¼‰
-- elite.js `initEliteOrder()`ï¼šæ”¹ç”¨ mapSeed æ±ºå®šæ€§äº‚åºï¼Œä¸‰éš¼/ä¸‰çŠ¬åŒå±€çµ±ä¸€ï¼ˆä¸å†æ¯å¤œéš¨æ©Ÿï¼‰
-- boss.js é»‘è‰²çµäººè¡€æ¢ï¼šé¡¯ç¤ºç•¶å‰ HP æ•¸å­— + ä¸‹ä¸€ç®¡é è¦½è‰²å½©
-- hud.js ç²¾è‹±æ€ªä¸Šæ–¹è¡€æ¢åç¨±ï¼šæ”¹ç”¨ `elite.label` é¡¯ç¤ºæ­£ç¢ºåç¨±
+### 重構（Codex）
+- elite.js `initEliteOrder()`：改用 mapSeed 決定性亂序，三隼/三犬同局統一（不再每夜隨機）
+- boss.js 黑色獵人血條：顯示當前 HP 數字 + 下一管預覽色彩
+- hud.js 精英怪上方血條名稱：改用 `elite.label` 顯示正確名稱
 
 ---
 
 ## v0.1.7.1 - 2026-06-07
 
-### ä¿®å¾©
-- boss.js `_screenPos is not defined`ï¼š
-  `_drawHunterAimingWarning()` æ”¹ç”¨ `worldToScreen()` å–å¾—èž¢å¹•åº§æ¨™
-  ï¼ˆèˆ‡ elite.js åŒé¡žå•é¡Œï¼ŒESM é·ç§»éºæ¼ï¼‰
+### 修復
+- boss.js `_screenPos is not defined`：
+  `_drawHunterAimingWarning()` 改用 `worldToScreen()` 取得螢幕座標
+  （與 elite.js 同類問題，ESM 遷移遺漏）
 
 ---
 
 ## v0.1.7.0 - 2026-06-07
 
-### é‡æ§‹
-- Web Audio API å®Œæ•´é·ç§»ï¼ˆaudio-refactor åˆ†æ”¯ï¼‰ï¼š
-  - AudioContext + masterGain / musicGain / sfxGain æž¶æ§‹
-  - éŸ³æ¨‚ç³»çµ±æŽ¥ GainNodeï¼ˆintroTheme + playMusicï¼‰
-  - éŸ³æ•ˆæ”¹ç”¨ AudioBuffer + AudioBufferSourceNode
-  - iOS unlockï¼šuser gesture æ™‚ audioContext.resume()
-  - ä¿ç•™ HTMLAudio pool ä½œç‚º fallback
+### 重構
+- Web Audio API 完整遷移（audio-refactor 分支）：
+  - AudioContext + masterGain / musicGain / sfxGain 架構
+  - 音樂系統接 GainNode（introTheme + playMusic）
+  - 音效改用 AudioBuffer + AudioBufferSourceNode
+  - iOS unlock：user gesture 時 audioContext.resume()
+  - 保留 HTMLAudio pool 作為 fallback
 
-### ä¿®å¾©
-- elite.js `_screenPos is not defined`ï¼š
-  `_drawHunterElite()` æ”¹ç”¨ `worldToScreen()` å–å¾—èž¢å¹•åº§æ¨™
+### 修復
+- elite.js `_screenPos is not defined`：
+  `_drawHunterElite()` 改用 `worldToScreen()` 取得螢幕座標
 
 ---
 
 ## v0.1.6.3 - 2026-06-07
 
-### é‡æ§‹
-- Web Audio API é·ç§»ï¼ˆæ–¹æ¡ˆäºŒï¼Œaudio-refactor åˆ†æ”¯ï¼‰ï¼š
-  - Part Aï¼šå»ºç«‹ AudioContext + masterGain / musicGain / sfxGain
-  - Part Bï¼šéŸ³æ¨‚ç³»çµ±æŽ¥ GainNodeï¼ˆintroTheme + playMusicï¼‰
-  - Part Cï¼šéŸ³æ•ˆæ”¹ç”¨ AudioBuffer + AudioBufferSourceNode
-  - iOS unlockï¼šuser gesture æ™‚å‘¼å« audioContext.resume()
-  - ä¿ç•™ HTMLAudio pool ä½œç‚º AudioBuffer æœªå°±ç·’æ™‚çš„ fallback
+### 重構
+- Web Audio API 遷移（方案二，audio-refactor 分支）：
+  - Part A：建立 AudioContext + masterGain / musicGain / sfxGain
+  - Part B：音樂系統接 GainNode（introTheme + playMusic）
+  - Part C：音效改用 AudioBuffer + AudioBufferSourceNode
+  - iOS unlock：user gesture 時呼叫 audioContext.resume()
+  - 保留 HTMLAudio pool 作為 AudioBuffer 未就緒時的 fallback
 
 ---
 
 ## v0.1.6.2 - 2026-06-07
 
-### ä¿®å¾©
-- iOS Safari éŸ³æ¨‚é–‹é—œä¿®å¾©ï¼ˆæ–¹æ¡ˆ 1ï¼‰ï¼š
-  `refreshMusicVolume()` æ”¹ç”¨ pause/play æŽ§åˆ¶ï¼Œä¸ä¾è³´ volume = 0
-  `playMusic()` fade-in æ¯ tick é‡æ–°è®€å–éŸ³é‡ç›®æ¨™
-  éŸ³æ¨‚é—œé–‰ç‹€æ…‹ä¸‹ `playMusic()` ä¸å‘¼å« play()ï¼Œç­‰é–‹å•Ÿæ™‚æ¢å¾©
+### 修復
+- iOS Safari 音樂開關修復（方案 1）：
+  `refreshMusicVolume()` 改用 pause/play 控制，不依賴 volume = 0
+  `playMusic()` fade-in 每 tick 重新讀取音量目標
+  音樂關閉狀態下 `playMusic()` 不呼叫 play()，等開啟時恢復
 
 ---
 
 ## v0.1.6.1 - 2026-06-06
 
-### æ•ˆèƒ½å„ªåŒ–
-- Stage Eï¼šç§»é™¤ç”Ÿç‰©åç¨±æ¨™ç±¤ shadowBlurï¼Œæ”¹ç”¨ strokeText æé‚Š
-- Stage Eï¼šåç¨±æ¨™ç±¤æ”¹ç”¨ viewport cullingï¼Œç§»é™¤ 300px è·é›¢å‰”é™¤
+### 效能優化
+- Stage E：移除生物名稱標籤 shadowBlur，改用 strokeText 描邊
+- Stage E：名稱標籤改用 viewport culling，移除 300px 距離剔除
 
-### èª¿æ•´
-- getGameFont() å¼·åˆ¶å¤§å­—ç²—é«”ï¼ˆsize + 8pxï¼Œæ°¸é  boldï¼‰
-- æµ®å‹•æ–‡å­—æ°¸é å¤§å­— + strokeText æé‚Š
-- fontBoldLarge é–‹é—œæ”¹ç‚ºã€Œç„¡å­—å¤©æ›¸/Greekã€ï¼Œé–‹å•Ÿå¾Œéš±è—æ‰€æœ‰éŠæˆ²æ–‡å­—ï¼ˆä¿ç•™è¡€æ¢ï¼‰
-- ç§»é™¤ fontBoldLargeHint å’Œç›¸é—œ DOM å…ƒç´ 
+### 調整
+- getGameFont() 強制大字粗體（size + 8px，永遠 bold）
+- 浮動文字永遠大字 + strokeText 描邊
+- fontBoldLarge 開關改為「無字天書/Greek」，開啟後隱藏所有遊戲文字（保留血條）
+- 移除 fontBoldLargeHint 和相關 DOM 元素
 
 ---
 
 ## v0.1.6.0 - 2026-06-06
 
-### é‡æ§‹
-- Stage C Slice 3ï¼šå»ºç«‹ `stats/index.js`ï¼ŒsessionStats è®€å¯«çµ±ä¸€ï¼ˆ`resetSessionStats` / `getSessionStats` / `incrementStat` / `updateStatMax`ï¼‰ï¼›`main.js`ã€`systems/combat.js`ã€`systems/player.js`ã€`config/supabase.js`ã€`systems/leaderboard.js` å…¨éƒ¨æ”¹ç”¨ stats å…¥å£
-- Stage C Slice 2ï¼š`systems/evolution.js` fromHome/forceStart èˆ‡ postGame çš„ mutationSkills è¼‰å…¥æ”¹å‘¼å« `initMutationSkills()`ï¼Œä¸å†ç›´æŽ¥ `Object.assign` å¯«å…¥ `gameState.mutationSkills`
-- æ¸¬è©¦ï¼šæ–°å¢ž `tests/stats/stats.test.js`ï¼ˆ9 testsï¼‰ï¼Œä¿®æ­£ `vi.hoisted` hoisting å•é¡Œï¼›ç¸½è¨ˆ 64/64 é€šéŽ
+### 重構
+- Stage C Slice 3：建立 `stats/index.js`，sessionStats 讀寫統一（`resetSessionStats` / `getSessionStats` / `incrementStat` / `updateStatMax`）；`main.js`、`systems/combat.js`、`systems/player.js`、`config/supabase.js`、`systems/leaderboard.js` 全部改用 stats 入口
+- Stage C Slice 2：`systems/evolution.js` fromHome/forceStart 與 postGame 的 mutationSkills 載入改呼叫 `initMutationSkills()`，不再直接 `Object.assign` 寫入 `gameState.mutationSkills`
+- 測試：新增 `tests/stats/stats.test.js`（9 tests），修正 `vi.hoisted` hoisting 問題；總計 64/64 通過
 
 ---
 
 ## v0.1.5.2 - 2026-06-06
 
-### ä¿®å¾©
-- **é˜¿å¥‡çˆ¾ Charge Attack éŸ³æ•ˆ**ï¼šç¬¬ä¸‰æ ¼å……èƒ½ï¼ˆchargeConsumed >= 3ï¼‰æ’­æ”¾ `archerAttackCrit`ï¼Œå…¶ä»–å……èƒ½éšŽæ®µæ’­æ”¾ `archerAttackNormal`ï¼ˆ`main.js` mouseup äº‹ä»¶ï¼‰
-- **é˜¿å¥‡çˆ¾æ­»äº¡éŸ³æ•ˆ**ï¼šæ­»äº¡æ™‚æ’­æ”¾ `archerDeath` è€Œéžé€šç”¨ `death`ï¼ˆ`systems/evolution.js` showSkillTreeï¼‰
-- **å†ä¾†ä¸€å±€è§’è‰²é‡ç½®**ï¼šautostart è·¯å¾‘è£œä¸Šå¾ž localStorage é‚„åŽŸ `lastCharacter`ï¼Œä¿®å¾©å†ä¾†ä¸€å±€å¾Œè§’è‰²æ°¸é é¡¯ç¤ºå™ªéµ‘çš„å•é¡Œï¼ˆ`main.js` window.onloadï¼‰
+### 修復
+- **阿奇爾 Charge Attack 音效**：第三格充能（chargeConsumed >= 3）播放 `archerAttackCrit`，其他充能階段播放 `archerAttackNormal`（`main.js` mouseup 事件）
+- **阿奇爾死亡音效**：死亡時播放 `archerDeath` 而非通用 `death`（`systems/evolution.js` showSkillTree）
+- **再來一局角色重置**：autostart 路徑補上從 localStorage 還原 `lastCharacter`，修復再來一局後角色永遠顯示噪鵑的問題（`main.js` window.onload）
 
 ---
 
 ## v0.1.5.1 - 2026-06-06
 
-### ä¿®å¾©
-- **BUG-01**ï¼šé˜¿å¥‡çˆ¾è§’è‰²éŸ³æ•ˆèª¤æ¤ä¿®å¾©ï¼Œ4 å€‹å‘¼å«é»žåŠ å…¥è§’è‰²åˆ¤æ–·ï¼ˆ`selectedCharacter === 'archerfish'`ï¼‰
-  - `systems/combat.js`ï¼šå—å‚·éŸ³æ•ˆè·¯ç”±ï¼ˆ`hurt` â†’ `archerHurt`ï¼‰
-  - `systems/combat.js`ï¼šæ”»æ“Š/æš´æ“ŠéŸ³æ•ˆè·¯ç”±ï¼ˆ`attackNormal/attackCrit` â†’ `archerAttackNormal/archerAttackCrit`ï¼‰
-  - `systems/player.js`ï¼šé ç¨‹æ”»æ“ŠéŸ³æ•ˆè·¯ç”±ï¼ˆ`attackNormal` â†’ `archerAttackNormal`ï¼‰
-  - `main.js`ï¼šæ»‘é¼ é»žæ“Šæ”»æ“ŠéŸ³æ•ˆè·¯ç”±ï¼ˆ`attackNormal` â†’ `archerAttackNormal`ï¼‰
-- **TODO-UI-01**ï¼šç²¾è‹±æ€ªå…¬å‘Šæ–‡å­—æ‰‹æ©Ÿç‰ˆæˆªæ–·ä¿®å¾©ï¼ˆ`systems/hud.js`ï¼‰
-  - `VIEW_W < 700` æ™‚å­—é«”å¾ž 36px ç¸®å°ç‚º 22px
-  - `ctx.fillText` åŠ å…¥ `maxWidth = VIEW_W * 0.9` é˜²æ­¢ç•«å¸ƒé‚Šç·£æˆªæ–·
+### 修復
+- **BUG-01**：阿奇爾角色音效誤植修復，4 個呼叫點加入角色判斷（`selectedCharacter === 'archerfish'`）
+  - `systems/combat.js`：受傷音效路由（`hurt` → `archerHurt`）
+  - `systems/combat.js`：攻擊/暴擊音效路由（`attackNormal/attackCrit` → `archerAttackNormal/archerAttackCrit`）
+  - `systems/player.js`：遠程攻擊音效路由（`attackNormal` → `archerAttackNormal`）
+  - `main.js`：滑鼠點擊攻擊音效路由（`attackNormal` → `archerAttackNormal`）
+- **TODO-UI-01**：精英怪公告文字手機版截斷修復（`systems/hud.js`）
+  - `VIEW_W < 700` 時字體從 36px 縮小為 22px
+  - `ctx.fillText` 加入 `maxWidth = VIEW_W * 0.9` 防止畫布邊緣截斷
 
 ---
 
 ## v0.1.5.0 - 2026-06-06
 
-### æž¶æ§‹
-- ESM å…¨æ¨¡çµ„åŒ–å®Œæˆï¼ˆStage 0â€“3ï¼‰ï¼š37 å€‹ JS æª”æ¡ˆå¾žå…¨åŸŸ `<script src>` æ”¹ç‚º `import`/`export`
-- `index.html` æ”¹ç‚ºå–®ä¸€ `<script type="module" src="./main.js">` å…¥å£
-- `storage/index.js`ï¼šé›†ä¸­æ‰€æœ‰ `localStorage` key å®šç¾©èˆ‡è®€å¯« helper
-- `systems/audio.js`ï¼šAudioManager çµ±ä¸€éŸ³é‡ç‹€æ…‹ï¼ˆ`_vol`ã€`loadVolume`ã€`setVolume`ã€`serializeVolume`ï¼‰
-- `systems/evolution.js`ï¼š`buildSkillTreeOverlay` æ‹†æˆ coordinator + 4 å€‹ private sub-functions
-- `mutation.js` â†” `evolution.js` å¾ªç’°ä¾è³´æ”¹ç”¨ `CustomEvent` è§£è€¦
-- `systems/ui.js`ï¼š`showSettings()` ç§»é™¤ `fromHome` åƒæ•¸ï¼Œæ”¹ç”¨ DOM è‡ªå‹•åµæ¸¬
-- çµç®—ç•«é¢çµ±ä¸€ï¼šæ–°å¢ž `buildEndGameOverlay()` å…±ç”¨å‹åˆ©/æ­»äº¡å¤–æ®¼
+### 架構
+- ESM 全模組化完成（Stage 0–3）：37 個 JS 檔案從全域 `<script src>` 改為 `import`/`export`
+- `index.html` 改為單一 `<script type="module" src="./main.js">` 入口
+- `storage/index.js`：集中所有 `localStorage` key 定義與讀寫 helper
+- `systems/audio.js`：AudioManager 統一音量狀態（`_vol`、`loadVolume`、`setVolume`、`serializeVolume`）
+- `systems/evolution.js`：`buildSkillTreeOverlay` 拆成 coordinator + 4 個 private sub-functions
+- `mutation.js` ↔ `evolution.js` 循環依賴改用 `CustomEvent` 解耦
+- `systems/ui.js`：`showSettings()` 移除 `fromHome` 參數，改用 DOM 自動偵測
+- 結算畫面統一：新增 `buildEndGameOverlay()` 共用勝利/死亡外殼
 
 ---
 
 ## v0.1.4.3 - 2026-06-05
 
-### æ•ˆèƒ½
-- `showXPPopup` æ”¹ç‚ºå‘¼å« Canvas `showFloatingText`ï¼Œç§»é™¤ DOM XP popup pool
-  - å®Œå…¨ç§»é™¤ `_XP_POOL_SIZE`ã€`_xpPopupPool`ã€`_xpPoolReady`ã€`_initXpPool()`
-  - `showXPPopup` ç›´æŽ¥å‘¼å« `showFloatingText`ï¼Œåƒæžœå­æµ®å­—ç´å…¥ Canvas æ‰¹æ¬¡ç¹ªè£½
-  - ç§»é™¤ `main.js` ä¸­çš„ `_initXpPool()` å‘¼å«
-- AudioManager éŸ³æ•ˆç¯€æµï¼šä¸€èˆ¬éŸ³æ•ˆ 100msï¼Œhurt/attack/playerAttack 150ms
-  - æ–°å¢ž `_sfxLastPlayed` å¿«å–è¨˜éŒ„ä¸Šæ¬¡æ’­æ”¾æ™‚é–“
-  - `play()` é–‹é ­åŠ å…¥ç¯€æµåˆ¤æ–·ï¼Œé¿å…å¤šéš»ç”Ÿç‰©åŒå¹€åŒæ™‚æ’­æ”¾éŸ³æ•ˆé€ æˆæ‰‹æ©ŸéŸ³è¨Šå£“åŠ›
+### 效能
+- `showXPPopup` 改為呼叫 Canvas `showFloatingText`，移除 DOM XP popup pool
+  - 完全移除 `_XP_POOL_SIZE`、`_xpPopupPool`、`_xpPoolReady`、`_initXpPool()`
+  - `showXPPopup` 直接呼叫 `showFloatingText`，吃果子浮字納入 Canvas 批次繪製
+  - 移除 `main.js` 中的 `_initXpPool()` 呼叫
+- AudioManager 音效節流：一般音效 100ms，hurt/attack/playerAttack 150ms
+  - 新增 `_sfxLastPlayed` 快取記錄上次播放時間
+  - `play()` 開頭加入節流判斷，避免多隻生物同幀同時播放音效造成手機音訊壓力
 
 ---
 
 ## v0.1.4.2 - 2026-06-05
 
-### æ•ˆèƒ½
-- `showFloatingText` å¾ž DOM pool æ”¹ç‚º Canvas æ‰¹æ¬¡ç¹ªè£½
-  - å®Œå…¨ç§»é™¤ `_FLOAT_POOL_SIZE`ã€`_floatPool`ã€`_floatPoolReady`ã€`_initFloatPool()`ã€`resetFloatPool()` åŠ `.float-text-animate` CSS
-  - `gameState.floatTexts` é™£åˆ—çµ±ä¸€æ”¶é›†æµ®å­—ï¼Œ`drawGame()` æœ«æ®µä¸€æ¬¡æ‰¹æ¬¡ç¹ªè£½ï¼Œç„¡å¤šå±¤ text-shadow
-  - æ‰‹æ©Ÿä¸Šé™ 12 å€‹ï¼Œæ¡Œæ©Ÿ 20 å€‹ï¼›100ms å…§åŒä½ç½®åŒé¡è‰²æ•¸å­—è‡ªå‹•åˆä½µ
-  - å­—å¤§åˆç²—æ¨¡å¼ï¼š+8px + ç°¡å–®é»‘è‰²æé‚Šä¸€æ¬¡ï¼ˆå–ä»£ 4 å±¤ CSS shadowï¼‰
+### 效能
+- `showFloatingText` 從 DOM pool 改為 Canvas 批次繪製
+  - 完全移除 `_FLOAT_POOL_SIZE`、`_floatPool`、`_floatPoolReady`、`_initFloatPool()`、`resetFloatPool()` 及 `.float-text-animate` CSS
+  - `gameState.floatTexts` 陣列統一收集浮字，`drawGame()` 末段一次批次繪製，無多層 text-shadow
+  - 手機上限 12 個，桌機 20 個；100ms 內同位置同顏色數字自動合併
+  - 字大又粗模式：+8px + 簡單黑色描邊一次（取代 4 層 CSS shadow）
 
 ---
 
 ## v0.1.4.1 - 2026-06-05
 
-### æ•ˆèƒ½
-- `updateTreeFruitProduction` ç¯€æµæ”¹ç‚ºç´¯ç©æ™‚é–“è£œçµ¦ï¼šç¯€æµå‰ç´¯ç© `elapsed`ï¼Œè§¸ç™¼æ™‚ä¸€æ¬¡æŠŠ elapsed è£œçµ¦ `tree.fruitTimer`ï¼Œæžœå­ç”Ÿç”¢é€Ÿåº¦æ¢å¾©æ­£å¸¸ï¼ˆä¿®å¾©ç¯€æµå°Žè‡´é€Ÿåº¦è®Š 1/30 çš„å‰¯ä½œç”¨ï¼‰
-- `showFloatingText` ç§»é™¤ `void el.offsetWidth` å¼·åˆ¶ reflowï¼Œæ”¹ç”¨ `requestAnimationFrame` + CSS class `.float-text-animate` åˆ‡æ›è§¸ç™¼ animationï¼Œæ”¹å–„ iOS Safari é€£çºŒæµ®å­—æ™‚çš„ spike
-- AudioManager é ç†±æ¸…å–®ä¿®æ­£ï¼šç§»é™¤ä¸å­˜åœ¨çš„ `'attacked'`ï¼Œè£œä¸Šå¯¦éš›æ’­æ”¾çš„ `'hurt'`ï¼Œé¿å…ç¬¬ä¸€æ¬¡è¢«æ‰“æ™‚ lazy å»ºç«‹ pool é€ æˆå¡é “
+### 效能
+- `updateTreeFruitProduction` 節流改為累積時間補給：節流前累積 `elapsed`，觸發時一次把 elapsed 補給 `tree.fruitTimer`，果子生產速度恢復正常（修復節流導致速度變 1/30 的副作用）
+- `showFloatingText` 移除 `void el.offsetWidth` 強制 reflow，改用 `requestAnimationFrame` + CSS class `.float-text-animate` 切換觸發 animation，改善 iOS Safari 連續浮字時的 spike
+- AudioManager 預熱清單修正：移除不存在的 `'attacked'`，補上實際播放的 `'hurt'`，避免第一次被打時 lazy 建立 pool 造成卡頓
 
 ---
 
 ## v0.1.4.0 - 2026-06-05
 
-### æ•ˆèƒ½
-- `showFloatingText` æ”¹ç”¨ DOM ç‰©ä»¶æ± ï¼ˆpool size 20ï¼‰ï¼Œé¿å…æ¯æ¬¡ `createElement` + CSS animation + `remove`ï¼Œå¤§å¹…æ”¹å–„æ‰‹æ©Ÿå¡é “
-  - æ–°å¢žæ¨¡çµ„é ‚éƒ¨ `_FLOAT_POOL_SIZE`ã€`_floatPool`ã€`_floatPoolReady` ä¸‰å€‹å¸¸æ•¸/è®Šæ•¸
-  - æ–°å¢ž `_initFloatPool()`ï¼šç¬¬ä¸€æ¬¡å‘¼å« `showFloatingText` æ™‚ lazy initï¼Œé å»º 20 å€‹ `div` ä¸¦ append è‡³ `#ui-overlay`
-  - `showFloatingText` æ”¹ç‚ºå¾ž pool å–é–’ç½® slotï¼Œé‡ç½® animation å¾Œé‡è¤‡ä½¿ç”¨ï¼Œpool æ»¿æ™‚ç›´æŽ¥è·³éŽä¸å¡ä¸»åŸ·è¡Œç·’
-  - æ–°å¢ž `resetFloatPool()`ï¼Œåœ¨ `initializeGame()` æ¯å±€é–‹å§‹æ™‚æ¸…é™¤æ‰€æœ‰ timer ä¸¦é‡ç½® pool ç‹€æ…‹
+### 效能
+- `showFloatingText` 改用 DOM 物件池（pool size 20），避免每次 `createElement` + CSS animation + `remove`，大幅改善手機卡頓
+  - 新增模組頂部 `_FLOAT_POOL_SIZE`、`_floatPool`、`_floatPoolReady` 三個常數/變數
+  - 新增 `_initFloatPool()`：第一次呼叫 `showFloatingText` 時 lazy init，預建 20 個 `div` 並 append 至 `#ui-overlay`
+  - `showFloatingText` 改為從 pool 取閒置 slot，重置 animation 後重複使用，pool 滿時直接跳過不卡主執行緒
+  - 新增 `resetFloatPool()`，在 `initializeGame()` 每局開始時清除所有 timer 並重置 pool 狀態
 
 ---
 
 ## v0.1.3.9 - 2026-06-05
 
-### æ•ˆèƒ½
-- AudioManager éŸ³æ•ˆæ”¹ç”¨ç‰©ä»¶æ± ï¼Œé¿å… iOS Safari cloneNode å¡é “
-  - æ–°å¢ž `_sfxPools`ï¼ˆæ¯å€‹éŸ³æ•ˆ 4 å€‹å¯¦ä¾‹ï¼‰èˆ‡ `_getPooledAudio(key)`
-  - `play()` æ”¹ç‚ºå¾žæ± å–é–’ç½®å¯¦ä¾‹ï¼Œä¸å†æ¯æ¬¡ `cloneNode()`ï¼›éŸ³é‡ç‚º 0 æ™‚ç›´æŽ¥è·³éŽ
-  - `init()` é ç†± `eatFruit`ã€`levelUp`ã€`attacked` ä¸‰å€‹å¸¸ç”¨éŸ³æ•ˆæ± 
-- `updateTreeFruitProduction` æ”¹ç‚ºæ¯ 500ms åŸ·è¡Œä¸€æ¬¡ï¼ˆç´„æ¯ 30 å¹€ï¼‰
-  - æ–°å¢žæ¨¡çµ„é ‚éƒ¨ `_treeProductionTimer` è¨ˆæ™‚å™¨
-  - æ–°å¢ž `resetTreeProductionTimer()`ï¼Œåœ¨ `initializeGame()` æ¯å±€é–‹å§‹æ™‚é‡ç½®
-- `updateMinimapFog` æ”¹ç‚ºæ¯ 3 å¹€æ›´æ–°ä¸€æ¬¡
-  - æ–°å¢žæ¨¡çµ„é ‚éƒ¨ `_fogFrameCount` è¨ˆæ•¸å™¨
-  - æ–°å¢ž `resetFogFrameCount()`ï¼Œåœ¨ `initializeGame()` æ¯å±€é–‹å§‹æ™‚é‡ç½®
+### 效能
+- AudioManager 音效改用物件池，避免 iOS Safari cloneNode 卡頓
+  - 新增 `_sfxPools`（每個音效 4 個實例）與 `_getPooledAudio(key)`
+  - `play()` 改為從池取閒置實例，不再每次 `cloneNode()`；音量為 0 時直接跳過
+  - `init()` 預熱 `eatFruit`、`levelUp`、`attacked` 三個常用音效池
+- `updateTreeFruitProduction` 改為每 500ms 執行一次（約每 30 幀）
+  - 新增模組頂部 `_treeProductionTimer` 計時器
+  - 新增 `resetTreeProductionTimer()`，在 `initializeGame()` 每局開始時重置
+- `updateMinimapFog` 改為每 3 幀更新一次
+  - 新增模組頂部 `_fogFrameCount` 計數器
+  - 新增 `resetFogFrameCount()`，在 `initializeGame()` 每局開始時重置
 
 ---
 
 ## v0.1.3.8 - 2026-06-05
 
-### æ•ˆèƒ½
-- `worldToScreen` å’Œ `wrappedDelta` æ”¹ç‚ºç‰©ä»¶é‡ç”¨ï¼Œå¤§å¹…æ¸›å°‘æ¯å¹€ GC allocationï¼Œæ”¹å–„æ‰‹æ©Ÿ spike lag
-  - `camera.js` é ‚éƒ¨æ–°å¢ž `_screenPos` å’Œ `_delta` é‡ç”¨ç‰©ä»¶
-  - `worldToScreen` ç›´æŽ¥å¯«å…¥ `_screenPos` ä¸¦å›žå‚³åŒä¸€ç‰©ä»¶ï¼Œä¸å†æ¯æ¬¡ `return { x, y }`
-  - `wrappedDelta` ç›´æŽ¥å¯«å…¥ `_delta` ä¸¦å›žå‚³åŒä¸€ç‰©ä»¶ï¼Œä¸å†æ¯æ¬¡ `return { dx, dy }`
-  - ä¿®æ­£æ‰€æœ‰ã€Œé€£çºŒå‘¼å«å¾ŒåŒæ™‚ä½¿ç”¨å…©å€‹çµæžœã€çš„å‘¼å«é»žï¼ˆå…± 5 è™•ï¼‰ï¼Œç«‹å³èƒå–æ•¸å€¼é˜²æ­¢ç‰©ä»¶è¢«è¦†è“‹ï¼š
-    - `boss.js` `_drawSharkChargeArrow`ï¼š`fromSx/fromSy` + `toSx/toSy`
-    - `boss.js` `_drawHunterAimingWarning`ï¼š`bsx/bsy` + `tsx/tsy`
-    - `elite.js` `_drawHunterElite`ï¼šç°½åæ”¹ç‚ºå‚³å…¥æ•¸å€¼ `(sx, sy)`ï¼Œå…§éƒ¨çž„æº–ç·šæ”¹ç”¨ `tsx/tsy`
-    - `hud.js` `_drawArcherLockOn`ï¼š`psx/psy` + `tsx/tsy`
-    - `hud.js` `drawGame` ä¸­ `ps`ï¼šæ–°å¢ž `psx/psy` å¿«å–ï¼Œé–ƒç¾ç‰¹æ•ˆæ”¹ç”¨ `sax/say/sbx/sby`
+### 效能
+- `worldToScreen` 和 `wrappedDelta` 改為物件重用，大幅減少每幀 GC allocation，改善手機 spike lag
+  - `camera.js` 頂部新增 `_screenPos` 和 `_delta` 重用物件
+  - `worldToScreen` 直接寫入 `_screenPos` 並回傳同一物件，不再每次 `return { x, y }`
+  - `wrappedDelta` 直接寫入 `_delta` 並回傳同一物件，不再每次 `return { dx, dy }`
+  - 修正所有「連續呼叫後同時使用兩個結果」的呼叫點（共 5 處），立即萃取數值防止物件被覆蓋：
+    - `boss.js` `_drawSharkChargeArrow`：`fromSx/fromSy` + `toSx/toSy`
+    - `boss.js` `_drawHunterAimingWarning`：`bsx/bsy` + `tsx/tsy`
+    - `elite.js` `_drawHunterElite`：簽名改為傳入數值 `(sx, sy)`，內部瞄準線改用 `tsx/tsy`
+    - `hud.js` `_drawArcherLockOn`：`psx/psy` + `tsx/tsy`
+    - `hud.js` `drawGame` 中 `ps`：新增 `psx/psy` 快取，閃現特效改用 `sax/say/sbx/sby`
 
 ---
 
 ## v0.1.3.7 - 2026-06-05
 
-### ä¿®å¾©
-- éˆæ•çŸ¥è¦ºä¸‰ç­‰ç´šæ”¹ç”¨å¿«å–ï¼Œé™åˆ¶é‡ç®—é »çŽ‡ï¼Œå¤§å¹…æ¸›å°‘æ‰‹æ©Ÿ spike lag
-  - Lv1 æžœå­è·¯å¾‘ï¼ˆ`findBestPerceptionPath`ï¼‰ï¼šè·ä¸Šæ¬¡è¨ˆç®— >500msã€æžœå­æ•¸é‡æ”¹è®Šã€æˆ–çŽ©å®¶ç§»å‹• >50px æ‰é‡ç®—
-  - Lv2 æœ€è¿‘å±é«”ï¼šè·ä¸Šæ¬¡è¨ˆç®— >300ms æˆ–å±é«”æ•¸é‡æ”¹è®Šæ‰é‡ç®—
-  - Lv3 æœ€è¿‘ç™½éª¨ï¼šè·ä¸Šæ¬¡è¨ˆç®— >300ms æˆ–ç™½éª¨æ•¸é‡æ”¹è®Šæ‰é‡ç®—
-  - æ–°å¢žæ¨¡çµ„é ‚éƒ¨ `_perceptionCache` å¿«å–ç‰©ä»¶
-  - æ–°å¢ž `resetPerceptionCache()`ï¼Œåœ¨ `initializeGame()` æ¯å±€é–‹å§‹æ™‚é‡ç½®å¿«å–
+### 修復
+- 靈敏知覺三等級改用快取，限制重算頻率，大幅減少手機 spike lag
+  - Lv1 果子路徑（`findBestPerceptionPath`）：距上次計算 >500ms、果子數量改變、或玩家移動 >50px 才重算
+  - Lv2 最近屍體：距上次計算 >300ms 或屍體數量改變才重算
+  - Lv3 最近白骨：距上次計算 >300ms 或白骨數量改變才重算
+  - 新增模組頂部 `_perceptionCache` 快取物件
+  - 新增 `resetPerceptionCache()`，在 `initializeGame()` 每局開始時重置快取
 
 ---
 
 ## v0.1.3.6 - 2026-06-05
 
-### ä¿®å¾©
-- `tutorial.js` `_highlightDayNight` setTimeout è¨˜æ†¶é«”æ´©æ¼ï¼šæ”¹ç”¨å¯æ¸…é™¤çš„ timer IDï¼ˆ`_dnFlashTimer`ï¼‰ï¼Œåœæ­¢æ¢ä»¶æ™‚æ­£ç¢º clearTimeoutï¼Œä¸å†æ°¸ä¹…åœ¨èƒŒæ™¯è·‘
-- æ–°å¢ž `_clearDnFlash()` çµ±ä¸€æ¸…é™¤ timer èˆ‡ DOM æ¨£å¼ï¼Œåœ¨ `_endTutorial()`ã€`showTutorial()` é ­éƒ¨å‘¼å«
-- æ–°å¢ž `resetTutorial()`ï¼š`initializeGame()` æ¯å±€é–‹å§‹æ™‚å¼·åˆ¶é‡ç½®æ•™å­¸ç‹€æ…‹ï¼Œé˜²æ­¢è·¨å±€ timer æ®˜ç•™å°Žè‡´æ‰‹æ©Ÿè¶Šä¾†è¶Šå¡
+### 修復
+- `tutorial.js` `_highlightDayNight` setTimeout 記憶體洩漏：改用可清除的 timer ID（`_dnFlashTimer`），停止條件時正確 clearTimeout，不再永久在背景跑
+- 新增 `_clearDnFlash()` 統一清除 timer 與 DOM 樣式，在 `_endTutorial()`、`showTutorial()` 頭部呼叫
+- 新增 `resetTutorial()`：`initializeGame()` 每局開始時強制重置教學狀態，防止跨局 timer 殘留導致手機越來越卡
 
 ---
 
 ## v0.1.3.5 - 2026-06-05
 
-### ä¿®å¾©
-- `updateUI` dirty checkï¼šæ¯å¹€ DOM æ“ä½œå¾ž 6~9 æ¬¡é™ç‚ºåªåœ¨å€¼æ”¹è®Šæ™‚æ›´æ–°ï¼Œæ¸›å°‘æ‰‹æ©Ÿå¡é “
-  - æ–°å¢žæ¨¡çµ„é ‚éƒ¨ `_uiCache` å¿«å–ç‰©ä»¶ï¼Œè¨˜éŒ„ä¸Šæ¬¡å¯«å…¥çš„ xp æ–‡å­—ã€xp æ¢å¯¬ã€HPã€ç”Ÿæ…‹åœˆã€æ™‚é–“ã€éŠçŽ©æ™‚é–“ã€è®Šç•°ç­‰ç´šã€ç´…é»ž
-  - `_drawHpHearts` åªåœ¨ `player.hp` æˆ– `player.maxHp` æ”¹è®Šæ™‚é‡ç¹ª
-  - æ–°å¢ž `resetUICache()`ï¼Œåœ¨ `initializeGame()` æ¯å±€é–‹å§‹æ™‚é‡ç½®å¿«å–
+### 修復
+- `updateUI` dirty check：每幀 DOM 操作從 6~9 次降為只在值改變時更新，減少手機卡頓
+  - 新增模組頂部 `_uiCache` 快取物件，記錄上次寫入的 xp 文字、xp 條寬、HP、生態圈、時間、遊玩時間、變異等級、紅點
+  - `_drawHpHearts` 只在 `player.hp` 或 `player.maxHp` 改變時重繪
+  - 新增 `resetUICache()`，在 `initializeGame()` 每局開始時重置快取
 
 ---
 
 ## v0.1.3.4 - 2026-06-04
 
-### ä¿®å¾©
-- é¦–é æŠ€èƒ½æ¨¹çš„éš±è—å™¨å®˜ç¹¼æ‰¿é¸æ“‡æ°¸é åªèƒ½é¸ä¸€å€‹ï¼ˆ`homeSelHidden` å–®é¸é‚è¼¯ï¼‰
-  - æ”¹ç‚ºé™£åˆ—å¤šé¸ï¼Œæ­£ç¢ºè®€å– `hiddenOrganLimit`ï¼ˆå›žæ†¶å™¨å®˜ç­‰ç´š + 1ï¼‰
-  - æ¨™é¡Œå‹•æ…‹é¡¯ç¤ºå¯ç¹¼æ‰¿æ•¸é‡ï¼ˆä¸Šé™ > 1 æ™‚é¡¯ç¤ºã€Œé¸æ“‡ç¹¼æ‰¿æœ€å¤š N å€‹ã€ï¼‰
-  - èˆ‡ postGame è·¯å¾‘çš„é¸æ“‡é‚è¼¯ä¿æŒä¸€è‡´
+### 修復
+- 首頁技能樹的隱藏器官繼承選擇永遠只能選一個（`homeSelHidden` 單選邏輯）
+  - 改為陣列多選，正確讀取 `hiddenOrganLimit`（回憶器官等級 + 1）
+  - 標題動態顯示可繼承數量（上限 > 1 時顯示「選擇繼承最多 N 個」）
+  - 與 postGame 路徑的選擇邏輯保持一致
 
 ---
 
 ## v0.1.3.3 - 2026-06-04
 
-### ä¿®å¾©
-- å›žæ†¶å™¨å®˜å‡ç´šå¾Œ postGame æŠ€èƒ½æ¨¹å¼·å¤§å™¨å®˜é¸æ“‡ä¸Šé™æœªæ›´æ–°
-  - `buildSkillTreeOverlay` postGame æ¨¡å¼åŠ å…¥ localStorage å¼·åˆ¶é‡è¼‰ `mutationSkills`
-  - ç§»é™¤ `_checkAndRepairMutationSkills` åœ¨æ¯æ¬¡é–‹å•Ÿè®Šç•°é¢æ¿æ™‚çš„èª¤å‘¼å«ï¼ˆä¿ç•™ `initMutationSkills` è¼‰å…¥æ™‚çš„é©—ç®—ï¼‰
-  - ç§»é™¤ v0.1.2.0 éºç•™çš„ `[Debug]` console.log
-- éŸ³é‡è¨­å®šåˆ·æ–°å¾Œæ­¸å›žé è¨­å€¼
-  - `window.onload` è£œä¸Š `loadSettings()`ï¼Œç¢ºä¿é é¢è¼‰å…¥æ™‚ç«‹å³è®€å–å·²å­˜è¨­å®š
-  - `loadSettings()` volume æ”¹ç‚ºæ·±åº¦åˆä½µï¼ˆ`Object.assign` é˜²ç¦¦æ€§å¯«æ³•ï¼‰
-  - `playIntroTheme()` æ”¹ç‚ºå³æ™‚è®€å– `gameState.settings.volume`ï¼Œä¸å†ä½¿ç”¨ä¸€æ¬¡æ€§å¿«ç…§
+### 修復
+- 回憶器官升級後 postGame 技能樹強大器官選擇上限未更新
+  - `buildSkillTreeOverlay` postGame 模式加入 localStorage 強制重載 `mutationSkills`
+  - 移除 `_checkAndRepairMutationSkills` 在每次開啟變異面板時的誤呼叫（保留 `initMutationSkills` 載入時的驗算）
+  - 移除 v0.1.2.0 遺留的 `[Debug]` console.log
+- 音量設定刷新後歸回預設值
+  - `window.onload` 補上 `loadSettings()`，確保頁面載入時立即讀取已存設定
+  - `loadSettings()` volume 改為深度合併（`Object.assign` 防禦性寫法）
+  - `playIntroTheme()` 改為即時讀取 `gameState.settings.volume`，不再使用一次性快照
 
 ---
 
 ## v0.1.3.1 - 2026-06-04
 
-### ä¿®å¾©
-- **è®Šç•°æŠ€èƒ½é»žç•°å¸¸**ï¼šå‡ç´šå›žæ†¶å™¨å®˜å¾ŒæŠ€èƒ½é»žæ­¸é›¶ä¸”ç­‰ç´šæœªä¿å­˜ï¼ˆå‡ºäº†é»žæ•¸æ‹¿ä¸åˆ°æ•ˆæžœï¼‰
-  - `_syncMutationSkillPoints()` é˜²æ­¢ `earned - spent` ç‚ºè² æ™‚å¼·åˆ¶è¦†è“‹ç¾æœ‰é»žæ•¸
-  - `initMutationSkills()` æ­£ç¢ºé‚„åŽŸ localStorage çš„ `_points` å¿«ç…§ï¼Œé¿å…æ¯æ¬¡é‡ç®—
-  - æ–°å¢ž `_checkAndRepairMutationSkills()`ï¼šå•Ÿå‹•æ™‚åŠé–‹å•Ÿè®Šç•°é¢æ¿æ™‚è‡ªå‹•é©—ç®—ï¼Œç™¼ç¾ç•°å¸¸è‡ªå‹•é€€é‚„æ‰€æœ‰æŠ€èƒ½é»žä¸¦é¡¯ç¤º âš ï¸ æç¤º
+### 修復
+- **變異技能點異常**：升級回憶器官後技能點歸零且等級未保存（出了點數拿不到效果）
+  - `_syncMutationSkillPoints()` 防止 `earned - spent` 為負時強制覆蓋現有點數
+  - `initMutationSkills()` 正確還原 localStorage 的 `_points` 快照，避免每次重算
+  - 新增 `_checkAndRepairMutationSkills()`：啟動時及開啟變異面板時自動驗算，發現異常自動退還所有技能點並顯示 ⚠️ 提示
 
-### æ–°å¢žï¼ˆåˆä½µè‡ª v0.1.3.0ï¼‰
-- è¶£å‘³æŽ’è¡Œæ¦œï¼šðŸŽ æœ€ä½³æžœçŽ‹ï¼ˆå–®å±€åƒæžœå­æ•¸æœ€å¤šï¼‰
-- è¶£å‘³æŽ’è¡Œæ¦œï¼šðŸ¹ æœ€å¼·çµæˆ¶ï¼ˆå–®å±€æ™®é€šç”Ÿç‰©æ“Šæ®ºæ•¸æœ€å¤šï¼Œä¸å«ç²¾è‹±/Boss/å·¨äºº/æ®ºæ‰‹ï¼‰
-- `sessionStats` æ–°å¢ž `fruitsEaten` å’Œ `normalKills` è¨ˆæ•¸ï¼ˆæ¯å±€é‡ç½®ï¼‰
-- Supabase leaderboard è¡¨æ–°å¢ž `fruits_eaten` / `normal_kills` æ¬„ä½å°æ‡‰
+### 新增（合併自 v0.1.3.0）
+- 趣味排行榜：🍎 最佳果王（單局吃果子數最多）
+- 趣味排行榜：🏹 最強獵戶（單局普通生物擊殺數最多，不含精英/Boss/巨人/殺手）
+- `sessionStats` 新增 `fruitsEaten` 和 `normalKills` 計數（每局重置）
+- Supabase leaderboard 表新增 `fruits_eaten` / `normal_kills` 欄位對應
 
 ---
 
 ## v0.1.3.0 - 2026-06-04
 
-### æ–°å¢ž
-- è¶£å‘³æŽ’è¡Œæ¦œï¼šðŸŽ æœ€ä½³æžœçŽ‹ï¼ˆå–®å±€åƒæžœå­æ•¸æœ€å¤šï¼‰
-- è¶£å‘³æŽ’è¡Œæ¦œï¼šðŸ¹ æœ€å¼·çµæˆ¶ï¼ˆå–®å±€æ™®é€šç”Ÿç‰©æ“Šæ®ºæ•¸æœ€å¤šï¼Œä¸å«ç²¾è‹±/Boss/å·¨äºº/æ®ºæ‰‹ï¼‰
-- `sessionStats` æ–°å¢ž `fruitsEaten` å’Œ `normalKills` è¨ˆæ•¸ï¼ˆæ¯å±€é‡ç½®ï¼‰
-- `submitScore` è‡ªå‹•è£œå¡« `fruits_eaten` / `normal_kills` è‡³ Supabase leaderboard è³‡æ–™è¡¨
+### 新增
+- 趣味排行榜：🍎 最佳果王（單局吃果子數最多）
+- 趣味排行榜：🏹 最強獵戶（單局普通生物擊殺數最多，不含精英/Boss/巨人/殺手）
+- `sessionStats` 新增 `fruitsEaten` 和 `normalKills` 計數（每局重置）
+- `submitScore` 自動補填 `fruits_eaten` / `normal_kills` 至 Supabase leaderboard 資料表
 
 ---
 
 ## v0.1.2.0 - 2026-06-04
 
-### ä¿®å¾©
-- **ç²¾è‹±æ€ª UI åå­—æ¨™ç±¤**ï¼šç¢ºèª `drawEliteCreature()` å·²æ­£ç¢ºè®€å– `elite.label`ï¼ˆHunter Elite é¡¯ç¤ºã€Œâ˜… å¹½éˆçŠ¬ã€ç­‰æ­£ç¢ºåç¨±ï¼‰ï¼Œç„¡éœ€ä¿®æ”¹
-- **çŽ©å®¶æ¯’å‚· tick æœªè™•ç†**ï¼š`updateStatusEffects()` æœ«å°¾æ–°å¢žçŽ©å®¶æ¯’å‚· tickï¼Œæ¯’éœ§çŠ¬å’¬ä¸­å¾Œæ¯’æ•ˆæžœç¾å¯æ­£å¸¸ç”Ÿæ•ˆ
-- **è¼”åŠ©åŠŸèƒ½è¨­å®šåœ¨éŠæˆ²çµæŸæ™‚æœªå„²å­˜**ï¼š`showSkillTree()` èˆ‡ `showVictory()` é–‹é ­åŠ å…¥ `saveSettings()`ï¼Œç¢ºä¿æ­»äº¡/å‹åˆ©å‰æ‰€æœ‰è¨­å®šå­˜å…¥ localStorage
-- **å›žæ†¶å™¨å®˜ç­‰ç´šåœ¨ postGame æœªæ­£ç¢ºè®€å–**ï¼š`showSkillTree()` åŠ å…¥ `initMutationSkills` ä¿éšœï¼Œ`buildSkillTreeOverlay` åŠ å…¥ `[Debug]` log ä¾›ç¢ºèª
+### 修復
+- **精英怪 UI 名字標籤**：確認 `drawEliteCreature()` 已正確讀取 `elite.label`（Hunter Elite 顯示「★ 幽靈犬」等正確名稱），無需修改
+- **玩家毒傷 tick 未處理**：`updateStatusEffects()` 末尾新增玩家毒傷 tick，毒霧犬咬中後毒效果現可正常生效
+- **輔助功能設定在遊戲結束時未儲存**：`showSkillTree()` 與 `showVictory()` 開頭加入 `saveSettings()`，確保死亡/勝利前所有設定存入 localStorage
+- **回憶器官等級在 postGame 未正確讀取**：`showSkillTree()` 加入 `initMutationSkills` 保障，`buildSkillTreeOverlay` 加入 `[Debug]` log 供確認
 
-### èª¿æ•´
-- **è‚‰é£Ÿæ€§ç”Ÿç‰©é€²é£Ÿæ™‚ Aggro ç¯„åœå¾ž Ã—1.5 æ”¹ç‚º Ã—0.5**ï¼šè®“ç”Ÿç‰©èƒ½é †åˆ©é€²é£Ÿè§¸ç™¼æ®ºæ‰‹åŒ–
-- **è‰é£Ÿæ€§é€²åŒ– Lv4**ï¼šå·¨äººåŒ–ç”Ÿç‰©ï¼ˆå« Alphaï¼‰å°çŽ©å®¶å‚·å®³ -15%
-- **è‰é£Ÿæ€§é€²åŒ– Lv5**ï¼šå·¨äººåŒ–ç”Ÿç‰©ï¼ˆå« Alphaï¼‰å°çŽ©å®¶å‚·å®³ -30%
+### 調整
+- **肉食性生物進食時 Aggro 範圍從 ×1.5 改為 ×0.5**：讓生物能順利進食觸發殺手化
+- **草食性進化 Lv4**：巨人化生物（含 Alpha）對玩家傷害 -15%
+- **草食性進化 Lv5**：巨人化生物（含 Alpha）對玩家傷害 -30%
 
 ---
 
@@ -1119,1977 +1119,1977 @@
 
 ## v0.1.1.3 - 2026-06-04
 
-### ä¿®å¾©
-- **é»‘è‰²çµäººä¸‰å½¢æ…‹æ”»æ“Šå®Œå…¨å¤±æ•ˆï¼ˆaggroRange è¦†è“‹ Bugï¼‰**
-  - Phase 1/3 çš„ `'aiming'` å’Œ Phase 2 çš„ `'pumping'` æ¯å¹€è¢« `if (dist < aggroRange)` è¦†è“‹ç‚º `'chasing'` â†’ Boss æ°¸é ä¸é–‹æ§ã€Phase 2 éŸ³æ•ˆæ¯å¹€æ’­æ”¾
-  - ä¿®æ­£ï¼šå„ Phase åŠ å…¥ `state !== 'aiming'` / `state !== 'pumping'` ä¿è­·
-- **é»‘è‰²çµäºº Phase 1/3 çž„æº–ç·šåœ¨èž¢å¹•å¤–ä¸å¯è¦‹**
-  - Boss åœ¨ 1350px ç¹žåœˆè¶…å‡ºèž¢å¹•ï¼ŒdrawBoss cull æŠŠé›·å°„ç·šä¸€èµ·éŽæ¿¾æŽ‰
-  - ä¿®æ­£ï¼šæ–°å¢ž `_drawHunterAimingWarning()` åœ¨ cull å‰å‘¼å«ï¼ŒçŽ©å®¶é ­ä¸ŠåŠ æº–å¿ƒéŽ–å®šç’°
-- **å¹½éˆéš¼è“„åŠ›æ™‚ç¹¼çºŒ kiting å¯èƒ½è·‘å‡ºæ”»æ“Šç¯„åœ**
-  - è¨­è¨ˆæ‡‰ç‚ºã€Œ0.3 ç§’ç«™ç«‹è“„åŠ›ã€ï¼Œç¾å¯¦æ˜¯é‚Šè“„åŠ›é‚Šå¾Œé€€
-  - ä¿®æ­£ï¼šè“„åŠ›ä¸­ï¼ˆ`_aimTarget` å­˜åœ¨ï¼‰æå‰ returnï¼Œå‡çµç§»å‹•
-- **å¹½éˆéš¼çž„æº–ç·šå¤ªç´°å¹¾ä¹Žä¸å¯è¦‹**
-  - `lineWidth 1.5` ç„¡ shadow â†’ é›£ä»¥å¯Ÿè¦º
-  - ä¿®æ­£ï¼šå¼·åŒ–ç‚ºç´…è‰²è™›ç·š + glow + ç›®æ¨™æº–å¿ƒï¼Œèˆ‡ Boss é›·å°„åŒç­‰è¦–è¦ºå¼·åº¦
-- **ç²¾è‹±æ€ªç®­é ­åœ¨ Boss èž¢å¹•å¤–æ™‚è¢«æŠ‘åˆ¶**
-  - `drawEliteArrow` ç•¶ Boss off-screen æ™‚ä¹Ÿä¸ç•«ç²¾è‹±ç®­é ­ï¼ŒPhase 1 æœŸé–“çŽ©å®¶æ‰¾ä¸åˆ°éš¼
-  - ä¿®æ­£ï¼šç§»é™¤ Boss off-screen æŠ‘åˆ¶ï¼Œç²¾è‹±ç®­é ­ç¨ç«‹é¡¯ç¤º
+### 修復
+- **黑色獵人三形態攻擊完全失效（aggroRange 覆蓋 Bug）**
+  - Phase 1/3 的 `'aiming'` 和 Phase 2 的 `'pumping'` 每幀被 `if (dist < aggroRange)` 覆蓋為 `'chasing'` → Boss 永遠不開槍、Phase 2 音效每幀播放
+  - 修正：各 Phase 加入 `state !== 'aiming'` / `state !== 'pumping'` 保護
+- **黑色獵人 Phase 1/3 瞄準線在螢幕外不可見**
+  - Boss 在 1350px 繞圈超出螢幕，drawBoss cull 把雷射線一起過濾掉
+  - 修正：新增 `_drawHunterAimingWarning()` 在 cull 前呼叫，玩家頭上加準心鎖定環
+- **幽靈隼蓄力時繼續 kiting 可能跑出攻擊範圍**
+  - 設計應為「0.3 秒站立蓄力」，現實是邊蓄力邊後退
+  - 修正：蓄力中（`_aimTarget` 存在）提前 return，凍結移動
+- **幽靈隼瞄準線太細幾乎不可見**
+  - `lineWidth 1.5` 無 shadow → 難以察覺
+  - 修正：強化為紅色虛線 + glow + 目標準心，與 Boss 雷射同等視覺強度
+- **精英怪箭頭在 Boss 螢幕外時被抑制**
+  - `drawEliteArrow` 當 Boss off-screen 時也不畫精英箭頭，Phase 1 期間玩家找不到隼
+  - 修正：移除 Boss off-screen 抑制，精英箭頭獨立顯示
 
-### æ–°å¢ž
-- `docs/BOSS_RANGED_DESIGN_TRAPS.md`ï¼šè¨˜éŒ„ 6 ç¨® Boss / é ç¨‹æ€ªè¨­è¨ˆé™·é˜±åŠè§£æ³•ï¼Œå«è¨­è¨ˆ Checklist
+### 新增
+- `docs/BOSS_RANGED_DESIGN_TRAPS.md`：記錄 6 種 Boss / 遠程怪設計陷阱及解法，含設計 Checklist
 
 ---
 
 ## v0.1.1.2 - 2026-06-04
 
-### ä¿®å¾©
-- **é»‘è‰²çµäººä¸‰å½¢æ…‹æ”»æ“Šå®Œå…¨å¤±æ•ˆ**ï¼ˆæ ¹æœ¬åŽŸå› ï¼š`aggroRange` è¦†è“‹ Bugï¼‰
-  - æ¯å¹€ `if (dist < aggroRange) boss.state = 'chasing'` ç„¡æ¢ä»¶è¦†è“‹æˆ°é¬¥ä¸­é–“ç‹€æ…‹ï¼Œå°Žè‡´ `aiming`ï¼ˆPhase 1/3ï¼‰è¢«æ‰“æ–·æ¯å¹€é‡ç½®ã€`pumping`ï¼ˆPhase 2ï¼‰`_pumpUntil` æ¯å¹€é‡è¨­æ°¸é ä¸è§¸ç™¼é–‹æ§
-  - ä¿®æ­£ï¼šå„ Phase aggroRange åˆ¤æ–·åŠ å…¥ `boss.state !== 'aiming'` / `boss.state !== 'pumping'` é˜²è­·
-- **é»‘è‰²çµäºº Phase 1/3 é›·å°„çž„æº–ç·šèž¢å¹•å¤–ä¸å¯è¦‹**
-  - Boss ä»¥ idealDist 1350px ç¹žåœˆï¼Œè¶…å‡ºèž¢å¹•å¯è¦–ç¯„åœï¼Œ`drawBoss` cull å¾Œé›·å°„ç·šä¸è¢«ç¹ªè£½
-  - ä¿®æ­£ï¼šæ–°å¢ž `_drawHunterAimingWarning()` åœ¨ cull å‰å‘¼å«ï¼Œå«ï¼šç´…è‰²è™›ç·šå¾ž Boss æŒ‡å‘çŽ©å®¶ï¼ˆèž¢å¹•å¤–ä¹Ÿç•«ï¼‰ï¼‹çŽ©å®¶é ­ä¸Šè„ˆå‹•æº–å¿ƒéŽ–å®šç’°
-  - ç§»é™¤é‡è¤‡çš„ `_drawHunter` å…§èˆŠç‰ˆé›·å°„ç·šä»£ç¢¼
+### 修復
+- **黑色獵人三形態攻擊完全失效**（根本原因：`aggroRange` 覆蓋 Bug）
+  - 每幀 `if (dist < aggroRange) boss.state = 'chasing'` 無條件覆蓋戰鬥中間狀態，導致 `aiming`（Phase 1/3）被打斷每幀重置、`pumping`（Phase 2）`_pumpUntil` 每幀重設永遠不觸發開槍
+  - 修正：各 Phase aggroRange 判斷加入 `boss.state !== 'aiming'` / `boss.state !== 'pumping'` 防護
+- **黑色獵人 Phase 1/3 雷射瞄準線螢幕外不可見**
+  - Boss 以 idealDist 1350px 繞圈，超出螢幕可視範圍，`drawBoss` cull 後雷射線不被繪製
+  - 修正：新增 `_drawHunterAimingWarning()` 在 cull 前呼叫，含：紅色虛線從 Boss 指向玩家（螢幕外也畫）＋玩家頭上脈動準心鎖定環
+  - 移除重複的 `_drawHunter` 內舊版雷射線代碼
 
 ---
 
 ## v0.1.1.1 - 2026-06-04
 
-### ä¿®å¾©
-- æ¯’éœ§éš¼é”åˆ° 3 å€‹æ¯’éœ§ä¸Šé™å¾Œï¼Œ`attackCooldown` æœªé‡ç½®å°Žè‡´æ¯å¹€è§¸ç™¼æ”»æ“Šåˆ¤æ–·ï¼Œkiting ç„¡åœé “é€£çºŒå¾Œé€€ï¼ˆé€ƒè·‘ä¸æ”»æ“Šï¼‰
-- æ¯’éœ§éš¼é”ä¸Šé™å¾Œè£œè¨­ `_postShotTimer`ï¼Œé˜²æ­¢æ¯«ç„¡åœé “çš„å¾Œé€€å¾ªç’°
-- æ¯’éœ§é£›è¡Œæ¯’çƒæ”¹ç”¨ `_venomFirePos`ï¼ˆç™¼å°„çž¬é–“ä½ç½®ï¼‰ä½œç‚ºæ’å€¼èµ·é»žï¼Œé¿å…éš¨ elite ç§»å‹•è€ŒæŠ–å‹•
-- æ¯’éœ§é£›è¡Œæ¯’çƒè¦–è¦ºå¼·åŒ–ï¼šå¤–å±¤å…‰æšˆåŠå¾‘ 14px + å…§æ ¸äº®ç¶ åŠå¾‘ 7pxï¼Œ`#00FF66` å¼·å…‰æšˆï¼ˆåŽŸç‚ºæš—è‰² 8pxï¼‰
-- è…è•æ¶²é«”è¦–è¦ºå¼·åŒ–ï¼šé€æ˜Žåº¦ç”± 0.35 â†’ æœ€é«˜ 0.55 + æ·¡å…¥æ·¡å‡ºï¼ŒåŠ ä¸Šäº®ç¶ è‰²é‚Šæ¡† glow
+### 修復
+- 毒霧隼達到 3 個毒霧上限後，`attackCooldown` 未重置導致每幀觸發攻擊判斷，kiting 無停頓連續後退（逃跑不攻擊）
+- 毒霧隼達上限後補設 `_postShotTimer`，防止毫無停頓的後退循環
+- 毒霧飛行毒球改用 `_venomFirePos`（發射瞬間位置）作為插值起點，避免隨 elite 移動而抖動
+- 毒霧飛行毒球視覺強化：外層光暈半徑 14px + 內核亮綠半徑 7px，`#00FF66` 強光暈（原為暗色 8px）
+- 腐蝕液體視覺強化：透明度由 0.35 → 最高 0.55 + 淡入淡出，加上亮綠色邊框 glow
 
 ---
 
 ## v0.1.1.0 - 2026-06-04
 
-### ä¿®å¾©
-- é»‘è‰²çµäººè¡€ç®¡æ¨™è¨˜é¡¯ç¤ºéŒ¯èª¤ï¼ˆx5 é¡¯ç¤ºç‚º x4ï¼Œå·²ä¿®æ­£ç‚ºæ­£ç¢ºç®¡æ•¸ï¼‰
-- é»‘è‰²çµäººç¬¬ä¸€å½¢æ…‹åŠç¬¬ä¸‰å½¢æ…‹ Sniper ç´…è‰²é›·å°„çž„æº–ç·šä¸é¡¯ç¤ºï¼ˆé‡å¯«ç‚ºå¾ž Boss ä¸­å¿ƒè‡³ç›®æ¨™çš„ç²¾ç¢ºç·šæ®µï¼‰
-- ä¸‰éš¼å­å½ˆç¼ºå°‘ type æ¬„ä½ï¼šå¹½éˆéš¼ï¼ˆå–®ç™¼ï¼‰ç¾æ­£ç¢ºæ¨™è¨˜ç‚º `sniper`ï¼Œæš—å½±éš¼æ•£å½ˆä¿æŒ `shotgun_pellet`
-- æ¯’éœ§éš¼æ”»æ“Šé£›è¡Œè»Œè·¡è¦–è¦ºç¼ºå¤±ï¼ˆè£œä¸Šæš—ç¶ è‰²æ’å€¼æ¯’çƒï¼Œå¸¶éœ§æ°£å…‰æšˆï¼‰
-- æ¯’éœ§éš¼è½åœ°è…è•æ¶²é«”åœ¨å›°é›£åœ°åœ–æœªç¹ªè£½ï¼ˆåœ¨ hud.js è£œä¸Š venomFalcon puddle ç¨ç«‹ç¹ªè£½é‚è¼¯ï¼‰
-- ç¬¬ä¸‰å½¢æ…‹èžåˆæŠ€çž„æº–æ™‚è£œä¸Š 5 æ¢æ©˜è‰²éš¨æ©Ÿæ–¹å‘æ•£å°„é è­¦ç·š
+### 修復
+- 黑色獵人血管標記顯示錯誤（x5 顯示為 x4，已修正為正確管數）
+- 黑色獵人第一形態及第三形態 Sniper 紅色雷射瞄準線不顯示（重寫為從 Boss 中心至目標的精確線段）
+- 三隼子彈缺少 type 欄位：幽靈隼（單發）現正確標記為 `sniper`，暗影隼散彈保持 `shotgun_pellet`
+- 毒霧隼攻擊飛行軌跡視覺缺失（補上暗綠色插值毒球，帶霧氣光暈）
+- 毒霧隼落地腐蝕液體在困難地圖未繪製（在 hud.js 補上 venomFalcon puddle 獨立繪製邏輯）
+- 第三形態融合技瞄準時補上 5 條橘色隨機方向散射預警線
 
 ---
 
 ## v0.1.0.3 - 2026-06-03
 
-### ä¿®å¾©
+### 修復
 
-#### å¹³è¡¡æ€§ä¿®å¾©
+#### 平衡性修復
 
-- **æ“Šæ®º XP å…¬å¼ä¿®æ­£**ï¼ˆ`systems/combat.js`ï¼‰ï¼š`handleKill()` çš„ hostile æ“Šæ®º XP å…¬å¼å¾ž `Math.min(80, 30 + Math.round((maxHp/50) * 50))` æ”¹ç‚º `Math.min(80, 30 + Math.round((maxHp/50) * 10))`ï¼Œç§»é™¤èˆŠå…¬å¼å°Žè‡´å¹¾ä¹Žæ‰€æœ‰é›£åº¦è‚‰é£Ÿæ€ªéƒ½è§¸ç™¼ cap 80 çš„å•é¡Œï¼ŒXP ç¾åœ¨éš¨ HP å‹•æ…‹è®ŠåŒ–ï¼ˆç°¡å–®ç´„ 40ã€æ™®é€šç´„ 45ã€å›°é›£ç´„ 55ï¼‰
+- **擊殺 XP 公式修正**（`systems/combat.js`）：`handleKill()` 的 hostile 擊殺 XP 公式從 `Math.min(80, 30 + Math.round((maxHp/50) * 50))` 改為 `Math.min(80, 30 + Math.round((maxHp/50) * 10))`，移除舊公式導致幾乎所有難度肉食怪都觸發 cap 80 的問題，XP 現在隨 HP 動態變化（簡單約 40、普通約 45、困難約 55）
 
-- **è‚‰é£Ÿæ€§æ€ªç‰©å¤œæ™šå¢žå¼·**ï¼ˆ`systems/spawning.js`ï¼‰ï¼š`_makeCarnCreature()` æ–°å¢žå¤œæ™šå€çŽ‡è¨ˆç®—ï¼Œè£œå……ç”Ÿæˆçš„è‚‰é£Ÿæ€ªä¾ç•¶å‰å¤œæ™šæ•¸å¥—ç”¨ HP/æ”»æ“Š `Ã—1.2^å¤œ`ã€é€Ÿåº¦ `Ã—1.1^å¤œ`ï¼Œç¬¬1å¤œç´„ +20%/+10%ã€ç¬¬3å¤œç´„ +73%/+33%ï¼›è‰é£Ÿæ€§ç”Ÿç‰©ä¸å—å½±éŸ¿
+- **肉食性怪物夜晚增強**（`systems/spawning.js`）：`_makeCarnCreature()` 新增夜晚倍率計算，補充生成的肉食怪依當前夜晚數套用 HP/攻擊 `×1.2^夜`、速度 `×1.1^夜`，第1夜約 +20%/+10%、第3夜約 +73%/+33%；草食性生物不受影響
 
-- **ç°¡å–®é›£åº¦ Boss é€Ÿåº¦ä¿®æ­£**ï¼ˆ`map/easymap.js`ï¼‰ï¼šä¸‰éš» Boss é€Ÿåº¦å¾žåœ°åœ–è¨­å®šçš„éŽä½Žå€¼ï¼ˆ1.0/1.3/1.2ï¼‰ä¿®æ­£ç‚ºèˆ‡ `BOSS_CONFIG` ä¸€è‡´çš„æ­£ç¢ºå€¼ï¼ˆé»‘ç†Š 3.0ã€å¤§ç™½é¯Š 3.9ã€è çŽ‹ 3.6ï¼‰
+- **簡單難度 Boss 速度修正**（`map/easymap.js`）：三隻 Boss 速度從地圖設定的過低值（1.0/1.3/1.2）修正為與 `BOSS_CONFIG` 一致的正確值（黑熊 3.0、大白鯊 3.9、蠍王 3.6）
 
-- **ç²¾è‹±æ€ª HP å¥—ç”¨åœ°åœ–é›£åº¦å€çŽ‡**ï¼ˆ`systems/elite.js`ï¼‰ï¼šEasy/Normal åœ°åœ–çš„ä¸‰çŠ¬/ä¸‰éš¼ç²¾è‹±æ€ª HP è¨ˆç®—æ–°å¢žä¹˜ä¸Š `creatureStrength.hostile.hpMultiplier`ï¼Œä¿®æ­£æ™®é€šé›£åº¦ç²¾è‹± HP èˆ‡ç°¡å–®é›£åº¦ç›¸åŒçš„å•é¡Œï¼ˆæ™®é€šç¬¬1å¤œ 250 â†’ 375ã€ç¬¬3å¤œ 500 â†’ 1500ï¼‰ï¼›å›°é›£åœ°åœ–ç¶­æŒå›ºå®šæ•¸å€¼ä¸è®Š
+- **精英怪 HP 套用地圖難度倍率**（`systems/elite.js`）：Easy/Normal 地圖的三犬/三隼精英怪 HP 計算新增乘上 `creatureStrength.hostile.hpMultiplier`，修正普通難度精英 HP 與簡單難度相同的問題（普通第1夜 250 → 375、第3夜 500 → 1500）；困難地圖維持固定數值不變
 
-- **éš±è—å™¨å®˜æŽ‰è½ Bug ä¿®å¾©**ï¼ˆ`systems/organs.js`ï¼‰ï¼š`handleEliteKill()` çš„ Hunter ç²¾è‹±æ€ªåˆ†æ”¯ï¼ˆ`isHunterElite`ï¼‰åœ¨å‘¼å« `_handleHunterEliteKill()` å¾Œè£œä¸Šéš±è—å™¨å®˜æŽ‰è½åˆ¤æ–·ï¼Œä¿®å¾© v0.1.0.2 èµ·ä¸‰çŠ¬/ä¸‰éš¼æ“Šæ®ºå¾Œå®Œå…¨ä¸æŽ‰è½éš±è—å™¨å®˜çš„å•é¡Œ
+- **隱藏器官掉落 Bug 修復**（`systems/organs.js`）：`handleEliteKill()` 的 Hunter 精英怪分支（`isHunterElite`）在呼叫 `_handleHunterEliteKill()` 後補上隱藏器官掉落判斷，修復 v0.1.0.2 起三犬/三隼擊殺後完全不掉落隱藏器官的問題
 
 ---
 
 ## v0.1.0.2 - 2026-06-03
 
-### æ–°å¢ž
-- **è®Šç•°é¢æ¿å·¦æ¬„æ•´åˆ**ï¼ˆ`systems/evolution.js`ï¼‰ï¼š`_buildMutationSkillContent()` å·¦æ¬„é ‚éƒ¨æ–°å¢žå¯ç”¨è®Šç•°é»žé¡¯ç¤ºï¼ˆ`å¯ç”¨è®Šç•°é»žï¼šN`ï¼‰ï¼›åº•éƒ¨æ–°å¢žå…Œæ›æŒ‰éˆ•ï¼ˆ100 æŠ€èƒ½é»ž â†’ 10 è®Šç•°é»žï¼‰ï¼Œå…Œæ›å¾Œå³æ™‚ replaceChild é‡å»ºé¢æ¿
+### 新增
+- **變異面板左欄整合**（`systems/evolution.js`）：`_buildMutationSkillContent()` 左欄頂部新增可用變異點顯示（`可用變異點：N`）；底部新增兌換按鈕（100 技能點 → 10 變異點），兌換後即時 replaceChild 重建面板
 
-### ä¿®å¾©
-- **è®Šç•°æŠ€èƒ½é»ž NaN å®Œæ•´ä¿®å¾©**ï¼ˆ`systems/mutation.js`ã€`systems/evolution.js`ï¼‰ï¼š`_syncMutationSkillPoints()` åœ¨ `mutationData` å°šæœªåˆå§‹åŒ–æ™‚è£œè¨­é è¨­å€¼ 0ï¼›`buildSkillTreeOverlay()` é–‹é ­å¼·åˆ¶å‘¼å« `_syncMutationSkillPoints()`ï¼›æŠ€èƒ½é»žæ•¸é¡¯ç¤ºåŠ å…¥é˜²å‘†ï¼ˆ`?? 0`ï¼‰ï¼›å™¨å®˜å‡ç´šæŒ‰éˆ•æ”¹ç‚º replaceChild æ–¹å¼é‡å»ºé¢æ¿ç¢ºä¿é»žæ•¸å³æ™‚åˆ·æ–°
-- **é¦–é è·¯å¾‘è®Šç•°é»žé¡¯ç¤ºä¿®å¾©**ï¼ˆ`systems/evolution.js`ï¼‰ï¼š`buildSkillTreeOverlay(fromHome)` çš„ localStorage åŒæ­¥å€å¡Šè£œè®€ `mutationData` å’Œ `mutationSkills`ï¼Œç¢ºä¿é¦–é é€²å…¥èˆ‡ postGame è·¯å¾‘è®€å–ç›¸åŒè³‡æ–™ï¼›`getMutationUpgradeCost` åƒæ•¸ç”±éŒ¯èª¤çš„ `def.id`ï¼ˆå­—ä¸²ï¼‰æ”¹ç‚º `lv`ï¼ˆç­‰ç´šæ•¸å­—ï¼‰ï¼Œæ¶ˆé™¤å‡ç´šè²»ç”¨ NaN é¡¯ç¤º
-- **è¿”å›žæŠ€èƒ½æ¨¹æŒ‰éˆ•é‡è¤‡ ðŸŒ¿ ä¿®å¾©**ï¼ˆ`systems/evolution.js`ï¼‰ï¼šåˆ‡æ›è‡³è®Šç•°æŠ€èƒ½æ¨¹æ™‚ï¼ŒæŒ‰éˆ•æ–‡å­—å¾ž `ðŸŒ¿ ðŸŒ¿ æŠ€èƒ½æ¨¹` æ”¹ç‚º `ðŸŒ¿ æŠ€èƒ½`
-- **Easy/Normal ä¸‰çŠ¬ç²¾è‹±æ€ªè¡€é‡ä¿®å¾©**ï¼ˆ`systems/elite.js`ï¼‰ï¼š`_spawnHunterElite()` æ”¹ä¾åœ°åœ– `elites` å€çŽ‡å‹•æ…‹è¨ˆç®— HP/å‚·å®³/é€Ÿåº¦ï¼ˆEasy ç¬¬ä¸€å¤œ HP å¾žå›ºå®š 480 â†’ æ­£ç¢ºçš„ 250ï¼‰
-- **é»‘è‰²çµäºº Boss æ•¸å€¼è£œå…¥**ï¼ˆ`map/hardmap.js`ï¼‰ï¼š`hp: 800`ã€`speed: 4.0`ã€`damage: 45`ï¼ˆåŽŸç‚º nullï¼‰
-- **å›°é›£åœ°åœ–è‰é£Ÿæ€§ç”Ÿç‰©å‚·å®³å€çŽ‡ä¿®å¾©**ï¼ˆ`systems/spawning.js`ï¼‰ï¼š`_makeHerbCreature()` çš„ damage è£œä¹˜ `str.damageMultiplier`ï¼Œèˆ‡ HP/é€Ÿåº¦è¨ˆç®—ä¸€è‡´
+### 修復
+- **變異技能點 NaN 完整修復**（`systems/mutation.js`、`systems/evolution.js`）：`_syncMutationSkillPoints()` 在 `mutationData` 尚未初始化時補設預設值 0；`buildSkillTreeOverlay()` 開頭強制呼叫 `_syncMutationSkillPoints()`；技能點數顯示加入防呆（`?? 0`）；器官升級按鈕改為 replaceChild 方式重建面板確保點數即時刷新
+- **首頁路徑變異點顯示修復**（`systems/evolution.js`）：`buildSkillTreeOverlay(fromHome)` 的 localStorage 同步區塊補讀 `mutationData` 和 `mutationSkills`，確保首頁進入與 postGame 路徑讀取相同資料；`getMutationUpgradeCost` 參數由錯誤的 `def.id`（字串）改為 `lv`（等級數字），消除升級費用 NaN 顯示
+- **返回技能樹按鈕重複 🌿 修復**（`systems/evolution.js`）：切換至變異技能樹時，按鈕文字從 `🌿 🌿 技能樹` 改為 `🌿 技能`
+- **Easy/Normal 三犬精英怪血量修復**（`systems/elite.js`）：`_spawnHunterElite()` 改依地圖 `elites` 倍率動態計算 HP/傷害/速度（Easy 第一夜 HP 從固定 480 → 正確的 250）
+- **黑色獵人 Boss 數值補入**（`map/hardmap.js`）：`hp: 800`、`speed: 4.0`、`damage: 45`（原為 null）
+- **困難地圖草食性生物傷害倍率修復**（`systems/spawning.js`）：`_makeHerbCreature()` 的 damage 補乘 `str.damageMultiplier`，與 HP/速度計算一致
 
 ---
 
 ## v0.1.0.1 - 2026-06-03
 
-### æ–°å¢ž
-- **GOBLIN NEST Splash ç•«é¢**ï¼ˆ`systems/ui.js`ã€`main.js`ï¼‰ï¼šå•Ÿå‹•æ™‚é¡¯ç¤ºé–‹ç™¼è€…å“ç‰Œé ï¼Œé»žæ“Šå¾Œæ’­æ”¾ Intro Theme ä¸¦é€²å…¥é¦–é 
-- **é¦–é èƒŒæ™¯éŸ³æ¨‚**ï¼ˆ`config/gameConfig.js`ã€`systems/audio.js`ï¼‰ï¼š`playIntroTheme()` / `stopIntroTheme()`ï¼›é€²å…¥éŠæˆ²æ™‚è‡ªå‹•åœæ­¢
-- **é¦–é å…¬å‘Šæ¨™ç±¤**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ¨™é¡Œå³ä¸Šå´æ—‹è½‰å°ç« ï¼Œäº¤æ›¿é¡¯ç¤ºã€Œå·¨äººè¦ºé†’ï¼ã€ã€Œçµäººå…¥ä¾µï¼ã€
+### 新增
+- **GOBLIN NEST Splash 畫面**（`systems/ui.js`、`main.js`）：啟動時顯示開發者品牌頁，點擊後播放 Intro Theme 並進入首頁
+- **首頁背景音樂**（`config/gameConfig.js`、`systems/audio.js`）：`playIntroTheme()` / `stopIntroTheme()`；進入遊戲時自動停止
+- **首頁公告標籤**（`systems/ui.js`）：標題右上側旋轉印章，交替顯示「巨人覺醒！」「獵人入侵！」
 
-### èª¿æ•´
-- è®Šç•°æŠ€èƒ½æ¨¹æŒ‰éˆ•ç§»è‡³æŠ€èƒ½æ¨¹ Header å³å´ï¼›é¢æ¿æ”¹ç‚ºå·¦å³å…©æ¬„ï¼ˆå·¦ï¼šè®Šç•°å™¨å®˜ã€å³ï¼šæŠ€èƒ½é»ž/æŠ€èƒ½ï¼‰
-- Splash æ¨™é¡Œæ”¹ç‚ºç«‹é«”é™°å½±æ¨£å¼
+### 調整
+- 變異技能樹按鈕移至技能樹 Header 右側；面板改為左右兩欄（左：變異器官、右：技能點/技能）
+- Splash 標題改為立體陰影樣式
 
-### ä¿®å¾©
-- TOP10 é›£åº¦åˆ‡æ›é †åºå›ºå®šç‚º ç°¡å–®â†’æ™®é€šâ†’å›°é›£ï¼Œä¸å†ä¾è³´ DB æŸ¥è©¢
-- æŠ€èƒ½æ¨¹ Header é‡è¤‡ ðŸŒ¿ emoji ä¿®å¾©
-- è®Šç•°æŠ€èƒ½é»žå‡ç´šè²»ç”¨ NaN ä¿®å¾©ï¼ˆ`sk.level` ç©ºå€¼é˜²å‘†ï¼‰
-- åˆ‡æ›è®Šç•°é¢æ¿å¾Œè¿”å›žæŠ€èƒ½æ¨¹ä½ˆå±€é‚„åŽŸä¿®å¾©ï¼ˆ`display:flex` æ˜Žç¢ºè¨­å®šï¼‰
+### 修復
+- TOP10 難度切換順序固定為 簡單→普通→困難，不再依賴 DB 查詢
+- 技能樹 Header 重複 🌿 emoji 修復
+- 變異技能點升級費用 NaN 修復（`sk.level` 空值防呆）
+- 切換變異面板後返回技能樹佈局還原修復（`display:flex` 明確設定）
 
 ---
 
 ## v0.1.0.0 - 2026-06-03
 
-### æ–°å¢ž
-- **å›°é›£é›£åº¦åœ°åœ–**ï¼ˆ`map/hardmap.js`ï¼‰ï¼šç”Ÿç‰©å¼·åº¦ Ã—2.5ã€ä¾µç•¥è·é›¢ 600ã€ç²¾è‹±æ€ªèˆ‡ Boss ä¸å›žè¡€
-- **é»‘è‰²çµäºº Boss**ï¼ˆ`systems/boss.js`ï¼‰ï¼šå›°é›£åœ°åœ–å°ˆå±¬ï¼Œ5ç®¡è¡€æ¢åˆ¶ï¼›ä¸‰å½¢æ…‹ï¼ˆç‹™æ“Š/æ•£å½ˆ/èžåˆæŠ€ï¼‰ï¼›ç‰›ä»”å¸½+æ§ Canvas å¤–è§€ï¼›å°è©žå­—å¹•ç³»çµ±ï¼›æ­»äº¡çŽå‹µ +1000XP / +5æŠ€èƒ½é»ž / +5è®Šç•°é»žï¼›æ¯ç®¡æ“Šç ´ +30 ç§’éŠæˆ²æ™‚é–“ï¼ˆæœ€å¤š +120 ç§’ï¼‰
-- **éœéŸ³çµéšŠç²¾è‹±æ€ª**ï¼ˆ`systems/elite.js`ï¼‰ï¼šå›°é›£åœ°åœ–ä¸‰éš¼ï¼ˆå¹½éˆéš¼â˜…/æš—å½±éš¼â˜…â˜…/æ¯’éœ§éš¼â˜…â˜…â˜…ï¼‰ï¼›æ™®é€š/ç°¡å–®åœ°åœ–ä¸‰çŠ¬ï¼ˆå¹½éˆçŠ¬/æš—å½±çŠ¬/æ¯’éœ§çŠ¬ï¼‰ï¼›å‡ºå ´å»£æ’­å­—å¹• + è­¦å ±éŸ³æ•ˆ
-- **è¶£å‘³æ¦œã€ŒðŸŽ¯ çµäººçµ‚çµè€…ã€**ï¼ˆ`config/supabase.js`ã€`systems/leaderboard.js`ï¼‰ï¼šå›°é›£åœ°åœ–æœ€å¿«æ“Šæ®ºé»‘è‰²çµäºº
-- **éŸ³æ•ˆç³»çµ±æ“´å……**ï¼ˆ`config/gameConfig.js`ï¼‰ï¼šé»‘è‰²çµäººï¼ˆ18 çµ„ï¼‰ã€ä¸‰éš¼ï¼ˆ15 çµ„ï¼‰ã€ä¸‰çŠ¬ï¼ˆ8 çµ„ï¼‰ã€é˜¿å¥‡çˆ¾ï¼ˆ5 çµ„ï¼‰éŸ³æ•ˆ
+### 新增
+- **困難難度地圖**（`map/hardmap.js`）：生物強度 ×2.5、侵略距離 600、精英怪與 Boss 不回血
+- **黑色獵人 Boss**（`systems/boss.js`）：困難地圖專屬，5管血條制；三形態（狙擊/散彈/融合技）；牛仔帽+槍 Canvas 外觀；台詞字幕系統；死亡獎勵 +1000XP / +5技能點 / +5變異點；每管擊破 +30 秒遊戲時間（最多 +120 秒）
+- **靜音獵隊精英怪**（`systems/elite.js`）：困難地圖三隼（幽靈隼★/暗影隼★★/毒霧隼★★★）；普通/簡單地圖三犬（幽靈犬/暗影犬/毒霧犬）；出場廣播字幕 + 警報音效
+- **趣味榜「🎯 獵人終結者」**（`config/supabase.js`、`systems/leaderboard.js`）：困難地圖最快擊殺黑色獵人
+- **音效系統擴充**（`config/gameConfig.js`）：黑色獵人（18 組）、三隼（15 組）、三犬（8 組）、阿奇爾（5 組）音效
 
-### èª¿æ•´
-- åœ°åœ–é¸æ“‡å›°é›£é›£åº¦æ­£å¼æŽ¥å…¥ `HARD_MAP`ï¼ˆ`systems/ui.js`ï¼‰
-- é»‘è‰²çµäººä½¿ç”¨ç¨ç«‹ä¸»é¡Œæ›² `Super boss.mp3`
-- æ‰€æœ‰ Boss æ­»äº¡è·¯ç”±æ”¹ç‚ºçµ±ä¸€ `handleBossKill()`ï¼Œæ”¯æ´å¤šç®¡è¡€æ¢ï¼ˆ`systems/combat.js`ã€`systems/player.js`ï¼‰
+### 調整
+- 地圖選擇困難難度正式接入 `HARD_MAP`（`systems/ui.js`）
+- 黑色獵人使用獨立主題曲 `Super boss.mp3`
+- 所有 Boss 死亡路由改為統一 `handleBossKill()`，支援多管血條（`systems/combat.js`、`systems/player.js`）
 
 ---
 
 ## v0.0.69.0 - 2026-06-03
 
-### æ–°å¢ž
-- **è®Šç•°æŠ€èƒ½æ¨¹**ï¼ˆ`systems/evolution.js`ã€`systems/mutation.js`ã€`systems/gameState.js`ã€`lang/`ï¼‰ï¼šæŠ€èƒ½æ¨¹é¢æ¿å³ä¸Šè§’æ–°å¢žã€Œâš—ï¸ è®Šç•°ã€æŒ‰éˆ•ï¼›`_showMutationSkillPanel()` å­é¢æ¿ï¼›ã€Œå›žæ†¶å™¨å®˜ã€æŠ€èƒ½ï¼ˆ0/3ï¼Œæ¯ç­‰ +1 éš±è—å™¨å®˜ä¿ç•™ï¼‰ï¼›`_upgradeMutationSkill()`ï¼›æŠ€èƒ½é»žæ¯ 50 è®Šç•°ç¸½ç­‰ç´š +1ï¼›`DEFAULT_MUTATION_SKILLS`ã€`initMutationSkills()`ã€`_saveMutationSkills()`ã€`_syncMutationSkillPoints()`ï¼›éš±è—å™¨å®˜é¸æ“‡æ”¹ç‚ºå¤šé¸ï¼ˆä¸Šé™ä¾ recallOrgan ç­‰ç´šï¼‰
-- **å›°é›£é›£åº¦è§£éŽ–**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`showMapSelect()` ä¸­ hard locked æ”¹ç‚º false
-- **ç¬¬äºŒç« åŠ‡æƒ…**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`showGuideStory()` åŠ å…¥ç« ç¯€ Tab å°Žèˆªï¼›`_getGuideStoryPages()` æ–°å¢ž 4 é ï¼ˆç¬¬ä¸‰ç« çµäººçš„è¶³è·¡ Ã— 3 + Coming Soon å‹•æ…‹é ï¼‰ï¼›`renderPage()` æ”¯æ´ `customRender` å›žå‘¼ï¼›`chapter2Unlocked` localStorage æŽ§åˆ¶è§£éŽ–
-- **é€šé—œè§£éŽ–è¨˜éŒ„**ï¼ˆ`systems/boss.js`ï¼‰ï¼šæ™®é€šé›£åº¦é€šé—œå¯«å…¥ `chapter2Unlocked: 'true'`
-- **localStorage é€šé—œçµ±è¨ˆ**ï¼ˆ`systems/boss.js`ï¼‰ï¼š`_recordClearStats()`ã€`_recordBossKill()`ï¼›é€šé—œæ™‚è¨˜éŒ„é›£åº¦ / è§’è‰² / Boss æ“Šæ®ºæ¬¡æ•¸
+### 新增
+- **變異技能樹**（`systems/evolution.js`、`systems/mutation.js`、`systems/gameState.js`、`lang/`）：技能樹面板右上角新增「⚗️ 變異」按鈕；`_showMutationSkillPanel()` 子面板；「回憶器官」技能（0/3，每等 +1 隱藏器官保留）；`_upgradeMutationSkill()`；技能點每 50 變異總等級 +1；`DEFAULT_MUTATION_SKILLS`、`initMutationSkills()`、`_saveMutationSkills()`、`_syncMutationSkillPoints()`；隱藏器官選擇改為多選（上限依 recallOrgan 等級）
+- **困難難度解鎖**（`systems/ui.js`）：`showMapSelect()` 中 hard locked 改為 false
+- **第二章劇情**（`systems/ui.js`）：`showGuideStory()` 加入章節 Tab 導航；`_getGuideStoryPages()` 新增 4 頁（第三章獵人的足跡 × 3 + Coming Soon 動態頁）；`renderPage()` 支援 `customRender` 回呼；`chapter2Unlocked` localStorage 控制解鎖
+- **通關解鎖記錄**（`systems/boss.js`）：普通難度通關寫入 `chapter2Unlocked: 'true'`
+- **localStorage 通關統計**（`systems/boss.js`）：`_recordClearStats()`、`_recordBossKill()`；通關時記錄難度 / 角色 / Boss 擊殺次數
 
 ---
 
 ## v0.0.68.0 - 2026-06-03
 
-### ä¿®å¾©
-- **ç”Ÿç‰©é«”åž‹éš¨è¦–é‡Žç¸®æ”¾ä¿®å¾©**ï¼ˆ`systems/creatures.js`ã€`systems/boss.js`ã€`systems/hud.js`ï¼‰ï¼š`drawCreatureShape`ã€`_drawCreatureGlow`ã€`drawNeutralCreatures`ã€`drawHostileCreatures`ã€`drawBoss`ã€`drawBossShape` åŠçŽ©å®¶ç¹ªè£½å‡æ”¹ç‚º `radius * cameraZoom`ï¼›è¡€æ¢ Y åç§»ã€åå­—/éšŠä¼æ¨™ç±¤ Y åç§»åŒæ­¥ä¿®æ­£ï¼›æ”»æ“Šç¯„åœåœˆç¸®æ”¾æ­£å¸¸ï¼ˆv0.0.66.0 å·²ä¿®ï¼Œæœ¬æ¬¡æœªé‡è¤‡å¥—ç”¨ï¼‰
-- **æŽ’è¡Œæ¦œèˆŠç‰ˆæœ¬è™Ÿå£“åˆ¶æ–°ç‰ˆä¿®å¾©**ï¼ˆ`systems/leaderboard.js`ï¼‰ï¼šä¸‰ç¢¼èˆŠæ ¼å¼ï¼ˆå¦‚ v0.65.0ï¼‰`version_order` å¼·åˆ¶å›žå‚³ 0ï¼Œä¸å†è¦†è“‹å››ç¢¼æ–°ç‰ˆæŽ’å
+### 修復
+- **生物體型隨視野縮放修復**（`systems/creatures.js`、`systems/boss.js`、`systems/hud.js`）：`drawCreatureShape`、`_drawCreatureGlow`、`drawNeutralCreatures`、`drawHostileCreatures`、`drawBoss`、`drawBossShape` 及玩家繪製均改為 `radius * cameraZoom`；血條 Y 偏移、名字/隊伍標籤 Y 偏移同步修正；攻擊範圍圈縮放正常（v0.0.66.0 已修，本次未重複套用）
+- **排行榜舊版本號壓制新版修復**（`systems/leaderboard.js`）：三碼舊格式（如 v0.65.0）`version_order` 強制回傳 0，不再覆蓋四碼新版排名
 
-### æ–°å¢ž
-- **é¦–é æŒ‰éˆ• Hover æ•ˆæžœ**ï¼ˆ`systems/ui.js`ï¼‰ï¼šé–‹å§‹éŠæˆ²ã€æŠ€èƒ½æ¨¹ã€åœ–é‘‘ã€æŽ’è¡Œæ¦œã€è¨­å®šäº”å€‹æŒ‰éˆ•åŠ å…¥ scale/é¡è‰²/é™°å½± hover å‹•ç•«ï¼›æ‰‹æ©Ÿç‰ˆæ”¹ç‚º touch ç¸®æ”¾å›žé¥‹ï¼›æ–°å¢ž `_addMenuHover()` helper
-- **èŠå¤©å®¤ `[c=crim]` æ·±ç´…è‰²**ï¼ˆ`systems/chat.js`ï¼‰ï¼šæ–°å¢ž `crim`ï¼ˆ`#C62828`ï¼‰è‡³ä¸€èˆ¬çŽ©å®¶å¯ç”¨è‰²ï¼›é¡è‰²é¢æ¿åŠ å…¥ã€Œæ·±ç´…å­—ã€æŒ‰éˆ•ï¼›åŠ å…¥ `_COLOR_MAP` çµ±ä¸€ç®¡ç†è‰²ç¢¼
-- **å·¨äººè·¨ç‰©ç¨®çµ„éšŠ**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šæ‹›å‹Ÿæ¢ä»¶æ”¹ç‚ºã€Œé›™æ–¹ diet === 'herbivore'ã€ï¼Œä¸å†é™åŒç‰©ç¨®åŒç”Ÿæ…‹ï¼›ä¸Šé™/Alpha è§¸ç™¼æ©Ÿåˆ¶ä¸è®Š
-- **é¬£ç‹—éšŠåæ¨™ç±¤**ï¼ˆ`systems/creatures.js`ã€`main.js`ï¼‰ï¼šæ–°å¢žä¸‰åœ‹æ­¦å°‡åç¨±æ± ï¼ˆ20åï¼‰`_HYENA_PACK_NAMES`ï¼›æ¯å€‹ packGroup é¦–æ¬¡çµ„éšŠæ™‚åˆ†é…éšŠåï¼›åå­—ä¸‹æ–¹é¡¯ç¤º `æ›¹æ“(2/3)` æ ¼å¼æ¨™ç±¤ï¼›éŠæˆ²é‡ç½®æ™‚æ¸…ç©ºå·²ç”¨åç¨±
+### 新增
+- **首頁按鈕 Hover 效果**（`systems/ui.js`）：開始遊戲、技能樹、圖鑑、排行榜、設定五個按鈕加入 scale/顏色/陰影 hover 動畫；手機版改為 touch 縮放回饋；新增 `_addMenuHover()` helper
+- **聊天室 `[c=crim]` 深紅色**（`systems/chat.js`）：新增 `crim`（`#C62828`）至一般玩家可用色；顏色面板加入「深紅字」按鈕；加入 `_COLOR_MAP` 統一管理色碼
+- **巨人跨物種組隊**（`systems/creatures.js`）：招募條件改為「雙方 diet === 'herbivore'」，不再限同物種同生態；上限/Alpha 觸發機制不變
+- **鬣狗隊名標籤**（`systems/creatures.js`、`main.js`）：新增三國武將名稱池（20名）`_HYENA_PACK_NAMES`；每個 packGroup 首次組隊時分配隊名；名字下方顯示 `曹操(2/3)` 格式標籤；遊戲重置時清空已用名稱
 
-### èª¿æ•´
-- **å·¨äººéšŠåæ”¹ç‚ºä»¿è£½è©ž**ï¼ˆ`systems/creatures.js`ï¼‰ï¼š`_PACK_NAMES` å…¨éƒ¨æ”¹ç‚ºä»¿è£½è©žï¼ˆå¦‚ SKTâ†’SK-Teaã€T1â†’T-Oneï¼‰ï¼Œé¿å…ä¾µæ¬Š
-- **å·¨äººæ“Šæ®ºçŽå‹µä¸Šèª¿**ï¼ˆ`systems/combat.js`ï¼‰ï¼šæ™®é€šå·¨äºº XP 60â†’100ï¼›Alpha XP 200â†’300ï¼›Alpha è®Šç•°é»žä¿åº• +1â†’+2ï¼›é¡å¤–æŽ‰è½æ©ŸçŽ‡ 10%â†’20%ã€æ•¸é‡ 1~3â†’2~6
+### 調整
+- **巨人隊名改為仿製詞**（`systems/creatures.js`）：`_PACK_NAMES` 全部改為仿製詞（如 SKT→SK-Tea、T1→T-One），避免侵權
+- **巨人擊殺獎勵上調**（`systems/combat.js`）：普通巨人 XP 60→100；Alpha XP 200→300；Alpha 變異點保底 +1→+2；額外掉落機率 10%→20%、數量 1~3→2~6
 
 ---
 
 ## v0.0.67.1 - 2026-06-02
 
-### èª¿æ•´
-- **åœ–é‘‘ç”Ÿç‰©ç™¾ç§‘é‡æ–°æŽ’åº**ï¼ˆ`config/compendium_data.js`ï¼‰ï¼šç²¾è‹±æ€ªç§»è‡³æœ€å‰ï¼ˆç‰¹æ®Šç”Ÿç‰©å„ªå…ˆï¼‰ï¼Œä¸€èˆ¬ç”Ÿç‰©æ”¹ä¾åœ°å€æŽ’åˆ—ï¼ˆæ£®æž—â†’æµ·æ´‹â†’æ²™æ¼ ï¼‰
-- **åœ–é‘‘éŠæˆ²æ©Ÿåˆ¶æ–°å¢žã€Œè®Šç•°å™¨å®˜ã€æ¢ç›®**ï¼ˆ`config/compendium_data.js`ï¼‰ï¼šèªªæ˜Žå››ç¨®è®Šç•°å™¨å®˜ã€ç²å¾—èˆ‡å‡ç´šæ–¹å¼
-- **å™¨å®˜åœ–é‘‘èˆ‡é€²åŒ–ç³»çµ±åˆ†é æ”¹ç‚ºé›™æ¬„ç‰ˆé¢**ï¼ˆ`systems/ui.js`ï¼‰ï¼šç§»é™¤èˆŠå¼ç¿»é æŒ‰éˆ•ï¼Œæ”¹ç‚ºæ¡Œæ©Ÿå·¦å´ç›®éŒ„ + å³å´å…§å®¹ã€æ‰‹æ©Ÿæ©«å‘ Tab åˆ‡æ›ï¼Œèˆ‡éŠæˆ²èªªæ˜Žåˆ†é é¢¨æ ¼çµ±ä¸€ï¼›æ–°å¢ž `_renderOrgans()`ã€`_renderEvo()` å‡½å¼ï¼Œç§»é™¤ `buildOrganPages()`ã€`buildEvoPages()`ã€`getPages()`
+### 調整
+- **圖鑑生物百科重新排序**（`config/compendium_data.js`）：精英怪移至最前（特殊生物優先），一般生物改依地區排列（森林→海洋→沙漠）
+- **圖鑑遊戲機制新增「變異器官」條目**（`config/compendium_data.js`）：說明四種變異器官、獲得與升級方式
+- **器官圖鑑與進化系統分頁改為雙欄版面**（`systems/ui.js`）：移除舊式翻頁按鈕，改為桌機左側目錄 + 右側內容、手機橫向 Tab 切換，與遊戲說明分頁風格統一；新增 `_renderOrgans()`、`_renderEvo()` 函式，移除 `buildOrganPages()`、`buildEvoPages()`、`getPages()`
 
 ---
 
 ## v0.0.67.0 - 2026-06-02
 
-### æ–°å¢ž
-- **éŠæˆ²åœ–é‘‘ç³»çµ±**ï¼ˆ`config/compendium_data.js`ã€`systems/ui.js`ã€`index.html`ï¼‰ï¼šæ–°å¢ž `COMPENDIUM_DATA` å…¨åŸŸå¸¸æ•¸ï¼Œå®šç¾©å››å¤§åˆ†é¡žï¼ˆéŠæˆ²æ©Ÿåˆ¶ 9 æ¢ã€Biome 3 æ¢ã€Boss 3 æ¢ã€ç”Ÿç‰©ç™¾ç§‘ 7 æ¢ï¼‰ï¼Œå…± 22 å€‹æ¢ç›®ï¼Œç¹ä¸­ï¼è‹±æ–‡é›™èªžï¼Œæ•¸å€¼å‹•æ…‹å¼•ç”¨ configï¼Œä¸å¯«æ­»
-- **åœ–é‘‘ Guide åˆ†é é‡è¨­è¨ˆ**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ¡Œæ©Ÿç‰ˆæ”¹ç‚ºå·¦å´ 160px ç›®éŒ„æ¬„ + å³å´å…§å®¹å€é›™æ¬„ç‰ˆé¢ï¼›æ‰‹æ©Ÿç‰ˆæ”¹ç‚ºæ©«å‘å¯æ»‘å‹• Tab åˆ— + ä¸‹æ–¹å…§å®¹å€ï¼›å„åˆ†é¡žç”¨ section color æ¨™è‰²ï¼›èªžè¨€åˆ‡æ›å³æ™‚é‡ç¹ª
-- **åœ–é‘‘ç¶­è­· SOP**ï¼ˆ`.claude/instructions.md`ï¼‰ï¼šæ–°å¢žã€Œæ›´æ–°åœ–é‘‘ã€èˆ‡ã€Œæª¢æŸ¥åœ–é‘‘ã€å…©å€‹ AI æŒ‡ä»¤æ­¥é©Ÿèªªæ˜Ž
+### 新增
+- **遊戲圖鑑系統**（`config/compendium_data.js`、`systems/ui.js`、`index.html`）：新增 `COMPENDIUM_DATA` 全域常數，定義四大分類（遊戲機制 9 條、Biome 3 條、Boss 3 條、生物百科 7 條），共 22 個條目，繁中／英文雙語，數值動態引用 config，不寫死
+- **圖鑑 Guide 分頁重設計**（`systems/ui.js`）：桌機版改為左側 160px 目錄欄 + 右側內容區雙欄版面；手機版改為橫向可滑動 Tab 列 + 下方內容區；各分類用 section color 標色；語言切換即時重繪
+- **圖鑑維護 SOP**（`.claude/instructions.md`）：新增「更新圖鑑」與「檢查圖鑑」兩個 AI 指令步驟說明
 
 ---
 
 ## v0.0.66.3 - 2026-06-01
 
-### ä¿®å¾© / æ•ˆèƒ½
-- **getGameFont cache**ï¼ˆ`systems/utils.js`ï¼‰ï¼šæ–°å¢žå­—é«”å­—ä¸²å¿«å–ï¼Œç›¸åŒè¨­å®šä¸‹ç›´æŽ¥å›žå‚³å¿«å–å€¼ï¼Œé¿å…æ¯å¹€å°æ‰€æœ‰ç”Ÿç‰©é‡è¤‡å»ºç«‹æ–°å­—ä¸²ç‰©ä»¶ï¼›ä»¥æ•¸å­— key å–ä»£å­—ä¸² key åŠ å¿«æŸ¥è©¢
-- **å­—å¤§åˆç²—åˆä½µ Toggle**ï¼ˆ`systems/gameState.js`ã€`systems/ui.js`ã€`lang/`ï¼‰ï¼šç§»é™¤ç¨ç«‹çš„ã€Œå­—é«”åŠ å¤§ã€èˆ‡ã€Œå­—é«”åŠ ç²—ã€å…©å€‹é¸é …ï¼Œåˆä½µç‚ºå–®ä¸€ã€Œå­—å¤§åˆç²—ã€Toggleï¼ˆ+7px + boldï¼‰ï¼Œä¸¦ä¿ç•™èˆŠ localStorage è‡ªå‹•é·ç§»
-- **showXPPopup DOM ç‰©ä»¶æ± **ï¼ˆ`systems/player.js`ã€`main.js`ï¼‰ï¼šé å»º 10 å€‹å¯é‡è¤‡ä½¿ç”¨çš„ DOM å…ƒç´ ï¼Œåƒæžœå­æ™‚å¾žæ± å–å¾—è€Œéžæ¯æ¬¡ createElementï¼›æ± æ»¿æ™‚ç›´æŽ¥è·³éŽï¼Œä¸å»ºç«‹æ–°å…ƒç´ 
-- **_checkGuardianRange ç¯€æµ**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šåŠ å…¥ 200ms ç¯€æµï¼Œé¿å…æ¯å¹€å°æ¯éš»å·¨äººåŸ·è¡Œ O(ä¸­ç«‹Ã—æ•µæ„) é›™é‡è¿´åœˆè·é›¢è¨ˆç®—
-- **è¦–é‡Žç¸®æ”¾å…¬å¼èª¿æ•´**ï¼ˆ`systems/camera.js`ã€`systems/ui.js`ï¼‰ï¼šæ‰‹æ©Ÿç‰ˆæ”¹ç”¨ `0.48 + level Ã— 0.04`ï¼ˆ10æ ¼=0.84ï¼‰ï¼Œé›»è…¦ç‰ˆæ”¹ç”¨ `0.80 + level Ã— 0.04`ï¼ˆ6æ ¼=1.00ï¼‰ï¼›v0.0.66.3 ä¸€æ¬¡æ€§å¼·åˆ¶è¦†è“‹çŽ©å®¶å­˜æª”é è¨­å€¼
+### 修復 / 效能
+- **getGameFont cache**（`systems/utils.js`）：新增字體字串快取，相同設定下直接回傳快取值，避免每幀對所有生物重複建立新字串物件；以數字 key 取代字串 key 加快查詢
+- **字大又粗合併 Toggle**（`systems/gameState.js`、`systems/ui.js`、`lang/`）：移除獨立的「字體加大」與「字體加粗」兩個選項，合併為單一「字大又粗」Toggle（+7px + bold），並保留舊 localStorage 自動遷移
+- **showXPPopup DOM 物件池**（`systems/player.js`、`main.js`）：預建 10 個可重複使用的 DOM 元素，吃果子時從池取得而非每次 createElement；池滿時直接跳過，不建立新元素
+- **_checkGuardianRange 節流**（`systems/creatures.js`）：加入 200ms 節流，避免每幀對每隻巨人執行 O(中立×敵意) 雙重迴圈距離計算
+- **視野縮放公式調整**（`systems/camera.js`、`systems/ui.js`）：手機版改用 `0.48 + level × 0.04`（10格=0.84），電腦版改用 `0.80 + level × 0.04`（6格=1.00）；v0.0.66.3 一次性強制覆蓋玩家存檔預設值
 
 ---
 
 ## v0.0.66.2 - 2026-06-01
 
-### æ–°å¢ž
-- **å‡ºç”Ÿä¿è­·å€**ï¼ˆ`systems/spawning.js`ã€`systems/gameState.js`ã€`main.js`ï¼‰ï¼šéŠæˆ²é–‹å§‹å¾Œ 3 ç§’å…§ä¸è£œå……ç”Ÿæˆè‚‰é£Ÿæ€ªï¼›åˆå§‹ç”Ÿæˆæ™‚ï¼Œè·åœ°åœ–ä¸­å¿ƒ forestCenterRadius ä»¥å…§çš„ä½ç½®ä¹Ÿä¸ç”Ÿæˆè‚‰é£Ÿæ€ª
-- **å·¨äºº guardianRange ç¸®å°**ï¼ˆ`systems/creatures.js`ï¼‰ï¼š`_triggerGiantization()` ä¸­å·¨äººä¿è­·ç¯„åœç”± 1000px ç¸®å°ç‚º 500pxï¼ˆAlpha çš„ 1500px ä¸è®Šï¼‰
-- **æ®ºæ‰‹æ‚„æ‚„çµæ®º**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šæ®ºæ‰‹åŒ–ç”Ÿç‰©åœ¨å·¨äºº guardianRangeï¼ˆ500pxï¼‰ä»¥å¤–æ”»æ“Šè‰é£Ÿæ€§æ™‚ï¼Œä¸è§¸ç™¼å·¨äººçš„ guardianTarget ä¿è­·ï¼Œè®“æ®ºæ‰‹å¯åœ¨å¤–åœæ‚„æ‚„æ•çµ
-- **éšŠä¼åç¨±æ¨™ç±¤**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šå·¨äººåŒ–éšŠé•·è‡ªå‹•åˆ†é…éšŠä¼åç¨±ï¼ˆSKTã€T1ã€Fnatic ç­‰ï¼Œå…± 26 çµ„ï¼‰ï¼›éšŠå“¡ç¹¼æ‰¿åç¨±ï¼›åå­—ä¸‹æ–¹é¡¯ç¤ºéšŠä¼æ¨™ç±¤èˆ‡æˆå“¡æ¯”ï¼ˆå¦‚ `T1(3/6)`ï¼‰
+### 新增
+- **出生保護區**（`systems/spawning.js`、`systems/gameState.js`、`main.js`）：遊戲開始後 3 秒內不補充生成肉食怪；初始生成時，距地圖中心 forestCenterRadius 以內的位置也不生成肉食怪
+- **巨人 guardianRange 縮小**（`systems/creatures.js`）：`_triggerGiantization()` 中巨人保護範圍由 1000px 縮小為 500px（Alpha 的 1500px 不變）
+- **殺手悄悄獵殺**（`systems/creatures.js`）：殺手化生物在巨人 guardianRange（500px）以外攻擊草食性時，不觸發巨人的 guardianTarget 保護，讓殺手可在外圍悄悄捕獵
+- **隊伍名稱標籤**（`systems/creatures.js`）：巨人化隊長自動分配隊伍名稱（SKT、T1、Fnatic 等，共 26 組）；隊員繼承名稱；名字下方顯示隊伍標籤與成員比（如 `T1(3/6)`）
 
 ---
 
 ## v0.0.66.1 - 2026-06-01
 
-### æ–°å¢ž
-- **GM æ¨™ç±¤æ”¹é›è—è‰²**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`_parseName()` ä¸­ GM çš„ã€GMã€‘æ¨™ç±¤ç”±å½©è™¹æ¼¸å±¤æ”¹ç‚ºå›ºå®šé›è—è‰² `#4B9CD3`ï¼Œç§»é™¤ `-webkit-background-clip` ç­‰æ¼¸å±¤ CSS
-- **èŠå¤©é¡è‰²æŒ‰éˆ•**ï¼ˆ`systems/chat.js`ï¼‰ï¼šèŠå¤©è¼¸å…¥æ¡†æ–°å¢ž ðŸŽ¨ æŒ‰éˆ•ï¼Œé»žæ“Šå½ˆå‡ºé¢æ¿å¯æ’å…¥ `[c=red]`ã€`[c=blue]`ã€`[c=green]` å½©è‰²å­—æ¨™ç±¤ï¼Œæ¸¸æ¨™è‡ªå‹•ç½®æ–¼å…© tag ä¸­é–“
-- **è§’è‰²å±…ä¸­æ›´å**ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ã€`systems/ui.js`ï¼‰ï¼šè¨­å®šé¢æ¿ã€Œæ°¸é å±…ä¸­ã€æ”¹åç‚ºã€Œè§’è‰²å±…ä¸­ã€ï¼ˆè‹±æ–‡ Center Cameraï¼‰ï¼Œä¸¦åˆªé™¤åº•éƒ¨ hint æç¤ºæ–‡å­—
-- **åœ°åœ–é€æ˜Žé–‹é—œ**ï¼ˆ`systems/gameState.js`ã€`systems/ui.js`ã€`systems/hud.js`ã€`lang/`ï¼‰ï¼šè¼”åŠ©åŠŸèƒ½æ–°å¢žã€Œåœ°åœ–é€æ˜Žã€Toggleï¼›é–‹å•Ÿå¾Œç§»å‹•æ™‚å°åœ°åœ–æ¯ 0.5 ç§’é™ä½Ž 0.15 é€æ˜Žåº¦ï¼ˆæœ€ä½Ž 0.5ï¼‰ï¼Œåœæ­¢å¾Œç·©æ…¢å›žå¾©è‡³ 1.0
-- **å™¨å®˜é¸æ“‡é˜²èª¤è§¸**ï¼ˆ`systems/organs.js`ï¼‰ï¼šå™¨å®˜é¸æ“‡é¢æ¿é–‹å•Ÿå¾Œ 0.5 ç§’å…§é»žæ“Šç„¡æ•ˆï¼Œé˜²æ­¢å‡ç´š/é¸æ“‡å™¨å®˜ä»‹é¢ä¸€é–‹å³èª¤è§¸
-- **å­—é«”è¼”åŠ©åŠŸèƒ½**ï¼ˆ`systems/gameState.js`ã€`systems/ui.js`ã€`systems/utils.js`ã€`lang/`ï¼‰ï¼šè¼”åŠ©åŠŸèƒ½æ–°å¢žã€Œå­—é«”åŠ å¤§ã€ï¼ˆ+2pxï¼‰èˆ‡ã€Œå­—é«”åŠ ç²—ã€å…©å€‹ Toggleï¼›æ–°å¢žå…¨åŸŸ `getGameFont(baseSize, baseBold)` å‡½å¼ï¼Œå¥—ç”¨è‡³ `hud.js`ã€`creatures.js` æ‰€æœ‰ canvas ctx.font è¨­å®š
+### 新增
+- **GM 標籤改靛藍色**（`systems/chat.js`）：`_parseName()` 中 GM 的【GM】標籤由彩虹漸層改為固定靛藍色 `#4B9CD3`，移除 `-webkit-background-clip` 等漸層 CSS
+- **聊天顏色按鈕**（`systems/chat.js`）：聊天輸入框新增 🎨 按鈕，點擊彈出面板可插入 `[c=red]`、`[c=blue]`、`[c=green]` 彩色字標籤，游標自動置於兩 tag 中間
+- **角色居中更名**（`lang/zh-TW.js`、`lang/en.js`、`systems/ui.js`）：設定面板「永遠居中」改名為「角色居中」（英文 Center Camera），並刪除底部 hint 提示文字
+- **地圖透明開關**（`systems/gameState.js`、`systems/ui.js`、`systems/hud.js`、`lang/`）：輔助功能新增「地圖透明」Toggle；開啟後移動時小地圖每 0.5 秒降低 0.15 透明度（最低 0.5），停止後緩慢回復至 1.0
+- **器官選擇防誤觸**（`systems/organs.js`）：器官選擇面板開啟後 0.5 秒內點擊無效，防止升級/選擇器官介面一開即誤觸
+- **字體輔助功能**（`systems/gameState.js`、`systems/ui.js`、`systems/utils.js`、`lang/`）：輔助功能新增「字體加大」（+2px）與「字體加粗」兩個 Toggle；新增全域 `getGameFont(baseSize, baseBold)` 函式，套用至 `hud.js`、`creatures.js` 所有 canvas ctx.font 設定
 
 ---
 
 ## v0.0.66.0 - 2026-05-29
 
-### ä¿®å¾©
-- **æ”»æ“Šç¯„åœåœˆç¸®æ”¾ä¿®æ­£**ï¼ˆ`systems/hud.js`ï¼‰ï¼šæ”»æ“Šç¯„åœåœˆåŠå¾‘ä¹˜ä¸Š `cameraZoom`ï¼Œä¿®å¾©ç¸®æ”¾ä¸ç‚º 1 æ™‚åœˆåœˆå¤§å°éŒ¯èª¤çš„å•é¡Œ
-- **ç½®é ‚è¨Šæ¯è‡ªå‹•éŽæœŸ**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`renderChat()` é–‹é ­æ–°å¢ž `_pinnedMessage.pinUntil` éŽæœŸæª¢æŸ¥ï¼›éŽæœŸå¾Œæ¸…é™¤æœ¬åœ°ç½®é ‚ç‹€æ…‹ä¸¦åŒæ­¥æ¸…é™¤è¨Šæ¯é™£åˆ—ä¸­çš„ `is_pinned`
+### 修復
+- **攻擊範圍圈縮放修正**（`systems/hud.js`）：攻擊範圍圈半徑乘上 `cameraZoom`，修復縮放不為 1 時圈圈大小錯誤的問題
+- **置頂訊息自動過期**（`systems/chat.js`）：`renderChat()` 開頭新增 `_pinnedMessage.pinUntil` 過期檢查；過期後清除本地置頂狀態並同步清除訊息陣列中的 `is_pinned`
 
-### æ–°å¢ž
-- **æŽ’è¡Œæ¦œè³½å­£ç‰ˆæœ¬åˆ¶**ï¼ˆ`config/gameConfig.js`ã€`systems/leaderboard.js`ï¼‰ï¼šç‰ˆæœ¬è™Ÿæ ¼å¼æ”¹ç‚ºå››æ®µ `v0.x.y.z`ï¼›`version_order` æ”¹å–ç¬¬äºŒæ®µ xï¼ŒåŒä¸€å€‹ x çš„è¨˜éŒ„äº’ç›¸ç«¶çˆ­ï¼ˆx=0 ç‚ºåˆå§‹è³½å­£ï¼‰
-- **`/unpin` æŒ‡ä»¤**ï¼ˆ`systems/chat.js`ï¼‰ï¼šGM å¯è¼¸å…¥ `/unpin` å–æ¶ˆç•¶å‰ç½®é ‚è¨Šæ¯ï¼ˆ`_handleUnpinCommand()`ï¼‰ï¼ŒåŒæ­¥æ›´æ–°è³‡æ–™åº«èˆ‡æœ¬åœ°ç‹€æ…‹
-- **ç­‰ç´šé¡è‰²è¾¨è­˜ç³»çµ±**ï¼ˆ`systems/chat.js`ï¼‰ï¼šè®Šç•°ç­‰ç´šé¡¯ç¤ºç¨ç«‹æ”¾å¤§ï¼ˆ13px, boldï¼‰ä¸¦ä¾ç­‰ç´šå¥—è‰²ï¼ˆ0 ç™½/50 ç¶ /100 è—/150 ç´«/200 ç²‰/250 é‡‘/300 ç´…/350 æ©˜/400+ å½©è™¹æ¼¸å±¤ï¼‰ï¼›`_lvColor(lvNum)` å‡½å¼
-- **GM å½©è™¹ã€GMã€‘æ¨™ç±¤ + é‡‘è‰²èªªè©±å…§å®¹**ï¼ˆ`systems/chat.js`ï¼‰ï¼šGM çš„ã€GMã€‘æ¨™ç±¤æ”¹ç‚ºå½©è™¹æ¼¸å±¤è‰²ï¼Œèªªè©±å…§å®¹ä»¥é‡‘è‰² `#FFD700` é¡¯ç¤º
-- **å½©è‰²å­—æ¨™ç±¤ç³»çµ±**ï¼ˆ`systems/chat.js`ï¼‰ï¼šæ”¯æ´ `[c=red]æ–‡å­—[/c]` èªžæ³•ï¼Œä¸€èˆ¬çŽ©å®¶é™ red/green/blue ä¸‰è‰²ï¼›`_parseColorTags(escapedContent, isVIP)` å‡½å¼
-- **å…ˆé©…è€… VIP TODO ç´¢å¼•**ï¼ˆ`systems/chat.js`ï¼‰ï¼šæ–°å¢ž `isVipPlayer(msg)` å‡½å¼ï¼ˆç›®å‰å›žå‚³ falseï¼‰ï¼Œä½œç‚ºæœªä¾†å…ˆé©…è€…è§£éŽ–ä»»æ„é¡è‰²å½©è‰²å­—çš„äº¤æŽ¥é»ž
+### 新增
+- **排行榜賽季版本制**（`config/gameConfig.js`、`systems/leaderboard.js`）：版本號格式改為四段 `v0.x.y.z`；`version_order` 改取第二段 x，同一個 x 的記錄互相競爭（x=0 為初始賽季）
+- **`/unpin` 指令**（`systems/chat.js`）：GM 可輸入 `/unpin` 取消當前置頂訊息（`_handleUnpinCommand()`），同步更新資料庫與本地狀態
+- **等級顏色辨識系統**（`systems/chat.js`）：變異等級顯示獨立放大（13px, bold）並依等級套色（0 白/50 綠/100 藍/150 紫/200 粉/250 金/300 紅/350 橘/400+ 彩虹漸層）；`_lvColor(lvNum)` 函式
+- **GM 彩虹【GM】標籤 + 金色說話內容**（`systems/chat.js`）：GM 的【GM】標籤改為彩虹漸層色，說話內容以金色 `#FFD700` 顯示
+- **彩色字標籤系統**（`systems/chat.js`）：支援 `[c=red]文字[/c]` 語法，一般玩家限 red/green/blue 三色；`_parseColorTags(escapedContent, isVIP)` 函式
+- **先驅者 VIP TODO 索引**（`systems/chat.js`）：新增 `isVipPlayer(msg)` 函式（目前回傳 false），作為未來先驅者解鎖任意顏色彩色字的交接點
 
-### èª¿æ•´
-- **èŠå¤©è¨Šæ¯ç§»é™¤ç‰ˆæœ¬è™Ÿé¡¯ç¤º**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`_buildMsgHTML()` å’Œç½®é ‚å±•é–‹ç‰ˆå‡ç§»é™¤ `[ç‰ˆæœ¬è™Ÿ]` æ¬„ä½ï¼Œä»‹é¢æ›´ç°¡æ½”
+### 調整
+- **聊天訊息移除版本號顯示**（`systems/chat.js`）：`_buildMsgHTML()` 和置頂展開版均移除 `[版本號]` 欄位，介面更簡潔
 
 ---
 
 ## v0.64.0 - 2026-05-28
 
-### æ–°å¢ž
-- **èŠå¤©å®¤å¯æ‹–æ‹½ç§»å‹•**ï¼ˆ`systems/chat.js`ï¼‰ï¼šæ–°å¢ž `_makeDraggable(handle, panels)` å‡½å¼ï¼Œä»¥ `#chat-settings-btn` ç‚ºæ‹–æ‹½æŠŠæ‰‹ï¼ŒåŒæ­¥ç§»å‹• `#chat-history-panel` èˆ‡ `#chat-input-panel`ï¼›è¶…éŽ 5px æ‰åˆ¤å®šç‚ºæ‹–æ‹½ï¼Œæ»‘å‹•éŽç¨‹ä»¥é‚Šç•Œå¤¾ä½é˜²æ­¢æ‹–å‡ºç•«é¢å¤–
-- **è¨˜ä½æœ€å¾Œä½ç½®**ï¼ˆ`systems/chat.js`ï¼‰ï¼šæ‹–æ‹½çµæŸå¾Œå‘¼å« `_saveChatPosition()` å­˜å…¥ `localStorage`ï¼›`buildChatUI()` å»ºç«‹æ‰‹æ©Ÿç‰ˆé¢æ¿å¾Œä»¥ `_loadChatPosition()` é‚„åŽŸä¸Šæ¬¡ä½ç½®
-- **æ‹–æ‹½å¾Œä¸èª¤è§¸é½’è¼ª**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`_chatDragState.wasDragging` æ——æ¨™ç¢ºä¿æ‹–æ‹½çµæŸå¾Œçš„ click äº‹ä»¶ä¸æœƒé–‹å•Ÿè¨­å®šé¢æ¿
-- **è¦–çª—èª¿æ•´é‚Šç•Œä¿è­·**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`window.resize` ç›£è½å™¨ç¢ºä¿è½‰å±å¾Œé¢æ¿ä¸è·‘å‡ºç•«é¢å¤–
+### 新增
+- **聊天室可拖拽移動**（`systems/chat.js`）：新增 `_makeDraggable(handle, panels)` 函式，以 `#chat-settings-btn` 為拖拽把手，同步移動 `#chat-history-panel` 與 `#chat-input-panel`；超過 5px 才判定為拖拽，滑動過程以邊界夾住防止拖出畫面外
+- **記住最後位置**（`systems/chat.js`）：拖拽結束後呼叫 `_saveChatPosition()` 存入 `localStorage`；`buildChatUI()` 建立手機版面板後以 `_loadChatPosition()` 還原上次位置
+- **拖拽後不誤觸齒輪**（`systems/chat.js`）：`_chatDragState.wasDragging` 旗標確保拖拽結束後的 click 事件不會開啟設定面板
+- **視窗調整邊界保護**（`systems/chat.js`）：`window.resize` 監聽器確保轉屏後面板不跑出畫面外
 
 ---
 
 ## v0.63.1 - 2026-05-28
 
-### æ–°å¢ž
-- **èŠå¤©å®¤é¦–é å°ˆå±¬é¡¯ç¤º**ï¼ˆ`systems/chat.js`ã€`systems/ui.js`ã€`systems/evolution.js`ã€`systems/leaderboard.js`ï¼‰ï¼šæ–°å¢ž `showChat()` / `hideChat()` å·¥å…·å‡½å¼ï¼›é¦–é  7 å€‹æŒ‰éˆ•ï¼ˆé–‹å§‹éŠæˆ²ã€æŠ€èƒ½æ¨¹ã€åœ–é‘‘ã€æŽ’è¡Œæ¦œã€è¨­å®šã€æ•…äº‹ã€æ›´æ–°ï¼‰é»žæ“Šæ™‚å‘¼å« `hideChat()`ï¼›`closeCompendium()`ã€`hideSettings()`ã€`closeLb()`ã€æ•…äº‹é—œé–‰ã€æ›´æ–°æ—¥èªŒé—œé–‰ã€æŠ€èƒ½æ¨¹ fromHome é—œé–‰æ™‚è‹¥ä»åœ¨é¦–é å‰‡å‘¼å« `showChat()`ï¼›`showStartScreen()` æœ«å°¾æ”¹ç”¨ `showChat()` å–ä»£åŽŸæœ¬æ‰‹å‹•é¡¯ç¤º `#chat-panel`
+### 新增
+- **聊天室首頁專屬顯示**（`systems/chat.js`、`systems/ui.js`、`systems/evolution.js`、`systems/leaderboard.js`）：新增 `showChat()` / `hideChat()` 工具函式；首頁 7 個按鈕（開始遊戲、技能樹、圖鑑、排行榜、設定、故事、更新）點擊時呼叫 `hideChat()`；`closeCompendium()`、`hideSettings()`、`closeLb()`、故事關閉、更新日誌關閉、技能樹 fromHome 關閉時若仍在首頁則呼叫 `showChat()`；`showStartScreen()` 末尾改用 `showChat()` 取代原本手動顯示 `#chat-panel`
 
 ---
 
 ## v0.63.0 - 2026-05-28
 
-### é‡æ§‹
-- **æ‰‹æ©Ÿç‰ˆèŠå¤©å®¤ UI é‡æ–°è¨­è¨ˆ**ï¼ˆ`systems/chat.js`ï¼‰ï¼šæ‹†åˆ†ç‚ºå…©å€‹ç¨ç«‹ fixed å…ƒç´  â€” `#chat-history-panel`ï¼ˆbottom:23vh, height:18vhï¼Œå¯æ²å‹•æ­·å²å€ï¼Œå« sticky é½’è¼ªèˆ‡ç½®é ‚è¨Šæ¯ï¼‰èˆ‡ `#chat-input-panel`ï¼ˆbottom:5vh, height:5vhï¼Œç¨ç«‹è¼¸å…¥åˆ—ï¼‰ï¼›ç§»é™¤èˆŠç‰ˆ `#chat-panel` æ‰‹æ©Ÿåˆ†æ”¯èˆ‡ `_adjustMobileChatHeight()`
-- **renderChat() é›™è·¯å¾‘**ï¼ˆ`systems/chat.js`ï¼‰ï¼šåµæ¸¬ `#chat-history-panel` å­˜åœ¨æ™‚èµ°æ‰‹æ©Ÿç‰ˆè·¯å¾‘ï¼ˆè¨Šæ¯ä»¥ `<p>` ç›´æŽ¥ appendï¼‰ï¼Œå¦å‰‡èµ°æ¡Œæ©Ÿç‰ˆè·¯å¾‘ï¼ˆè¡Œç‚ºä¸è®Šï¼‰
-- **_isAtBottom() æ›´æ–°**ï¼ˆ`systems/chat.js`ï¼‰ï¼šå„ªå…ˆæŠ“å– `#chat-history-panel`ï¼Œæ¡Œæ©Ÿç‰ˆ fallback è‡³ `#chat-messages`
+### 重構
+- **手機版聊天室 UI 重新設計**（`systems/chat.js`）：拆分為兩個獨立 fixed 元素 — `#chat-history-panel`（bottom:23vh, height:18vh，可捲動歷史區，含 sticky 齒輪與置頂訊息）與 `#chat-input-panel`（bottom:5vh, height:5vh，獨立輸入列）；移除舊版 `#chat-panel` 手機分支與 `_adjustMobileChatHeight()`
+- **renderChat() 雙路徑**（`systems/chat.js`）：偵測 `#chat-history-panel` 存在時走手機版路徑（訊息以 `<p>` 直接 append），否則走桌機版路徑（行為不變）
+- **_isAtBottom() 更新**（`systems/chat.js`）：優先抓取 `#chat-history-panel`，桌機版 fallback 至 `#chat-messages`
 
 ---
 
 ## v0.62.2 - 2026-05-28
 
-### ä¿®å¾©
-- **æ‰‹æ©Ÿç‰ˆèŠå¤©å®¤åº•éƒ¨ç•™ç©º**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`#chat-panel` æ‰‹æ©Ÿç‰ˆ `bottom:0` æ”¹ç‚º `bottom:5vh`ã€`height:25vh` æ”¹ç‚º `height:20vh`ï¼Œé¿å…èˆ‡ç•«é¢æœ€åº•éƒ¨æ“ä½œå€é‡ç–Šï¼›`border-radius` æ”¹ç‚ºå››è§’åœ“ï¼ˆä¸å†è²¼åº•ï¼‰
-- **æ‰‹æ©Ÿç‰ˆ flex ä½ˆå±€è£œå¼·**ï¼ˆ`systems/chat.js`ï¼‰ï¼šæ‰‹æ©Ÿç‰ˆå°ˆå±¬è£œä¸è£œä¸Š `#chat-messages` çš„ `box-sizing:border-box`ã€`#chat-input-row` çš„ `height:36px`ã€`#chat-settings-btn` çš„ `flex-shrink:0`ï¼Œç¢ºä¿è¼¸å…¥åˆ—å›ºå®šåº•éƒ¨ä¸”ä¸è¢«å…§å®¹æ’å‡º
+### 修復
+- **手機版聊天室底部留空**（`systems/chat.js`）：`#chat-panel` 手機版 `bottom:0` 改為 `bottom:5vh`、`height:25vh` 改為 `height:20vh`，避免與畫面最底部操作區重疊；`border-radius` 改為四角圓（不再貼底）
+- **手機版 flex 佈局補強**（`systems/chat.js`）：手機版專屬補丁補上 `#chat-messages` 的 `box-sizing:border-box`、`#chat-input-row` 的 `height:36px`、`#chat-settings-btn` 的 `flex-shrink:0`，確保輸入列固定底部且不被內容撐出
 
 ---
 
 ## v0.62.1 - 2026-05-28
 
-### ä¿®å¾©
-- **èŠå¤©å®¤ç§»è‡³ body fixed å®šä½**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`#chat-panel` å¾ž `#game-container` ç§»è‡³ `document.body`ï¼Œ`position` æ”¹ç‚º `fixed`ï¼ˆæ¡Œæ©Ÿ left:10px bottom:10pxï¼Œæ‰‹æ©Ÿ bottom:0 left:5% right:5%ï¼‰ï¼Œå®Œå…¨è„«é›¢éŠæˆ²å®¹å™¨ CSS é®è”½ï¼Œä¿®å¾©æ»¾å‹•èˆ‡è¼¸å…¥è¢«æ””æˆªçš„å•é¡Œ
-- **è¨­å®šé¢æ¿ä¸å†è¢«è£åˆ‡**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`#chat-settings-panel` ç§»è‡³ `document.body`ï¼Œ`position:fixed`ã€`z-index:9999`ï¼›é½’è¼ªæŒ‰éˆ• onclick æ”¹ç”¨ `getBoundingClientRect()` å‹•æ…‹è¨ˆç®—ä½ç½®ï¼Œå°é½Š `#chat-panel` å³ä¸Šè§’ï¼Œè§£æ±º `overflow:hidden` è£åˆ‡å•é¡Œ
+### 修復
+- **聊天室移至 body fixed 定位**（`systems/chat.js`）：`#chat-panel` 從 `#game-container` 移至 `document.body`，`position` 改為 `fixed`（桌機 left:10px bottom:10px，手機 bottom:0 left:5% right:5%），完全脫離遊戲容器 CSS 遮蔽，修復滾動與輸入被攔截的問題
+- **設定面板不再被裁切**（`systems/chat.js`）：`#chat-settings-panel` 移至 `document.body`，`position:fixed`、`z-index:9999`；齒輪按鈕 onclick 改用 `getBoundingClientRect()` 動態計算位置，對齊 `#chat-panel` 右上角，解決 `overflow:hidden` 裁切問題
 
 ---
 
 ## v0.62.0 - 2026-05-28
 
-### ä¿®å¾©
-- **èŠå¤©å®¤æ»¾å‹•ä¿®å¾©**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`#chat-messages` æ”¹ç”¨ `overflow-y:scroll` å¼·åˆ¶é¡¯ç¤ºæ»¾å‹•æ¢ï¼Œè£œä¸Š `overflow-x:hidden`ã€`scrollbar-width:thin`ï¼›`#chat-input-row` è£œ `width:100%`ï¼Œç¢ºä¿è¼¸å…¥æ¡†æ°¸é å›ºå®šæ–¼é¢æ¿åº•éƒ¨ä¸è¢«æŽ¨å‡º
+### 修復
+- **聊天室滾動修復**（`systems/chat.js`）：`#chat-messages` 改用 `overflow-y:scroll` 強制顯示滾動條，補上 `overflow-x:hidden`、`scrollbar-width:thin`；`#chat-input-row` 補 `width:100%`，確保輸入框永遠固定於面板底部不被推出
 
-### æ–°å¢ž
-- **GM åå­—é‡‘è‰²**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`_parseName()` ä¸­ GM ç™¼è¨€çš„åå­—æ¬„ä½å¥—ç”¨ `#FFD700` é‡‘è‰²ï¼Œèˆ‡ã€GMã€‘æ¨™ç±¤ä¸€è‡´
-- **ç¨±è™Ÿç³»çµ±**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`player_name` æ ¼å¼æ“´å……ç‚º `lv{N}|{name}|{title}`ï¼ˆç¨±è™Ÿé¸å¡«ï¼‰ï¼›ç™»å…¥æ™‚å¾ž `chat_users.title` è®€å–ä¸¦å­˜å…¥ `chatSettings`ï¼›è¨Šæ¯æ ¼å¼æ–°å¢ž `[ç¨±è™Ÿ]`ï¼ˆæ·¡è—è‰² `#88CCFF`ï¼‰ï¼Œé¡¯ç¤ºæ–¼ã€GMã€‘å¾Œã€åå­—å‰
+### 新增
+- **GM 名字金色**（`systems/chat.js`）：`_parseName()` 中 GM 發言的名字欄位套用 `#FFD700` 金色，與【GM】標籤一致
+- **稱號系統**（`systems/chat.js`）：`player_name` 格式擴充為 `lv{N}|{name}|{title}`（稱號選填）；登入時從 `chat_users.title` 讀取並存入 `chatSettings`；訊息格式新增 `[稱號]`（淡藍色 `#88CCFF`），顯示於【GM】後、名字前
 
 ---
 
 ## v0.61.0 - 2026-05-28
 
-### æ–°å¢ž
-- **èŠå¤©å®¤è¨Šæ¯æ™‚é–“æˆ³**ï¼ˆ`systems/chat.js`ï¼‰ï¼šæ¯å‰‡è¨Šæ¯æœ€å·¦æ¬„æ–°å¢žç›¸å°æ™‚é–“é¡¯ç¤ºï¼ˆå‰›å‰› / Nåˆ†é˜å‰ / Nå°æ™‚å‰ / æ˜¨å¤© HH:MMï¼‰ï¼Œç½®é ‚è¨Šæ¯åŒæ­¥é¡¯ç¤º
-- **èŠå¤©å®¤å¾€ä¸‹æŒ‰éˆ•**ï¼ˆ`systems/chat.js`ï¼‰ï¼šå‘ä¸Šæ²å‹•å¾Œå³ä¸‹è§’å‡ºç¾ â†“ æŒ‰éˆ•ï¼Œé»žæ“Šè·³å›žæœ€æ–°è¨Šæ¯ï¼›è‡ªå‹•åœ¨åº•éƒ¨æ™‚éš±è—
+### 新增
+- **聊天室訊息時間戳**（`systems/chat.js`）：每則訊息最左欄新增相對時間顯示（剛剛 / N分鐘前 / N小時前 / 昨天 HH:MM），置頂訊息同步顯示
+- **聊天室往下按鈕**（`systems/chat.js`）：向上捲動後右下角出現 ↓ 按鈕，點擊跳回最新訊息；自動在底部時隱藏
 
-### ä¿®å¾©
-- **è¼¸å…¥æ¡†å›ºå®šåº•éƒ¨**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`#chat-messages` è£œä¸Š `min-height:0`ï¼Œé˜²æ­¢ flex å­å…ƒç´ æ’ç ´å®¹å™¨ï¼Œç¢ºä¿è¼¸å…¥åˆ—å§‹çµ‚å›ºå®šæ–¼é¢æ¿åº•éƒ¨
+### 修復
+- **輸入框固定底部**（`systems/chat.js`）：`#chat-messages` 補上 `min-height:0`，防止 flex 子元素撐破容器，確保輸入列始終固定於面板底部
 
 ---
 
 ## v0.60.2 - 2026-05-28
 
-### ä¿®å¾©
-- **èŠå¤©å®¤è¨­å®šé¢æ¿è£œä¸Šé—œé–‰æŒ‰éˆ•**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`_renderChatSettingsPanel()` é ‚éƒ¨æ–°å¢ž âœ• æŒ‰éˆ•ï¼Œé»žæ“Šå¾Œéš±è—é¢æ¿ï¼Œè§£æ±ºè¨­å®šé¢æ¿é–‹å•Ÿå¾Œç„¡æ³•é—œé–‰çš„å•é¡Œ
+### 修復
+- **聊天室設定面板補上關閉按鈕**（`systems/chat.js`）：`_renderChatSettingsPanel()` 頂部新增 ✕ 按鈕，點擊後隱藏面板，解決設定面板開啟後無法關閉的問題
 
 ---
 
 ## v0.60.1 - 2026-05-28
 
-### ä¿®å¾©
-- **åŒæ­¥è³‡æ–™ä¸è¦†è“‹æœ¬åœ° SAVE_VERSION**ï¼ˆ`systems/chat.js`ï¼‰ï¼š`_applyRemoteData()` å¯«å›ž localStorage æ™‚æŽ’é™¤ `SAVE_VERSION`ï¼Œé˜²æ­¢é›²ç«¯èˆŠç‰ˆæœ¬è™Ÿè¦†è“‹æœ¬åœ°ï¼Œé¿å…å­˜æª”æ ¼å¼åˆ¤æ–·éŒ¯èª¤
+### 修復
+- **同步資料不覆蓋本地 SAVE_VERSION**（`systems/chat.js`）：`_applyRemoteData()` 寫回 localStorage 時排除 `SAVE_VERSION`，防止雲端舊版本號覆蓋本地，避免存檔格式判斷錯誤
 
 ---
 
 ## v0.60.0 - 2026-05-28
 
-### æ–°å¢ž
-- **èŠå¤©å®¤å¸³è™Ÿç³»çµ±**ï¼ˆ`systems/chat.js`ï¼‰ï¼šâš™ï¸ è¨­å®šé¢æ¿æ”¹ç‰ˆç‚ºç™»å…¥/å·²ç™»å…¥å…©ç‹€æ…‹ï¼›æ–°å¢ž `chatLogin`ï¼ˆæŸ¥å¸³/è‡ªå‹•è¨»å†Š/å¯†ç¢¼ SHA-256 é©—è­‰/é€²åº¦æ¯”è¼ƒåŒæ­¥ï¼‰ã€`chatSaveProgress`ã€`chatSyncData`ã€`chatLogout`ï¼ˆæ¸…é™¤æœ¬åœ°æ‰€æœ‰éŠæˆ²é€²åº¦ï¼‰
-- **éŠæˆ²çµæŸè‡ªå‹•ä¿å­˜**ï¼ˆ`systems/boss.js`ã€`systems/daynight.js`ï¼‰ï¼šæ­»äº¡èˆ‡å‹åˆ©çµç®—å‰ï¼Œè‹¥å·²ç™»å…¥å‰‡è‡ªå‹•å‘¼å« `chatSaveProgress()` ä¸¦é¡¯ç¤º 2 ç§’æç¤º
+### 新增
+- **聊天室帳號系統**（`systems/chat.js`）：⚙️ 設定面板改版為登入/已登入兩狀態；新增 `chatLogin`（查帳/自動註冊/密碼 SHA-256 驗證/進度比較同步）、`chatSaveProgress`、`chatSyncData`、`chatLogout`（清除本地所有遊戲進度）
+- **遊戲結束自動保存**（`systems/boss.js`、`systems/daynight.js`）：死亡與勝利結算前，若已登入則自動呼叫 `chatSaveProgress()` 並顯示 2 秒提示
 
-### æ³¨æ„
-- âš ï¸ å¸³è™Ÿèˆ‡å¯†ç¢¼ç¶å®šï¼Œå¿˜è¨˜å¯†ç¢¼è«‹è¯çµ¡é–‹ç™¼è€… Kiserï¼›ç™»å‡ºå‰è«‹å…ˆæ‰‹å‹•ä¿å­˜é€²åº¦
+### 注意
+- ⚠️ 帳號與密碼綁定，忘記密碼請聯絡開發者 Kiser；登出前請先手動保存進度
 
 ---
 
 ## v0.59.0 - 2026-05-28
 
-### æ–°å¢ž
-- **é¦–é å³æ™‚èŠå¤©å®¤**ï¼ˆ`systems/chat.js`ã€`systems/ui.js`ã€`main.js`ã€`index.html`ï¼‰ï¼šé¦–é é¡¯ç¤º Supabase Realtime èŠå¤©å®¤é¢æ¿ï¼ˆæ¡Œæ©Ÿ 320Ã—220pxï¼Œæ‰‹æ©Ÿ 25vhï¼‰ï¼›æ”¯æ´ GM é©—è­‰ã€ç½®é ‚è¨Šæ¯ï¼ˆ`/pin 1H`ï¼‰ã€1 å°æ™‚é–’ç½®è‡ªå‹•æ–·ç·šã€24 å°æ™‚èˆŠè¨Šæ¯è‡ªå‹•æ¸…ç†ï¼›ç„¡ JS Client æ™‚è‡ªå‹•é™ç´šç‚º 8 ç§’è¼ªè©¢
+### 新增
+- **首頁即時聊天室**（`systems/chat.js`、`systems/ui.js`、`main.js`、`index.html`）：首頁顯示 Supabase Realtime 聊天室面板（桌機 320×220px，手機 25vh）；支援 GM 驗證、置頂訊息（`/pin 1H`）、1 小時閒置自動斷線、24 小時舊訊息自動清理；無 JS Client 時自動降級為 8 秒輪詢
 
 ---
 
 ## v0.58.0 - 2026-05-25
 
-### æ–°å¢ž
-- **å°åœ°åœ–å¤§å°èª¿æ•´**ï¼ˆ`systems/gameState.js`ã€`systems/hud.js`ã€`systems/ui.js`ï¼‰ï¼šè¨­å®šé¢æ¿æ–°å¢žå°åœ°åœ–å¤§å°å€å¡Šï¼ˆ0~10 æ ¼è‰²å¡Šï¼‰ï¼ŒOFF æ™‚éš±è— minimapCanvas ä¸¦å°‡ minimap-info ç§»è‡³ top-left åŒé«˜ï¼›æ•¸å€¼ä»¥ `minimapSize` å„²å­˜æ–¼ localStorageï¼Œç‰ˆæœ¬æ›´æ–°ä¸é‡ç½®
-- **è¦–é‡Žæ™ºèƒ½/æ‰‹å‹•æ¨¡å¼**ï¼ˆ`systems/gameState.js`ã€`systems/camera.js`ã€`systems/ui.js`ï¼‰ï¼š`_updateMobileCameraZoom()` é‡æ§‹ç‚º `_updateCameraZoom()`ï¼Œæ”¯æ´æ¡Œæ©Ÿèˆ‡æ‰‹æ©Ÿï¼›æ–°å¢ž `cameraMode`ï¼ˆsmart/manualï¼‰èˆ‡ `cameraZoomLevel`ï¼ˆ1~10ï¼‰è¨­å®šï¼›`worldToScreen()` èˆ‡ `drawTerrain()` çš„ zoom æ¢ä»¶ç§»é™¤ `isMobile` é™åˆ¶ï¼›è¨­å®šé¢æ¿æ–°å¢ž 10 æ ¼ç¸®æ”¾åˆ»åº¦èª¿æ•´å™¨èˆ‡æ™ºèƒ½/æ‰‹å‹•åˆ‡æ›æŒ‰éˆ•
+### 新增
+- **小地圖大小調整**（`systems/gameState.js`、`systems/hud.js`、`systems/ui.js`）：設定面板新增小地圖大小區塊（0~10 格色塊），OFF 時隱藏 minimapCanvas 並將 minimap-info 移至 top-left 同高；數值以 `minimapSize` 儲存於 localStorage，版本更新不重置
+- **視野智能/手動模式**（`systems/gameState.js`、`systems/camera.js`、`systems/ui.js`）：`_updateMobileCameraZoom()` 重構為 `_updateCameraZoom()`，支援桌機與手機；新增 `cameraMode`（smart/manual）與 `cameraZoomLevel`（1~10）設定；`worldToScreen()` 與 `drawTerrain()` 的 zoom 條件移除 `isMobile` 限制；設定面板新增 10 格縮放刻度調整器與智能/手動切換按鈕
 
 ---
 
 ## v0.57.7 - 2026-05-25
 
-### ä¿®å¾©
-- **æŠ€èƒ½æ¨¹ forceStart è·¯å¾‘æœªè®€ localStorage**ï¼ˆ`systems/evolution.js`ï¼‰ï¼š`buildSkillTreeOverlay(forceStart)` ç¾åœ¨èˆ‡ `fromHome` èµ°ç›¸åŒæµç¨‹â€”â€”é–‹å•Ÿæ™‚è®€å– `skillPoints` / `playerSkills`ï¼Œå™¨å®˜ç¹¼æ‰¿åˆ—è¡¨æ”¹è®€ `lastRunOrgans`ï¼›åŽŸæœ¬è®€è¨˜æ†¶é«” `gameState.player.organs` çš„é‚è¼¯é™ç¸®è‡³ `postGame` æ¨¡å¼ï¼ˆéŠæˆ²å‰›çµæŸè¨˜æ†¶é«”ä»å®Œæ•´çš„æƒ…æ³ï¼‰ï¼›ä¿®å¾©äº†åˆ·æ–°å¾Œé€²å…¥æŠ€èƒ½æ¨¹çœ‹ä¸åˆ°æŠ€èƒ½é»žèˆ‡å¯ç¹¼æ‰¿å™¨å®˜çš„å•é¡Œ
+### 修復
+- **技能樹 forceStart 路徑未讀 localStorage**（`systems/evolution.js`）：`buildSkillTreeOverlay(forceStart)` 現在與 `fromHome` 走相同流程——開啟時讀取 `skillPoints` / `playerSkills`，器官繼承列表改讀 `lastRunOrgans`；原本讀記憶體 `gameState.player.organs` 的邏輯限縮至 `postGame` 模式（遊戲剛結束記憶體仍完整的情況）；修復了刷新後進入技能樹看不到技能點與可繼承器官的問題
 
 ---
 
 ## v0.57.6 - 2026-05-25
 
-### èª¿æ•´
-- **ç„¡è‰é£Ÿæ€§æ™‚æžœå­ XP é™ç‚º 1**ï¼ˆ`systems/player.js`ï¼‰ï¼š`_collectFruit()` æ–°å¢žè‰é£Ÿæ€§ç­‰ç´šåˆ¤æ–·ï¼›`ev.herbivore >= 1` ç¶­æŒåŽŸè¨ˆç®—ï¼ˆåŸºç¤Ž5 + forager + è‰é£Ÿbonusï¼‰ï¼Œæœªé”è‰é£Ÿæ€§ Lv1 å‰‡åªçµ¦ 1 XPï¼›é¿å…åˆ·å·¨äººæ™‚çŽ©å®¶é åƒæžœå­è§¸ç™¼å‡ç´šå›žè¡€
+### 調整
+- **無草食性時果子 XP 降為 1**（`systems/player.js`）：`_collectFruit()` 新增草食性等級判斷；`ev.herbivore >= 1` 維持原計算（基礎5 + forager + 草食bonus），未達草食性 Lv1 則只給 1 XP；避免刷巨人時玩家靠吃果子觸發升級回血
 
 ---
 
 ## v0.57.5 - 2026-05-25
 
-### ä¿®å¾©
-- **é˜¿å¥‡çˆ¾å­å½ˆç©¿é€æ•™å­¸æœ¨æ¨**ï¼ˆ`systems/player.js`ï¼‰ï¼š`_checkProjectileHit()` çš„ targets é™£åˆ—è£œå…¥ `gameState.tutorialStump`ï¼Œä¸¦ç¢ºèªæ­»äº¡è·¯ç”±åŒ…å« `isTutorialStump` åˆ¤æ–·
-- **é–‹å§‹éŠæˆ²è·³éŽæŠ€èƒ½æ¨¹å°Žè‡´æ‰€æœ‰å±¬æ€§ä¸Ÿå¤±**ï¼ˆ`main.js`ã€`systems/evolution.js`ï¼‰ï¼š`loadSavedOrgans()` æŠ½å‡ºç‚ºç¨ç«‹å‡½å¼ä¸¦åœ¨ `initializeGame()` æ­¥é©Ÿ 8 çš„ `applySkillBonuses()` ä¹‹å‰å‘¼å«ï¼Œç¢ºä¿å™¨å®˜æ•ˆæžœä¸ä¾è³´æŠ€èƒ½æ¨¹é¢æ¿é–‹å•Ÿï¼›`buildSkillTreeOverlay()` çš„ `fromHome` è·¯å¾‘ç§»é™¤é‡è¤‡çš„å™¨å®˜è¼‰å…¥å‘¼å«
+### 修復
+- **阿奇爾子彈穿透教學木樁**（`systems/player.js`）：`_checkProjectileHit()` 的 targets 陣列補入 `gameState.tutorialStump`，並確認死亡路由包含 `isTutorialStump` 判斷
+- **開始遊戲跳過技能樹導致所有屬性丟失**（`main.js`、`systems/evolution.js`）：`loadSavedOrgans()` 抽出為獨立函式並在 `initializeGame()` 步驟 8 的 `applySkillBonuses()` 之前呼叫，確保器官效果不依賴技能樹面板開啟；`buildSkillTreeOverlay()` 的 `fromHome` 路徑移除重複的器官載入呼叫
 
-### æ–°å¢ž
-- **è¼”åŠ©åŠŸèƒ½ã€Œæ°¸é å±…ä¸­ã€é¸é …**ï¼ˆ`systems/gameState.js`ã€`systems/camera.js`ã€`systems/ui.js`ï¼‰ï¼šè¨­å®šé¢æ¿è¼”åŠ©åŠŸèƒ½å€å¡Šæ–°å¢ž Toggleï¼›é–‹å•Ÿå¾Œè¦–è§’é‚Šç•Œé–¾å€¼å¾ž 30% æ”¹ç‚º 50%ï¼Œè§’è‰²æ°¸é å›ºå®šæ–¼ç•«é¢æ­£ä¸­å¤®ï¼›é è¨­é—œé–‰ï¼ŒçŽ©å®¶è‡ªç”±é¸æ“‡
+### 新增
+- **輔助功能「永遠居中」選項**（`systems/gameState.js`、`systems/camera.js`、`systems/ui.js`）：設定面板輔助功能區塊新增 Toggle；開啟後視角邊界閾值從 30% 改為 50%，角色永遠固定於畫面正中央；預設關閉，玩家自由選擇
 
-### èª¿æ•´
-- **æ‰‹æ©Ÿæ”»æ“Šè“„åŠ›æ”¹ç‚º touchstart å³é–‹å§‹è¨ˆæ™‚**ï¼ˆ`systems/mobile.js`ï¼‰ï¼šæ”»æ“ŠæŒ‰éˆ• touchstart çž¬é–“é–‹å§‹è“„åŠ›è¨ˆæ™‚ï¼Œtouchend æ™‚ä¾è“„åŠ›æ™‚é–“ï¼ˆâ‰¥500msï¼‰ç™¼å‹•è“„åŠ›æ”»æ“Šï¼ˆå‚·å®³ Ã—2ï¼‰ï¼Œå¦å‰‡æ™®é€šæ”»æ“Šï¼›touchcancel é‡ç½®è“„åŠ›ç‹€æ…‹ï¼›`initializeGame()` è£œé½Šä¸‰å€‹è“„åŠ›æ——æ¨™çš„é‡ç½®
+### 調整
+- **手機攻擊蓄力改為 touchstart 即開始計時**（`systems/mobile.js`）：攻擊按鈕 touchstart 瞬間開始蓄力計時，touchend 時依蓄力時間（≥500ms）發動蓄力攻擊（傷害 ×2），否則普通攻擊；touchcancel 重置蓄力狀態；`initializeGame()` 補齊三個蓄力旗標的重置
 
 ---
 
 ## v0.57.4 - 2026-05-25
 
-### ä¿®å¾©
-- **è¶£å‘³æŽ’è¡Œæ¦œè§’è‰²æ¬„**ï¼ˆ`systems/leaderboard.js`ï¼‰ï¼šè§’è‰²å¾žåå­—ä¸‹å°å­—ç¨ç«‹ç‚ºç¬¬ä¸‰æ¬„ï¼Œè¡¨æ ¼çµæ§‹æ”¹ç‚ºã€ŒæŽ’åï½œåå­—ï½œè§’è‰²ï½œæ•¸å€¼ï½œç‰ˆæœ¬ï½œæ—¥æœŸã€ï¼ˆ6 æ¬„ï¼‰
-- **é˜¿å¥‡çˆ¾å¤œæ™šå…‰åœˆ**ï¼ˆ`systems/hud.js`ï¼‰ï¼šå¤œæ™šå¤–åœˆå¾žåœ“å½¢ `arc` æ”¹ç‚ºä¸‰è§’å½¢ï¼Œèˆ‡è§’è‰²å¤–åž‹ä¸€è‡´
-- **é˜¿å¥‡çˆ¾ FæŠ€è¦–è¦ºæ•ˆæžœ**ï¼ˆ`systems/hud.js`ï¼‰ï¼šFæŠ€è¡åˆºï¼ˆ`archerDashActive`ï¼‰æœŸé–“åœ¨è§’è‰²å¤–åœé¡¯ç¤ºç´…è‰²ä¸‰è§’å½¢é‚Šæ¡†ï¼Œå«ç´…è‰²å…‰æšˆ
+### 修復
+- **趣味排行榜角色欄**（`systems/leaderboard.js`）：角色從名字下小字獨立為第三欄，表格結構改為「排名｜名字｜角色｜數值｜版本｜日期」（6 欄）
+- **阿奇爾夜晚光圈**（`systems/hud.js`）：夜晚外圈從圓形 `arc` 改為三角形，與角色外型一致
+- **阿奇爾 F技視覺效果**（`systems/hud.js`）：F技衝刺（`archerDashActive`）期間在角色外圍顯示紅色三角形邊框，含紅色光暈
 
 ---
 
 ## v0.57.3 - 2026-05-25
 
-### ä¿®å¾©
-- **TOP 10 è§’è‰²æ¬„ä½å…¨é¡¯ç¤ºã€Œå™ªéµ‘ã€**ï¼ˆ`config/supabase.js`ï¼‰ï¼š`fetchTop10` çš„ select ç¼ºå°‘ `character` æ¬„ä½ï¼Œå°Žè‡´ `row.character` æ°¸é ç‚º `undefined` è€Œ fallback åˆ° `koel`ï¼›å·²è£œä¸Š
-- **è¶£å‘³æŽ’è¡Œæ¦œç„¡è§’è‰²é¡¯ç¤º**ï¼ˆ`config/supabase.js`ã€`systems/leaderboard.js`ï¼‰ï¼šæ‰€æœ‰ `fetchFun*` æŸ¥è©¢çš„ select è£œä¸Š `character`ï¼›`loadFunRows` é¡¯ç¤ºé‚è¼¯åœ¨åå­—ä¸‹æ–¹åŠ è§’è‰²å°å­—
+### 修復
+- **TOP 10 角色欄位全顯示「噪鵑」**（`config/supabase.js`）：`fetchTop10` 的 select 缺少 `character` 欄位，導致 `row.character` 永遠為 `undefined` 而 fallback 到 `koel`；已補上
+- **趣味排行榜無角色顯示**（`config/supabase.js`、`systems/leaderboard.js`）：所有 `fetchFun*` 查詢的 select 補上 `character`；`loadFunRows` 顯示邏輯在名字下方加角色小字
 
 ---
 
 ## v0.57.2 - 2026-05-25
 
-### ä¿®å¾©
-- **è§’è‰²é¸æ“‡ç•«é¢**ï¼ˆ`systems/ui.js`ï¼‰ï¼šè§’è‰²æŒ‰éˆ•æ¨™ç±¤æ”¹ç”¨ `t('charXxx')` èªžè¨€åŒ…é¡¯ç¤ºï¼Œéš¨èªžè¨€åˆ‡æ›åŒæ­¥æ›´æ–°ï¼ˆåŽŸæœ¬ç¡¬å¯« `c.name + 'ï¼ˆ' + c.nameEn + 'ï¼‰'`ï¼‰
+### 修復
+- **角色選擇畫面**（`systems/ui.js`）：角色按鈕標籤改用 `t('charXxx')` 語言包顯示，隨語言切換同步更新（原本硬寫 `c.name + '（' + c.nameEn + '）'`）
 
 ---
 
 ## v0.57.1 - 2026-05-25
 
-### ä¿®å¾©
-- **è§’è‰²åç¨±èªžè¨€åŒ…**ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼šä¸­æ–‡æ”¹ç‚ºã€Œå™ªéµ‘ã€ï¼ã€Œé˜¿å¥‡çˆ¾ã€ï¼Œè‹±æ–‡æ”¹ç‚ºã€ŒKoelã€ï¼ã€ŒArcherfishã€ï¼ŒæŽ’è¡Œæ¦œèˆ‡ TOP 10 é¡¯ç¤ºæ›´ç°¡æ½”
+### 修復
+- **角色名稱語言包**（`lang/zh-TW.js`、`lang/en.js`）：中文改為「噪鵑」／「阿奇爾」，英文改為「Koel」／「Archerfish」，排行榜與 TOP 10 顯示更簡潔
 
 ---
 
 ## v0.57.0 - 2026-05-25
 
-### æ–°å¢ž
-- **æŽ’è¡Œæ¦œè§’è‰²æ¬„ä½**ï¼ˆ`systems/leaderboard.js`ã€`systems/ui.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼šå…¨å±æŽ’è¡Œæ¦œè¡¨æ ¼åœ¨ã€Œåå­—ã€å¾Œæ–°å¢žã€Œè§’è‰²ã€æ¬„ä½ï¼›TOP 10 æµ®çª—åå­—ä¸‹æ–¹é¡¯ç¤ºå°å­—è§’è‰²æ¨™ç±¤ï¼›åˆ†æ•¸ä¸Šå‚³ data ç‰©ä»¶åŠ å…¥ `character` æ¬„ä½ï¼Œè‡ªå‹•è¨˜éŒ„æœ¬å±€é¸ç”¨è§’è‰²
+### 新增
+- **排行榜角色欄位**（`systems/leaderboard.js`、`systems/ui.js`、`lang/zh-TW.js`、`lang/en.js`）：全屏排行榜表格在「名字」後新增「角色」欄位；TOP 10 浮窗名字下方顯示小字角色標籤；分數上傳 data 物件加入 `character` 欄位，自動記錄本局選用角色
 
 ---
 
 ## v0.56.0 - 2026-05-25
 
-### æ–°å¢ž
-- **è§’è‰²é¸æ“‡ç³»çµ±**ï¼ˆ`config/characters.js`ã€`systems/ui.js`ï¼‰ï¼šé›£åº¦é¸æ“‡å¾Œå‡ºç¾è§’è‰²é¸æ“‡ç•«é¢ï¼›å™ªéµ‘/é˜¿å¥‡çˆ¾å¯é¸ï¼Œã€Œï¼Ÿå³å°‡æŽ¨å‡ºðŸ”’ã€æ ¼å­é ç•™ï¼›`CHARACTERS` å¸¸æ•¸å®šç¾©å„è§’è‰²å±¬æ€§ã€èµ·å§‹å™¨å®˜ã€èµ·å§‹é€²åŒ–
-- **é˜¿å¥‡çˆ¾ï¼ˆArcherfishï¼‰**ï¼ˆ`config/characters.js`ã€`systems/player.js`ã€`systems/combat.js`ï¼‰ï¼šé¦–å€‹é ç¨‹æ”»æ“Šè§’è‰²ï¼›HP60/é€Ÿåº¦2.0ï¼ˆæ°´ä¸­+50%ï¼‰/æ”»æ“Šç¯„åœ120px/æš´æ“Š1.25x/æ”»é€Ÿ1500msï¼›ä¸‰è§’å½¢å¤–è§€ï¼ˆç¥žä»™é­šè— #4FC3F7ï¼‰ï¼Œå·¦å³ç¿»è½‰æœå‘ç§»å‹•æ–¹å‘
-- **Reload å……èƒ½ç³»çµ±**ï¼ˆ`systems/player.js`ï¼‰ï¼šä¸æ”»æ“Šæ™‚æ¯1.0ç§’ï¼ˆå—æ”»é€Ÿå½±éŸ¿ï¼‰+1æ ¼ï¼Œä¸Šé™3æ ¼ï¼›ä»»ä½•æ”»æ“Šå¾Œè¨ˆæ™‚å™¨é‡ç½®æ¶ˆè€—1æ ¼ï¼›é ­ä¸Š3æ ¼æŒ‡ç¤º+å‘¨åœè—è‰²æ³¡æ³¡è¦–è¦º
-- **å­å½ˆç³»çµ±**ï¼ˆ`systems/player.js`ã€`systems/combat.js`ï¼‰ï¼š`gameState.projectiles[]` ç®¡ç†ï¼›é€Ÿåº¦9px/å¹€ï¼Œè¶…å‡ºæ”»æ“Šç¯„åœ120%æ¶ˆå¤±ï¼›è—è‰²åŠé€æ˜Žæ°´æ™¶bubbleè¦–è¦º
-- **è‡ªå‹•/æ‰‹å‹•æ”»æ“Šæ¨¡å¼**ï¼ˆ`systems/player.js`ã€`systems/input.js`ï¼‰ï¼šè‡ªå‹•=ç§»å‹•æ–¹å‘Â±45Â°æ‰‡å½¢å…§æœ€è¿‘ç›®æ¨™å„ªå…ˆï¼Œç„¡ç›®æ¨™â†’å…¨å ´æœ€è¿‘ï¼›æ‰‹å‹•é›»è…¦=æ»‘é¼ æ–¹å‘+æŒ‰ä½è“„åŠ›ï¼ˆæœ€å¤š3æ ¼ï¼‰ï¼Œæ”¾é–‹ç™¼å°„ï¼›æ‰‹å‹•æ‰‹æ©Ÿ=æ”»æ“Šå€è®Šæ–¹å‘éˆ•ï¼Œæ‹–å‹•æ±ºå®šæ–¹å‘
-- **é˜¿å¥‡çˆ¾ F æŠ€è¡åˆº**ï¼ˆ`systems/player.js`ï¼‰ï¼šé™¸åœ°+3é€Ÿ/æ°´ä¸­+5é€Ÿï¼ŒæŒçºŒ3ç§’ï¼Œè¡åˆºæœŸé–“æ’žæ€ªæšˆçœ©0.5ç§’+é™„åŠ å‚·å®³ï¼Œå†·å»15ç§’
-- **æ–°å™¨å®˜ï¼šå˜´å™¨**ï¼ˆ`config/organs.js`ï¼‰ï¼šæ”»æ“Šé¡ž Lv1~3ï¼Œç´¯è¨ˆæ”»æ“Š+10ï¼ŒLv3 å‘½ä¸­ä½¿ç›®æ¨™ç§»å‹•é€Ÿåº¦-20%æŒçºŒ2ç§’ï¼›é˜¿å¥‡çˆ¾èµ·å§‹ Lv3
-- **æ–°å™¨å®˜ï¼šé­šé±—**ï¼ˆ`config/organs.js`ï¼‰ï¼šé˜²ç¦¦é¡ž Lv1~3ï¼Œç´¯è¨ˆéŸŒæ€§+30%ï¼ˆLv1=5%/Lv2=15%/Lv3=30%ï¼‰
-- **æ–°å™¨å®˜ï¼šé¯Šé­šå—…è‘‰**ï¼ˆ`config/organs.js`ï¼‰ï¼šéˆåŠ›é¡ž Lv1~3ï¼Œè¦†è“‹æ•ˆæžœï¼Œå°ä½Žè¡€é‡ç›®æ¨™å‚·å®³+10/15/20%ï¼ˆé–¾å€¼15/30/50%ï¼‰
-- **éŸŒæ€§å±¬æ€§ç³»çµ±**ï¼ˆ`systems/utils.js`ã€`systems/organs.js`ã€`systems/combat.js`ï¼‰ï¼šæ¸›å°‘è¢«æŽ§åˆ¶æŒçºŒæ™‚é–“ï¼Œä¸å½±éŸ¿æ¸›é€Ÿå¹…åº¦ï¼›`applyTenacity(durationMs, target)` é€šç”¨å‡½å¼ï¼›é©ç”¨æšˆçœ©/ç¡¬æŽ§/æ¸›é€Ÿï¼›å·²å¥—ç”¨è‡³çŒžçŒæš´æ“Šç·©é€Ÿã€é±·é­šæ­»äº¡ç¿»æ»¾
-- **å˜´å™¨ Lv3 æ¸›é€Ÿ**ï¼ˆ`systems/player.js`ã€`systems/combat.js`ã€`systems/creatures.js`ï¼‰ï¼šè¿‘æˆ°åŠé ç¨‹å‘½ä¸­å‡å¯æ–½åŠ  -20% é€Ÿåº¦ã€2ç§’ï¼ˆå—ç›®æ¨™éŸŒæ€§ç¸®çŸ­ï¼‰ï¼›`_effSpeed(c)` çµ±ä¸€ç®¡ç†æœ‰æ•ˆé€Ÿåº¦ï¼Œå·²å¥—ç”¨è‡³ neutral/hostile/elite/boss æ‰€æœ‰ç§»å‹•è·¯å¾‘
-- **é¯Šé­šå—…è‘‰è™•æ±ºåŠ æˆ**ï¼ˆ`systems/player.js`ã€`systems/combat.js`ï¼‰ï¼šè¿‘æˆ°åŠé ç¨‹æ”»æ“Šä¸­ï¼Œè‹¥ç›®æ¨™è¡€é‡ä½Žæ–¼é–¾å€¼å‰‡é¡å¤–åŠ æˆå‚·å®³
-- **æ‰‹æ©Ÿè¦–é‡Žç¸®æ”¾**ï¼ˆ`systems/camera.js`ã€`main.js`ï¼‰ï¼š`_updateMobileCameraZoom()` ä¾çŽ©å®¶é«”åž‹å‹•æ…‹èª¿æ•´ `cameraZoom`ï¼ˆé«”åž‹æ¯+20%ç¸®å°5%ï¼Œæœ€å°0.6ï¼‰ï¼›`worldToScreen()` ä»¥èž¢å¹•ä¸­å¿ƒç‚ºåŸºæº–ç¸®æ”¾ï¼Œæ¡Œæ©Ÿä¸å—å½±éŸ¿
-- **Boss è¡€æ¢ Debuff åœ–ç¤º**ï¼ˆ`systems/boss.js`ï¼‰ï¼šè¡€æ¢ä¸‹æ–¹æ­£æ–¹å½¢åœ–ç¤ºåˆ—ï¼›æ¯’å‚·ç¶ /æµè¡€ç´…/æ¸›é€Ÿè—/æšˆçœ©é»ƒï¼›é€†æ™‚é‡ç¸®æ¸›é€²åº¦é‚Šæ¡†ï¼›æœ€å¤š4å€‹åŒæ™‚é¡¯ç¤º
-- **Debuff StartTime è¿½è¹¤**ï¼ˆ`systems/combat.js`ã€`systems/player.js`ï¼‰ï¼šæ–½åŠ æ¯’/æµè¡€/æ¸›é€Ÿ/æšˆçœ©æ™‚åŒæ­¥è¨˜éŒ„ `_[type]StartTime`ï¼Œä¾› Debuff åœ–ç¤ºå¼§åº¦é€²åº¦è¨ˆç®—
+### 新增
+- **角色選擇系統**（`config/characters.js`、`systems/ui.js`）：難度選擇後出現角色選擇畫面；噪鵑/阿奇爾可選，「？即將推出🔒」格子預留；`CHARACTERS` 常數定義各角色屬性、起始器官、起始進化
+- **阿奇爾（Archerfish）**（`config/characters.js`、`systems/player.js`、`systems/combat.js`）：首個遠程攻擊角色；HP60/速度2.0（水中+50%）/攻擊範圍120px/暴擊1.25x/攻速1500ms；三角形外觀（神仙魚藍 #4FC3F7），左右翻轉朝向移動方向
+- **Reload 充能系統**（`systems/player.js`）：不攻擊時每1.0秒（受攻速影響）+1格，上限3格；任何攻擊後計時器重置消耗1格；頭上3格指示+周圍藍色泡泡視覺
+- **子彈系統**（`systems/player.js`、`systems/combat.js`）：`gameState.projectiles[]` 管理；速度9px/幀，超出攻擊範圍120%消失；藍色半透明水晶bubble視覺
+- **自動/手動攻擊模式**（`systems/player.js`、`systems/input.js`）：自動=移動方向±45°扇形內最近目標優先，無目標→全場最近；手動電腦=滑鼠方向+按住蓄力（最多3格），放開發射；手動手機=攻擊區變方向鈕，拖動決定方向
+- **阿奇爾 F 技衝刺**（`systems/player.js`）：陸地+3速/水中+5速，持續3秒，衝刺期間撞怪暈眩0.5秒+附加傷害，冷卻15秒
+- **新器官：嘴器**（`config/organs.js`）：攻擊類 Lv1~3，累計攻擊+10，Lv3 命中使目標移動速度-20%持續2秒；阿奇爾起始 Lv3
+- **新器官：魚鱗**（`config/organs.js`）：防禦類 Lv1~3，累計韌性+30%（Lv1=5%/Lv2=15%/Lv3=30%）
+- **新器官：鯊魚嗅葉**（`config/organs.js`）：靈力類 Lv1~3，覆蓋效果，對低血量目標傷害+10/15/20%（閾值15/30/50%）
+- **韌性屬性系統**（`systems/utils.js`、`systems/organs.js`、`systems/combat.js`）：減少被控制持續時間，不影響減速幅度；`applyTenacity(durationMs, target)` 通用函式；適用暈眩/硬控/減速；已套用至猞猁暴擊緩速、鱷魚死亡翻滾
+- **嘴器 Lv3 減速**（`systems/player.js`、`systems/combat.js`、`systems/creatures.js`）：近戰及遠程命中均可施加 -20% 速度、2秒（受目標韌性縮短）；`_effSpeed(c)` 統一管理有效速度，已套用至 neutral/hostile/elite/boss 所有移動路徑
+- **鯊魚嗅葉處決加成**（`systems/player.js`、`systems/combat.js`）：近戰及遠程攻擊中，若目標血量低於閾值則額外加成傷害
+- **手機視野縮放**（`systems/camera.js`、`main.js`）：`_updateMobileCameraZoom()` 依玩家體型動態調整 `cameraZoom`（體型每+20%縮小5%，最小0.6）；`worldToScreen()` 以螢幕中心為基準縮放，桌機不受影響
+- **Boss 血條 Debuff 圖示**（`systems/boss.js`）：血條下方正方形圖示列；毒傷綠/流血紅/減速藍/暈眩黃；逆時針縮減進度邊框；最多4個同時顯示
+- **Debuff StartTime 追蹤**（`systems/combat.js`、`systems/player.js`）：施加毒/流血/減速/暈眩時同步記錄 `_[type]StartTime`，供 Debuff 圖示弧度進度計算
 
-### ä¿®å¾©
-- **å™¨å®˜åç¨±é¡¯ç¤º undefined**ï¼ˆ`config/organs.js`ï¼‰ï¼š`mouthOrgan`/`fishScale`/`sharkLeaf` è£œä¸Š `name` æ¬„ä½
-- **ç²¾è‹±æ€ª/Boss å˜´å™¨æ¸›é€Ÿç„¡æ•ˆ**ï¼ˆ`systems/elite.js`ã€`systems/boss.js`ï¼‰ï¼šç§»å‹•å‘¼å«æ”¹ç”¨ `_effSpeed()`ï¼Œæ¸›é€Ÿç¾åœ¨æ­£ç¢ºç”Ÿæ•ˆ
-- **æ»‘é¼ æ‹–æ›³ç”¢ç”Ÿæ–‡å­—é¸å–**ï¼ˆ`index.html`ï¼‰ï¼š`#game-container` å¥—ç”¨ `user-select: none`ï¼Œç¦æ­¢æ–‡å­—é¸å–å’Œå³éµé¸å–®
-- **æ‰‹æ©Ÿè¿”å›žéµ/å·¦æ»‘é€€å‡ºéŠæˆ²**ï¼ˆ`main.js`ï¼‰ï¼š`history.pushState` + `popstate` å…¨ç¨‹æ””æˆªç€è¦½å™¨è¿”å›žè¡Œç‚º
+### 修復
+- **器官名稱顯示 undefined**（`config/organs.js`）：`mouthOrgan`/`fishScale`/`sharkLeaf` 補上 `name` 欄位
+- **精英怪/Boss 嘴器減速無效**（`systems/elite.js`、`systems/boss.js`）：移動呼叫改用 `_effSpeed()`，減速現在正確生效
+- **滑鼠拖曳產生文字選取**（`index.html`）：`#game-container` 套用 `user-select: none`，禁止文字選取和右鍵選單
+- **手機返回鍵/左滑退出遊戲**（`main.js`）：`history.pushState` + `popstate` 全程攔截瀏覽器返回行為
 
 ---
 
 ## v0.55.0 - 2026-05-24
 
-### æ–°å¢žï¼ˆPhase Cï¼‰
+### 新增（Phase C）
 
-- **æ–°å™¨å®˜ Ã— 3**ï¼ˆ`config/organs.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼š
-  - `mouthOrgan`ï¼ˆæ”»æ“Šåž‹ï¼Œ3 ç´šï¼‰ï¼šæ”»æ“Š+4 â†’ +4 â†’ +2ï¼ŒLv3 å‘½ä¸­ä½¿ç›®æ¨™ç§»é€Ÿ -20% / 2 ç§’
-  - `fishScale`ï¼ˆé˜²ç¦¦åž‹ï¼Œ3 ç´šï¼‰ï¼šéŸŒæ€§ +5% â†’ +10% â†’ +15%ï¼ˆç´¯è¨ˆ 30%ï¼‰ï¼Œæ¸›å°‘çŽ©å®¶è¢«æŽ§åˆ¶æ™‚é–“
-  - `sharkLeaf`ï¼ˆç²¾ç¥žåž‹ï¼Œ3 ç´šï¼‰ï¼šå°ä½Žè¡€é‡ç›®æ¨™ï¼ˆ15%/30%/50%ï¼‰å‚·å®³åŠ æˆ 10%/15%/20%
+- **新器官 × 3**（`config/organs.js`、`lang/zh-TW.js`、`lang/en.js`）：
+  - `mouthOrgan`（攻擊型，3 級）：攻擊+4 → +4 → +2，Lv3 命中使目標移速 -20% / 2 秒
+  - `fishScale`（防禦型，3 級）：韌性 +5% → +10% → +15%（累計 30%），減少玩家被控制時間
+  - `sharkLeaf`（精神型，3 級）：對低血量目標（15%/30%/50%）傷害加成 10%/15%/20%
 
-- **éŸŒæ€§å±¬æ€§ç³»çµ±**ï¼ˆ`systems/utils.js`ï¼‰ï¼š
-  `applyTenacity(durationMs, target)` æ ¹æ“šç›®æ¨™è‡ªèº« `tenacity`ï¼ˆ0~1ï¼‰ç¸®çŸ­ CC æ•ˆæžœæŒçºŒæ™‚é–“ï¼›
-  å·²å¥—ç”¨è‡³çŽ©å®¶è¢«çŒžçŒç·©é€Ÿï¼ˆ`_lynxSlowUntil`ï¼‰åŠé±·é­šæ­»äº¡ç¿»æ»¾ï¼ˆ`_stunUntil`ï¼‰
+- **韌性屬性系統**（`systems/utils.js`）：
+  `applyTenacity(durationMs, target)` 根據目標自身 `tenacity`（0~1）縮短 CC 效果持續時間；
+  已套用至玩家被猞猁緩速（`_lynxSlowUntil`）及鱷魚死亡翻滾（`_stunUntil`）
 
-- **å˜´å™¨ Lv3 æ¸›é€Ÿ**ï¼ˆ`systems/player.js`ã€`systems/combat.js`ã€`systems/creatures.js`ï¼‰ï¼š
-  è¿‘æˆ°å‘½ä¸­ï¼ˆ`playerAttack`ï¼‰èˆ‡é ç¨‹å‘½ä¸­ï¼ˆ`_checkProjectileHit`ï¼‰å‡å¯å°ç›®æ¨™æ–½åŠ  -20% é€Ÿåº¦ã€
-  æŒçºŒ 2 ç§’ï¼ˆå—ç›®æ¨™éŸŒæ€§ç¸®çŸ­ï¼‰ï¼›æ–°å¢ž `_effSpeed(c)` å‡½å¼çµ±ä¸€è™•ç†ç”Ÿç‰©æœ‰æ•ˆç§»å‹•é€Ÿåº¦ï¼Œ
-  å·²å¥—ç”¨è‡³ `updateNeutralCreatures`ã€`updateHostileCreatures` å…¨éƒ¨ç§»å‹•è·¯å¾‘
+- **嘴器 Lv3 減速**（`systems/player.js`、`systems/combat.js`、`systems/creatures.js`）：
+  近戰命中（`playerAttack`）與遠程命中（`_checkProjectileHit`）均可對目標施加 -20% 速度、
+  持續 2 秒（受目標韌性縮短）；新增 `_effSpeed(c)` 函式統一處理生物有效移動速度，
+  已套用至 `updateNeutralCreatures`、`updateHostileCreatures` 全部移動路徑
 
-- **é¯Šé­šè‘‰åŸ·è¡ŒåŠ æˆ**ï¼ˆ`systems/player.js`ã€`systems/combat.js`ï¼‰ï¼š
-  è¿‘æˆ°åŠé ç¨‹æ”»æ“Šä¸­ï¼Œè‹¥ç›®æ¨™è¡€é‡ä½Žæ–¼ç•¶å‰ç­‰ç´šé–¾å€¼å‰‡é¡å¤–åŠ æˆå‚·å®³ï¼›
-  `sharkLeaf` ç­‰ç´šç›´æŽ¥è®€å– `ORGANS.sharkLeaf.levels[lv-1].effects.executeBonus`
+- **鯊魚葉執行加成**（`systems/player.js`、`systems/combat.js`）：
+  近戰及遠程攻擊中，若目標血量低於當前等級閾值則額外加成傷害；
+  `sharkLeaf` 等級直接讀取 `ORGANS.sharkLeaf.levels[lv-1].effects.executeBonus`
 
-- **æ‰‹æ©Ÿè¦–é‡Žç¸®æ”¾**ï¼ˆ`systems/camera.js`ã€`main.js`ï¼‰ï¼š
-  `_updateMobileCameraZoom()` ä¾çŽ©å®¶é«”åž‹ï¼ˆradiusï¼‰è¨ˆç®—ç¸®æ”¾æ¯”ï¼ˆé«”åž‹å¢žåŠ  20% â†’ ç¸®å° 5%ï¼Œæœ€å° 0.6ï¼‰ï¼›
-  `worldToScreen()` åŠ å…¥ç¸®æ”¾é‚è¼¯ï¼ˆä»¥èž¢å¹•ä¸­å¿ƒç‚ºåŸºæº–ï¼‰ï¼Œåƒ…åœ¨ `gameState.isMobile` æ™‚å•Ÿç”¨
+- **手機視野縮放**（`systems/camera.js`、`main.js`）：
+  `_updateMobileCameraZoom()` 依玩家體型（radius）計算縮放比（體型增加 20% → 縮小 5%，最小 0.6）；
+  `worldToScreen()` 加入縮放邏輯（以螢幕中心為基準），僅在 `gameState.isMobile` 時啟用
 
-- **Boss è¡€æ¢ Debuff åœ–ç¤º**ï¼ˆ`systems/boss.js`ï¼‰ï¼š
-  `_drawBossDebuffIcons()` åœ¨ Boss è¡€æ¢æ­£ä¸‹æ–¹é¡¯ç¤ºæœ€å¤š 4 å€‹ Debuff åœ–ç¤ºï¼ˆæ¯’/æµè¡€/æ¸›é€Ÿ/æšˆçœ©ï¼‰ï¼Œ
-  æ¯å€‹åœ–ç¤ºå«æ·±è‰²èƒŒæ™¯ã€å½©è‰²é‚Šæ¡†ã€ç¸®å¯«æ¨™ç±¤ã€ä»¥åŠé€†æ™‚é‡å‰©é¤˜æ™‚é–“å¼§ï¼›
-  å„ Debuff æ–½åŠ é»žï¼ˆ`combat.js`ã€`player.js`ï¼‰åŒæ­¥è¨˜éŒ„ `_poisonStartTime`ã€`_bleedStartTime`ã€
-  `_slowStartTime`ã€`_stunStartTime`ï¼Œä¾›å¼§åº¦è¨ˆç®—ä½¿ç”¨
+- **Boss 血條 Debuff 圖示**（`systems/boss.js`）：
+  `_drawBossDebuffIcons()` 在 Boss 血條正下方顯示最多 4 個 Debuff 圖示（毒/流血/減速/暈眩），
+  每個圖示含深色背景、彩色邊框、縮寫標籤、以及逆時針剩餘時間弧；
+  各 Debuff 施加點（`combat.js`、`player.js`）同步記錄 `_poisonStartTime`、`_bleedStartTime`、
+  `_slowStartTime`、`_stunStartTime`，供弧度計算使用
 
 ---
 
 ## v0.54.1 - 2026-05-24
 
-### æ–°å¢ž
+### 新增
 
-- **Submit å‰åæ¬¡é è¦½**ï¼ˆ`systems/leaderboard.js`ï¼‰ï¼š
-  `showScoreSubmitPopup()` é¢æ¿é–‹å•Ÿæ™‚ç«‹å³ä¸¦è¡ŒæŸ¥è©¢ä¸€èˆ¬æ¦œåæ¬¡èˆ‡æ‰€æœ‰è¶£å‘³æ¦œï¼ˆ`Promise.all`ï¼‰ï¼Œ
-  é¡¯ç¤ºã€Œâ³ è¨ˆç®—ä¸­...ã€ï¼›æŸ¥è©¢å®Œæˆå¾Œåœ¨è¼¸å…¥æ¡†ä¸Šæ–¹é¡¯ç¤ºé è¨ˆæŽ’åèˆ‡å‘½ä¸­çš„è¶£å‘³æ¦œ TOP3ï¼›
-  æ–·ç·šæ™‚é¡¯ç¤ºé€£ç·šç•°å¸¸æç¤ºï¼›`funCategories` é™£åˆ—é›†ä¸­ç®¡ç†æ‰€æœ‰è¶£å‘³æ¦œæŸ¥è©¢é‚è¼¯ï¼Œ
-  æ–°å¢žè¶£å‘³æ¦œåˆ†é¡žæ™‚éœ€åŒæ­¥æ›´æ–°ï¼ˆå·²è¨˜éŒ„è‡³ `MAIN.md`ï¼‰
+- **Submit 前名次預覽**（`systems/leaderboard.js`）：
+  `showScoreSubmitPopup()` 面板開啟時立即並行查詢一般榜名次與所有趣味榜（`Promise.all`），
+  顯示「⏳ 計算中...」；查詢完成後在輸入框上方顯示預計排名與命中的趣味榜 TOP3；
+  斷線時顯示連線異常提示；`funCategories` 陣列集中管理所有趣味榜查詢邏輯，
+  新增趣味榜分類時需同步更新（已記錄至 `MAIN.md`）
 
 ---
 
-## æ–‡ä»¶ä¿®æ­£ - 2026-05-24ï¼ˆä¸æ›´æ–°ç‰ˆæœ¬è™Ÿï¼‰
+## 文件修正 - 2026-05-24（不更新版本號）
 
-### ä¿®å¾©
+### 修復
 
-- **XP Popup é¡¯ç¤ºæ•¸å€¼æœªåæ˜ è®Šç•° XP å€çŽ‡**ï¼ˆ`systems/player.js`ã€`systems/combat.js`ã€`systems/organs.js`ï¼‰ï¼š
-  `addXP()` æ”¹ç‚ºå›žå‚³å¯¦éš›åŠ å…¥çš„ XP å€¼ï¼ˆå·²ä¹˜ `mutationXpBonus`ï¼‰ï¼›
-  `handleGiantKill`ã€`handleKillerKill`ã€`handleKill`ã€`checkTreasureCollision`ã€`_collectFruit`ã€`handleEliteKill`
-  æ‰€æœ‰ `showXPPopup` å‘¼å«é»žçµ±ä¸€æ”¹ç”¨å›žå‚³å€¼ï¼Œç¢ºä¿ popup é¡¯ç¤ºèˆ‡å¯¦éš›ç²å¾— XP ä¸€è‡´ï¼›
-  `updateCorpseEating` çš„ `showFloatingText` XP æµ®å‹•æ–‡å­—åŒæ­¥ä¿®æ­£
+- **XP Popup 顯示數值未反映變異 XP 倍率**（`systems/player.js`、`systems/combat.js`、`systems/organs.js`）：
+  `addXP()` 改為回傳實際加入的 XP 值（已乘 `mutationXpBonus`）；
+  `handleGiantKill`、`handleKillerKill`、`handleKill`、`checkTreasureCollision`、`_collectFruit`、`handleEliteKill`
+  所有 `showXPPopup` 呼叫點統一改用回傳值，確保 popup 顯示與實際獲得 XP 一致；
+  `updateCorpseEating` 的 `showFloatingText` XP 浮動文字同步修正
 
 ---
 
 ## v0.54.0 - 2026-05-24
 
-### æ–°å¢ž
+### 新增
 
-- **é–ƒç¾è¦–è¦ºç‰¹æ•ˆ**ï¼ˆ`systems/hud.js`ã€`systems/player.js`ï¼‰ï¼š
-  é–ƒç¾è§¸ç™¼å¾Œæ’­æ”¾ 150ms ä¸‰æ®µç‰¹æ•ˆï¼šå‡ºç™¼é»žé‡‘è‰²ç…™éœ§ï¼ˆ0~100ms æ“´æ•£æ¶ˆæ•£ï¼‰ã€åˆ°é”é»žç™½è‰²å…‰çƒï¼ˆ50ms~çµæŸ æ¼¸æ·¡ï¼‰ã€Aâ†’B å…‰ç·šæŽƒéŽï¼ˆé ­éƒ¨ t=0â†’1ï¼Œå°¾å·´å»¶é² 0.35 å‡ºç™¼ï¼Œç·šæ€§æ¼¸å±¤ï¼‰
-- **é–ƒç¾ç›´ç·šæžœå­å¸æ”¶**ï¼ˆ`systems/player.js`ï¼‰ï¼š
-  é–ƒç¾è·¯å¾‘ Aâ†’B ç›´ç·šä¸Šï¼ˆå¯¬åº¦ = radius + pickupRangeï¼‰çš„æžœå­å…¨éƒ¨å¸æ”¶ï¼Œçµ¦äºˆæ­£å¸¸ XPï¼›è¤‡ç”¨ `_collectFruit()` å‡½å¼ï¼Œä¸é‡è¤‡ XP é‚è¼¯
-- **ç‰¹æ®ŠæŠ€èƒ½éµå¯è‡ªè¨‚**ï¼ˆ`systems/gameState.js`ã€`systems/ui.js`ã€`systems/input.js`ï¼‰ï¼š
-  `DEFAULT_SETTINGS.keys.dash = 'f'`ï¼›è¨­å®šä»‹é¢æŒ‰éµè¨­å®šå€å¡Šæ–°å¢žã€Œç‰¹æ®ŠæŠ€èƒ½éµã€ä¸€æ¬„ï¼ŒçŽ©å®¶å¯ä»»æ„é‡ç¶
+- **閃現視覺特效**（`systems/hud.js`、`systems/player.js`）：
+  閃現觸發後播放 150ms 三段特效：出發點金色煙霧（0~100ms 擴散消散）、到達點白色光球（50ms~結束 漸淡）、A→B 光線掃過（頭部 t=0→1，尾巴延遲 0.35 出發，線性漸層）
+- **閃現直線果子吸收**（`systems/player.js`）：
+  閃現路徑 A→B 直線上（寬度 = radius + pickupRange）的果子全部吸收，給予正常 XP；複用 `_collectFruit()` 函式，不重複 XP 邏輯
+- **特殊技能鍵可自訂**（`systems/gameState.js`、`systems/ui.js`、`systems/input.js`）：
+  `DEFAULT_SETTINGS.keys.dash = 'f'`；設定介面按鍵設定區塊新增「特殊技能鍵」一欄，玩家可任意重綁
 
-### èª¿æ•´
+### 調整
 
-- æå– `_collectFruit(p, fruit)` å‡½å¼ï¼ˆ`systems/player.js`ï¼‰ï¼šåŽŸ `checkFruitCollision` çš„å¸æ”¶é‚è¼¯æ”¹ç”±æ­¤å‡½å¼è™•ç†ï¼Œ`playerDash` ä¹Ÿå…±ç”¨
+- 提取 `_collectFruit(p, fruit)` 函式（`systems/player.js`）：原 `checkFruitCollision` 的吸收邏輯改由此函式處理，`playerDash` 也共用
 
 ---
 
 ## v0.53.1 - 2026-05-24
 
-### èª¿æ•´
+### 調整
 
-- **æ‰‹æ©Ÿç‰ˆ ðŸ’¨ é–ƒç¾æŒ‰éˆ•ç¸®å°**ï¼ˆ`systems/mobile.js`ï¼‰ï¼šåµæ¸¬ç¯„åœï¼ˆ`_dashZone()`ï¼‰å’Œè¦–è¦ºå°ºå¯¸ç¸®å°ç‚ºåŽŸæ”»æ“Šå€çš„ 50%ï¼Œä¸­å¿ƒé»žä½ç½®ä¸è®Šï¼›æ”»æ“Šå€å®Œå…¨ä¸å—å½±éŸ¿
-- **æ¡Œæ©Ÿç‰ˆæŒ‡ç¤ºå™¨ä½ç½®å°æ‡‰æ›´æ–°**ï¼ˆ`systems/hud.js`ï¼‰ï¼š`ðŸ’¨ F` ç¹ªè£½çŸ©å½¢æ”¹ç‚ºç¸®å°å¾Œçš„å°ºå¯¸ï¼ˆ`dashW Ã— dashH`ï¼‰ï¼Œä½ç½®èˆ‡æ‰‹æ©Ÿç›´å‘é–ƒç¾å€å°æ‡‰
+- **手機版 💨 閃現按鈕縮小**（`systems/mobile.js`）：偵測範圍（`_dashZone()`）和視覺尺寸縮小為原攻擊區的 50%，中心點位置不變；攻擊區完全不受影響
+- **桌機版指示器位置對應更新**（`systems/hud.js`）：`💨 F` 繪製矩形改為縮小後的尺寸（`dashW × dashH`），位置與手機直向閃現區對應
 
 ---
 
 ## v0.53.0 - 2026-05-24
 
-### æ–°å¢ž
+### 新增
 
-- **é–ƒç¾æŠ€èƒ½ï¼ˆðŸ’¨ï¼‰**ï¼ˆ`systems/player.js`ã€`systems/combat.js`ã€`systems/input.js`ã€`systems/mobile.js`ã€`systems/hud.js`ï¼‰ï¼š
-  - è§¸ç™¼ï¼šæ¡Œæ©Ÿç‰ˆæŒ‰ `F` éµï¼›æ‰‹æ©Ÿç‰ˆé»žæ“Šæ”»æ“Šå€æ­£ä¸Šæ–¹ ðŸ’¨ æŒ‰éˆ•
-  - æ•ˆæžœï¼šçž¬é–“ä½ç§»è‡³æœ€å¾Œç§»å‹•æ–¹å‘ `speed Ã— 50`ï¼ˆæœ€é  500pxï¼‰
-  - ç„¡æ•µï¼šè§¸ç™¼å¾Œ **0.5 ç§’** å…§è±å…æ‰€æœ‰å¤–éƒ¨å‚·å®³ï¼ˆ`applyDamageToPlayer` é–‹é ­åˆ¤æ–· `dashInvincible`ï¼‰
-  - å†·å»ï¼š**15 ç§’**ï¼ˆ`dashCooldown`ï¼Œæ¯å¹€å›ºå®šéžæ¸›ï¼‰
-  - æ–¹å‘é‚è¼¯ï¼šæ‰‹æ©Ÿç‰ˆå„ªå…ˆç”¨æ–æ¡¿æ–¹å‘ï¼ˆ`mobileInput`ï¼‰ï¼›æ¡Œæ©Ÿç‰ˆç”¨ `lastMoveDir`ï¼ˆæœ€å¾Œç§»å‹•æ–¹å‘ï¼Œåˆå§‹æœä¸Šï¼‰
-  - `gameState.player` æ–°å¢žæ¬„ä½ï¼š`dashCooldown`ã€`dashInvincible`ã€`dashInvincibleEnd`ã€`lastMoveDir`
-  - æ¡Œæ©Ÿç‰ˆå³ä¸‹è§’ç¹ªè£½å†·å»æŒ‡ç¤ºå™¨ï¼ˆ`ðŸ’¨ F`ï¼‰ï¼Œå†·å»ä¸­é¡¯ç¤ºç°è‰²é€²åº¦æ¢ + å€’æ•¸ç§’æ•¸
-  - æ‰‹æ©Ÿç‰ˆ `_dashZone()` å®šç¾©æŒ‰éˆ•çŸ©å½¢ï¼›å†·å»ä¸­é¡¯ç¤ºç°è‰²é€²åº¦æ¢ + å€’æ•¸ç§’æ•¸
-- **èªžè¨€åŒ…æ–°å¢ž** `dashSkill` / `dashCooldownLabel` éµå€¼ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰
+- **閃現技能（💨）**（`systems/player.js`、`systems/combat.js`、`systems/input.js`、`systems/mobile.js`、`systems/hud.js`）：
+  - 觸發：桌機版按 `F` 鍵；手機版點擊攻擊區正上方 💨 按鈕
+  - 效果：瞬間位移至最後移動方向 `speed × 50`（最遠 500px）
+  - 無敵：觸發後 **0.5 秒** 內豁免所有外部傷害（`applyDamageToPlayer` 開頭判斷 `dashInvincible`）
+  - 冷卻：**15 秒**（`dashCooldown`，每幀固定遞減）
+  - 方向邏輯：手機版優先用搖桿方向（`mobileInput`）；桌機版用 `lastMoveDir`（最後移動方向，初始朝上）
+  - `gameState.player` 新增欄位：`dashCooldown`、`dashInvincible`、`dashInvincibleEnd`、`lastMoveDir`
+  - 桌機版右下角繪製冷卻指示器（`💨 F`），冷卻中顯示灰色進度條 + 倒數秒數
+  - 手機版 `_dashZone()` 定義按鈕矩形；冷卻中顯示灰色進度條 + 倒數秒數
+- **語言包新增** `dashSkill` / `dashCooldownLabel` 鍵值（`lang/zh-TW.js`、`lang/en.js`）
 
 ---
 
 ## v0.52.0 - 2026-05-24
 
-### æ–°å¢ž
+### 新增
 
-- **å¤§ç™½é¯Šè¡åˆºç®­é ­é‡è¨­è¨ˆ**ï¼ˆ`systems/boss.js`ï¼‰ï¼šè­¦å‘Š 600ms é¡¯ç¤ºé»ƒè‰²é–ƒçˆç®­é ­ï¼Œå¯¬åº¦ï¼Boss ç›´å¾‘ï¼Œ**é•·åº¦ç¾åœ¨å°æ‡‰å¯¦éš›è¡åˆºè·é›¢**ï¼ˆ`speedÃ—4Ã—0.8Ã—60px`ï¼‰è€Œéž Boss åˆ°çŽ©å®¶çš„ç›´ç·šè·é›¢ï¼›è¡åˆºæœŸé–“æ”¹ç‚ºç´…è‰²ï¼›æ–¹å‘åœ¨ warning çž¬é–“éŽ–å®š
-- **è çŽ‹æ¯’éœ§æ”¹ç‚ºå®šé»žæŠ•æ“²**ï¼ˆ`systems/boss.js`ï¼‰ï¼šæ¯5ç§’éŽ–å®šçŽ©å®¶**ç•¶å‰ä½ç½®**æŠ•æ“²æ¯’æ¶²ï¼Œ600ms é»ƒè‰²è™›ç·šåœ“åœˆè­¦å‘Šå¾Œåœ¨ç›®æ¨™ä½ç½®ç”Ÿæˆç¶ è‰²æ¯’éœ§ï¼ˆåŠå¾‘ 150pxï¼ŒæŒçºŒ 4 ç§’ï¼Œæ¯ç§’å‚·å®³ `boss.damageÃ—0.3`ï¼‰ï¼›çŽ©å®¶å¯è·‘å‡ºç¯„åœå®Œå…¨èº²é–‹ï¼›å¤šå€‹æ¯’éœ§å¯åŒæ™‚å­˜åœ¨ï¼ˆ`gameState.venomPuddles[]`ï¼‰ï¼›è§¸ç™¼ä¸å†éœ€è¦é è¿‘ Bossï¼Œè§£æ±ºçŽ©å®¶ç„¡æ³•è¿‘æˆ°çš„å•é¡Œ
-- **è çŽ‹æ²™æš´é™å®šæ²™æ¼ ç”Ÿæ…‹å€**ï¼ˆ`systems/boss.js`ï¼‰ï¼šçŽ©å®¶é›¢é–‹æ²™æ¼ ç”Ÿæ…‹å€æ™‚ç«‹å³è§£é™¤ç§»é€Ÿ -40% å’Œèž¢å¹•é®ç½©æ•ˆæžœï¼Œè·‘å‡ºæ²™æ¼ å³å¯è„«é›¢æ²™æš´
-- **é»‘ç†Šæš´æ“Šæµ®å‹•æ–‡å­—ä½ç½®ä¿®æ­£**ï¼ˆ`systems/boss.js`ï¼‰ï¼šã€ŒXç†Šçˆªï¼ã€æ–‡å­—æ”¹é¡¯ç¤ºåœ¨çŽ©å®¶ä½ç½®ï¼ˆåŽŸæœ¬åœ¨ Boss é ­ä¸Šï¼‰
+- **大白鯊衝刺箭頭重設計**（`systems/boss.js`）：警告 600ms 顯示黃色閃爍箭頭，寬度＝Boss 直徑，**長度現在對應實際衝刺距離**（`speed×4×0.8×60px`）而非 Boss 到玩家的直線距離；衝刺期間改為紅色；方向在 warning 瞬間鎖定
+- **蠍王毒霧改為定點投擲**（`systems/boss.js`）：每5秒鎖定玩家**當前位置**投擲毒液，600ms 黃色虛線圓圈警告後在目標位置生成綠色毒霧（半徑 150px，持續 4 秒，每秒傷害 `boss.damage×0.3`）；玩家可跑出範圍完全躲開；多個毒霧可同時存在（`gameState.venomPuddles[]`）；觸發不再需要靠近 Boss，解決玩家無法近戰的問題
+- **蠍王沙暴限定沙漠生態區**（`systems/boss.js`）：玩家離開沙漠生態區時立即解除移速 -40% 和螢幕遮罩效果，跑出沙漠即可脫離沙暴
+- **黑熊暴擊浮動文字位置修正**（`systems/boss.js`）：「X熊爪！」文字改顯示在玩家位置（原本在 Boss 頭上）
 
-### èª¿æ•´
+### 調整
 
-- è çŽ‹æ¯’éœ§è§¸ç™¼æ¢ä»¶å¾žã€ŒçŽ©å®¶åœ¨ 300px å…§æ‰è§¸ç™¼ã€æ”¹ç‚ºã€Œæ¯5ç§’ç„¡è·é›¢é™åˆ¶æŠ•æ“²ã€ï¼Œè§£æ±ºçŽ©å®¶å› æ‹‰é–‹è·é›¢è€Œæ¯’éœ§æ°¸ä¸è§¸ç™¼çš„å•é¡Œ
+- 蠍王毒霧觸發條件從「玩家在 300px 內才觸發」改為「每5秒無距離限制投擲」，解決玩家因拉開距離而毒霧永不觸發的問題
 
 ---
 
 ## v0.51.0 - 2026-05-24
 
-### ä¿®å¾©
+### 修復
 
-- **éŠæˆ²å¡æ­»ï¼ˆè² æ•¸ radiusï¼‰**ï¼ˆ`systems/organs.js`ã€`systems/evolution.js`ã€`systems/hud.js`ï¼‰ï¼š
-  `applyOrganEffects` / `applyHiddenOrganEffects` çš„ `radiusAdd` åŠ å…¥ `Math.max(5, ...)` ä¿è­·ï¼Œ
-  åŒæ™‚ç¢ºä¿ `rangeIncrease` è¨ˆç®—ä½¿ç”¨ `Math.max(p.radius, 1)` é¿å…é™¤ä»¥é›¶ï¼›
-  `applyEvolutionLevelEffect` / `applyEvolutionEffects` åŒæ¨£åŠ å…¥ä¸‹é™ä¿è­·ï¼›
-  `drawGame` ç¹ªè£½çŽ©å®¶å‰åŠ å…¥ `const drawRadius = Math.max(1, p.radius)` é˜²å‘†ï¼Œ
-  ç¢ºä¿ `ctx.arc()` æ°¸é ä¸æœƒæ”¶åˆ°è² æ•¸æˆ–é›¶ radius
-- **initializeGame å†ä¾†ä¸€å±€æ®˜ç•™èˆŠè³‡æ–™**ï¼ˆ`main.js`ï¼‰ï¼š
-  è£œé½Š `fruits`ã€`corpses`ã€`bones`ã€`treasures`ã€`brainShockwaves`
-  äº”å€‹é™£åˆ—çš„æ¸…ç©ºé‡ç½®ï¼Œé¿å…å¤šå±€ç´¯ç©å°Žè‡´ç•°å¸¸
-- **Alpha æ­»äº¡æ¸…é™¤è·¯å¾‘è£œé½Š**ï¼ˆ`systems/creatures.js`ã€`systems/combat.js`ï¼‰ï¼š
-  ç¢ºèªä¸¦è£œé½Šå››æ¢æ­»äº¡è·¯å¾‘ï¼ˆ`handleGiantKill`ã€æ¯’å‚·/æµè¡€ã€
-  `updateNeutralCreatures`ã€`updateHostileCreatures`ï¼‰å…¨éƒ¨æ­£ç¢ºæ¸…é™¤
+- **遊戲卡死（負數 radius）**（`systems/organs.js`、`systems/evolution.js`、`systems/hud.js`）：
+  `applyOrganEffects` / `applyHiddenOrganEffects` 的 `radiusAdd` 加入 `Math.max(5, ...)` 保護，
+  同時確保 `rangeIncrease` 計算使用 `Math.max(p.radius, 1)` 避免除以零；
+  `applyEvolutionLevelEffect` / `applyEvolutionEffects` 同樣加入下限保護；
+  `drawGame` 繪製玩家前加入 `const drawRadius = Math.max(1, p.radius)` 防呆，
+  確保 `ctx.arc()` 永遠不會收到負數或零 radius
+- **initializeGame 再來一局殘留舊資料**（`main.js`）：
+  補齊 `fruits`、`corpses`、`bones`、`treasures`、`brainShockwaves`
+  五個陣列的清空重置，避免多局累積導致異常
+- **Alpha 死亡清除路徑補齊**（`systems/creatures.js`、`systems/combat.js`）：
+  確認並補齊四條死亡路徑（`handleGiantKill`、毒傷/流血、
+  `updateNeutralCreatures`、`updateHostileCreatures`）全部正確清除
   `gameState.alphaCreature = null`
-- **æ®ºæ‰‹ 100% è¿´é¿å·¨äºº**ï¼ˆ`systems/creatures.js`ï¼‰ï¼š
-  `_shouldFleeFromGiant` å°æ®ºæ‰‹åŒ–ç”Ÿç‰©ç›´æŽ¥è¿”å›ž `false`ï¼›
-  æ–°å¢žæ®ºæ‰‹æˆ°è¡“é‚è¼¯ï¼šæ­£å¸¸æ”»æ“Šå·¨äººï¼Œè‡ªèº«è¡€é‡ < 70% ä¸”å·¨äººè¡€é‡ > 70%
-  æ™‚å„ªå…ˆè½‰ç§»æ”»æ“Šè½å–®è‰é£Ÿæ€§ï¼Œæ‰¾ä¸åˆ°æ‰æš«æ™‚æ’¤é€€
-- **è®Šç•°å™¨å®˜æ–‡æœ¬æœªé¡¯ç¤ºå¯¦éš›æ•¸å€¼**ï¼ˆ`systems/mutation.js`ï¼‰ï¼š
-  é¢æ¿å››å€‹å™¨å®˜æè¿°æ”¹ç‚ºå‹•æ…‹è®€å–å¯¦éš›å€çŽ‡ï¼Œ
-  é¡¯ç¤ºã€Œç•¶å‰ +N%ï¼ˆLv.Nï¼Œæ¯ç´š +1%ï¼‰ã€æ ¼å¼ï¼›ç­‰ç´šç‚º 0 æ™‚é¡¯ç¤ºå°šæœªè§£éŽ–æç¤º
+- **殺手 100% 迴避巨人**（`systems/creatures.js`）：
+  `_shouldFleeFromGiant` 對殺手化生物直接返回 `false`；
+  新增殺手戰術邏輯：正常攻擊巨人，自身血量 < 70% 且巨人血量 > 70%
+  時優先轉移攻擊落單草食性，找不到才暫時撤退
+- **變異器官文本未顯示實際數值**（`systems/mutation.js`）：
+  面板四個器官描述改為動態讀取實際倍率，
+  顯示「當前 +N%（Lv.N，每級 +1%）」格式；等級為 0 時顯示尚未解鎖提示
 
-### æ–°å¢ž
+### 新增
 
-- **è¶£å‘³æŽ’è¡Œæ¦œã€ŒðŸ‘‘ æœ€é«˜ç­‰ç´šã€åˆ†é¡ž**ï¼ˆ`config/supabase.js`ã€`systems/leaderboard.js`ï¼‰ï¼š
-  æ–°å¢ž `fetchFunMaxLevel()` æŸ¥è©¢ `level` æ¬„ä½æœ€é«˜å€¼ï¼ŒTOP10 é¡¯ç¤ºæ ¼å¼ `Lv.N`
+- **趣味排行榜「👑 最高等級」分類**（`config/supabase.js`、`systems/leaderboard.js`）：
+  新增 `fetchFunMaxLevel()` 查詢 `level` 欄位最高值，TOP10 顯示格式 `Lv.N`
 
 ---
 
 ## v0.50.0 - 2026-05-24
 
-### æ–°å¢ž
+### 新增
 
-- **å¤§ç™½é¯Šè¡åˆºè­¦å‘Šç®­é ­**ï¼ˆ`systems/boss.js`ï¼‰ï¼šè­¦å‘Š 600ms é¡¯ç¤ºé»ƒè‰²é–ƒçˆç®­é ­ï¼ˆå¯¬åº¦ï¼Boss ç›´å¾‘ï¼‰ï¼Œè¡åˆº 800ms æ”¹ç‚ºç´…è‰²å¯¦å¿ƒç®­é ­ï¼›ç®­é ­å¾ž Boss èµ·é»žæŒ‡å‘éŽ–å®šçš„çŽ©å®¶ä½ç½®ï¼ˆé€²å…¥ warning çž¬é–“è¨˜éŒ„ï¼‰ï¼ŒçŽ©å®¶å¯åœ¨è­¦å‘ŠæœŸé–“å´ç§»èº²é–‹è¡åˆºå‚·å®³
-- **è çŽ‹æ¯’éœ§è¦–è¦ºç‰¹æ•ˆ**ï¼ˆ`systems/boss.js`ï¼‰ï¼šæ¯’éœ§ä»¥ç¶ è‰²åŠé€æ˜Žåœ“å½¢å¾ž Boss å‘å¤–æ“´æ•£è‡³ 300pxï¼ŒæŒçºŒ 4 ç§’ï¼Œé€æ˜Žåº¦éš¨æ™‚é–“æ¼¸æ·¡ï¼›æ¯’å‚·åˆ¤å®šæ”¹ç‚ºå‹•æ…‹åŠå¾‘ï¼ŒçŽ©å®¶è·‘å‡ºæ“´æ•£åœ“ç¯„åœå¯å®Œå…¨èº²é–‹å‚·å®³
-- **è çŽ‹æ²™æš´èž¢å¹•é®ç½©**ï¼ˆ`systems/boss.js`ã€`systems/hud.js`ï¼‰ï¼šæ²™æš´è§¸ç™¼æ™‚èž¢å¹•å¤–åœˆ 30% è¢«æ²™è‰²åŠé€æ˜Ž radialGradient è¦†è“‹ï¼ˆalpha æœ€é«˜ 0.3ï¼‰ï¼ŒæŒçºŒ 6 ç§’ï¼Œæ·¡å…¥æ·¡å‡ºå„ 500msï¼›ç´”è¦–è¦ºæ•ˆæžœ
-- **é»‘ç†Šæš´æ“Šæµ®å‹•æ–‡å­—**ï¼ˆ`systems/boss.js`ï¼‰ï¼š25% æš´æ“Šå‘½ä¸­çŽ©å®¶æ™‚é¡¯ç¤ºæ©™è‰²æµ®å‹•æ–‡å­—ã€ŒXç†Šçˆªï¼ã€
+- **大白鯊衝刺警告箭頭**（`systems/boss.js`）：警告 600ms 顯示黃色閃爍箭頭（寬度＝Boss 直徑），衝刺 800ms 改為紅色實心箭頭；箭頭從 Boss 起點指向鎖定的玩家位置（進入 warning 瞬間記錄），玩家可在警告期間側移躲開衝刺傷害
+- **蠍王毒霧視覺特效**（`systems/boss.js`）：毒霧以綠色半透明圓形從 Boss 向外擴散至 300px，持續 4 秒，透明度隨時間漸淡；毒傷判定改為動態半徑，玩家跑出擴散圓範圍可完全躲開傷害
+- **蠍王沙暴螢幕遮罩**（`systems/boss.js`、`systems/hud.js`）：沙暴觸發時螢幕外圈 30% 被沙色半透明 radialGradient 覆蓋（alpha 最高 0.3），持續 6 秒，淡入淡出各 500ms；純視覺效果
+- **黑熊暴擊浮動文字**（`systems/boss.js`）：25% 暴擊命中玩家時顯示橙色浮動文字「X熊爪！」
 
 ---
 
 ## v0.49.0 - 2026-05-23
 
-### æ–°å¢ž
+### 新增
 
-- **é»‘ç†Š Boss å‹•ç•«é‡è£½**ï¼ˆ`systems/boss.js`ï¼‰ï¼š
-  - æ‰‹è‡‚ä¸‰ç‹€æ…‹å‹•ç•«ï¼šé–’ç½®åž‚ä¸‹ / è¿½æ“Šé«˜èˆ‰ï¼ˆé›™è‡‚å¤–å±•è‡³ Â±69Â°ï¼Œå»¶ä¼¸å‡ºèº«é«”æ©¢åœ“å¤–å´å¯è¦‹ï¼‰ / æ”»æ“Šæ©«æŽƒ
-  - æ™®æ”»ä¾è¸æ­¥è…³åˆ¤æ–·æ®ç è‡‚ï¼ˆå·¦è…³è¸©åœ°â†’å³è‡‚"/"æŽƒï¼›å³è…³è¸©åœ°â†’å·¦è‡‚"\"æŽƒï¼‰ï¼›25% æ©ŸçŽ‡æš´æ“Šâ†’é›™è‡‚åŒæ™‚æ®ç å½¢æˆ"X"
-  - æ”»æ“Šæ®˜å½±ï¼šæ®ç è‡‚å‰ç¹ªè£½ 2 å±¤åŠé€æ˜ŽèˆŠä½ç½®ï¼ˆalpha 0.10 / 0.22ï¼‰ï¼Œå¼·åŒ–é«˜é€Ÿæ„Ÿ
-  - çˆªç—•ç‰¹æ•ˆï¼šæ”»æ“Š 450ms å…§ç¹ªè£½æ·±ç´…ï¼ˆæ™®æ”»ï¼‰æˆ–æ©™ç´…ï¼ˆæš´æ“Šï¼‰æ¼¸é•·æ–œç·šï¼Œç¢ºä¿ç„¡è«–æ‰‹è‡‚ä½ç½®å‡æ¸…æ™°å¯è¦‹
-  - è¸æ­¥é€Ÿåº¦é€£å‹•ï¼šè¿½æ“Šæ™‚ period ç¸®çŸ­ï¼ˆÃ—1.9ï¼‰ï¼Œå¥”è·‘æ„Ÿæ›´å¼·
-- **å¤§ç™½é¯Š Boss é¢å‘ç¿»è½‰**ï¼ˆ`systems/boss.js`ï¼‰ï¼šä»¥ `player.x < boss.x` åˆ¤æ–·æ–¹å‘ï¼Œ`ctx.scale(-1,1)` è®“é ­éƒ¨æ°¸é æœå‘çŽ©å®¶ï¼Œä¸ä¾è³´ moveAngle
-- **è çŽ‹ä¸‰è…³æ­¥æ³•**ï¼ˆ`systems/boss.js`ï¼‰ï¼š6 æ¢è…¿é‡æ–°è¨­è¨ˆç‚º Tripod Gaitï¼ˆç¾¤ A/B äº¤æ›¿ï¼Œçµ„å…§ 10% ç›¸ä½å·®ï¼‰ï¼Œè…¿å‹•ç•«æ”¹ç‚ºæœ«ç«¯ y ä½ç§»ï¼ˆæŠ¬è…³ç´°ç·š/è½åœ°ç²—ç·šï¼‰ï¼Œå¤¾é‰—éœæ­¢å¾…æ©Ÿã€æ”»æ“Šå¾Œ 700ms å…§å¼§ç·šå‘å…§å¤¾ï¼ˆæœ€å¤§ 37Â°ï¼‰
-- **å‹•ç•«å¯¦ä½œæŒ‡å—**ï¼ˆ`docs/ANIMATION_GUIDE.md`ï¼‰ï¼šå®Œæ•´è¨˜éŒ„è¸æ­¥ã€é¢å‘ç¿»è½‰ã€ä¸‰è…³æ­¥æ³•ã€æ”»æ“Šè¨ˆæ™‚åŽŸç†ã€çˆªç—•ç‰¹æ•ˆã€æ®˜å½±ã€çœ¼ç›è„ˆå‹•åƒæ•¸ï¼Œå«å¯è¤‡è£½çš„æ¨£æ¿ç¨‹å¼ç¢¼ä¾›ç²¾è‹±æ€ª / æ™®é€šç”Ÿç‰©ä½¿ç”¨
+- **黑熊 Boss 動畫重製**（`systems/boss.js`）：
+  - 手臂三狀態動畫：閒置垂下 / 追擊高舉（雙臂外展至 ±69°，延伸出身體橢圓外側可見） / 攻擊橫掃
+  - 普攻依踏步腳判斷揮砍臂（左腳踩地→右臂"/"掃；右腳踩地→左臂"\"掃）；25% 機率暴擊→雙臂同時揮砍形成"X"
+  - 攻擊殘影：揮砍臂前繪製 2 層半透明舊位置（alpha 0.10 / 0.22），強化高速感
+  - 爪痕特效：攻擊 450ms 內繪製深紅（普攻）或橙紅（暴擊）漸長斜線，確保無論手臂位置均清晰可見
+  - 踏步速度連動：追擊時 period 縮短（×1.9），奔跑感更強
+- **大白鯊 Boss 面向翻轉**（`systems/boss.js`）：以 `player.x < boss.x` 判斷方向，`ctx.scale(-1,1)` 讓頭部永遠朝向玩家，不依賴 moveAngle
+- **蠍王三腳步法**（`systems/boss.js`）：6 條腿重新設計為 Tripod Gait（群 A/B 交替，組內 10% 相位差），腿動畫改為末端 y 位移（抬腳細線/落地粗線），夾鉗靜止待機、攻擊後 700ms 內弧線向內夾（最大 37°）
+- **動畫實作指南**（`docs/ANIMATION_GUIDE.md`）：完整記錄踏步、面向翻轉、三腳步法、攻擊計時原理、爪痕特效、殘影、眼睛脈動參數，含可複製的樣板程式碼供精英怪 / 普通生物使用
 
-### ä¿®å¾©
+### 修復
 
-- **é»‘ç†Šæ‰‹è‡‚å®Œå…¨ä¸å¯è¦‹**ï¼šåŽŸå› ç‚º `BOSS_COLORS.bear.limbs` èˆ‡ `body` é¡è‰²ç›¸åŒï¼ˆå‡ç‚º `#2a1808`ï¼‰ï¼Œä¸”æ‰‹è‡‚æ©¢åœ“ä½ç½®è½åœ¨ rx=rÃ—1.2 çš„è¶…å¯¬èº«é«”æ©¢åœ“å…§éƒ¨ã€‚ä¿®æ­£ï¼š`limbs` æ”¹ç‚º `#7a3d0c`ï¼ˆæ˜Žé¡¯è¼ƒæ·ºï¼‰ï¼Œè¿½æ“Šæ™‚æ‰‹è‡‚è§’åº¦èª¿æ•´ç‚º Â±1.20 rad ä½¿è‡‚ä¸­å¿ƒè½åœ¨èº«é«”å¤–å´
+- **黑熊手臂完全不可見**：原因為 `BOSS_COLORS.bear.limbs` 與 `body` 顏色相同（均為 `#2a1808`），且手臂橢圓位置落在 rx=r×1.2 的超寬身體橢圓內部。修正：`limbs` 改為 `#7a3d0c`（明顯較淺），追擊時手臂角度調整為 ±1.20 rad 使臂中心落在身體外側
 
 ---
 
 ## v0.48.0 - 2026-05-23
 
-### æ–°å¢ž
+### 新增
 
-- **ç”Ÿç‰©è¦–è¦ºå·®ç•°åŒ–**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šå…­ç¨®ç”Ÿæ…‹ç”Ÿç‰©å„æœ‰ç¨ç«‹å¹¾ä½•å½¢ç‹€ï¼Œmoose/beetle/croc å®Œæ•´æ—‹è½‰ï¼ˆè·Ÿéš¨ `_moveAngle`ï¼‰ï¼Œcamel/lynx åªå·¦å³ç¿»è½‰ï¼ˆ`ctx.scale(-1,1)`ï¼‰ï¼Œhyena æ°¸é æœä¸Šä¸æ—‹è½‰
-- **ç”Ÿç‰©é¡è‰²å›ºå®š**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šæ–°å¢ž `CREATURE_COLORS` å¸¸æ•¸ï¼Œå„ç‰©ç¨®ä½¿ç”¨å›ºå®šè¾¨è­˜è‰²ï¼ˆé§é¹¿æ·±æ£• `#8B4513`ã€ç”²èŸ²é’ç¶  `#1ABC9C`ã€é§±é§æ·ºæ²™ `#E8C87A`ã€çŒžçŒç°è¤ `#A0826D`ã€é±·é­šæ©„æ¬–ç¶  `#6B8E23`ã€é¬£ç‹—æ·±å’– `#8B6914`ï¼‰
-- **ç‰¹æ®Šç‹€æ…‹å…‰æšˆ**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šAlpha é‡‘è‰²ã€å·¨äººåŒ–æ©™è‰²ã€æ®ºæ‰‹åŒ–ä¾ killerLevel æ¼¸å±¤æ·±ç´…ï¼›å…‰æšˆä»¥ä¸–ç•Œåº§æ¨™ç¹ªè£½ï¼Œä¸è·Ÿæ—‹è½‰
-- **ç¹ªåœ–è¦æ ¼æ–‡ä»¶**ï¼ˆ`docs/creature_shapes.md`ï¼‰ï¼šè¨˜éŒ„æ‰€æœ‰ç‰©ç¨®æ—‹è½‰æ¨¡å¼ã€é¡è‰²å¸¸æ•¸ã€å½¢ç‹€å‡½å¼å®Œæ•´ç¨‹å¼ç¢¼èˆ‡è¨­è¨ˆå‚™æ³¨
+- **生物視覺差異化**（`systems/creatures.js`）：六種生態生物各有獨立幾何形狀，moose/beetle/croc 完整旋轉（跟隨 `_moveAngle`），camel/lynx 只左右翻轉（`ctx.scale(-1,1)`），hyena 永遠朝上不旋轉
+- **生物顏色固定**（`systems/creatures.js`）：新增 `CREATURE_COLORS` 常數，各物種使用固定辨識色（駝鹿深棕 `#8B4513`、甲蟲青綠 `#1ABC9C`、駱駝淺沙 `#E8C87A`、猞猁灰褐 `#A0826D`、鱷魚橄欖綠 `#6B8E23`、鬣狗深咖 `#8B6914`）
+- **特殊狀態光暈**（`systems/creatures.js`）：Alpha 金色、巨人化橙色、殺手化依 killerLevel 漸層深紅；光暈以世界座標繪製，不跟旋轉
+- **繪圖規格文件**（`docs/creature_shapes.md`）：記錄所有物種旋轉模式、顏色常數、形狀函式完整程式碼與設計備注
 
-### ä¿®å¾©
+### 修復
 
-- **è¿½æ“Šç‹€æ…‹ä¸‹ `_moveAngle` æœªæ›´æ–°**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šaggressive è¿½æ“Šã€giant è¿½æ“Šã€biome fleeã€éž biome flee/è·Ÿéš¨æžœå­ã€hostile ä¸»è¿½æ“Šç­‰ 6 è™•ç§»å‹•é‚è¼¯å‡è£œä¸Š `creature._moveAngle = angle`ï¼Œç¢ºä¿æ—‹è½‰æ–¹å‘å³æ™‚æ­£ç¢º
-
----
-
-## åŠŸèƒ½æ–°å¢ž - 2026-05-23ï¼ˆä¸æ›´æ–°ç‰ˆæœ¬è™Ÿï¼‰
-
-### æ–°å¢ž
-
-- **è¶£å‘³æŽ’è¡Œæ¦œæ–°å¢žã€Œâš”ï¸ æœ€å¿«æ“Šæ®ºBossã€åˆ†é¡ž**ï¼ˆ`config/supabase.js`ã€`systems/leaderboard.js`ï¼‰ï¼šå¼•ç”¨ç¾æœ‰ `boss_kill_time` æ¬„ä½ï¼ˆBoss å‡ºç¾åˆ°è¢«æ“Šæ®ºçš„ç§’æ•¸ï¼‰ï¼ŒæŽ’åº asc è¶Šå°è¶Šå¿«ï¼›åªé¡¯ç¤ºå‹åˆ©è¨˜éŒ„ï¼ˆ`is_victory=true`ï¼‰
+- **追擊狀態下 `_moveAngle` 未更新**（`systems/creatures.js`）：aggressive 追擊、giant 追擊、biome flee、非 biome flee/跟隨果子、hostile 主追擊等 6 處移動邏輯均補上 `creature._moveAngle = angle`，確保旋轉方向即時正確
 
 ---
 
-## æ–‡ä»¶ä¿®æ­£ - 2026-05-23ï¼ˆä¸æ›´æ–°ç‰ˆæœ¬è™Ÿï¼‰
+## 功能新增 - 2026-05-23（不更新版本號）
 
-### ä¿®å¾©
+### 新增
 
-- **è¶£å‘³æŽ’è¡Œæ¦œæœ€é€Ÿé€šé—œæ¬„ä½å¼•ç”¨éŒ¯èª¤**ï¼ˆ`config/supabase.js`ã€`systems/leaderboard.js`ï¼‰ï¼š`fetchFunSpeedVictory` æŸ¥è©¢æ¬„ä½å¾ž `boss_kill_time` æ”¹ç‚º `play_time`ï¼Œé¡¯ç¤ºæ¬„ä½æ¨™ç±¤åŒæ­¥æ›´æ–°ç‚ºã€ŒéŠçŽ©æ™‚é–“(ç§’)ã€ï¼›èˆŠè³‡æ–™ä¸å—å½±éŸ¿ï¼Œç›´æŽ¥å¼•ç”¨æ­£ç¢ºæ¬„ä½å³å¯
+- **趣味排行榜新增「⚔️ 最快擊殺Boss」分類**（`config/supabase.js`、`systems/leaderboard.js`）：引用現有 `boss_kill_time` 欄位（Boss 出現到被擊殺的秒數），排序 asc 越小越快；只顯示勝利記錄（`is_victory=true`）
+
+---
+
+## 文件修正 - 2026-05-23（不更新版本號）
+
+### 修復
+
+- **趣味排行榜最速通關欄位引用錯誤**（`config/supabase.js`、`systems/leaderboard.js`）：`fetchFunSpeedVictory` 查詢欄位從 `boss_kill_time` 改為 `play_time`，顯示欄位標籤同步更新為「遊玩時間(秒)」；舊資料不受影響，直接引用正確欄位即可
 
 ---
 
 ## v0.47.1 - 2026-05-23
 
-### ä¿®å¾©
+### 修復
 
-- **å…¬å‘Šç´…é»žæœªåŠæ™‚æ¶ˆé™¤**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`showPatchNotes()` æ”¹ç‚ºå»ºç«‹ `readInSession` Set è¿½è¹¤æœ¬æ¬¡å·²è®€çš„ç‰ˆæœ¬ Tabï¼Œä¸å†åœ¨é¢æ¿é–‹å•Ÿæ™‚ç«‹å³å¯«å…¥ `lastSeenPatchVersion`ï¼›æ‰€æœ‰æ¯” `lastSeenPatchVersion` æ–°çš„ç‰ˆæœ¬ Tab éƒ½é»žé–‹å¾Œæ‰æ¶ˆé™¤ç´…é»žä¸¦æ›´æ–° localStorageï¼Œå¾¹åº•è§£æ±ºæ®˜ç•™å•é¡Œ
+- **公告紅點未及時消除**（`systems/ui.js`）：`showPatchNotes()` 改為建立 `readInSession` Set 追蹤本次已讀的版本 Tab，不再在面板開啟時立即寫入 `lastSeenPatchVersion`；所有比 `lastSeenPatchVersion` 新的版本 Tab 都點開後才消除紅點並更新 localStorage，徹底解決殘留問題
 
-### èª¿æ•´
+### 調整
 
-- **é€²åŒ–åœ–é‘‘æ”¹ç‚ºå›ºå®šå€¼å‹•æ…‹æè¿°**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ–°å¢žå…¨åŸŸå‡½å¼ `buildEvoLevelDesc(pathId, upToLevel)`ï¼Œå¾ž `config/evolution.js` çš„ `effects` å‹•æ…‹è¨ˆç®—ç´¯è¨ˆå€¼ï¼ˆè‰é£Ÿæ€§ HP/æžœå­XP/é«”åž‹ç´¯è¨ˆï¼Œé›œé£Ÿæ€§é€Ÿåº¦ç´¯è¨ˆï¼›è‚‰é£Ÿæ€§æ”»æ“Šå’Œé›œé£Ÿæ€§ç™½éª¨ç´ ç‚ºå›ºå®šå€¼ï¼‰ï¼Œåœ–é‘‘æ•¸å€¼è‡ªå‹•èˆ‡ config åŒæ­¥ï¼Œä¸å†æ‰‹å¯«å›ºå®šæ–‡å­—
+- **進化圖鑑改為固定值動態描述**（`systems/ui.js`）：新增全域函式 `buildEvoLevelDesc(pathId, upToLevel)`，從 `config/evolution.js` 的 `effects` 動態計算累計值（草食性 HP/果子XP/體型累計，雜食性速度累計；肉食性攻擊和雜食性白骨素為固定值），圖鑑數值自動與 config 同步，不再手寫固定文字
 
-### æ–°å¢ž
+### 新增
 
-- **åœ–é‘‘ Boss ä»‹ç´¹é **ï¼ˆ`systems/ui.js`ï¼‰ï¼šåœ–é‘‘éŠæˆ²èªªæ˜Žåˆ†é æ–°å¢žã€ŒBoss åœ–é‘‘ã€é ï¼Œå‹•æ…‹å¼•ç”¨ `EASY_MAP`/`NORMAL_MAP` bosses æ•¸å€¼ï¼Œé¡¯ç¤ºç°¡å–®/æ™®é€šå…©å¥— HP/é€Ÿåº¦/å‚·å®³ã€æ™®é€šé›£åº¦æŠ€èƒ½èªªæ˜Žï¼ˆé»‘ç†Šç‹‚æš´åŒ–/å¤§ç™½é¯Šè¡é‹’æ’•å’¬/è çŽ‹æ¯’éœ§ï¼‰ã€é€šç”¨å›žè¡€èªªæ˜Žã€å¼±é»žæç¤º
-- **åœ–é‘‘é›£åº¦ä»‹ç´¹é **ï¼ˆ`systems/ui.js`ï¼‰ï¼šåœ–é‘‘éŠæˆ²èªªæ˜Žåˆ†é æ–°å¢žã€Œé›£åº¦ä»‹ç´¹ã€é ï¼Œå‹•æ…‹å¼•ç”¨ `EASY_MAP`/`NORMAL_MAP` configï¼Œé¡¯ç¤ºç”Ÿç‰©å¼·åº¦å€çŽ‡ã€ç²¾è‹±/Boss çŽå‹µã€ç‰¹æ®Šæ©Ÿåˆ¶é–‹é—œï¼ˆå·¨äººåŒ–/æ®ºæ‰‹åŒ–/ç²¾è‹±å›žè¡€/Boss å›žè¡€ï¼‰ï¼Œå…¼é¡§ç¡¬æ ¸èˆ‡ä¼‘é–’çŽ©å®¶èªªæ˜Žé¢¨æ ¼
+- **圖鑑 Boss 介紹頁**（`systems/ui.js`）：圖鑑遊戲說明分頁新增「Boss 圖鑑」頁，動態引用 `EASY_MAP`/`NORMAL_MAP` bosses 數值，顯示簡單/普通兩套 HP/速度/傷害、普通難度技能說明（黑熊狂暴化/大白鯊衝鋒撕咬/蠍王毒霧）、通用回血說明、弱點提示
+- **圖鑑難度介紹頁**（`systems/ui.js`）：圖鑑遊戲說明分頁新增「難度介紹」頁，動態引用 `EASY_MAP`/`NORMAL_MAP` config，顯示生物強度倍率、精英/Boss 獎勵、特殊機制開關（巨人化/殺手化/精英回血/Boss 回血），兼顧硬核與休閒玩家說明風格
 
 ---
 
 ## v0.47.0 - 2026-05-23
 
-### ä¿®æ­£ï¼ˆBug Fixï¼‰
-- **B1ï¼šå†ä¾†ä¸€å±€ä¿ç•™é›£åº¦** â€” `showMapSelect()` é¸å®Œé›£åº¦å¾Œå­˜å…¥ `localStorage('lastDifficulty')`ï¼›`initializeGame()` è‹¥ `currentMap` ç‚º nullï¼ˆé é¢é‡æ•´å¾Œï¼‰å¾ž localStorage æ¢å¾©é›£åº¦èˆ‡åœ°åœ–ç‰©ä»¶
-- **B8ï¼šæŠ€èƒ½æ¨¹é˜²å‘†** â€” `buildSkillTreeOverlay()` å…¥å£åŠ å…¥ `if (!gameState.player || !gameState.playerSkills) return;` é˜²æ­¢ç©ºç™½ç•«é¢
+### 修正（Bug Fix）
+- **B1：再來一局保留難度** — `showMapSelect()` 選完難度後存入 `localStorage('lastDifficulty')`；`initializeGame()` 若 `currentMap` 為 null（頁面重整後）從 localStorage 恢復難度與地圖物件
+- **B8：技能樹防呆** — `buildSkillTreeOverlay()` 入口加入 `if (!gameState.player || !gameState.playerSkills) return;` 防止空白畫面
 
-### èª¿æ•´
-- **æ”»é€Ÿå…¬å¼æ”¹ç‚ºåŠ æ³•**ï¼ˆ`systems/combat.js`ã€`systems/organs.js`ã€`systems/evolution.js`ã€`config/organs.js`ï¼‰ï¼š
-  - æ–°å…¬å¼ `interval = 1000ms / (1 + totalBonus)`ï¼›çŽ©å®¶æ–°å¢ž `attackSpeedBonus: 0` æ¬„ä½ç´¯ç©åŠ æ³•åŠ æˆ
-  - `boxingGloves` effects æ”¹ç‚º `attackSpeedBonus: 0.10/0.15/0.15`ï¼ˆåŽŸç‚ºä¹˜æ³• `attackSpeedMult`ï¼‰
-  - è‚‰é£Ÿæ€§é€²åŒ– `attackSpeedBonus` ç´¯ç©è‡³ `p.attackSpeedBonus`ï¼ˆåŽŸç‚º `p.attackSpeed *=`ï¼‰
-- **æ€ªç‰©å‘½ä¸­åˆ¤å®šæ“´å¤§**ï¼ˆ`systems/combat.js`ï¼‰ï¼šæ”»æ“Šå‘½ä¸­æ¢ä»¶æ”¹ç‚º `distance < attackRange + radius * 0.5`ï¼Œå¤§åž‹æ•µäººæ›´æ˜“è¢«æ“Šä¸­
-- **ç²¾è‹±çŽå‹µèª¿æ•´**ï¼ˆ`systems/organs.js`ï¼‰ï¼šå¤œæ™šæŠ€èƒ½é»ž `[1, 1, 2]`ï¼ˆåŽŸç‚º `Math.round((phase+1)/2)`ï¼Œå³ 1/2/3ï¼‰
-- **Boss çŽå‹µèª¿æ•´**ï¼ˆ`systems/boss.js`ï¼‰ï¼šæ“Šæ®º Boss çŽå‹µ +3 æŠ€èƒ½é»žï¼ˆåŽŸ +5ï¼‰
-- **ç”Ÿæ…‹ Emoji å‰ç¶´**ï¼ˆ`config/creatures.js`ã€`map/normalmap.js`ã€`map/easymap.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼š
-  - æ‰€æœ‰ç”Ÿç‰©åç¨±åŠ å…¥ ðŸŒ¿ï¼ˆæ£®æž—ï¼‰ðŸŒŠï¼ˆæµ·æ´‹ï¼‰ðŸœï¸ï¼ˆæ²™æ¼ ï¼‰å‰ç¶´
-  - Boss åç¨±åŒæ­¥æ›´æ–°ï¼Œæ¯’å‚·å…ç–«åˆ¤æ–·æ”¹ç‚º `c.name.includes('è çŽ‹')`
+### 調整
+- **攻速公式改為加法**（`systems/combat.js`、`systems/organs.js`、`systems/evolution.js`、`config/organs.js`）：
+  - 新公式 `interval = 1000ms / (1 + totalBonus)`；玩家新增 `attackSpeedBonus: 0` 欄位累積加法加成
+  - `boxingGloves` effects 改為 `attackSpeedBonus: 0.10/0.15/0.15`（原為乘法 `attackSpeedMult`）
+  - 肉食性進化 `attackSpeedBonus` 累積至 `p.attackSpeedBonus`（原為 `p.attackSpeed *=`）
+- **怪物命中判定擴大**（`systems/combat.js`）：攻擊命中條件改為 `distance < attackRange + radius * 0.5`，大型敵人更易被擊中
+- **精英獎勵調整**（`systems/organs.js`）：夜晚技能點 `[1, 1, 2]`（原為 `Math.round((phase+1)/2)`，即 1/2/3）
+- **Boss 獎勵調整**（`systems/boss.js`）：擊殺 Boss 獎勵 +3 技能點（原 +5）
+- **生態 Emoji 前綴**（`config/creatures.js`、`map/normalmap.js`、`map/easymap.js`、`lang/zh-TW.js`、`lang/en.js`）：
+  - 所有生物名稱加入 🌿（森林）🌊（海洋）🏜️（沙漠）前綴
+  - Boss 名稱同步更新，毒傷免疫判斷改為 `c.name.includes('蠍王')`
 
-### æ–°å¢ž
-- **æ™®é€š Boss å¹³è¡¡æ”¹ç‰ˆ**ï¼ˆ`systems/boss.js`ã€`map/normalmap.js`ï¼‰ï¼š
-  - æ™®é€šé›£åº¦ Boss é€Ÿåº¦ç¿»å€ï¼ˆé»‘ç†Š 9.0ã€å¤§ç™½é¯Š 11.7ã€è çŽ‹ 10.8ï¼‰
-  - é€šç”¨å›žè¡€ï¼šæ¯ 3 ç§’å›žå¾©æœ€å¤§HP 2%ï¼ˆåŽŸ 10 ç§’ 10%ï¼‰
-  - é»‘ç†Šï¼š<40% HP è§¸ç™¼ç‹‚æš´ï¼ˆé€Ÿåº¦Ã—1.5ã€å‚·å®³Ã—1.3ã€ç™¼å…‰æç¤ºï¼‰
-  - å¤§ç™½é¯Šï¼šæ¯ 4 ç§’å° 500px å…§çŽ©å®¶ç™¼å‹•è¡åˆºæ”»æ“Šï¼ˆ0.6 ç§’è­¦å‘Š â†’ 0.8 ç§’è¡åˆºï¼Œé€ æˆ 1.5 å€å‚·å®³ï¼‰
-  - æ²™æ¼ è çŽ‹ï¼šæ¯ 5 ç§’åœ¨ 300px å…§é‡‹æ”¾æ¯’éœ§ï¼ˆ4 ç§’æ¯ç§’æ¯’å‚·ï¼‰ï¼›<40% HP è§¸ç™¼æ²™æš´ï¼ˆçŽ©å®¶ç§»é€Ÿ -40% æŒçºŒ 6 ç§’ï¼‰
-  - ç°¡å–®æ¨¡å¼ Boss æ–°å¢ž radius/attackRange æ¬„ä½
-- **è®Šç•°å™¨å®˜ UI æ”¹ç‰ˆ**ï¼ˆ`systems/hud.js`ã€`index.html`ï¼‰ï¼š
-  - æ–‡å­—æ”¹ç‚ºã€Œè®Šç•°å™¨å®˜ âš—ï¸ Lv.Xã€
-  - æœ‰å¯å‡ç´šé»žæ•¸æ™‚ `#mutation-icon-row` å¥—ç”¨ `mutation-pulse` CSS å‹•ç•«ï¼ˆ0.8s å½ˆè·³ï¼‰
-- **å°åœ°åœ–é›£åº¦æ¨™ç±¤**ï¼ˆ`systems/hud.js`ã€`index.html`ï¼‰ï¼šå°åœ°åœ–ä¸‹æ–¹æ–°å¢ž `#minimap-difficulty` é¡¯ç¤º `âš”ï¸ æ™®é€š`/`ðŸŒ¿ ç°¡å–®`
-- **è¶£å‘³æŽ’è¡Œæ¦œ**ï¼ˆ`systems/leaderboard.js`ã€`config/supabase.js`ã€`systems/gameState.js`ã€`systems/combat.js`ï¼‰ï¼š
-  - æ–°å¢ž 5 ç¨®è¶£å‘³çµ±è¨ˆï¼šðŸƒæœ€é€Ÿé€šé—œ / ðŸ’€æœ€é€Ÿæ­»äº¡ / ðŸ‘¾å·¨äººçµäºº / ðŸ”ªæ®ºæ‰‹çµäºº / â­æ®ºæ‰‹å…‹æ˜Ÿ
-  - å…¨å±æŽ’è¡Œæ¦œæ–°å¢žã€ŒðŸŽ² ç¨®é¡žã€åˆ‡æ›æŒ‰éˆ•
-  - æ–°å¢ž Supabase æŸ¥è©¢å‡½å¼ï¼š`fetchFunSpeedVictory/Death/GiantKills/KillerKills/KillerMaxLevel`
-  - `sessionStats.giantKills/killerKills/killerMaxLevel` å³æ™‚è¿½è¹¤ï¼›`submitScore()` è‡ªå‹•å¸¶å…¥
-- **Alpha å°åœ°åœ–æ¨™è¨˜**ï¼ˆ`systems/hud.js`ï¼‰ï¼šAlpha æ€ªåœ¨å°åœ°åœ–ä¸Šé¡¯ç¤ºé‡‘è‰²é–ƒçˆåœ“é»ž + Î± æ–‡å­—
-- **éšŠä¼æ»¿å“¡æ“´å¼µ**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šå·¨äººåŒ–éšŠä¼é” 8 äººæ™‚ï¼Œæžœå­æœç´¢åŠå¾‘å¾ž 800px æ“´å±•è‡³ 2000px
-- **è®Šç•°å•†åº—æŠ€èƒ½é»žå…Œæ›**ï¼ˆ`systems/mutation.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼š
-  - è®Šç•°é¢æ¿ä¸‹æ–¹æ–°å¢žã€Œ100 æŠ€èƒ½é»ž â†’ 10 è®Šç•°é»žã€å…Œæ›æŒ‰éˆ•
-  - æ–°å¢žèªžè¨€ keyï¼š`mutationExchange`ã€`mutationExchangeHint`
-- **å…¬å‘Šç´…é»ž**ï¼ˆ`systems/ui.js`ï¼‰ï¼šé¦–é å…¬å‘ŠæŒ‰éˆ•æœ‰æœªè®€ç‰ˆæœ¬æ™‚é¡¯ç¤ºç´…é»žï¼›é–‹å•Ÿå…¬å‘Šå¾Œæ¶ˆå¤±
-- **æ²™æš´çŽ©å®¶æ¸›é€Ÿ**ï¼ˆ`systems/player.js`ï¼‰ï¼šè çŽ‹æ²™æš´æœŸé–“çŽ©å®¶ç§»é€Ÿ -40%ï¼ˆ`p._inSandstorm` æ——æ¨™ï¼‰
-- **èªžè¨€æ–°å¢ž**ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼š`venomFloat`ï¼ˆæ¯’éœ§æµ®å‹•æ–‡å­—ï¼‰
+### 新增
+- **普通 Boss 平衡改版**（`systems/boss.js`、`map/normalmap.js`）：
+  - 普通難度 Boss 速度翻倍（黑熊 9.0、大白鯊 11.7、蠍王 10.8）
+  - 通用回血：每 3 秒回復最大HP 2%（原 10 秒 10%）
+  - 黑熊：<40% HP 觸發狂暴（速度×1.5、傷害×1.3、發光提示）
+  - 大白鯊：每 4 秒對 500px 內玩家發動衝刺攻擊（0.6 秒警告 → 0.8 秒衝刺，造成 1.5 倍傷害）
+  - 沙漠蠍王：每 5 秒在 300px 內釋放毒霧（4 秒每秒毒傷）；<40% HP 觸發沙暴（玩家移速 -40% 持續 6 秒）
+  - 簡單模式 Boss 新增 radius/attackRange 欄位
+- **變異器官 UI 改版**（`systems/hud.js`、`index.html`）：
+  - 文字改為「變異器官 ⚗️ Lv.X」
+  - 有可升級點數時 `#mutation-icon-row` 套用 `mutation-pulse` CSS 動畫（0.8s 彈跳）
+- **小地圖難度標籤**（`systems/hud.js`、`index.html`）：小地圖下方新增 `#minimap-difficulty` 顯示 `⚔️ 普通`/`🌿 簡單`
+- **趣味排行榜**（`systems/leaderboard.js`、`config/supabase.js`、`systems/gameState.js`、`systems/combat.js`）：
+  - 新增 5 種趣味統計：🏃最速通關 / 💀最速死亡 / 👾巨人獵人 / 🔪殺手獵人 / ⭐殺手克星
+  - 全屏排行榜新增「🎲 種類」切換按鈕
+  - 新增 Supabase 查詢函式：`fetchFunSpeedVictory/Death/GiantKills/KillerKills/KillerMaxLevel`
+  - `sessionStats.giantKills/killerKills/killerMaxLevel` 即時追蹤；`submitScore()` 自動帶入
+- **Alpha 小地圖標記**（`systems/hud.js`）：Alpha 怪在小地圖上顯示金色閃爍圓點 + α 文字
+- **隊伍滿員擴張**（`systems/creatures.js`）：巨人化隊伍達 8 人時，果子搜索半徑從 800px 擴展至 2000px
+- **變異商店技能點兌換**（`systems/mutation.js`、`lang/zh-TW.js`、`lang/en.js`）：
+  - 變異面板下方新增「100 技能點 → 10 變異點」兌換按鈕
+  - 新增語言 key：`mutationExchange`、`mutationExchangeHint`
+- **公告紅點**（`systems/ui.js`）：首頁公告按鈕有未讀版本時顯示紅點；開啟公告後消失
+- **沙暴玩家減速**（`systems/player.js`）：蠍王沙暴期間玩家移速 -40%（`p._inSandstorm` 旗標）
+- **語言新增**（`lang/zh-TW.js`、`lang/en.js`）：`venomFloat`（毒霧浮動文字）
 
 ---
 
 ## v0.46.0 - 2026-05-22
 
-### æ–°å¢ž
+### 新增
 
-- **ç”Ÿæ…‹ç‰¹æ€§ç³»çµ±**ï¼ˆ`systems/creatures.js`ã€`systems/player.js`ã€`systems/spawning.js`ï¼‰ï¼š
-  - **çŒžçŒï¼ˆæ£®æž—ï¼‰**ï¼šåœ¨æ£®æž—å…§ 50% æš´æ“Šæ©ŸçŽ‡ï¼ˆÃ—2 baseDmgï¼Œå°çŽ©å®¶æ–½åŠ  -30% é€Ÿåº¦ 3 ç§’ï¼‰ï¼›é›¢é–‹æ£®æž— â‰¥3 ç§’å¾Œé™ç‚º 25% / Ã—1.5 / -15% 1.5 ç§’ï¼›ç§»å‹•é€Ÿåº¦æ£®æž—å…§ Ã—1.2
-  - **é±·é­šï¼ˆæ°´æ½­ï¼‰**ï¼šæ°´æ½­å…§æ”»æ“Š Ã—1.2ã€ç§»å‹• Ã—1.3ã€20% æ©ŸçŽ‡è§¸ç™¼ã€Œæ­»äº¡ç¿»æ»¾ã€ï¼ˆå°çŽ©å®¶æ–½åŠ  1 ç§’æšˆçœ©ï¼Œ`p._stunUntil`ï¼‰ï¼›é›¢æ°´æ½­å¾ŒåŠ æˆæ­¸é›¶
-  - **é¬£ç‹—ï¼ˆæ²™æ¼ ï¼‰**ï¼šç”Ÿæˆæ™‚éš¨æ©Ÿåˆ†é… packGroupï¼ˆ1~3ï¼‰ï¼›æ¯ 2 ç§’æŽƒæåŒçµ„å­˜æ´» packMatesï¼ˆ600px å…§ï¼‰ï¼›æ¯éš» packMate +20% æ”»æ“Šã€+5% é€Ÿåº¦ï¼›éŽ–å®šç›®æ¨™æ™‚è­¦å ±åŒçµ„å‡ºå‹•ï¼ˆ`_alertHyenaPack`ï¼‰ï¼›é›¢æ²™æ¼  â‰¥3 ç§’æ”»æ“Š/é€Ÿåº¦å‡ Ã—0.5
-  - **çŽ©å®¶æšˆçœ©**ï¼š`updatePlayerMovement()` åŠ å…¥ `p._stunUntil` åˆ¤æ–·ï¼Œæšˆçœ©æœŸé–“ç„¡æ³•ç§»å‹•
-  - **çŽ©å®¶æ¸›é€Ÿ**ï¼š`updatePlayerMovement()` åŠ å…¥ `p._lynxSlowUntil` / `p._lynxSlowAmt` æ¸›é€Ÿæ•ˆæžœ
-  - **è‚‰é£Ÿè€…é€ƒé›¢å·¨äºº**ï¼ˆ`_shouldFleeFromGiant`ï¼‰ï¼šç›®æ¨™ç‚º Alpha ä¸€å¾‹é€ƒï¼›æ™®é€šå·¨äºº HP > è‚‰é£Ÿè€… HPÃ—3 â†’ é€ƒï¼›`fleeing_giant` ç‹€æ…‹æŒçºŒ 3 ç§’å¾Œå°‹æ‰¾éžå·¨äººåŒ–è‰é£Ÿæ€§
-  - **ç”Ÿæ…‹å€å›žæ­¸**ï¼šè‚‰é£Ÿè€…é›¢é–‹è‡ªèº«ç”Ÿæ…‹å€æ™‚ï¼Œä»¥ 1.3 å€é€Ÿæœæœ€è¿‘ç”Ÿæ…‹å€é»žå›žæ­¸ï¼›`_leftBiomeTime` åŒæ™‚ä½œç‚ºå„ç‰©ç¨®åŠ æˆå¤±æ•ˆè¨ˆæ™‚
+- **生態特性系統**（`systems/creatures.js`、`systems/player.js`、`systems/spawning.js`）：
+  - **猞猁（森林）**：在森林內 50% 暴擊機率（×2 baseDmg，對玩家施加 -30% 速度 3 秒）；離開森林 ≥3 秒後降為 25% / ×1.5 / -15% 1.5 秒；移動速度森林內 ×1.2
+  - **鱷魚（水潭）**：水潭內攻擊 ×1.2、移動 ×1.3、20% 機率觸發「死亡翻滾」（對玩家施加 1 秒暈眩，`p._stunUntil`）；離水潭後加成歸零
+  - **鬣狗（沙漠）**：生成時隨機分配 packGroup（1~3）；每 2 秒掃描同組存活 packMates（600px 內）；每隻 packMate +20% 攻擊、+5% 速度；鎖定目標時警報同組出動（`_alertHyenaPack`）；離沙漠 ≥3 秒攻擊/速度均 ×0.5
+  - **玩家暈眩**：`updatePlayerMovement()` 加入 `p._stunUntil` 判斷，暈眩期間無法移動
+  - **玩家減速**：`updatePlayerMovement()` 加入 `p._lynxSlowUntil` / `p._lynxSlowAmt` 減速效果
+  - **肉食者逃離巨人**（`_shouldFleeFromGiant`）：目標為 Alpha 一律逃；普通巨人 HP > 肉食者 HP×3 → 逃；`fleeing_giant` 狀態持續 3 秒後尋找非巨人化草食性
+  - **生態區回歸**：肉食者離開自身生態區時，以 1.3 倍速朝最近生態區點回歸；`_leftBiomeTime` 同時作為各物種加成失效計時
 
-- **æ®ºæ‰‹ killerLevel è¨ˆæ•¸å™¨**ï¼ˆ`systems/creatures.js`ã€`systems/combat.js`ã€`systems/ui.js`ï¼‰ï¼š
-  - æ®ºæ‰‹åŒ–å¾Œæ¯åƒä¸€å…·å±é«” `killerLevel++`ï¼›é ­ä¸Šé¡¯ç¤ºã€Œ[ç‰©ç¨®å] æ®ºæ‰‹Lv[N]ã€ï¼ˆæ©™è‰²ç²—é«”ï¼‰
-  - æ“Šæ®ºXPå…¬å¼æ”¹ç‚º `100 + killerLevelÃ—5 + çµäººæœ¬èƒ½Ã—10`ï¼ˆåŽŸç‚º `baseDamageÃ—2Ã—1.1^n`ï¼‰
-  - æ“Šæ®ºæŽ‰è½å±é«”æ•¸ï¼š3 ä»½ â†’ 2 ä»½
+- **殺手 killerLevel 計數器**（`systems/creatures.js`、`systems/combat.js`、`systems/ui.js`）：
+  - 殺手化後每吃一具屍體 `killerLevel++`；頭上顯示「[物種名] 殺手Lv[N]」（橙色粗體）
+  - 擊殺XP公式改為 `100 + killerLevel×5 + 獵人本能×10`（原為 `baseDamage×2×1.1^n`）
+  - 擊殺掉落屍體數：3 份 → 2 份
 
-### èª¿æ•´
+### 調整
 
-- **å·¨äººåŒ– aggroRange**ï¼š150 â†’ 400ï¼ˆ`_triggerGiantization`ï¼‰
-- **å·¨äººåŒ– guardianRange**ï¼šæ–°å¢ž 1000px â€” åµæ¸¬ guardianRange å…§çµ„å“¡è¢«æ•µæ„ç”Ÿç‰©å¨è„…æ™‚ï¼Œåˆ‡æ›ç‚º guardianTarget å„ªå…ˆæ”»æ“Š
-- **å·¨äººåŒ– HP ä½Žè¡€é€ƒè·‘**ï¼šHP â‰¤ 30% æ™‚é€ƒå¾€æœ€è¿‘æžœå­ï¼›æ¯åƒä¸€é¡† +10% maxHPï¼ˆ`_updateGiantFlee`ï¼‰
-- **å·¨äººåŒ–éšŠä¼ä¸Šé™å‹•æ…‹åŒ–**ï¼š`base 5 + éšŠä¼å…§å·²å·¨äººåŒ–æˆå“¡æ•¸`ï¼Œä¸Šé™ 8 éš»ï¼ˆ`_getPackLimit`ï¼‰
-- **Alpha aggroRange**ï¼š300 â†’ 600ï¼ˆ`_triggerAlpha`ï¼‰
-- **Alpha guardianRange**ï¼šæ–°å¢ž 1500px
-- **Alpha HP åˆ†äº«å›žè¡€**ï¼šHP â‰¥ 80% â†’ æ¯ç§’åˆ†äº« 1% maxHP çµ¦æœ€ä½Žè¡€é‡çµ„å“¡ï¼›HP < 80% â†’ è‡ªå›ž 2%ï¼ˆä¸åˆ†äº«ï¼‰
-- **è‚‰é£Ÿæ€§é€²åŒ–å›ºå®šå€¼è¦†è“‹**ï¼ˆ`config/evolution.js`ã€`systems/evolution.js`ï¼‰ï¼šæ”¹ç‚ºå›ºå®šå€¼è¦†è“‹ï¼ˆéžç´¯è¨ˆï¼‰ï¼Œå„ç­‰ç´šæ”»æ“ŠåŠ æˆ 2/5/9/14/20ï¼Œåƒå±é«” XP 5/8/12/15/20ï¼Œåƒå±é«”æ™‚é–“ 3/2.5/2/1.5/1 ç§’ï¼ŒLv3+ æ”»é€Ÿ +5%/+10%/+15%
-- **è‰é£Ÿæ€§é€£åƒæ©ŸçŽ‡**ï¼šåƒå®Œä¸€é¡†æžœå­æœ‰ 70%ï¼ˆæ™®é€šï¼‰/ 90%ï¼ˆæœ‰åŒæ—å·¨äººåœ¨ 500px å…§ï¼‰æ©ŸçŽ‡ç¹¼çºŒåƒé™„è¿‘æžœå­ï¼ˆåŽŸç‚ºæ¯æ¬¡ç¨ç«‹è§¸ç™¼ï¼‰
+- **巨人化 aggroRange**：150 → 400（`_triggerGiantization`）
+- **巨人化 guardianRange**：新增 1000px — 偵測 guardianRange 內組員被敵意生物威脅時，切換為 guardianTarget 優先攻擊
+- **巨人化 HP 低血逃跑**：HP ≤ 30% 時逃往最近果子；每吃一顆 +10% maxHP（`_updateGiantFlee`）
+- **巨人化隊伍上限動態化**：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（`_getPackLimit`）
+- **Alpha aggroRange**：300 → 600（`_triggerAlpha`）
+- **Alpha guardianRange**：新增 1500px
+- **Alpha HP 分享回血**：HP ≥ 80% → 每秒分享 1% maxHP 給最低血量組員；HP < 80% → 自回 2%（不分享）
+- **肉食性進化固定值覆蓋**（`config/evolution.js`、`systems/evolution.js`）：改為固定值覆蓋（非累計），各等級攻擊加成 2/5/9/14/20，吃屍體 XP 5/8/12/15/20，吃屍體時間 3/2.5/2/1.5/1 秒，Lv3+ 攻速 +5%/+10%/+15%
+- **草食性連吃機率**：吃完一顆果子有 70%（普通）/ 90%（有同族巨人在 500px 內）機率繼續吃附近果子（原為每次獨立觸發）
 
 ---
 
 ## v0.45.1 - 2026-05-23
 
-### é‡æ§‹
-- **æ¨¡çµ„åŒ–æ‹†åˆ†**ï¼ˆ`systems/ui.js`ï¼‰ï¼šå°‡ ui.js æ‹†åˆ†ç‚ºä¸‰å€‹ç¨ç«‹æ¨¡çµ„
-  - `systems/leaderboard.js`ï¼šæŽ’è¡Œæ¦œé¢æ¿ã€åˆ†æ•¸æäº¤å½ˆçª—ã€é›£åº¦ç‹€æ…‹ç®¡ç†
-  - `systems/mobile.js`ï¼šè£ç½®åµæ¸¬ã€æ‰‹æ©Ÿç¸®æ”¾ã€æ–æ¡¿ã€æ”»æ“Šå€ã€è§¸æŽ§ç–ŠåŠ å±¤
-  - `systems/hud.js`ï¼šdrawGame ä¸»æ¸²æŸ“ã€HUD æ›´æ–°ã€å°åœ°åœ–ã€ä¸Šæ–¹è¡€æ¢
-  - ui.js ä¿ç•™ï¼šé¢æ¿ç³»çµ±ï¼ˆé¦–é /è¨­å®š/åœ°åœ–é¸æ“‡/åœ–é‘‘/æ•…äº‹æ›¸/ç‰ˆæœ¬å…¬å‘Šï¼‰ã€Tooltipã€èªžè¨€åˆ‡æ›ã€é–‹ç™¼è€…æ¨¡å¼
+### 重構
+- **模組化拆分**（`systems/ui.js`）：將 ui.js 拆分為三個獨立模組
+  - `systems/leaderboard.js`：排行榜面板、分數提交彈窗、難度狀態管理
+  - `systems/mobile.js`：裝置偵測、手機縮放、搖桿、攻擊區、觸控疊加層
+  - `systems/hud.js`：drawGame 主渲染、HUD 更新、小地圖、上方血條
+  - ui.js 保留：面板系統（首頁/設定/地圖選擇/圖鑑/故事書/版本公告）、Tooltip、語言切換、開發者模式
 
 ---
 
 ## v0.45.0 - 2026-05-22
 
-### æ–°å¢ž
-- **æ–°æ‰‹æ•™å­¸ç¬¬äºŒéšŽæ®µï¼šæˆ°é¬¥æ•™å­¸**ï¼ˆ`systems/tutorial.js`ã€`systems/organs.js`ã€`systems/combat.js`ã€`systems/ui.js`ã€`systems/gameState.js`ã€`main.js`ã€`index.html`ï¼‰ï¼š
-  ç¹¼ç¬¬ä¸€éšŽæ®µï¼ˆç§»å‹•ã€åƒæžœå­ã€æ—¥å¤œèªªæ˜Žï¼‰ä¹‹å¾Œï¼Œåœ¨çŽ©å®¶ç¬¬ä¸€æ¬¡å‡ç´šæ™‚è‡ªå‹•è§¸ç™¼æˆ°é¬¥æ•™å­¸ã€‚
-  - **å™¨å®˜éŽ–å®š**ï¼š`showOrganSelection()` åµæ¸¬åˆ° `tutorialCompleted` å­˜åœ¨ä¸” `tutorialCombatDone` ä¸å­˜åœ¨æ™‚ï¼Œè¨­å®š `tutorialOrganPhase = true`ï¼›ç•«é¢åªæœ‰ç¬¬ä¸€å¼µæ”»æ“Šå™¨å®˜å¡ç‰‡å¯é¸ï¼ˆé‡‘è‰²é–ƒçˆé‚Šæ¡† + ã€ŒðŸ‘† é¸æ“‡ä½ çš„ç¬¬ä¸€å€‹æ”»æ“Šå™¨å®˜ï¼ã€æç¤ºï¼‰ï¼Œå…¶ä»–å¡ç‰‡ç°æš—ç¦ç”¨ã€å¹¸é‹é‡æŠ½æŒ‰éˆ•éš±è—ã€‚
-  - **æ•™å­¸æœ¨æ¨**ï¼šé¸å®Œæ”»æ“Šå™¨å®˜å¾Œï¼Œåœ¨çŽ©å®¶æ­£å‰æ–¹ 150 åƒç´ ç”Ÿæˆä¸€æ ¹æ£•è‰²æœ¨æ¨ï¼ˆHP 30ã€ä¸ç§»å‹•ã€ä¸æ”»æ“Šï¼‰ï¼Œä¸¦é¡¯ç¤ºå·¦ä¸Šè§’æˆ°é¬¥æç¤ºæ¡†ï¼ˆæ‰‹æ©Ÿç‰ˆé¡¯ç¤ºæ”»æ“Šå€æç¤ºï¼‰ã€‚æœ¨æ¨æœ‰è¡€æ¢èˆ‡åç¨±æ¨™ç±¤ï¼Œç¹ªè£½æ–¼ `drawGame()` 7c æ­¥é©Ÿã€‚
-  - **æ”»æ“Šæ•´åˆ**ï¼š`playerAttack()` å°‡æ•™å­¸æœ¨æ¨åŠ å…¥æ”»æ“Šç›®æ¨™é™£åˆ—ï¼Œæ­»äº¡æ™‚å‘¼å« `handleTutorialStumpKill()` è€Œéžä¸€èˆ¬ `handleKill()`ã€‚
-  - **å®Œæˆæµç¨‹**ï¼šæ“Šæ®ºæœ¨æ¨ â†’ å‡çµ 0.5 ç§’ â†’ é¡¯ç¤ºã€Œâš”ï¸ æ”»æ“Šå­¸æœƒäº†ï¼ã€å°æ¡†ï¼ˆçŽ©å®¶é ­é ‚ï¼Œ2 ç§’è‡ªå‹•æ¶ˆå¤±ï¼‰â†’ å¯«å…¥ `localStorage.tutorialCombatDone` â†’ è§£å‡ç¹¼çºŒéŠæˆ²ã€‚
-  - **`index.html` è¼‰å…¥é †åºèª¿æ•´**ï¼š`tutorial.js` ç§»è‡³ `combat.js` / `organs.js` ä¹‹å‰ï¼Œç¢ºä¿å…©è€…å¯å‘¼å«æ•™å­¸å‡½å¼ã€‚
-  - æ–°å¢ž `gameState` æ——æ¨™ï¼š`tutorialOrganPhase`ã€`tutorialCombatActive`ã€`tutorialStump`ï¼Œå‡åœ¨ `initializeGame()` é‡ç½®ã€‚
+### 新增
+- **新手教學第二階段：戰鬥教學**（`systems/tutorial.js`、`systems/organs.js`、`systems/combat.js`、`systems/ui.js`、`systems/gameState.js`、`main.js`、`index.html`）：
+  繼第一階段（移動、吃果子、日夜說明）之後，在玩家第一次升級時自動觸發戰鬥教學。
+  - **器官鎖定**：`showOrganSelection()` 偵測到 `tutorialCompleted` 存在且 `tutorialCombatDone` 不存在時，設定 `tutorialOrganPhase = true`；畫面只有第一張攻擊器官卡片可選（金色閃爍邊框 + 「👆 選擇你的第一個攻擊器官！」提示），其他卡片灰暗禁用、幸運重抽按鈕隱藏。
+  - **教學木樁**：選完攻擊器官後，在玩家正前方 150 像素生成一根棕色木樁（HP 30、不移動、不攻擊），並顯示左上角戰鬥提示框（手機版顯示攻擊區提示）。木樁有血條與名稱標籤，繪製於 `drawGame()` 7c 步驟。
+  - **攻擊整合**：`playerAttack()` 將教學木樁加入攻擊目標陣列，死亡時呼叫 `handleTutorialStumpKill()` 而非一般 `handleKill()`。
+  - **完成流程**：擊殺木樁 → 凍結 0.5 秒 → 顯示「⚔️ 攻擊學會了！」小框（玩家頭頂，2 秒自動消失）→ 寫入 `localStorage.tutorialCombatDone` → 解凍繼續遊戲。
+  - **`index.html` 載入順序調整**：`tutorial.js` 移至 `combat.js` / `organs.js` 之前，確保兩者可呼叫教學函式。
+  - 新增 `gameState` 旗標：`tutorialOrganPhase`、`tutorialCombatActive`、`tutorialStump`，均在 `initializeGame()` 重置。
 
 ---
 
 ## v0.44.0 - 2026-05-22
 
-### æ–°å¢ž
-- **è¨­å®šé¢æ¿ â†’ è¼”åŠ©åŠŸèƒ½ â†’ æ–°æ‰‹æ•™å­¸é–‹é—œ**ï¼ˆ`systems/ui.js`ï¼‰ï¼š
-  å¯æ‰‹å‹•åˆ‡æ›ä¸‹ä¸€å ´éŠæˆ²æ˜¯å¦é¡¯ç¤ºæ–°æ‰‹æ•™å­¸ã€‚
-  é–‹å•Ÿï¼ˆç¶ è‰²ï¼‰= ç§»é™¤ `tutorialCompleted` æ¨™è¨˜ï¼Œä¸‹ä¸€å ´é€²å…¥éŠæˆ²å¾Œæœƒè‡ªå‹•å‡ºç¾ä¸‰æ­¥é©Ÿæ•™å­¸ï¼›
-  é—œé–‰ï¼ˆç°è‰²ï¼‰= å¯«å…¥ `tutorialCompleted`ï¼Œæ•™å­¸ä¸å†è§¸ç™¼ã€‚
-  é–‹é—œç‹€æ…‹å³æ™‚åæ˜  `localStorage` ç¾æ³ï¼Œä¸éœ€è¦é‡æ–°æ•´ç†é é¢ã€‚
+### 新增
+- **設定面板 → 輔助功能 → 新手教學開關**（`systems/ui.js`）：
+  可手動切換下一場遊戲是否顯示新手教學。
+  開啟（綠色）= 移除 `tutorialCompleted` 標記，下一場進入遊戲後會自動出現三步驟教學；
+  關閉（灰色）= 寫入 `tutorialCompleted`，教學不再觸發。
+  開關狀態即時反映 `localStorage` 現況，不需要重新整理頁面。
 
 ---
 
 ## v0.43.0 - 2026-05-22
 
-### æ–°å¢ž
-- **æ–°æ‰‹æ•™å­¸ç³»çµ±**ï¼ˆ`systems/tutorial.js`ã€`main.js`ã€`systems/gameState.js`ã€`index.html`ï¼‰ï¼š
-  é¦–æ¬¡éŠçŽ©è‡ªå‹•è§¸ç™¼ä¸‰æ­¥é©Ÿæ•™å­¸ï¼Œå®Œæˆå¾Œå¯«å…¥ `localStorage.tutorialCompleted` ä¸å†é‡è¤‡é¡¯ç¤ºã€‚
-  - **æ­¥é©Ÿä¸€ï¼ˆå‡çµï¼‰**ï¼šå…¨èž¢å¹•æš—è‰²é®ç½© + çŽ©å®¶ç™½è‰²å…‰åœˆè„ˆè¡å‹•ç•« + æ­¡è¿Žæç¤ºæ¡†ï¼ˆã€ŒðŸ¦ ä½ æ˜¯å™ªéµ‘â€¦â€¦ã€ï¼‰ï¼ŒæŒ‰éˆ•é€²å…¥ä¸‹ä¸€æ­¥ã€‚
-  - **æ­¥é©ŸäºŒï¼ˆè§£å‡ï¼‰**ï¼šéŠæˆ²æ¢å¾©é‹è¡Œï¼›æ‰¾åˆ°æœ€è¿‘æžœå­ä¸¦æ¨™è¨˜é‡‘è‰²è„ˆè¡å…‰æšˆèˆ‡é–ƒçˆ â†“ ç®­é ­ï¼›æç¤ºæ¡†ç§»è‡³å·¦ä¸Šè§’ï¼ˆæ‰‹æ©Ÿç‰ˆç‚ºä¸Šæ–¹ç½®ä¸­ï¼‰ï¼›15 ç§’é˜²å‘†è‡ªå‹•ç¹ªè£½å¾žçŽ©å®¶åˆ°æžœå­çš„ç´…è‰²è™›ç·šå¼•å°Žç·šï¼›XP å¢žåŠ å³è§¸ç™¼é‡‘è‰²é–ƒå…‰ä¸¦é€²å…¥ä¸‹ä¸€æ­¥ã€‚
-  - **æ­¥é©Ÿä¸‰ï¼ˆå‡çµï¼‰**ï¼šé®ç½©é‡æ–°å‡ºç¾ï¼›å³ä¸Šè§’æ—¥å¤œæŒ‡ç¤ºå™¨é‡‘è‰²é‚Šæ¡†é–ƒçˆé«˜äº®ï¼›ä¸­å¤®æç¤ºæ¡†èªªæ˜Žæ—¥å¤œæ©Ÿåˆ¶èˆ‡å‹åˆ©æ¢ä»¶ï¼ŒæŒ‰éˆ•çµæŸæ•™å­¸ã€‚
-  - `gameState.tutorialOpen`ï¼šæ–°å¢žç‹€æ…‹æ——æ¨™ï¼Œå·²æ•´åˆè‡³ `isGamePaused()` ä½¿æ•™å­¸æœŸé–“æš«åœéŠæˆ²é‚è¼¯ã€‚
+### 新增
+- **新手教學系統**（`systems/tutorial.js`、`main.js`、`systems/gameState.js`、`index.html`）：
+  首次遊玩自動觸發三步驟教學，完成後寫入 `localStorage.tutorialCompleted` 不再重複顯示。
+  - **步驟一（凍結）**：全螢幕暗色遮罩 + 玩家白色光圈脈衝動畫 + 歡迎提示框（「🐦 你是噪鵑……」），按鈕進入下一步。
+  - **步驟二（解凍）**：遊戲恢復運行；找到最近果子並標記金色脈衝光暈與閃爍 ↓ 箭頭；提示框移至左上角（手機版為上方置中）；15 秒防呆自動繪製從玩家到果子的紅色虛線引導線；XP 增加即觸發金色閃光並進入下一步。
+  - **步驟三（凍結）**：遮罩重新出現；右上角日夜指示器金色邊框閃爍高亮；中央提示框說明日夜機制與勝利條件，按鈕結束教學。
+  - `gameState.tutorialOpen`：新增狀態旗標，已整合至 `isGamePaused()` 使教學期間暫停遊戲邏輯。
 
 ---
 
-## æ–‡ä»¶ä¿®æ­£ - 2026-05-22ï¼ˆä¸æ›´æ–°ç‰ˆæœ¬è™Ÿï¼‰
+## 文件修正 - 2026-05-22（不更新版本號）
 
-### èª¿æ•´
-- **MOBILE_GAME_SCALE æ–‡ä»¶è¡çªä¿®æ­£**ï¼ˆ`project_summary.md`ã€`.claude/instructions.md`ï¼‰ï¼š
-  v0.34.0 å·²å°‡ `MOBILE_GAME_SCALE` å¾ž 0.7 èª¿æ•´ç‚º 0.6ï¼Œä½†ä¸‰è™•æ–‡ä»¶æœªåŒæ­¥æ›´æ–°ã€‚
-  æœ¬æ¬¡ä¿®æ­£æŠ€è¡“æž¶æ§‹å€å¡Šé‚è¼¯è§£æžåº¦æ•¸å€¼ï¼ˆæ©«å‘ 1120Ã—630 â†’ 960Ã—540ï¼Œç›´å‘ 630Ã—1120 â†’ 540Ã—960ï¼‰ã€
-  é‡è¦æé†’ç¬¬ 3 æ¢ã€`.claude/instructions.md` æŠ€è¡“é™·é˜±èªªæ˜Žï¼Œçµ±ä¸€å°é½Šå¯¦éš›ç¨‹å¼ç¢¼èˆ‡ CHANGELOGã€‚
+### 調整
+- **MOBILE_GAME_SCALE 文件衝突修正**（`project_summary.md`、`.claude/instructions.md`）：
+  v0.34.0 已將 `MOBILE_GAME_SCALE` 從 0.7 調整為 0.6，但三處文件未同步更新。
+  本次修正技術架構區塊邏輯解析度數值（橫向 1120×630 → 960×540，直向 630×1120 → 540×960）、
+  重要提醒第 3 條、`.claude/instructions.md` 技術陷阱說明，統一對齊實際程式碼與 CHANGELOG。
 
 ---
 
-## æ–‡ä»¶ä¿®æ­£ - 2026-05-22ï¼ˆä¸æ›´æ–°ç‰ˆæœ¬è™Ÿï¼‰
+## 文件修正 - 2026-05-22（不更新版本號）
 
-### èª¿æ•´
-- **é€Ÿåº¦ Ã—3.0 æ­·å²è£œä¸æ–‡æ¡ˆ Fixed**ï¼ˆ`project_summary.md`ã€`.claude/instructions.md`ï¼‰ï¼š
-  æ—©æœŸç„¡ Fixed Timestep æ™‚ï¼Œç‚ºä¿®æ­£ 180Hz èž¢å¹•é€Ÿåº¦åå¿«å•é¡Œå°æ‰€æœ‰é€Ÿåº¦æ•¸å€¼ä¹˜ä»¥ 3.0ï¼›
-  Fixed Timestep åŠ å…¥å¾Œè£œä¸å·²ç„¡å¿…è¦ä½†æ•¸å€¼åŸºæº–ä¿ç•™ï¼Œ`lang/zh-TW.js` é€Ÿåº¦æè¿°åœ¨ v0.34.0
-  æ•¸å€¼èª¿æ•´æ™‚å·²åŒæ­¥èˆ‡å¯¦éš› `speedAdd` ä¸€è‡´ã€‚ç§»é™¤éŽæ™‚çš„ã€Œæè¿°ä¸ä¸€è‡´ã€note èˆ‡å¾…è¾¦é …ç›®ï¼Œ
-  æ›´æ–°èªªæ˜Žç‚ºã€Œâœ… æ–‡æ¡ˆ Fixedï¼Œç„¡éœ€å†è™•ç†ã€ï¼Œå¾ŒçºŒ AI ä¸éœ€è¦ç¹¼çºŒè™•ç†æ­¤å•é¡Œã€‚
+### 調整
+- **速度 ×3.0 歷史補丁文案 Fixed**（`project_summary.md`、`.claude/instructions.md`）：
+  早期無 Fixed Timestep 時，為修正 180Hz 螢幕速度偏快問題對所有速度數值乘以 3.0；
+  Fixed Timestep 加入後補丁已無必要但數值基準保留，`lang/zh-TW.js` 速度描述在 v0.34.0
+  數值調整時已同步與實際 `speedAdd` 一致。移除過時的「描述不一致」note 與待辦項目，
+  更新說明為「✅ 文案 Fixed，無需再處理」，後續 AI 不需要繼續處理此問題。
 
 ---
 
 ## v0.42.0 - 2026-05-22
 
-### æ–°å¢ž
-- **ç‰ˆæœ¬æ›´æ–°å…¬å‘Šç³»çµ±**ï¼ˆ`config/patchnotes.js`ã€`systems/ui.js`ã€`index.html`ï¼‰ï¼šé¦–é å·¦ä¸Šè§’æ•…äº‹æ›¸æŒ‰éˆ•ä¸‹æ–¹æ–°å¢žã€ŒðŸ“‹ æ›´æ–°ã€æŒ‰éˆ•ï¼›æ–°å¢ž `showPatchNotes()` é¢æ¿ï¼ˆåž‚ç›´ Tab åˆ—é¡¯ç¤ºæ‰€æœ‰ç‰ˆæœ¬ï¼Œæœªè®€ç‰ˆæœ¬ç´…é»ž highlightï¼Œå…§å®¹ä¾ã€Œæ–°å¢ž/ä¿®å¾©/èª¿æ•´ã€åˆ†é¡žé¡¯ç¤ºï¼‰ï¼›æ–°å¢ž `checkPatchNotesPopup()` åœ¨é¦–é è‡ªå‹•å½ˆå‡ºæœªè®€å…¬å‘Šï¼ˆæ–°çŽ©å®¶è·³éŽï¼‰ï¼›æ–°å¢ž `config/patchnotes.js` çµ±ä¸€ç®¡ç†æ‰€æœ‰ç‰ˆæœ¬å…¬å‘Šè³‡æ–™ï¼ˆ`PATCH_NOTES` é™£åˆ—ï¼Œæœ€æ–°ç‰ˆæœ¬ç½®é ‚ï¼‰
+### 新增
+- **版本更新公告系統**（`config/patchnotes.js`、`systems/ui.js`、`index.html`）：首頁左上角故事書按鈕下方新增「📋 更新」按鈕；新增 `showPatchNotes()` 面板（垂直 Tab 列顯示所有版本，未讀版本紅點 highlight，內容依「新增/修復/調整」分類顯示）；新增 `checkPatchNotesPopup()` 在首頁自動彈出未讀公告（新玩家跳過）；新增 `config/patchnotes.js` 統一管理所有版本公告資料（`PATCH_NOTES` 陣列，最新版本置頂）
 
-### ä¿®å¾©
-- **æ‰‹æ©Ÿç‰ˆ Boss/ç²¾è‹±è¡€æ¢èˆ‡çŽ©å®¶è¡€æ¢é‡ç–Š**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`drawTopBarUI()` çš„ `y = 10` æ”¹ç‚ºå‹•æ…‹åµæ¸¬ `#top-left` DOM å…ƒç´ é«˜åº¦ä¸¦æ›ç®— Canvas é‚è¼¯åº§æ¨™ï¼Œæ‰‹æ©Ÿ/æ¡Œæ©Ÿè‡ªå‹•é©æ‡‰
-- **Boss æ­»äº¡å¾Œè¡€æ¢ UI æ®˜ç•™**ï¼ˆ`systems/boss.js`ï¼‰ï¼š`showVictory()` é–‹é ­åŠ å…¥ `gameState.topBarTarget = null; gameState.topBarFadeTimer = 0;`ï¼Œç¢ºä¿å‹åˆ©æ™‚è¡€æ¢ç«‹å³æ¸…é™¤
+### 修復
+- **手機版 Boss/精英血條與玩家血條重疊**（`systems/ui.js`）：`drawTopBarUI()` 的 `y = 10` 改為動態偵測 `#top-left` DOM 元素高度並換算 Canvas 邏輯座標，手機/桌機自動適應
+- **Boss 死亡後血條 UI 殘留**（`systems/boss.js`）：`showVictory()` 開頭加入 `gameState.topBarTarget = null; gameState.topBarFadeTimer = 0;`，確保勝利時血條立即清除
 
-### èª¿æ•´
-- **è‰é£Ÿæ€§ä¸­ç«‹ç”Ÿç‰©æŽ¢ç´¢æžœå­è¡Œç‚º**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šæŽ¢ç´¢æžœå­æ©ŸçŽ‡ 30% â†’ 60%ï¼Œæœå°‹ç¯„åœ 400px â†’ 800pxï¼Œä¼‘æ¯æ©ŸçŽ‡ 30% â†’ 20%ï¼Œéš¨æ©Ÿæ¼«éŠæ©ŸçŽ‡ 40% â†’ 20%
+### 調整
+- **草食性中立生物探索果子行為**（`systems/creatures.js`）：探索果子機率 30% → 60%，搜尋範圍 400px → 800px，休息機率 30% → 20%，隨機漫遊機率 40% → 20%
 
 ---
 
 ## v0.41.2 - 2026-05-22
 
-### ä¿®æ­£
-- **å™¨å®˜å€åŸŸè§¸ç¢°é€ æˆç§»å‹•æ­»å€**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`_attachJoystickListeners` `onStart` handler ä¸­ï¼Œå‘½ä¸­ `_organHitRegions` æ™‚ç§»é™¤ `continue`ï¼Œè®“è§¸ç¢°åœ¨é¡¯ç¤ºï¼ˆæˆ–ç•¥éŽï¼‰tooltip å¾Œç¹¼çºŒåŸ·è¡Œæ–æ¡¿å•Ÿå‹•é‚è¼¯ï¼›`showOrganTooltip` é—œé–‰æ™‚å·¦ä¸‹è§’å™¨å®˜å€åŸŸä¸å†æˆç‚ºç„¡æ³•ç§»å‹•çš„æ­»å€
+### 修正
+- **器官區域觸碰造成移動死區**（`systems/ui.js`）：`_attachJoystickListeners` `onStart` handler 中，命中 `_organHitRegions` 時移除 `continue`，讓觸碰在顯示（或略過）tooltip 後繼續執行搖桿啟動邏輯；`showOrganTooltip` 關閉時左下角器官區域不再成為無法移動的死區
 
 ---
 
 ## v0.41.1 - 2026-05-22
 
-### ä¿®æ­£
-- **å™¨å®˜æç¤ºé–‹é—œåŒæ™‚ç®¡æŽ§æ¡Œæ©Ÿç‰ˆ**ï¼ˆ`main.js`ï¼‰ï¼š`mousemove` äº‹ä»¶åœ¨ `showTooltip` å‘¼å«å‰åŠ å…¥ `showOrganTooltip` åˆ¤æ–·ï¼Œé–‹é—œé—œé–‰æ™‚ç«‹å³å‘¼å« `hideTooltip()` ä¸¦è¿”å›ž
-- **éš±è—å™¨å®˜ tooltip ç„¡æ³•é»žæ“Š**ï¼ˆ`systems/organs.js`ï¼‰ï¼š`_organHitRegions` éš±è—å™¨å®˜çš„ y åº§æ¨™å¾ž `(sepBase + 2 + j) * lineH` ä¿®æ­£ç‚º `(sepBase + 1 + j) * lineH`ï¼Œä½¿ hit region èˆ‡ç•«é¢ä¸Šå¯¦éš›æ–‡å­—ä½ç½®å°é½Šï¼ˆèˆ‡æ™®é€šå™¨å®˜å…¬å¼ä¸€è‡´ï¼‰
-- **å™¨å®˜æç¤ºé–‹é—œåœ¨æ¡Œæ©Ÿç‰ˆä¸é¡¯ç¤º**ï¼ˆ`systems/ui.js`ï¼‰ï¼šç§»é™¤ `showSettings()` ä¸­åŒ…ä½ organTooltip toggle çš„ `if (gameState.isMobile)` æ¢ä»¶ï¼Œæ¡Œæ©Ÿç‰ˆèˆ‡æ‰‹æ©Ÿç‰ˆå‡å¯æ“ä½œ
+### 修正
+- **器官提示開關同時管控桌機版**（`main.js`）：`mousemove` 事件在 `showTooltip` 呼叫前加入 `showOrganTooltip` 判斷，開關關閉時立即呼叫 `hideTooltip()` 並返回
+- **隱藏器官 tooltip 無法點擊**（`systems/organs.js`）：`_organHitRegions` 隱藏器官的 y 座標從 `(sepBase + 2 + j) * lineH` 修正為 `(sepBase + 1 + j) * lineH`，使 hit region 與畫面上實際文字位置對齊（與普通器官公式一致）
+- **器官提示開關在桌機版不顯示**（`systems/ui.js`）：移除 `showSettings()` 中包住 organTooltip toggle 的 `if (gameState.isMobile)` 條件，桌機版與手機版均可操作
 
 ---
 
 ## v0.41.0 - 2026-05-22
 
-### æ–°å¢ž
-- **æ‰‹æ©Ÿç‰ˆå™¨å®˜æç¤ºé–‹é—œ**ï¼ˆ`systems/ui.js`ã€`systems/gameState.js`ï¼‰ï¼šæ–°å¢ž `DEFAULT_SETTINGS.showOrganTooltip: true`ï¼›æ‰‹æ©Ÿç‰ˆè¨­å®šé¢æ¿ã€Œè¼”åŠ©åŠŸèƒ½ã€å€å¡Šæ–°å¢žã€Œå™¨å®˜æç¤ºã€ON/OFF toggleï¼ˆæ¡Œæ©Ÿç‰ˆéš±è—ï¼‰ï¼›é—œé–‰å¾Œé»žè§¸å™¨å®˜å€åŸŸä¸é¡¯ç¤º tooltipï¼Œä»é˜»æ“‹æ–æ¡¿å•Ÿå‹•
-- **èªžè¨€åŒ…**ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼šæ–°å¢ž `organTooltip` key
+### 新增
+- **手機版器官提示開關**（`systems/ui.js`、`systems/gameState.js`）：新增 `DEFAULT_SETTINGS.showOrganTooltip: true`；手機版設定面板「輔助功能」區塊新增「器官提示」ON/OFF toggle（桌機版隱藏）；關閉後點觸器官區域不顯示 tooltip，仍阻擋搖桿啟動
+- **語言包**（`lang/zh-TW.js`、`lang/en.js`）：新增 `organTooltip` key
 
 ---
 
 ## v0.40.1 - 2026-05-22
 
-### ä¿®æ­£
-- **TOP10 æµ®çª—ç¸®æ”¾**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ¡Œæ©Ÿç‰ˆ transform æ¢å¾© `translateY(-50%)`ï¼ˆç§»é™¤å¤šé¤˜çš„ `scale(0.65)`ï¼‰ï¼›æ‰‹æ©Ÿç‰ˆæ”¹ç‚º `scale(0.65)`ï¼ˆåŽŸç‚º `scale(0.55)`ï¼‰
+### 修正
+- **TOP10 浮窗縮放**（`systems/ui.js`）：桌機版 transform 恢復 `translateY(-50%)`（移除多餘的 `scale(0.65)`）；手機版改為 `scale(0.65)`（原為 `scale(0.55)`）
 
 ---
 
 ## v0.40.0 - 2026-05-22
 
-### æ–°å¢ž
-- **æŽ’è¡Œæ¦œé›£åº¦åˆ‡æ›**ï¼ˆ`config/supabase.js`ã€`systems/ui.js`ï¼‰ï¼š`fetchVictoryRecords`ã€`fetchDefeatRecords`ã€`fetchTop10` æ–°å¢ž `difficulty` ç¯©é¸åƒæ•¸ï¼›æ–°å¢ž `fetchAvailableDifficulties()` æŸ¥è©¢æœ‰è³‡æ–™çš„é›£åº¦é™£åˆ—ï¼ˆå‰ç«¯åŽ»é‡ï¼‰
-- **æŽ’è¡Œæ¦œé›£åº¦åˆ‡æ›æŒ‰éˆ•**ï¼ˆ`systems/ui.js` `showLeaderboard()`ï¼‰ï¼šæ¨™é¡Œåˆ—æ—åŠ å…¥åˆ‡æ›æŒ‰éˆ•ï¼Œé»žæ“Šå¾ªç’°åˆ‡æ›æœ‰è³‡æ–™çš„é›£åº¦ï¼Œé¡¯ç¤ºèªžè¨€åŒ…æ–‡å­—ï¼ˆ`diffEasy`/`diffNormal`ç­‰ï¼‰ï¼›åˆ‡æ›æ™‚åŒæ­¥æ›´æ–° `_top10Difficulty`
-- **TOP10 é›£åº¦åˆ‡æ›æŒ‰éˆ•**ï¼ˆ`systems/ui.js` `showStartScreen()`ï¼‰ï¼šæ¨™é¡Œå³å´åŠ å…¥å°åˆ‡æ›æŒ‰éˆ•ï¼Œé€éŽ `fetchAvailableDifficulties()` å¾ªç’°åˆ‡æ›ï¼›åˆ‡æ›æ™‚åŒæ­¥æ›´æ–° `_lbDifficulty`
-- **æ¨¡çµ„ç´šé›£åº¦ç‹€æ…‹**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`_lbDifficulty`ã€`_top10Difficulty` å…©å€‹æ¨¡çµ„è®Šæ•¸ä¿æŒåŒæ­¥ï¼›`_diffKey()` è¼”åŠ©å‡½å¼è½‰æ›èªžè¨€åŒ… key
-- **åˆ†æ•¸ä¸Šå‚³å«é›£åº¦æ¬„ä½**ï¼ˆ`systems/ui.js` `showScoreSubmitPopup()`ï¼‰ï¼šä¸Šå‚³è³‡æ–™åŠ å…¥ `difficulty: gameState.lastDifficulty || 'easy'`
-- **index.html fallback æ›´æ–°**ï¼š`fetchVictoryRecords`/`fetchDefeatRecords`/`fetchTop10` ç°½ååŒæ­¥ï¼›æ–°å¢ž `fetchAvailableDifficulties` fallbackï¼ˆå›žå‚³ç©ºé™£åˆ—ï¼‰
+### 新增
+- **排行榜難度切換**（`config/supabase.js`、`systems/ui.js`）：`fetchVictoryRecords`、`fetchDefeatRecords`、`fetchTop10` 新增 `difficulty` 篩選參數；新增 `fetchAvailableDifficulties()` 查詢有資料的難度陣列（前端去重）
+- **排行榜難度切換按鈕**（`systems/ui.js` `showLeaderboard()`）：標題列旁加入切換按鈕，點擊循環切換有資料的難度，顯示語言包文字（`diffEasy`/`diffNormal`等）；切換時同步更新 `_top10Difficulty`
+- **TOP10 難度切換按鈕**（`systems/ui.js` `showStartScreen()`）：標題右側加入小切換按鈕，透過 `fetchAvailableDifficulties()` 循環切換；切換時同步更新 `_lbDifficulty`
+- **模組級難度狀態**（`systems/ui.js`）：`_lbDifficulty`、`_top10Difficulty` 兩個模組變數保持同步；`_diffKey()` 輔助函式轉換語言包 key
+- **分數上傳含難度欄位**（`systems/ui.js` `showScoreSubmitPopup()`）：上傳資料加入 `difficulty: gameState.lastDifficulty || 'easy'`
+- **index.html fallback 更新**：`fetchVictoryRecords`/`fetchDefeatRecords`/`fetchTop10` 簽名同步；新增 `fetchAvailableDifficulties` fallback（回傳空陣列）
 
-### èª¿æ•´
-- **TOP10 æµ®çª—ç¸®æ”¾**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ¡Œæ©Ÿç‰ˆ transform å¾ž `translateY(-50%)` æ”¹ç‚º `translateY(-50%) scale(0.65)`ï¼Œç¸®å°ç‰ˆé¢ä¸é®æ“‹ä¸»é¸å–®ï¼›æ‰‹æ©Ÿç‰ˆç¶­æŒ `scale(0.55)`
+### 調整
+- **TOP10 浮窗縮放**（`systems/ui.js`）：桌機版 transform 從 `translateY(-50%)` 改為 `translateY(-50%) scale(0.65)`，縮小版面不遮擋主選單；手機版維持 `scale(0.55)`
 
 ---
 
 ## v0.39.0 - 2026-05-22
 
-### æ–°å¢ž
-- **è®Šç•°å™¨å®˜ç³»çµ±**ï¼ˆ`systems/mutation.js`ï¼‰ï¼šå››ç¨®æ°¸ä¹…è·¨å±€å™¨å®˜ï¼ˆæ†¤æ€’çš„ç ç‰™/æ‡¦å¼±çš„å°¾å·´/å‹‡æ•¢çš„ç¿…è†€/å¥½å¥‡çš„çœ¼ç›ï¼‰ï¼Œå„å° Final å€¼ +1%æ”»æ“Š/æœ€å¤§HP/é€Ÿåº¦/XPå€æ•¸ï¼›å‡ç´šè²»ç”¨æ¯5ç´š+1è²»ï¼ˆLv0â†’1=1é»žï¼‰ï¼›ç¨ç«‹ localStorage key `mutationData`ï¼Œä¸å— SAVE_VERSION æ¸…é™¤
-- **è®Šç•°é»žç²å¾—**ï¼ˆ`addMutationPoints`ï¼‰ï¼šæ“Šæ®ºå·¨äººåŒ–/Alpha/æ®ºæ‰‹åŒ–æŽ‰è½è®Šç•°é»žï¼ˆPhase 3-4 å·²å¯¦ä½œï¼‰ï¼Œå³æ™‚é¡¯ç¤ºæµ®å‹•æ–‡å­— `âœ¦ +N è®Šç•°é»ž`
-- **è®Šç•°å™¨å®˜ UI**ï¼ˆ`systems/ui.js`ï¼‰ï¼šé ‚å·¦ UI ç¬¬ä¸‰è¡ŒåŠ å…¥ âš—ï¸ åœ–æ¨™ + ç¸½ç­‰ç´šï¼Œç²å¾—æ–°è®Šç•°é»žæ™‚é¡¯ç¤ºç´…é»žï¼›é»žæ“Šå½ˆå‡ºå‡ç´šé¢æ¿ï¼ˆz-index 120ï¼ŒéŠæˆ²æš«åœï¼‰
-- **è£œå„Ÿæ©Ÿåˆ¶**ï¼ˆ`mutation.js`ï¼‰ï¼š`MUTATION_COMPENSATION_VERSION` æŽ§åˆ¶ï¼Œå¯æŒ‰æ¯”ä¾‹è¿”é‚„è®Šç•°é»žå’ŒæŠ€èƒ½é»žï¼ŒåŸ·è¡Œä¸€æ¬¡å¾Œè¨˜éŒ„ç‰ˆæœ¬é¿å…é‡è¤‡
-- **applyAllMutationBonuses**ï¼ˆ`mutation.js`ï¼‰ï¼šéŠæˆ²åˆå§‹åŒ–ä¸€æ¬¡æ€§å¥—ç”¨ï¼Œåœ¨æ‰€æœ‰å™¨å®˜æ•ˆæžœä¹‹å¾Œï¼›mid-game å‡ç´šç”¨ delta æ¯”å€¼å¥—ç”¨ï¼Œé¿å…è¤‡åˆ©èª¤ç®—
+### 新增
+- **變異器官系統**（`systems/mutation.js`）：四種永久跨局器官（憤怒的獠牙/懦弱的尾巴/勇敢的翅膀/好奇的眼睛），各對 Final 值 +1%攻擊/最大HP/速度/XP倍數；升級費用每5級+1費（Lv0→1=1點）；獨立 localStorage key `mutationData`，不受 SAVE_VERSION 清除
+- **變異點獲得**（`addMutationPoints`）：擊殺巨人化/Alpha/殺手化掉落變異點（Phase 3-4 已實作），即時顯示浮動文字 `✦ +N 變異點`
+- **變異器官 UI**（`systems/ui.js`）：頂左 UI 第三行加入 ⚗️ 圖標 + 總等級，獲得新變異點時顯示紅點；點擊彈出升級面板（z-index 120，遊戲暫停）
+- **補償機制**（`mutation.js`）：`MUTATION_COMPENSATION_VERSION` 控制，可按比例返還變異點和技能點，執行一次後記錄版本避免重複
+- **applyAllMutationBonuses**（`mutation.js`）：遊戲初始化一次性套用，在所有器官效果之後；mid-game 升級用 delta 比值套用，避免複利誤算
 
-### èª¿æ•´
-- `addXP()`ï¼ˆ`systems/player.js`ï¼‰ï¼šå‹•æ…‹å¥—ç”¨ `mutationXpBonus` ä¹˜æ•¸
-- `applyOrganEffects()`ï¼ˆ`systems/organs.js`ï¼‰ï¼šæœ«å°¾å‘¼å« `applyMutationEffects()` åˆ·æ–°å€çŽ‡
-- `isGamePaused()`ï¼ˆ`main.js`ï¼‰ï¼šåŠ å…¥ `mutationPanelOpen` åˆ¤æ–·
-- `_joyPaused()`ï¼ˆ`systems/ui.js`ï¼‰ï¼šåŠ å…¥ `mutationPanelOpen` åˆ¤æ–·
-- `initializeGame()`ï¼ˆ`main.js`ï¼‰ï¼šé‡ç½® `mutationPanelOpen = false`ï¼›å‘¼å« `applyAllMutationBonuses()`
-- `window.onload`ï¼ˆ`main.js`ï¼‰ï¼šå…ˆå‘¼å« `initMutationData()` è¼‰å…¥è®Šç•°è³‡æ–™
-- **æ™®é€šåœ°åœ– aggroRange**ï¼ˆ`map/normalmap.js`ï¼‰ï¼š`aggroRangeOverride: 2000 â†’ 400`ï¼ˆåŽŸå€¼ç­‰æ–¼å…¨åœ°åœ–éŽ–å®šï¼ŒçŽ©å®¶å®Œå…¨ç„¡æ³•èº²é¿ï¼‰
+### 調整
+- `addXP()`（`systems/player.js`）：動態套用 `mutationXpBonus` 乘數
+- `applyOrganEffects()`（`systems/organs.js`）：末尾呼叫 `applyMutationEffects()` 刷新倍率
+- `isGamePaused()`（`main.js`）：加入 `mutationPanelOpen` 判斷
+- `_joyPaused()`（`systems/ui.js`）：加入 `mutationPanelOpen` 判斷
+- `initializeGame()`（`main.js`）：重置 `mutationPanelOpen = false`；呼叫 `applyAllMutationBonuses()`
+- `window.onload`（`main.js`）：先呼叫 `initMutationData()` 載入變異資料
+- **普通地圖 aggroRange**（`map/normalmap.js`）：`aggroRangeOverride: 2000 → 400`（原值等於全地圖鎖定，玩家完全無法躲避）
 
 ---
 
 ## v0.38.0 - 2026-05-22
 
-### æ–°å¢ž
-- **è‚‰ç³»åƒå±é«”ç³»çµ±**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šæ™®é€šåœ°åœ–è‚‰ç³»ç”Ÿç‰©åœ¨æ¼«éŠ/ä¼‘æ¯æ™‚åµæ¸¬ 60px å…§å±é«”é€²å…¥ `eating` ç‹€æ…‹ï¼Œæ¯ 0.5s tick / 6 ticksï¼ˆ3ç§’ï¼‰å®Œæˆï¼ŒæœŸé–“ aggroRangeÃ—1.5ï¼Œæœ‰ç”Ÿç‰©é€²å…¥å‰‡ä¸­æ–·ï¼›å®Œæˆå¾Œ `_carnivoreEatCorpse` æˆé•·ï¼ˆæ¯å…· +10% åŸºç¤Žå€¼ï¼Œä¸ç´¯ä¹˜ï¼‰+ å›žè¡€ 5%
-- **æ®ºæ‰‹åŒ–ç³»çµ±**ï¼ˆ`systems/creatures.js`ï¼‰ï¼š`corpseEaten >= 5` è§¸ç™¼ `_triggerKiller`ï¼ŒaggroRange ç¿»å€ã€æ”»æ“Š +50%+ä¹‹å‰10%ç´¯è¨ˆã€é€Ÿåº¦ +30%+ä¹‹å‰10%ç´¯è¨ˆï¼›æ¯5ç§’å›žè¡€1%ï¼›ç¹¼çºŒåƒå±é«”æ¯å…·å† +10% åŸºç¤Žå€¼ï¼›`handleKillerKill`ï¼ˆ`systems/combat.js`ï¼‰ï¼šXPÃ—2ï¼ˆç´¯ä¹˜ 1.1^killerCorpseEatenï¼‰+ 3ä»½å±é«” + è®Šç•°é»ž
-- **ç²¾è‹±æ€ªå›žè¡€**ï¼ˆ`systems/elite.js`ï¼‰ï¼šæ™®é€šåœ°åœ– `eliteRegen`ï¼Œç¬¬1/2/3å¤œæ¯5ç§’å›žå¾© 1%/2%/3% maxHPï¼›`elite.tierIndex` è¨˜éŒ„å¤œæ™šç­‰ç´š
-- **Bosså›žè¡€**ï¼ˆ`systems/boss.js`ï¼‰ï¼šæ™®é€šåœ°åœ– `bossRegen`ï¼Œæ¯10ç§’å›žå¾© 10% maxHP
-- **ç²¾è‹±æ€ªæ­»äº¡æŽ‰è½**ï¼ˆ`systems/organs.js`ï¼‰ï¼š`handleEliteKill` å‘¼å« `spawnLootCircle`ï¼Œæ•£è½ 1 å€‹ 1 å€å±é«” + 4 å…·ç™½éª¨
-- **`baseRadius`**ï¼ˆ`systems/spawning.js`ï¼‰ï¼š`_makeCarnCreature` æ–°å¢ž `baseRadius: 10` æ¬„ä½ï¼Œä¾›åƒå±é«”æˆé•·è¨ˆç®—ä½¿ç”¨
+### 新增
+- **肉系吃屍體系統**（`systems/creatures.js`）：普通地圖肉系生物在漫遊/休息時偵測 60px 內屍體進入 `eating` 狀態，每 0.5s tick / 6 ticks（3秒）完成，期間 aggroRange×1.5，有生物進入則中斷；完成後 `_carnivoreEatCorpse` 成長（每具 +10% 基礎值，不累乘）+ 回血 5%
+- **殺手化系統**（`systems/creatures.js`）：`corpseEaten >= 5` 觸發 `_triggerKiller`，aggroRange 翻倍、攻擊 +50%+之前10%累計、速度 +30%+之前10%累計；每5秒回血1%；繼續吃屍體每具再 +10% 基礎值；`handleKillerKill`（`systems/combat.js`）：XP×2（累乘 1.1^killerCorpseEaten）+ 3份屍體 + 變異點
+- **精英怪回血**（`systems/elite.js`）：普通地圖 `eliteRegen`，第1/2/3夜每5秒回復 1%/2%/3% maxHP；`elite.tierIndex` 記錄夜晚等級
+- **Boss回血**（`systems/boss.js`）：普通地圖 `bossRegen`，每10秒回復 10% maxHP
+- **精英怪死亡掉落**（`systems/organs.js`）：`handleEliteKill` 呼叫 `spawnLootCircle`，散落 1 個 1 倍屍體 + 4 具白骨
+- **`baseRadius`**（`systems/spawning.js`）：`_makeCarnCreature` 新增 `baseRadius: 10` 欄位，供吃屍體成長計算使用
 
-### èª¿æ•´
-- `handleKill`ï¼ˆ`systems/combat.js`ï¼‰ï¼šé–‹é ­æ–°å¢ž `isKiller` åˆ¤æ–·ï¼Œè·¯ç”±è‡³ `handleKillerKill`
-- èˆŠè‚‰ç³»å³æ™‚åƒå±é«”é‚è¼¯ï¼ˆèˆŠ Phase 1 ç°¡æ˜“ç‰ˆï¼‰å®Œå…¨æ›¿æ›ç‚ºæ–° tick-based `eating` ç‹€æ…‹ç³»çµ±
+### 調整
+- `handleKill`（`systems/combat.js`）：開頭新增 `isKiller` 判斷，路由至 `handleKillerKill`
+- 舊肉系即時吃屍體邏輯（舊 Phase 1 簡易版）完全替換為新 tick-based `eating` 狀態系統
 
 ---
 
 ## v0.37.0 - 2026-05-22
 
-### æ–°å¢ž
-- **å·¨äººåŒ–ç³»çµ±**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šè‰ç³»ç”Ÿç‰©åƒæ»¿5é¡†æžœå­è§¸ç™¼ï¼ˆæ™®é€šåœ°åœ–é™å®šï¼‰ï¼Œæ”»æ“ŠåŠ›+20ã€è¡€é‡Ã—10ã€é«”ç©Ã—1.5ã€aggroRange 150ã€æ¯ç§’å›žå¾©1%è¡€ï¼›çµ„éšŠç³»çµ±ï¼ˆåŒæ—ä¸Šé™5éš»ï¼Œè·Ÿéš¨ç¯„åœ800pxï¼ŒéšŠå“¡ç­‰å¾…æ©Ÿåˆ¶ï¼‰ï¼›`_triggerGiantization()` è¼”åŠ©å‡½å¼
-- **Alphaç³»çµ±**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šéšŠä¼å‡ºç¾ç¬¬2éš»å·¨äººåŒ–æ™‚ï¼ŒéšŠé•·å‡æ ¼Alphaï¼Œå…¨åœ–å”¯ä¸€ï¼ˆ`gameState.alphaCreature`ï¼‰ï¼Œæ”»æ“ŠåŠ›ç¿»å€/è¡€é‡Ã—3/é«”ç©Ã—1.5/aggroRange 300/æ¯ç§’å›žå¾©2%è¡€ï¼›`_triggerAlpha()` è¼”åŠ©å‡½å¼ï¼›`showAlphaAnnouncement()` å…¨å±3ç§’å…¬å‘Š
-- **ä¸Šæ–¹è¡€æ¢UI**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`drawTopBarUI()` å‡½å¼ï¼ŒçŽ©å®¶2000pxå…§æœ‰ç‰¹æ®Šç›®æ¨™æ™‚é ‚éƒ¨é¡¯ç¤ºè¡€æ¢ï¼ˆå¯¬400pxï¼‰ï¼Œè¿½è¹¤æœ€å¾Œè¢«æ™®é€šæ”»æ“Šå‘½ä¸­çš„ç›®æ¨™ï¼Œç›®æ¨™æ­»äº¡/è¶…å‡ºç¯„åœå¾Œ0.5ç§’æ·¡å‡º
-- **handleGiantKill**ï¼ˆ`systems/combat.js`ï¼‰ï¼šå·¨äººåŒ–/Alphaå°ˆå±¬æ“Šæ®ºçŽå‹µï¼ŒåŒ…å«XPï¼ˆ60/200ï¼‰ã€`spawnLootCircle` æŽ‰è½ã€è®Šç•°é»žï¼ˆé ç•™Phase 5ï¼‰
-- **addMutationPoints**ï¼ˆ`systems/combat.js`ï¼‰ï¼šPhase 5 é ç•™ç©ºå‡½å¼
+### 新增
+- **巨人化系統**（`systems/creatures.js`）：草系生物吃滿5顆果子觸發（普通地圖限定），攻擊力+20、血量×10、體積×1.5、aggroRange 150、每秒回復1%血；組隊系統（同族上限5隻，跟隨範圍800px，隊員等待機制）；`_triggerGiantization()` 輔助函式
+- **Alpha系統**（`systems/creatures.js`）：隊伍出現第2隻巨人化時，隊長升格Alpha，全圖唯一（`gameState.alphaCreature`），攻擊力翻倍/血量×3/體積×1.5/aggroRange 300/每秒回復2%血；`_triggerAlpha()` 輔助函式；`showAlphaAnnouncement()` 全屏3秒公告
+- **上方血條UI**（`systems/ui.js`）：`drawTopBarUI()` 函式，玩家2000px內有特殊目標時頂部顯示血條（寬400px），追蹤最後被普通攻擊命中的目標，目標死亡/超出範圍後0.5秒淡出
+- **handleGiantKill**（`systems/combat.js`）：巨人化/Alpha專屬擊殺獎勵，包含XP（60/200）、`spawnLootCircle` 掉落、變異點（預留Phase 5）
+- **addMutationPoints**（`systems/combat.js`）：Phase 5 預留空函式
 
-### èª¿æ•´
-- ç§»é™¤è‰ç³»ç”Ÿç‰©çš„æ¿€é€²åŒ–é‚è¼¯ï¼ˆ`diet=aggressive`ï¼‰ï¼Œç”±å·¨äººåŒ–ç³»çµ±å–ä»£
-- `playerAttack()`ï¼šå‘½ä¸­ç²¾è‹±/Boss/å·¨äººåŒ–æ™‚è¨­å®š `gameState.topBarTarget`ï¼›å·¨äººåŒ–æ“Šæ®ºè·¯ç”±è‡³ `handleGiantKill`
-- `updateStatusEffects()`ï¼šç‹€æ…‹ç•°å¸¸ï¼ˆæ¯’/æµè¡€ï¼‰æ“Šæ®ºå·¨äººåŒ–ç”Ÿç‰©æ™‚æ­£ç¢ºè·¯ç”±è‡³ `handleGiantKill`
-- `gameState` æ–°å¢žä¸‰å€‹æ¬„ä½ï¼š`alphaCreature`ã€`topBarTarget`ã€`topBarFadeTimer`
-- `initializeGame()` å†ä¾†ä¸€å ´é‡ç½®æ™‚æ¸…ç©ºä¸Šè¿°ä¸‰å€‹æ¬„ä½
+### 調整
+- 移除草系生物的激進化邏輯（`diet=aggressive`），由巨人化系統取代
+- `playerAttack()`：命中精英/Boss/巨人化時設定 `gameState.topBarTarget`；巨人化擊殺路由至 `handleGiantKill`
+- `updateStatusEffects()`：狀態異常（毒/流血）擊殺巨人化生物時正確路由至 `handleGiantKill`
+- `gameState` 新增三個欄位：`alphaCreature`、`topBarTarget`、`topBarFadeTimer`
+- `initializeGame()` 再來一場重置時清空上述三個欄位
 
 ---
 
 ## v0.36.0 - 2026-05-22
 
-### æ–°å¢ž
-- **`map/normalmap.js`**ï¼šæ™®é€šé›£åº¦åœ°åœ–é…ç½®ï¼Œå«åœ°å½¢åƒæ•¸ï¼ˆä¸­å¿ƒæ£®æž— 400pxï¼‰ã€ç”Ÿç‰©å¼·åº¦ Ã—1.5ã€aggroRange 2000ã€ç§»é™¤é€Ÿåº¦/å‚·å®³ capï¼ˆ`removeHostileCap`ï¼‰ã€ç²¾è‹±/Boss å¼·åŒ–æ•¸å€¼ã€å°ˆå±¬ features é–‹é—œ
-- **æ™®é€šé›£åº¦è§£éŽ–**ï¼ˆ`systems/ui.js`ï¼‰ï¼šé›£åº¦é¸æ“‡é é¢æ™®é€šé›£åº¦å¾ž ðŸ”’ æ”¹ç‚ºå¯é¸ï¼Œå¯«å…¥ `NORMAL_MAP`
-- **`BIOME_CREATURES`**ï¼ˆ`config/creatures.js`ï¼‰ï¼šå…­ç¨®å‘½åç”Ÿç‰©ï¼ˆé§é¹¿/çŒžçŒ/å·¨åž‹ç”²è™«/é±·é­š/é§±é§/é¬£ç‹—ï¼‰ï¼Œå„è‡ªå°æ‡‰ç”Ÿæ…‹å€
-- **ç”Ÿæ…‹ç”Ÿç‰©ç”Ÿæˆç³»çµ±**ï¼ˆ`systems/spawning.js`ï¼‰ï¼š`spawnBiomeCreatures()` æ›¿æ›èˆŠ grid ç”Ÿæˆï¼›è‰ç³»åˆå§‹ 10 éš» Ã— 3 å€ã€è‚‰ç³» 8 éš» Ã— 3 å€ï¼›`_randomPointInBiome` æ‹’çµ•æŽ¡æ¨£ç¢ºä¿åœ¨æ­£ç¢ºç”Ÿæ…‹å€ï¼›6 å€‹ç¨ç«‹è¨ˆæ™‚å™¨ï¼ˆå„ç”Ÿæ…‹å€å„è‰/è‚‰ç³»ï¼‰ï¼›å°‘æ–¼ 3 éš»æ™‚é–“éš” Ã—0.3 åŠ é€Ÿ
-- **ç”Ÿç‰©ä¸‰æ…‹ç§»å‹•**ï¼ˆ`systems/creatures.js`ï¼‰ï¼š`creature.biome` æ¨™è¨˜çš„ç”Ÿç‰©ä½¿ç”¨ wanderingï¼ˆPerlin Noise å¹³æ»‘ï¼‰/ restingï¼ˆ1.5 ç§’ï¼Œå¯è¢«ä¸­æ–·ï¼‰/ attacking ä¸‰æ…‹ï¼›è‰ç³»å¶çˆ¾æŽ¢ç´¢æžœå­ã€è‚‰ç³»å¶çˆ¾æŽ¢ç´¢çµç‰©
+### 新增
+- **`map/normalmap.js`**：普通難度地圖配置，含地形參數（中心森林 400px）、生物強度 ×1.5、aggroRange 2000、移除速度/傷害 cap（`removeHostileCap`）、精英/Boss 強化數值、專屬 features 開關
+- **普通難度解鎖**（`systems/ui.js`）：難度選擇頁面普通難度從 🔒 改為可選，寫入 `NORMAL_MAP`
+- **`BIOME_CREATURES`**（`config/creatures.js`）：六種命名生物（駝鹿/猞猁/巨型甲虫/鱷魚/駱駝/鬣狗），各自對應生態區
+- **生態生物生成系統**（`systems/spawning.js`）：`spawnBiomeCreatures()` 替換舊 grid 生成；草系初始 10 隻 × 3 區、肉系 8 隻 × 3 區；`_randomPointInBiome` 拒絕採樣確保在正確生態區；6 個獨立計時器（各生態區各草/肉系）；少於 3 隻時間隔 ×0.3 加速
+- **生物三態移動**（`systems/creatures.js`）：`creature.biome` 標記的生物使用 wandering（Perlin Noise 平滑）/ resting（1.5 秒，可被中斷）/ attacking 三態；草系偶爾探索果子、肉系偶爾探索獵物
 
-### èª¿æ•´
-- **ç°¡å–®åœ°åœ–è‚‰ç³»é™åˆ¶**ï¼ˆ`systems/creatures.js`ï¼‰ï¼šè‚‰ç³»åƒå±é«”æˆé•·é‚è¼¯ç”± `features.hostileEatMeat` æŽ§åˆ¶ï¼ŒEASY_MAP ç„¡æ­¤ feature â†’ é è¨­ä¸åŸ·è¡Œ
-- **`gameState.spawnTimers`**ï¼ˆ`systems/gameState.js`ï¼‰ï¼šç”± `{ neutral, hostile }` æ”¹ç‚º `{ forest_herb, forest_carn, ocean_herb, ocean_carn, desert_herb, desert_carn }`
+### 調整
+- **簡單地圖肉系限制**（`systems/creatures.js`）：肉系吃屍體成長邏輯由 `features.hostileEatMeat` 控制，EASY_MAP 無此 feature → 預設不執行
+- **`gameState.spawnTimers`**（`systems/gameState.js`）：由 `{ neutral, hostile }` 改為 `{ forest_herb, forest_carn, ocean_herb, ocean_carn, desert_herb, desert_carn }`
 
 ---
 
 ## v0.35.0 - 2026-05-22
 
-### ä¿®å¾©
-- **Bossæ¯’å‚·æœªç”Ÿæ•ˆ**ï¼ˆ`systems/combat.js`ï¼‰ï¼š`updateStatusEffects()` çš„ç”Ÿç‰© loop æ–°å¢ž `bossArr`ï¼Œä½¿ Boss æ­£å¸¸æŽ¥å—æ¯’å‚· tickï¼›Boss æ­»äº¡æ™‚èµ° `showVictory()`ï¼Œä¸èµ° `handleKill()`
-- **å¿µåŠ›æ³¢æ“Šæ®ºXPå¯«æ­»**ï¼ˆ`systems/player.js`ï¼‰ï¼š`updatePassiveOrgans()` çš„å¿µåŠ›æ³¢æ“Šæ®ºæ”¹ç‚ºçµ±ä¸€èµ° `handleKill(c, true)`ï¼Œç§»é™¤å¯«æ­»çš„ `addXP(30)` å’Œæ‰‹å‹• `corpses.push`ï¼›è£œé½Šçµäººæœ¬èƒ½åŠ æˆã€å±é«”ç”Ÿæˆã€XP æµ®å‹•æ–‡å­—
+### 修復
+- **Boss毒傷未生效**（`systems/combat.js`）：`updateStatusEffects()` 的生物 loop 新增 `bossArr`，使 Boss 正常接受毒傷 tick；Boss 死亡時走 `showVictory()`，不走 `handleKill()`
+- **念力波擊殺XP寫死**（`systems/player.js`）：`updatePassiveOrgans()` 的念力波擊殺改為統一走 `handleKill(c, true)`，移除寫死的 `addXP(30)` 和手動 `corpses.push`；補齊獵人本能加成、屍體生成、XP 浮動文字
 
-### æ–°å¢ž
-- **æ¯’å‚·æ¸›å…ç³»çµ±**ï¼ˆ`systems/combat.js`ï¼‰ï¼šç²¾è‹±æ€ª 20%ã€Boss é€šç”¨ 30%ã€æ²™æ¼ è çŽ‹ 50%ï¼›`updateStatusEffects()` æ¯’å‚· tick ä¾ç›®æ¨™é¡žåž‹è¨ˆç®—æ¸›å…å¾Œå¯¦éš›å‚·å®³ï¼Œæµ®å‹•æ•¸å­—é¡¯ç¤ºå¯¦éš›æ‰£è¡€å€¼
-- **åœ“å½¢æ•£è½å…¨å±€å‡½å¼ `spawnLootCircle`**ï¼ˆ`systems/utils.js`ï¼‰ï¼šåœ“å½¢å¹³å‡è§’åº¦æ•£è½æŽ‰è½ç‰©ï¼Œè·ä¸­é»ž 10~25px éš¨æ©Ÿï¼›å–®å€‹ç‰©å“éš¨æ©Ÿè§’åº¦ï¼›æ”¯æ´ typeï¼š`corpse`ï¼ˆå« multiplier ç¸®æ”¾ï¼‰ã€`bone`ï¼›æ˜“æ“´å……è¨­è¨ˆä¾›å¾ŒçºŒ Phase ä½¿ç”¨
+### 新增
+- **毒傷減免系統**（`systems/combat.js`）：精英怪 20%、Boss 通用 30%、沙漠蠍王 50%；`updateStatusEffects()` 毒傷 tick 依目標類型計算減免後實際傷害，浮動數字顯示實際扣血值
+- **圓形散落全局函式 `spawnLootCircle`**（`systems/utils.js`）：圓形平均角度散落掉落物，距中點 10~25px 隨機；單個物品隨機角度；支援 type：`corpse`（含 multiplier 縮放）、`bone`；易擴充設計供後續 Phase 使用
 
 ---
 
 ## v0.34.1 - 2026-05-21
 
-### ä¿®å¾©
+### 修復
 
-#### UI ä¿®å¾©
-- **åœ–é‘‘çµ„åˆæ•ˆæžœå™¨å®˜åç¨±é¡¯ç¤º**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`showCompendium` çš„å™¨å®˜åœ–é‘‘é ï¼Œçµ„åˆæ•ˆæžœï¼ˆCOMBOSï¼‰æ¨™é¡ŒåŽŸæœ¬ç›´æŽ¥ä½¿ç”¨ `combo.ids.join(' + ')` é¡¯ç¤º id å­—ä¸²ï¼ˆå¦‚ `poisonStinger + poisonSac`ï¼‰ï¼›æ–°å¢ž `getOrganDisplayName(id)` helperï¼ˆå„ªå…ˆå¾ž `ORGANS` å–åï¼Œå…¶æ¬¡ `HIDDEN_ORGANS`ï¼Œfallback å›ž idï¼‰ï¼Œçµ„åˆæ¨™é¡Œæ”¹ç‚º `combo.ids.map(id => getOrganDisplayName(id)).join(' + ')`ï¼Œæ­£ç¢ºé¡¯ç¤ºä¸­æ–‡åç¨±ï¼ˆå¦‚ã€Œæ¯’åˆº + æ¯’å›Šã€ï¼‰
+#### UI 修復
+- **圖鑑組合效果器官名稱顯示**（`systems/ui.js`）：`showCompendium` 的器官圖鑑頁，組合效果（COMBOS）標題原本直接使用 `combo.ids.join(' + ')` 顯示 id 字串（如 `poisonStinger + poisonSac`）；新增 `getOrganDisplayName(id)` helper（優先從 `ORGANS` 取名，其次 `HIDDEN_ORGANS`，fallback 回 id），組合標題改為 `combo.ids.map(id => getOrganDisplayName(id)).join(' + ')`，正確顯示中文名稱（如「毒刺 + 毒囊」）
 
-### èª¿æ•´
+### 調整
 
-#### æ‰‹æ©Ÿ UI
-- **æ‰‹æ©Ÿç‰ˆé¦–é  TOP10 æŽ’è¡Œæ¦œç¸®å°ç‚º 55%**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ‰‹æ©Ÿè£ç½®ä¸‹ TOP10 æµ®çª—å¥—ç”¨ `scale(0.55)` CSS ç¸®æ”¾ï¼ˆåŽŸ `scale(0.7)`ï¼‰ï¼Œ`transform-origin` æ”¹ç‚º `top right`ï¼Œ`top` æ”¹ç‚º `16px`ï¼Œç¢ºä¿æµ®çª—å¾žå³ä¸Šè§’ç¸®æ”¾ä¸è¶…å‡ºç•«é¢
+#### 手機 UI
+- **手機版首頁 TOP10 排行榜縮小為 55%**（`systems/ui.js`）：手機裝置下 TOP10 浮窗套用 `scale(0.55)` CSS 縮放（原 `scale(0.7)`），`transform-origin` 改為 `top right`，`top` 改為 `16px`，確保浮窗從右上角縮放不超出畫面
 
 ---
 
 ## v0.34.0 - 2026-05-21
 
-### ä¿®å¾©
+### 修復
 
-#### Bug ä¿®å¾©
-- **æ¯’å›Šç¹¼æ‰¿ Bug**ï¼ˆ`systems/evolution.js`ï¼‰ï¼š`buildSkillTreeOverlay` çš„å™¨å®˜ç¹¼æ‰¿é¸å–®ç¾åœ¨æ­£ç¢ºéŽæ¿¾ `noInherit: true` çš„å™¨å®˜ï¼ˆæ¯’å›Šï¼‰ï¼Œä½¿å…¶ä¸å†å‡ºç¾æ–¼ç¹¼æ‰¿é¸æ“‡æ¸…å–®
-- **å†ä¾†ä¸€å ´â†’æŠ€èƒ½æ¨¹â†’é–‹å§‹éŠæˆ² ç„¡æ³•ç§»å‹• Bug**ï¼ˆ`main.js`ï¼‰ï¼š`initializeGame()` é–‹é ­æ–°å¢žå®Œæ•´ç‹€æ…‹é‡è¨­å€å¡Šï¼Œç¢ºä¿ `gameState.gameOver`ã€`skillTreeOpen`ã€`organSelectionActive` ç­‰æ——æ¨™åœ¨é‡æ–°éŠæˆ²æ™‚æ­¸é›¶ï¼Œä¿®å¾© `isGamePaused()` èª¤å›žå‚³ `true` å°Žè‡´çŽ©å®¶ç„¡æ³•ç§»å‹•çš„å•é¡Œ
+#### Bug 修復
+- **毒囊繼承 Bug**（`systems/evolution.js`）：`buildSkillTreeOverlay` 的器官繼承選單現在正確過濾 `noInherit: true` 的器官（毒囊），使其不再出現於繼承選擇清單
+- **再來一場→技能樹→開始遊戲 無法移動 Bug**（`main.js`）：`initializeGame()` 開頭新增完整狀態重設區塊，確保 `gameState.gameOver`、`skillTreeOpen`、`organSelectionActive` 等旗標在重新遊戲時歸零，修復 `isGamePaused()` 誤回傳 `true` 導致玩家無法移動的問題
 
-#### UI ä¿®å¾©
-- **å·¦ä¸‹è§’éš±è—å™¨å®˜æ¸…å–®è·‘ç‰ˆ**ï¼ˆ`systems/organs.js`ï¼‰ï¼šé‡æ§‹ `drawOrganUI()` çš„éš±è—å™¨å®˜ç¹ªè£½é‚è¼¯ï¼›åˆ†éš”è¡Œï¼ˆ`sepBase+1`ï¼‰å°ˆé–€ç¹ªè£½åˆ†éš”ç·šï¼Œå™¨å®˜åç¨±å¾ž `sepBase+2` é–‹å§‹ï¼Œhit region åŒæ­¥ä¿®æ­£ï¼Œç¢ºä¿æ‰€æœ‰æ–‡å­—åœ¨èƒŒæ™¯æ–¹å¡Šå…§æ­£ç¢ºé¡¯ç¤º
+#### UI 修復
+- **左下角隱藏器官清單跑版**（`systems/organs.js`）：重構 `drawOrganUI()` 的隱藏器官繪製邏輯；分隔行（`sepBase+1`）專門繪製分隔線，器官名稱從 `sepBase+2` 開始，hit region 同步修正，確保所有文字在背景方塊內正確顯示
 
-### èª¿æ•´
+### 調整
 
-#### å™¨å®˜æ•¸å€¼
-- **å¤§é•·è…¿**ï¼ˆ`config/organs.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼šå„ç´šç§»å‹•é€Ÿåº¦ +1.5 â†’ +1
-- **å¼·å¤§çš„å¿ƒè‡Ÿ**ï¼ˆ`config/organs.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼šHPä¸Šé™+100 â†’ HPä¸Šé™+60
+#### 器官數值
+- **大長腿**（`config/organs.js`、`lang/zh-TW.js`、`lang/en.js`）：各級移動速度 +1.5 → +1
+- **強大的心臟**（`config/organs.js`、`lang/zh-TW.js`、`lang/en.js`）：HP上限+100 → HP上限+60
 
-#### çµ„åˆæ•ˆæžœèª¿æ•´ï¼ˆ`config/organs.js`ã€`systems/organs.js`ã€`systems/combat.js`ï¼‰
-- **ç§»é™¤**åŽŸæœ‰ä¸‰å™¨å®˜çµ„åˆï¼ˆèŸ¹é‰—+æ¯’åˆº+æ¯’å›Šï¼‰
-- **æ–°å¢ž** `comboCrabPoison`ï¼šæ¯’åˆºLv3 + æ“æœ‰æ¯’å›Šå³è§¸ç™¼ â†’ æ¯’å‚·ç¿»å€
-- **æ–°å¢ž** `comboCrabGloves`ï¼šèŸ¹é‰—+ææ“Šæ‹³å¥—å„é”Lv3 â†’ æµè¡€å‚·å®³ç¿»å€ã€å‘½ä¸­æ–½åŠ å›žå¾©é‡-50%
-- `gameState.player` æ–°å¢ž `comboCrabGloves` æ——æ¨™ï¼›`checkComboEffects()` å° `comboCrabPoison` æŽ¡ç”¨ç‰¹æ®Šåˆ¤æ–·é‚è¼¯
+#### 組合效果調整（`config/organs.js`、`systems/organs.js`、`systems/combat.js`）
+- **移除**原有三器官組合（蟹鉗+毒刺+毒囊）
+- **新增** `comboCrabPoison`：毒刺Lv3 + 擁有毒囊即觸發 → 毒傷翻倍
+- **新增** `comboCrabGloves`：蟹鉗+搏擊拳套各達Lv3 → 流血傷害翻倍、命中施加回復量-50%
+- `gameState.player` 新增 `comboCrabGloves` 旗標；`checkComboEffects()` 對 `comboCrabPoison` 採用特殊判斷邏輯
 
-#### éˆæ•çŸ¥è¦ºé‡è¨­è¨ˆï¼ˆ`config/organs.js`ã€`systems/ui.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼‰
-- Lv1ï¼šç¶­æŒé¡¯ç¤ºæžœå­æœ€ä½³è·¯å¾‘ï¼ˆç´…ç·šï¼Œ1000px åµæ¸¬ç¯„åœï¼‰
-- Lv2ï¼šæ–°å¢žè¿½è¹¤æœ€è¿‘å±é«”ï¼ˆé»ƒç·šï¼‰ï¼Œä½¿ç”¨ `wrappedDistance` è¨ˆç®—æœ€è¿‘ç›®æ¨™
-- Lv3ï¼šæ–°å¢žè¿½è¹¤æœ€è¿‘ç™½éª¨ï¼ˆç™½ç·šï¼‰ï¼ŒåŒä¸Šé‚è¼¯
-- ä¸‰æ¢ç·šå¯ç´¯ç©åŒæ™‚é¡¯ç¤ºï¼›`perceptionRange` ç¶­æŒ 1000px ä¸å†éš¨ç­‰ç´šå¢žåŠ 
+#### 靈敏知覺重設計（`config/organs.js`、`systems/ui.js`、`lang/zh-TW.js`、`lang/en.js`）
+- Lv1：維持顯示果子最佳路徑（紅線，1000px 偵測範圍）
+- Lv2：新增追蹤最近屍體（黃線），使用 `wrappedDistance` 計算最近目標
+- Lv3：新增追蹤最近白骨（白線），同上邏輯
+- 三條線可累積同時顯示；`perceptionRange` 維持 1000px 不再隨等級增加
 
-#### é¡é ­èˆ‡ç¸®æ”¾ï¼ˆ`systems/camera.js`ã€`systems/ui.js`ï¼‰
-- é¡é ­é‚Šç•Œè§¸ç™¼è·é›¢ï¼š25% â†’ 30%ï¼ˆ`marginX/Y = VIEW_W/H * 0.30`ï¼‰
-- æ‰‹æ©ŸéŠæˆ²ç¸®æ”¾æ¯”ä¾‹ï¼š`MOBILE_GAME_SCALE` 0.7 â†’ 0.6
+#### 鏡頭與縮放（`systems/camera.js`、`systems/ui.js`）
+- 鏡頭邊界觸發距離：25% → 30%（`marginX/Y = VIEW_W/H * 0.30`）
+- 手機遊戲縮放比例：`MOBILE_GAME_SCALE` 0.7 → 0.6
 
-### æ–°å¢ž
+### 新增
 
-#### çµç®—ç•«é¢æŠ€èƒ½é»žæ˜Žç´°ï¼ˆ`systems/evolution.js`ã€`systems/boss.js`ã€`systems/gameState.js`ï¼‰
-- `gameState.sessionSkillPoints = { elite: 0, boss: 0 }` è¿½è¹¤æœ¬å±€å„ä¾†æºæŠ€èƒ½é»ž
-- `handleEliteKill` åœ¨æ“Šæ®ºç²¾è‹±å¾Œç´¯åŠ  `sessionSkillPoints.elite`
-- æ­»äº¡/è¶…æ™‚çµç®—ç•«é¢ï¼šé¡¯ç¤ºç²¾è‹±çŽå‹µï¼ˆ`skillPtElite`ï¼‰ã€æ™‚é–“çŽå‹µã€ç­‰ç´šçŽå‹µæ˜Žç´°
-- å‹åˆ©çµç®—ç•«é¢ï¼šé¡¯ç¤º Boss çŽå‹µï¼ˆ+5ï¼‰ã€ç²¾è‹±çŽå‹µã€æ™‚é–“çŽå‹µã€ç­‰ç´šçŽå‹µæ˜Žç´°ï¼›`sessionSkillPoints.boss = 5` åœ¨å‹åˆ©æ™‚è¨˜éŒ„
+#### 結算畫面技能點明細（`systems/evolution.js`、`systems/boss.js`、`systems/gameState.js`）
+- `gameState.sessionSkillPoints = { elite: 0, boss: 0 }` 追蹤本局各來源技能點
+- `handleEliteKill` 在擊殺精英後累加 `sessionSkillPoints.elite`
+- 死亡/超時結算畫面：顯示精英獎勵（`skillPtElite`）、時間獎勵、等級獎勵明細
+- 勝利結算畫面：顯示 Boss 獎勵（+5）、精英獎勵、時間獎勵、等級獎勵明細；`sessionSkillPoints.boss = 5` 在勝利時記錄
 
-#### æ‰‹æ©Ÿé¦–é  TOP10 é¢æ¿ç¸®æ”¾ï¼ˆ`systems/ui.js`ï¼‰
-- æ‰‹æ©Ÿè£ç½®ä¸‹ TOP10 æŽ’è¡Œæ¦œé¢æ¿å¥—ç”¨ `scale(0.7)` CSS ç¸®æ”¾ï¼Œ`transform-origin: right center`
+#### 手機首頁 TOP10 面板縮放（`systems/ui.js`）
+- 手機裝置下 TOP10 排行榜面板套用 `scale(0.7)` CSS 縮放，`transform-origin: right center`
 
-### èªžè¨€æª”æ›´æ–°ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰
-- å¤§é•·è…¿é€Ÿåº¦æè¿° +1.5 â†’ +1
-- éˆæ•çŸ¥è¦º Lv2/Lv3 æè¿°æ›´æ–°ï¼ˆå±é«”é»ƒç·š / ç™½éª¨ç™½ç·šï¼‰
-- å¼·å¤§çš„å¿ƒè‡Ÿæè¿° HP+100 â†’ HP+60
-- `comboCrabPoison` æè¿°æ›´æ–°ï¼ˆæ¢ä»¶å¾žä¸‰å™¨å®˜æ”¹ç‚ºæ¯’åˆºLv3+æ¯’å›Šï¼‰
-- æ–°å¢ž `comboCrabGloves` æè¿°
+### 語言檔更新（`lang/zh-TW.js`、`lang/en.js`）
+- 大長腿速度描述 +1.5 → +1
+- 靈敏知覺 Lv2/Lv3 描述更新（屍體黃線 / 白骨白線）
+- 強大的心臟描述 HP+100 → HP+60
+- `comboCrabPoison` 描述更新（條件從三器官改為毒刺Lv3+毒囊）
+- 新增 `comboCrabGloves` 描述
 
 ---
 
 ## v0.33.0 - 2026-05-21
 
-### æ–°å¢ž
+### 新增
 
-#### é¦–é ç«¥æ›¸æ•…äº‹ç³»çµ±ï¼ˆ`systems/ui.js`ã€`main.js`ï¼‰
-- **é¦–é ç«¥æ›¸æ•…äº‹æŒ‰éˆ•**ï¼šé¦–é å·¦ä¸Šè§’æ–°å¢ž ðŸ“– åœ–ç¤ºæŒ‰éˆ•ï¼Œæš–é»ƒè‰²åŠé€æ˜Žè¨­è¨ˆï¼Œhover è¼•å¾®æ”¾å¤§ï¼Œé»žæ“Šè§¸ç™¼ `showGuideStory()`
-- **å™ªé¹ƒç”Ÿå­˜è¨˜ Guide Story ç³»çµ±**ï¼šæ–°å¢ž `showGuideStory()` å’Œ `_getGuideStoryPages()`ï¼›ç«¥æ›¸é¢¨æ ¼ UIï¼ˆç±³é»ƒç´™è³ªèƒŒæ™¯ã€æ·±æ£•æ–‡å­—ï¼‰ï¼Œ4 é æ•…äº‹å„é™„ SVG å‹•ç•«æ’ç•«ï¼ˆç ´æ›‰ / å­¤å…’ / è›»è®Š / è©¦ç…‰ï¼‰ï¼Œç¿»é é€²åº¦é»žå°Žèˆªï¼Œé—œé–‰æŒ‰éˆ•ï¼Œæ‰‹æ©Ÿç‰ˆæ’ç•«ç¸®å°è‡³ 140px
-- **First Time Player åˆ¤æ–·**ï¼š`window.onload` æ”¹ç‚ºæª¢æŸ¥ `localStorage.hasPlayedBefore`ï¼›é¦–æ¬¡çŽ©å®¶è‡ªå‹•å½ˆå‡º Guide Storyï¼›`initializeGame()` é–‹é ­èˆ‡ Guide æœ€å¾Œä¸€é ã€Œé–‹å§‹å†’éšªã€å‡å¯«å…¥æ¨™è¨˜
+#### 首頁童書故事系統（`systems/ui.js`、`main.js`）
+- **首頁童書故事按鈕**：首頁左上角新增 📖 圖示按鈕，暖黃色半透明設計，hover 輕微放大，點擊觸發 `showGuideStory()`
+- **噪鹃生存記 Guide Story 系統**：新增 `showGuideStory()` 和 `_getGuideStoryPages()`；童書風格 UI（米黃紙質背景、深棕文字），4 頁故事各附 SVG 動畫插畫（破曉 / 孤兒 / 蛻變 / 試煉），翻頁進度點導航，關閉按鈕，手機版插畫縮小至 140px
+- **First Time Player 判斷**：`window.onload` 改為檢查 `localStorage.hasPlayedBefore`；首次玩家自動彈出 Guide Story；`initializeGame()` 開頭與 Guide 最後一頁「開始冒險」均寫入標記
 
 ---
 
 ## v0.32.1 - 2026-05-20
 
-### ä¿®å¾©
+### 修復
 
-#### æ¯’åˆº Bug ä¿®å¾©ï¼ˆ`systems/combat.js`ï¼‰
-- **Bug 1 â€” æ¯’è¨ˆæ™‚å™¨è¢«é‡ç½®**ï¼š`playerAttack()` çš„æ¯’åˆºé‚è¼¯æ”¹ç‚ºåªåœ¨æ•µäººæœªä¸­æ¯’æ™‚æ‰åˆå§‹åŒ– `lastPoisonTick`ï¼›é‡è¤‡æ”»æ“Šä¸é‡ç½®è¨ˆæ™‚å™¨ï¼Œç¢ºä¿æ¯’å‚·æ¯ç§’æ­£å¸¸ tick
-- **`updateStatusEffects()` æ¯’å‚· tick**ï¼š`c.lastPoisonTick = now` æ”¹ç‚º `c.lastPoisonTick += 1000`ï¼Œé¿å…èª¤å·®ç´¯ç©å°Žè‡´æ¯’å‚·ä¸­æ–·
-- **Bug 2 â€” åªæœ‰æ¯’åˆºæ²’æœ‰æ”»æ“ŠåŠ›æ™‚ç„¡æ³•æ”»æ“Š**ï¼šæ””æˆªæ¢ä»¶æ”¹ç‚ºåŒæ™‚åˆ¤æ–· `p.attack <= 0 && !hasPoison`ï¼ˆ`poisonStinger > 0` æˆ– `poisonSac.level > 0`ï¼‰ï¼Œæœ‰æ¯’æ€§å™¨å®˜æ™‚å¯æ­£å¸¸è§¸ç™¼æ”»æ“Š
+#### 毒刺 Bug 修復（`systems/combat.js`）
+- **Bug 1 — 毒計時器被重置**：`playerAttack()` 的毒刺邏輯改為只在敵人未中毒時才初始化 `lastPoisonTick`；重複攻擊不重置計時器，確保毒傷每秒正常 tick
+- **`updateStatusEffects()` 毒傷 tick**：`c.lastPoisonTick = now` 改為 `c.lastPoisonTick += 1000`，避免誤差累積導致毒傷中斷
+- **Bug 2 — 只有毒刺沒有攻擊力時無法攻擊**：攔截條件改為同時判斷 `p.attack <= 0 && !hasPoison`（`poisonStinger > 0` 或 `poisonSac.level > 0`），有毒性器官時可正常觸發攻擊
 
-### èª¿æ•´
+### 調整
 
-#### æŠ€èƒ½æ¨¹å¹³è¡¡ï¼ˆ`config/evolution.js`ã€`systems/evolution.js`ï¼‰
-- **è¨˜æ†¶å™¨å®˜**ï¼šæ­»äº¡ä¿ç•™å™¨å®˜æ•¸æ”¹ç‚ºé è¨­ 0 å€‹ï¼ˆåŽŸé è¨­ 1 å€‹ï¼‰ï¼›Lv1=1å€‹ï¼ŒLv2=2å€‹ï¼ŒLv3=3å€‹ï¼›`organsToKeep` å…¬å¼æ”¹ç‚º `gameState.playerSkills.organMemory || 0`
-- **ææ€–ä¹‹ç‰™**ï¼šLv3 é–‹å±€å¼·åˆ¶è¨­å®šç ç‰™ Lv1ï¼›Lv5 é–‹å±€å¼·åˆ¶è¨­å®šç ç‰™ Lv2ï¼ˆè¦†è“‹ Lv3 æ•ˆæžœï¼‰ï¼›æ–°å¢ž `_setFangLevel(targetLv)` å·¥å…·å‡½å¼ï¼Œæ”¯æ´å‡ç´šå·²ç¹¼æ‰¿çš„ç ç‰™å™¨å®˜
-- **æ”¶é›†æˆç™®**ï¼šæè¿°æ›´æ–°ç‚ºã€Œæ”¶é›†ç¯„åœ+10pxï¼ˆæžœå­ã€å±é«”å’Œç™½éª¨ï¼Œæ¯ç´šï¼‰ã€ï¼ˆç™½éª¨åžå™¬è·é›¢å·²ä½¿ç”¨ `p.pickupRange`ï¼Œæ­¤ç‚ºæè¿°ä¿®æ­£ï¼‰
+#### 技能樹平衡（`config/evolution.js`、`systems/evolution.js`）
+- **記憶器官**：死亡保留器官數改為預設 0 個（原預設 1 個）；Lv1=1個，Lv2=2個，Lv3=3個；`organsToKeep` 公式改為 `gameState.playerSkills.organMemory || 0`
+- **恐怖之牙**：Lv3 開局強制設定獠牙 Lv1；Lv5 開局強制設定獠牙 Lv2（覆蓋 Lv3 效果）；新增 `_setFangLevel(targetLv)` 工具函式，支援升級已繼承的獠牙器官
+- **收集成癮**：描述更新為「收集範圍+10px（果子、屍體和白骨，每級）」（白骨吞噬距離已使用 `p.pickupRange`，此為描述修正）
 
-#### èªžè¨€åŒ…æ›´æ–°ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰
-- åŒæ­¥æ›´æ–° `organMemory`ã€`terribleFang`ã€`collectionAddiction` çš„æŠ€èƒ½æè¿°æ–‡å­—
+#### 語言包更新（`lang/zh-TW.js`、`lang/en.js`）
+- 同步更新 `organMemory`、`terribleFang`、`collectionAddiction` 的技能描述文字
 
 ---
 
 ## v0.32.0 - 2026-05-20
 
-### æ–°å¢ž / ä¿®æ”¹
+### 新增 / 修改
 
-#### æŠ€èƒ½é»žç³»çµ±é‡æ•´
+#### 技能點系統重整
 
-- **ç§»é™¤** æ­»äº¡/å‹åˆ©å¾Œå›ºå®šçµ¦ 1 æŠ€èƒ½é»žçš„é‚è¼¯ï¼ˆ`showSkillTree`ã€`showVictory`ï¼‰
-- **ç²¾è‹±æ€ªæ“Šæ®º**ï¼ˆ`systems/organs.js` `handleEliteKill`ï¼‰ï¼šä¾å¤œæ™šç·¨è™Ÿçµ¦é»žï¼šç¬¬1å¤œ +1ã€ç¬¬2å¤œ +2ã€ç¬¬3å¤œ +3
-- **Bossæ“Šæ®º**ï¼ˆ`systems/boss.js` `showVictory`ï¼‰ï¼š+5æŠ€èƒ½é»ž
-- **æ™‚é–“çŽå‹µ**ï¼ˆæ­»äº¡/å‹åˆ©çµç®—æ™‚ï¼‰ï¼š`Math.floor((600 - timeRemaining) / 180)`ï¼Œæœ€å¤š3é»ž
-- **ç­‰ç´šçŽå‹µ**ï¼ˆæ­»äº¡/å‹åˆ©çµç®—æ™‚ï¼‰ï¼š`Math.floor(player.level / 6)`
-- çµç®—ç•«é¢é¡¯ç¤ºæœ¬å±€æŠ€èƒ½é»žæ˜Žç´°ï¼ˆæ™‚é–“/ç­‰ç´š/BossçŽå‹µï¼‰
+- **移除** 死亡/勝利後固定給 1 技能點的邏輯（`showSkillTree`、`showVictory`）
+- **精英怪擊殺**（`systems/organs.js` `handleEliteKill`）：依夜晚編號給點：第1夜 +1、第2夜 +2、第3夜 +3
+- **Boss擊殺**（`systems/boss.js` `showVictory`）：+5技能點
+- **時間獎勵**（死亡/勝利結算時）：`Math.floor((600 - timeRemaining) / 180)`，最多3點
+- **等級獎勵**（死亡/勝利結算時）：`Math.floor(player.level / 6)`
+- 結算畫面顯示本局技能點明細（時間/等級/Boss獎勵）
 
-#### æŠ€èƒ½å‡ç´šè²»ç”¨æ”¹ç‚ºéšŽæ¢¯å¼ï¼ˆ`systems/evolution.js` `upgradeSkill`ï¼‰
-- Lv1è²»1é»žã€Lv2è²»2é»žã€Lv3è²»3é»žã€Lv4è²»4é»žã€Lv5è²»5é»ž
-- æŠ€èƒ½æ¨¹æŒ‰éˆ•å‹•æ…‹é¡¯ç¤ºã€Œå‡ç´šï¼ˆè²»Né»žï¼‰ã€ï¼Œé»žæ•¸ä¸è¶³æ™‚æŒ‰éˆ•è®Šç°
+#### 技能升級費用改為階梯式（`systems/evolution.js` `upgradeSkill`）
+- Lv1費1點、Lv2費2點、Lv3費3點、Lv4費4點、Lv5費5點
+- 技能樹按鈕動態顯示「升級（費N點）」，點數不足時按鈕變灰
 
-#### å…¶ä»–
-- `SAVE_VERSION` 1.0 â†’ 1.1ï¼ˆè‡ªå‹•æ¸…é™¤èˆŠæŠ€èƒ½é»žå­˜æª”ï¼‰
-- èªžè¨€ keyï¼š`upgradeCost1` â†’ `upgradeCostN`ï¼ˆå« `{n}` å ä½ç¬¦ï¼‰ï¼›æ–°å¢ž `skillPtTime`ã€`skillPtLevel`ã€`skillPtElite`ã€`skillPtBoss`
+#### 其他
+- `SAVE_VERSION` 1.0 → 1.1（自動清除舊技能點存檔）
+- 語言 key：`upgradeCost1` → `upgradeCostN`（含 `{n}` 占位符）；新增 `skillPtTime`、`skillPtLevel`、`skillPtElite`、`skillPtBoss`
 
 ---
 
 ## v0.31.1 - 2026-05-20
 
-### ä¿®å¾©
+### 修復
 
-- **é‡æ•´çµç®—ç•«é¢æŒ‰éˆ•æµç¨‹**ï¼ˆ`systems/boss.js`ã€`systems/evolution.js`ï¼‰
-  - å‹åˆ©å’Œæ­»äº¡çµç®—ç•«é¢çµ±ä¸€é¡¯ç¤º 3 å€‹æŒ‰éˆ•ï¼šã€Œå‰å¾€æŠ€èƒ½æ¨¹ã€ã€ŒðŸ  å›žåˆ°é¦–é ã€ã€Œâš”ï¸ å†ä¾†ä¸€å ´ã€
-  - ã€Œå‰å¾€æŠ€èƒ½æ¨¹ã€â†’ `buildSkillTreeOverlay(mode='postGame')`ï¼Œåº•éƒ¨é¡¯ç¤ºã€ŒðŸ  å›žåˆ°é¦–é ã€+ã€Œâš”ï¸ å†ä¾†ä¸€å ´ã€ï¼Œç›´æŽ¥åŸ·è¡Œç„¡è­¦å‘Š
-  - ã€ŒðŸ  å›žåˆ°é¦–é ã€ï¼ˆå¾žçµç®—ç•«é¢ï¼‰â†’ warn-once æç¤ºï¼Œå†æŒ‰ä¸€æ¬¡ç¢ºèªè¿”å›žé¦–é 
-  - ã€Œâš”ï¸ å†ä¾†ä¸€å ´ã€ï¼ˆå¾žçµç®—ç•«é¢ï¼‰â†’ å¼·åˆ¶é€²å…¥ `buildSkillTreeOverlay(mode='forceStart')`ï¼Œåº•éƒ¨åªé¡¯ç¤ºã€Œâ–¶ é–‹å§‹éŠæˆ²ã€
-  - `buildSkillTreeOverlay` æ–°å¢ž `mode` åƒæ•¸ï¼ˆ`postGame` / `forceStart` / `fromHome`ï¼‰ï¼Œé€éŽ `_skillTreeMode` å…¨åŸŸè®Šæ•¸åœ¨ reset / upgrade æ™‚æ­£ç¢ºä¿ç•™æ¨¡å¼
-  - ç§»é™¤ `gameState.homeWarned`ã€`gameState.playAgainWarned`ï¼ˆæ”¹ç‚ºçµç®— overlay å…§çš„ local è®Šæ•¸ï¼‰
-  - ç§»é™¤ `btnSaveAndHome`ã€`warnNoOrganLine1`ã€`warnNoOrganLine2`ã€`warnNoOrganPlay` èªžè¨€ key
+- **重整結算畫面按鈕流程**（`systems/boss.js`、`systems/evolution.js`）
+  - 勝利和死亡結算畫面統一顯示 3 個按鈕：「前往技能樹」「🏠 回到首頁」「⚔️ 再來一場」
+  - 「前往技能樹」→ `buildSkillTreeOverlay(mode='postGame')`，底部顯示「🏠 回到首頁」+「⚔️ 再來一場」，直接執行無警告
+  - 「🏠 回到首頁」（從結算畫面）→ warn-once 提示，再按一次確認返回首頁
+  - 「⚔️ 再來一場」（從結算畫面）→ 強制進入 `buildSkillTreeOverlay(mode='forceStart')`，底部只顯示「▶ 開始遊戲」
+  - `buildSkillTreeOverlay` 新增 `mode` 參數（`postGame` / `forceStart` / `fromHome`），透過 `_skillTreeMode` 全域變數在 reset / upgrade 時正確保留模式
+  - 移除 `gameState.homeWarned`、`gameState.playAgainWarned`（改為結算 overlay 內的 local 變數）
+  - 移除 `btnSaveAndHome`、`warnNoOrganLine1`、`warnNoOrganLine2`、`warnNoOrganPlay` 語言 key
 
 ---
 
 ## v0.31.0 - 2026-05-20
 
-### æ–°å¢ž
+### 新增
 
-#### é€²åŒ–ç³»çµ±æ“´å±•è‡³ Lv5ï¼ˆ`config/evolution.js`ã€`systems/evolution.js`ï¼‰
-- è‰é£Ÿæ€§ã€è‚‰é£Ÿæ€§ã€é›œé£Ÿæ€§ä¸‰æ¢è·¯ç·šå„å¾ž Lv3 æ“´å±•è‡³ Lv5
-- è‰é£Ÿæ€§ Lv4/5ï¼šå¢žåŠ é«”åž‹ï¼ˆ`radiusPercent`ï¼‰+ ä¸­ç«‹ç”Ÿç‰©å®Œå…¨å‹å–„ï¼ˆ`friendly: true`ï¼‰
-- è‚‰é£Ÿæ€§ Lv4/5ï¼šæ”»æ“ŠåŠ›æŒçºŒå¢žåŠ ï¼Œæ”»é€Ÿç´¯ç©åŠ æˆï¼ˆ`attackSpeedBonusAdd` æœ€é«˜ +30%ï¼‰
-- é›œé£Ÿæ€§ Lv1~5ï¼šæ”¹ç‚ºé€Ÿåº¦åŠ æˆ + ç™½éª¨ç³»çµ±æ•´åˆï¼Œç§»é™¤èˆŠç‰ˆæžœå­/å±é«” XP åŠ æˆ
-- è‚‰é£Ÿæ€§ä¸å†éœ€è¦è‰é£Ÿæ€§å‰ç½®ï¼›é›œé£Ÿæ€§éœ€è‰é£Ÿ â‰¥1 ä¸”è‚‰é£Ÿ â‰¥1
-- é›œé£Ÿæ€§ Lv1 è‡ªå‹•æŽˆäºˆæ¯’å›Šå™¨å®˜ï¼ˆ`_grantPoisonSac`ï¼‰
+#### 進化系統擴展至 Lv5（`config/evolution.js`、`systems/evolution.js`）
+- 草食性、肉食性、雜食性三條路線各從 Lv3 擴展至 Lv5
+- 草食性 Lv4/5：增加體型（`radiusPercent`）+ 中立生物完全友善（`friendly: true`）
+- 肉食性 Lv4/5：攻擊力持續增加，攻速累積加成（`attackSpeedBonusAdd` 最高 +30%）
+- 雜食性 Lv1~5：改為速度加成 + 白骨系統整合，移除舊版果子/屍體 XP 加成
+- 肉食性不再需要草食性前置；雜食性需草食 ≥1 且肉食 ≥1
+- 雜食性 Lv1 自動授予毒囊器官（`_grantPoisonSac`）
 
-#### å™¨å®˜ç³»çµ±å¤§æ”¹ï¼ˆ`config/organs.js`ã€`systems/organs.js`ï¼‰
-- é‡å¯«æ‰€æœ‰å™¨å®˜æ•¸å€¼ä»¥ç¬¦åˆå¯¦éš›å¹³è¡¡è¨­è¨ˆ
-  - èŸ¹é‰—ï¼šæµè¡€æŒçºŒæ™‚é–“ 10 ç§’ã€æ¯ç§’å‚·æå‡
-  - ææ“Šæ‹³å¥—ï¼šæ”»é€Ÿæ”¹ç‚º 10%/15%/15%ï¼ˆéžç´¯ä¹˜ï¼‰
-  - æ¯’åˆºï¼šç§»é™¤ Lv1 æ”»æ“ŠåŠ æˆï¼Œæ”¹ç‚ºç´”ä¸­æ¯’å‚·å®³
-  - å¤§é•·è…¿ï¼šæ¯ç´š +1.5 é€Ÿåº¦ï¼ˆåŽŸ +0.5ï¼‰
-  - é¾œæ®¼ï¼šæ¯ç´š -10% å‚·å®³ -1 é€Ÿåº¦ï¼ˆçµ±ä¸€ï¼‰
-  - åŽšçš®ï¼šHP 20/30/50ï¼ŒåŠå¾‘åŠ æˆåªåœ¨ Lv2/3
-  - åˆºç”²ï¼šæ”¹ç‚ºã€Œåå½ˆæœ€å¤§HPç™¾åˆ†æ¯”ã€ï¼Œæ¯ç´š +5%ï¼ˆæœ€é«˜ 15%ï¼‰
-  - çœŸè¦–ä¹‹çœ¼ï¼šLv1 åªåŠ æš´æ“ŠçŽ‡ï¼Œä¸åŠ æš´æ“Šå€æ•¸
-  - éˆæ•çŸ¥è¦ºï¼šå®Œå…¨æ”¹ç‰ˆç‚ºã€Œåµæ¸¬ç¯„åœå…§æžœå­ä¸¦é¡¯ç¤ºæœ€ä½³æŽ¡é›†è·¯å¾‘ã€
-  - è¶…è‡ªç„¶å›žå¾©ï¼šLv2/3 æ–°å¢žå›žå¾©æœ€å¤§HP 0.5%
-- æ–°å¢žç‰¹æ®Šå™¨å®˜ **æ¯’å›Š**ï¼ˆ`poisonSac`ï¼‰ï¼š`noSelection: true, noInherit: true`ï¼Œ10 å€‹ç­‰ç´šï¼Œé€éŽç™½éª¨ç´ é–€æª»è‡ªå‹•å‡ç´š
-- æ–°å¢žéš±è—å™¨å®˜ **å¼·å¤§çš„çœ¼ç›**ï¼ˆ`strongEye`ï¼‰ï¼šæš´æ“ŠçŽ‡+10%ã€æš´æ“Šå‚·å®³+0.25ã€é«”åž‹+20%
-- æ‰€æœ‰çµ„åˆæ•ˆæžœï¼ˆCOMBOSï¼‰æ”¹ç‚ºã€Œå…©/ä¸‰æ–¹å™¨å®˜å„é” Lv3 æ‰è§¸ç™¼ã€
-- èŸ¹æ¯’çµ„åˆæ”¹ç‚ºä¸‰æ–¹ï¼šèŸ¹é‰— + æ¯’åˆº + æ¯’å›Š
+#### 器官系統大改（`config/organs.js`、`systems/organs.js`）
+- 重寫所有器官數值以符合實際平衡設計
+  - 蟹鉗：流血持續時間 10 秒、每秒傷提升
+  - 搏擊拳套：攻速改為 10%/15%/15%（非累乘）
+  - 毒刺：移除 Lv1 攻擊加成，改為純中毒傷害
+  - 大長腿：每級 +1.5 速度（原 +0.5）
+  - 龜殼：每級 -10% 傷害 -1 速度（統一）
+  - 厚皮：HP 20/30/50，半徑加成只在 Lv2/3
+  - 刺甲：改為「反彈最大HP百分比」，每級 +5%（最高 15%）
+  - 真視之眼：Lv1 只加暴擊率，不加暴擊倍數
+  - 靈敏知覺：完全改版為「偵測範圍內果子並顯示最佳採集路徑」
+  - 超自然回復：Lv2/3 新增回復最大HP 0.5%
+- 新增特殊器官 **毒囊**（`poisonSac`）：`noSelection: true, noInherit: true`，10 個等級，透過白骨素門檻自動升級
+- 新增隱藏器官 **強大的眼睛**（`strongEye`）：暴擊率+10%、暴擊傷害+0.25、體型+20%
+- 所有組合效果（COMBOS）改為「兩/三方器官各達 Lv3 才觸發」
+- 蟹毒組合改為三方：蟹鉗 + 毒刺 + 毒囊
 
-#### ç™½éª¨ç³»çµ±ï¼ˆ`systems/combat.js`ã€`systems/ui.js`ï¼‰
-- å±é«”è¶…éŽ 60 ç§’è‡ªå‹•è½‰åŒ–ç‚ºç™½éª¨ï¼›è¢«åƒæŽ‰çš„å±é«”ä¹Ÿç”Ÿæˆç™½éª¨
-- é›œé£Ÿæ€§çŽ©å®¶å¯åžå™¬ç™½éª¨ï¼ˆæœ‰æ™‚é–“é€²åº¦æ¢ï¼‰ï¼Œåžå™¬å¾Œå¢žåŠ ç™½éª¨ç´ ï¼ˆ`boneMaterial`ï¼‰
-- ç™½éª¨ç´ ç´¯ç©é”é–€æª»æ™‚è‡ªå‹•å‡ç´šæ¯’å›Šï¼ˆ10 å€‹é–€æª»ï¼š5/10/20/40/60/100/120/140/160/200ï¼‰
-- ç™½éª¨ä»¥ç™½è‰²åœ“å½¢é¡¯ç¤ºåœ¨åœ°åœ–ä¸Šï¼Œå¸¶åžå™¬é€²åº¦æ¢
+#### 白骨系統（`systems/combat.js`、`systems/ui.js`）
+- 屍體超過 60 秒自動轉化為白骨；被吃掉的屍體也生成白骨
+- 雜食性玩家可吞噬白骨（有時間進度條），吞噬後增加白骨素（`boneMaterial`）
+- 白骨素累積達門檻時自動升級毒囊（10 個門檻：5/10/20/40/60/100/120/140/160/200）
+- 白骨以白色圓形顯示在地圖上，帶吞噬進度條
 
-#### éˆæ•çŸ¥è¦ºç®—æ³•ï¼ˆ`systems/player.js`ï¼‰
-- æ–°å‡½å¼ `findBestPerceptionPath(player, fruits, detectionRange)`
-- ä»¥å€™é¸è§’åº¦ Â±5Â° å®¹å·®çª—å£ç¯©é¸æžœå­ï¼Œè¨ˆç®—æ•ˆçŽ‡ï¼ˆè·é›¢/æ•¸é‡ï¼‰ï¼Œè¿”å›žæœ€ä½³è·¯å¾‘ç«¯é»ž
-- ç¹ªè£½ç´…è‰²è™›ç·šæŒ‡å‘æœ€ä½³ç›®æ¨™ + ç›®æ¨™æžœå­é–ƒçˆé»ž
+#### 靈敏知覺算法（`systems/player.js`）
+- 新函式 `findBestPerceptionPath(player, fruits, detectionRange)`
+- 以候選角度 ±5° 容差窗口篩選果子，計算效率（距離/數量），返回最佳路徑端點
+- 繪製紅色虛線指向最佳目標 + 目標果子閃爍點
 
-#### å¤§è…¦å……èƒ½æ¢èˆ‡è¡æ“Šæ³¢ï¼ˆ`systems/ui.js`ï¼‰
-- å¤§è…¦æ¿€æ´»æ™‚åœ¨çŽ©å®¶ä¸‹æ–¹ç¹ªè£½ 4px è—è‰²å……èƒ½æ¢ï¼ˆ`#4488FF`ï¼‰
-- å¤§è…¦è§¸ç™¼æ™‚æŽ¨å…¥ `gameState.brainShockwaves[]`ï¼Œç¹ªè£½æ“´å¼µè¡æ“Šæ³¢åœ“ç’°ï¼ˆ600msï¼Œæ·¡å‡ºï¼‰
+#### 大腦充能條與衝擊波（`systems/ui.js`）
+- 大腦激活時在玩家下方繪製 4px 藍色充能條（`#4488FF`）
+- 大腦觸發時推入 `gameState.brainShockwaves[]`，繪製擴張衝擊波圓環（600ms，淡出）
 
-#### åœ–é‘‘ç³»çµ±ï¼ˆ`systems/ui.js`ã€`main.js`ï¼‰
-- é¦–é ã€ŒéŠæˆ²èªªæ˜Žã€æŒ‰éˆ•æ”¹ç‚ºã€ŒðŸ“– åœ–é‘‘ã€ï¼Œå‘¼å« `showCompendium('guide')`
-- éŠæˆ²å…§å³ä¸Šè§’æ–°å¢ž ðŸ“– åœ–é‘‘æŒ‰éˆ•ï¼ˆ`_drawCompendiumBtn`ï¼‰ï¼Œé»žæ“Šé–‹å•Ÿå™¨å®˜é 
-- `showCompendium(startTab)` ä¸‰åˆ†é ï¼šéŠæˆ²èªªæ˜Ž / å™¨å®˜åœ–é‘‘ / é€²åŒ–ç³»çµ±
-- å™¨å®˜é åˆ—å‡ºæ‰€æœ‰æ™®é€šå™¨å®˜ + éš±è—å™¨å®˜ + æ¯’å›Šèªªæ˜Ž + çµ„åˆæ•ˆæžœ
-- é€²åŒ–é åˆ—å‡ºä¸‰æ¢è·¯ç·š Lv1~5 è©³ç´°èªªæ˜Ž
-- é–‹å•Ÿæ™‚æš«åœéŠæˆ²ï¼ˆ`organSelectionActive = true`ï¼‰ï¼Œé—œé–‰æ™‚æ¢å¾©
+#### 圖鑑系統（`systems/ui.js`、`main.js`）
+- 首頁「遊戲說明」按鈕改為「📖 圖鑑」，呼叫 `showCompendium('guide')`
+- 遊戲內右上角新增 📖 圖鑑按鈕（`_drawCompendiumBtn`），點擊開啟器官頁
+- `showCompendium(startTab)` 三分頁：遊戲說明 / 器官圖鑑 / 進化系統
+- 器官頁列出所有普通器官 + 隱藏器官 + 毒囊說明 + 組合效果
+- 進化頁列出三條路線 Lv1~5 詳細說明
+- 開啟時暫停遊戲（`organSelectionActive = true`），關閉時恢復
 
-#### gameState æ›´æ–°ï¼ˆ`systems/gameState.js`ï¼‰
-- `critMultiplier` åˆå§‹å€¼æ”¹ç‚º `1.5`
-- æ–°å¢ž `player.boneMaterial: 0`ã€`player.perceptionRange: 0`ã€`player.naturalRegenHpMaxPercent: 0`
-- æ–°å¢žé™£åˆ— `gameState.bones: []`ã€`gameState.brainShockwaves: []`
+#### gameState 更新（`systems/gameState.js`）
+- `critMultiplier` 初始值改為 `1.5`
+- 新增 `player.boneMaterial: 0`、`player.perceptionRange: 0`、`player.naturalRegenHpMaxPercent: 0`
+- 新增陣列 `gameState.bones: []`、`gameState.brainShockwaves: []`
 
-#### èªžè¨€åŒ…æ›´æ–°ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰
-- æ–°å¢ž `compendium`ã€`compendiumTitle`ã€`compendiumTabGuide/Organs/Evo`
-- æ–°å¢ž `compendiumSacHint`ã€`compendiumHiddenOrgans`ã€`compendiumCombos`
-- æ–°å¢ž `boneMaterialFloat` æµ®å‹•æ–‡å­—
-- æ›´æ–°æ‰€æœ‰å™¨å®˜æè¿°ä»¥åæ˜ æ–°æ•¸å€¼
-- æ›´æ–°é€²åŒ–è·¯ç·šæè¿°ï¼ŒåŠ å…¥ Lv4/5
-- æ›´æ–° `guideEvo4`ï¼šæ¯æ¢è·¯ç·šæœ€é«˜ 5 ç´š
-- æ›´æ–°é€²åŒ–ç³»çµ±èªªæ˜Žé ï¼ŒåŠ å…¥ç™½éª¨ç³»çµ±ä»‹ç´¹
-- æ–°å¢žéš±è—å™¨å®˜ `strongEye` æè¿°
+#### 語言包更新（`lang/zh-TW.js`、`lang/en.js`）
+- 新增 `compendium`、`compendiumTitle`、`compendiumTabGuide/Organs/Evo`
+- 新增 `compendiumSacHint`、`compendiumHiddenOrgans`、`compendiumCombos`
+- 新增 `boneMaterialFloat` 浮動文字
+- 更新所有器官描述以反映新數值
+- 更新進化路線描述，加入 Lv4/5
+- 更新 `guideEvo4`：每條路線最高 5 級
+- 更新進化系統說明頁，加入白骨系統介紹
+- 新增隱藏器官 `strongEye` 描述
 
 ---
 
 ## v0.30.2 - 2026-05-20
 
-### ä¿®å¾©
-- **æ‰‹æ©Ÿç‰ˆå™¨å®˜ tooltip ç„¡æ³•è§¸ç™¼**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`onStart` handler åœ¨ç¢ºèªè§¸é»žè½åœ¨ `gameCanvas` å¾Œï¼Œæ›ç®— canvas å…§éƒ¨åº§æ¨™ä¸¦æ¯”å° `_organHitRegions`ï¼Œå‘½ä¸­æ™‚å‘¼å« `showTooltip()` ä¸¦ä»¥ `setTimeout 500ms` è‡ªå‹• `hideTooltip()`ï¼Œç„¶å¾Œ `continue` ä¸å•Ÿå‹•æ–æ¡¿ï¼Œä¿®å¾©å…¨èž¢å¹•æ¨¡å¼ä¸‹å·¦ä¸‹è§’å™¨å®˜å€åŸŸè§¸ç¢°ç„¡æ³•é¡¯ç¤º tooltip çš„å•é¡Œ
+### 修復
+- **手機版器官 tooltip 無法觸發**（`systems/ui.js`）：`onStart` handler 在確認觸點落在 `gameCanvas` 後，換算 canvas 內部座標並比對 `_organHitRegions`，命中時呼叫 `showTooltip()` 並以 `setTimeout 500ms` 自動 `hideTooltip()`，然後 `continue` 不啟動搖桿，修復全螢幕模式下左下角器官區域觸碰無法顯示 tooltip 的問題
 
 ---
 
 ## v0.30.1 - 2026-05-20
 
-### ä¿®å¾©
-- **å…¨èž¢å¹•æ–æ¡¿æ””æˆª HTML UI é»žæ“Š**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`_attachJoystickListeners()` çš„ `onStart` handler åœ¨ for è¿´åœˆé–‹é ­ä»¥ `document.elementFromPoint()` åˆ¤æ–·è§¸é»žç›®æ¨™ï¼Œè‹¥ä¸æ˜¯ `gameCanvas` æˆ– `joystick-canvas` å‰‡ `continue`ï¼Œç¢ºä¿é½’è¼ªã€å°åœ°åœ–ã€overlay æŒ‰éˆ•ç­‰ HTML UI å…ƒç´ çš„ touch äº‹ä»¶ä¸è¢«æ–æ¡¿é‚è¼¯æ””æˆªï¼Œä¿®å¾©å…¨èž¢å¹•æ¨¡å¼ä¸‹æŒ‰éˆ•ç„¡æ³•é»žæ“Šçš„å•é¡Œ
+### 修復
+- **全螢幕搖桿攔截 HTML UI 點擊**（`systems/ui.js`）：`_attachJoystickListeners()` 的 `onStart` handler 在 for 迴圈開頭以 `document.elementFromPoint()` 判斷觸點目標，若不是 `gameCanvas` 或 `joystick-canvas` 則 `continue`，確保齒輪、小地圖、overlay 按鈕等 HTML UI 元素的 touch 事件不被搖桿邏輯攔截，修復全螢幕模式下按鈕無法點擊的問題
 
 ---
 
 ## v0.30.0 - 2026-05-19
 
-### æ–°å¢ž
-- **å…¨èž¢å¹•ç§»å‹•å€åŸŸ**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`_joyZone()` æ”¹ç‚º `!_attackZone(x, y)`ï¼Œæ‰‹æ©Ÿç‰ˆéžæ”»æ“Šå€çš„ä»»æ„ä½ç½®å‡å¯ä½œç‚ºæ–æ¡¿èµ·å§‹é»ž
-- **æ”»æ“Šå€é‡æ§‹ç‚ºå³ä¸‹è§’çŸ©å½¢**ï¼ˆ`systems/ui.js`ï¼‰ï¼šç›´å‘ç‚ºå³50%Ã—ä¸‹25%ã€æ©«å‘ç‚ºå³25%Ã—ä¸‹50%ï¼›`_getAttackBtnPos()` å›žå‚³çŸ©å½¢æ­£ä¸­å¿ƒï¼›è¦–è¦ºæ”¹ç‚º âš”ï¸ ç½®ä¸­ã€é€æ˜Žåº¦ 0.2ã€ç„¡é‚Šæ¡†
-- **è‡ªå‹•æ”»æ“ŠåŠŸèƒ½**ï¼ˆ`systems/gameState.js`ã€`systems/ui.js`ã€`main.js`ã€`systems/input.js`ï¼‰ï¼š`DEFAULT_SETTINGS` æ–°å¢ž `autoAttack: false`ï¼›éŠæˆ²ä¸»è¿´åœˆæ¯å¹€åµæ¸¬æ¢ä»¶è‡ªå‹•å‘¼å« `playerAttack()`ï¼›`Z` éµå¯å³æ™‚åˆ‡æ›ä¸¦å­˜æª”
-- **è¨­å®šä»‹é¢è¼”åŠ©åŠŸèƒ½å€å¡Š**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæŒ‰éµè¨­å®šç¸®è‡³65%å¯¬ï¼Œæ—é‚Šæ–°å¢ž35%ã€Œè¼”åŠ©åŠŸèƒ½ã€å€å¡Šï¼Œå…§å«è‡ªå‹•æ”»æ“Š ON/OFF toggleï¼›é›»è…¦ç‰ˆé¡¯ç¤ºã€ŒZ éµåˆ‡æ›ã€æç¤º
-- **âš”ï¸ è‡ªå‹•æŒ‡ç¤ºå™¨**ï¼ˆ`systems/ui.js`ï¼‰ï¼šè‡ªå‹•æ”»æ“Šé–‹å•Ÿæ™‚ï¼Œæ‰‹æ©Ÿç‰ˆåœ¨æ”»æ“Šå€ä¸­å¿ƒé¡¯ç¤ºã€Œâš”ï¸ è‡ªå‹•ã€32pxï¼›é›»è…¦ç‰ˆåœ¨ç•«å¸ƒæ­£ä¸­å¤®é¡¯ç¤ºã€Œâš”ï¸ è‡ªå‹•ã€100pxï¼›é€æ˜Žåº¦å‡ç‚º 0.2
-- **éŠæˆ²èªªæ˜Žç¬¬ä¸€é æ›´æ–°**ï¼ˆ`systems/ui.js`ï¼‰ï¼šé›»è…¦ç‰ˆåŠ å…¥è‡ªå‹•æ”»æ“Šèªªæ˜Žï¼›æ‰‹æ©Ÿç‰ˆå·¦æ¬„æ›´æ–°ç§»å‹•/æ”»æ“Šèªªæ˜Žä¸¦åŠ å…¥è‡ªå‹•æ”»æ“Šï¼Œå³æ¬„æ”¹ç‚º SVG æ‰‹æ©Ÿç¤ºæ„åœ–ï¼ˆç§»å‹•å€/æ”»æ“Šå€ï¼Œæ”¯æ´ä¸­è‹±æ–‡ï¼‰
-- **èªžè¨€ key æ–°å¢ž**ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼š`sectionAccessibility`ã€`autoAttack`ã€`autoAttackHint`ã€`guideAutoAttack`ã€`guideMobileMove2`ã€`guideMobileAttackZone`
+### 新增
+- **全螢幕移動區域**（`systems/ui.js`）：`_joyZone()` 改為 `!_attackZone(x, y)`，手機版非攻擊區的任意位置均可作為搖桿起始點
+- **攻擊區重構為右下角矩形**（`systems/ui.js`）：直向為右50%×下25%、橫向為右25%×下50%；`_getAttackBtnPos()` 回傳矩形正中心；視覺改為 ⚔️ 置中、透明度 0.2、無邊框
+- **自動攻擊功能**（`systems/gameState.js`、`systems/ui.js`、`main.js`、`systems/input.js`）：`DEFAULT_SETTINGS` 新增 `autoAttack: false`；遊戲主迴圈每幀偵測條件自動呼叫 `playerAttack()`；`Z` 鍵可即時切換並存檔
+- **設定介面輔助功能區塊**（`systems/ui.js`）：按鍵設定縮至65%寬，旁邊新增35%「輔助功能」區塊，內含自動攻擊 ON/OFF toggle；電腦版顯示「Z 鍵切換」提示
+- **⚔️ 自動指示器**（`systems/ui.js`）：自動攻擊開啟時，手機版在攻擊區中心顯示「⚔️ 自動」32px；電腦版在畫布正中央顯示「⚔️ 自動」100px；透明度均為 0.2
+- **遊戲說明第一頁更新**（`systems/ui.js`）：電腦版加入自動攻擊說明；手機版左欄更新移動/攻擊說明並加入自動攻擊，右欄改為 SVG 手機示意圖（移動區/攻擊區，支援中英文）
+- **語言 key 新增**（`lang/zh-TW.js`、`lang/en.js`）：`sectionAccessibility`、`autoAttack`、`autoAttackHint`、`guideAutoAttack`、`guideMobileMove2`、`guideMobileAttackZone`
 
 ---
 
 ## v0.29.5 - 2026-05-19
 
-### ä¿®å¾©
-- **minimap-playtime æ”¹ç‚ºç·Šè²¼ç”Ÿæ…‹é¡¯ç¤º**ï¼ˆ`index.html`ï¼‰ï¼š`#minimap-info` çš„ `justify-content` å¾ž `space-between` æ”¹ç‚º `flex-start`ï¼Œä½¿ç”Ÿæ…‹ç³»èˆ‡éŠçŽ©æ™‚é–“ç·Šé å·¦å´ï¼›å³å´æ™‚é–“ span åŠ ä¸Š `margin-left:auto` ç¶­æŒé å³å°é½Š
+### 修復
+- **minimap-playtime 改為緊貼生態顯示**（`index.html`）：`#minimap-info` 的 `justify-content` 從 `space-between` 改為 `flex-start`，使生態系與遊玩時間緊靠左側；右側時間 span 加上 `margin-left:auto` 維持靠右對齊
 
 ---
 
 ## v0.29.4 - 2026-05-19
 
-### ä¿®å¾©
-- **minimap éŠçŽ©æ™‚é–“é¡¯ç¤ºæ”¹ç‚ºå³æ™‚ç´¯åŠ **ï¼ˆ`systems/ui.js`ï¼‰ï¼š`rpt` è¨ˆç®—å¾žç´”è®€ `gameState.realPlayTime` æ”¹ç‚ºåŠ ä¸Š `Date.now() - _playTimerStart` çš„ç•¶å‰å€æ®µæ™‚é–“ï¼Œä½¿å°åœ°åœ–è¨ˆæ™‚å™¨æ¯å¹€å³æ™‚æ›´æ–°è€Œéžåªåœ¨æš«åœ/ç¹¼çºŒæ™‚æ‰è·³å‹•
+### 修復
+- **minimap 遊玩時間顯示改為即時累加**（`systems/ui.js`）：`rpt` 計算從純讀 `gameState.realPlayTime` 改為加上 `Date.now() - _playTimerStart` 的當前區段時間，使小地圖計時器每幀即時更新而非只在暫停/繼續時才跳動
 
 ---
 
 ## v0.29.3 - 2026-05-19
 
-### ä¿®å¾©
-- **resumePlayTimer åˆå§‹æ¢ä»¶å°Žè‡´è¨ˆæ™‚å™¨æœªå•Ÿå‹•**ï¼ˆ`main.js`ï¼‰ï¼šç§»é™¤ `if (gameState._playTimerPaused)` æ¢ä»¶åˆ¤æ–·ï¼Œæ”¹ç‚ºç„¡æ¢ä»¶è¨­å®š `_playTimerStart`ï¼Œä¿®å¾©éŠæˆ²é–‹å§‹æ™‚è¨ˆæ™‚å™¨å›  `_playTimerPaused` åˆå§‹å€¼ç‚º `false` è€Œæœªå•Ÿå‹•çš„å•é¡Œ
+### 修復
+- **resumePlayTimer 初始條件導致計時器未啟動**（`main.js`）：移除 `if (gameState._playTimerPaused)` 條件判斷，改為無條件設定 `_playTimerStart`，修復遊戲開始時計時器因 `_playTimerPaused` 初始值為 `false` 而未啟動的問題
 
 ---
 
 ## v0.29.2 - 2026-05-19
 
-### æ–°å¢ž
-- **å°åœ°åœ–çœŸå¯¦éŠçŽ©æ™‚é–“é¡¯ç¤º**ï¼ˆ`index.html`ã€`systems/ui.js`ï¼‰ï¼šåœ¨å°åœ°åœ– `#minimap-info` çš„ç”Ÿæ…‹ç³» span å¾Œæ–°å¢ž `#minimap-playtime`ï¼Œæ¯å¹€å°‡ `gameState.realPlayTime`ï¼ˆæ¯«ç§’ï¼‰æ›ç®—ç‚º `mm:ss` æ ¼å¼å³æ™‚é¡¯ç¤ºæ–¼å°åœ°åœ–è³‡è¨Šæ¬„
+### 新增
+- **小地圖真實遊玩時間顯示**（`index.html`、`systems/ui.js`）：在小地圖 `#minimap-info` 的生態系 span 後新增 `#minimap-playtime`，每幀將 `gameState.realPlayTime`（毫秒）換算為 `mm:ss` 格式即時顯示於小地圖資訊欄
 
 ---
 
 ## v0.29.1 - 2026-05-19
 
-### ä¿®æ”¹
-- **æŽ’è¡Œæ¦œæŸ¥è©¢èˆ‡åˆ†é é‡æ§‹**ï¼ˆ`config/supabase.js`ã€`systems/ui.js`ã€`index.html`ï¼‰ï¼šæ‹†åˆ†åŽŸæœ¬ `fetchLeaderboard` ç‚º `fetchVictoryRecords()`ï¼ˆå‹åˆ©ï¼Œæœ€å¤š 100 ç­†ï¼ŒæŒ‰ version_order.desc / play_time.asc / boss_kill_time.asc æŽ’åºï¼‰èˆ‡ `fetchDefeatRecords(limit)`ï¼ˆå¤±æ•—ï¼ŒæŒ‰ version_order.desc / play_time.desc / score.desc æŽ’åºï¼‰ï¼›æŽ’è¡Œæ¦œé–‹å•Ÿæ™‚å…ˆæŠ“å‹åˆ©è¨˜éŒ„ï¼Œè¨ˆç®—å‰©é¤˜åé¡å†æŠ“å¤±æ•—è¨˜éŒ„ï¼Œåˆä½µå¾Œå­˜å…¥ `allRows`ï¼›`loadPage` æ”¹ç‚ºç´”å‰ç«¯åˆ‡ç‰‡åˆ†é ï¼Œç„¡ç¿»é  network requestï¼›`index.html` fallback åŒæ­¥æ›´æ–°
+### 修改
+- **排行榜查詢與分頁重構**（`config/supabase.js`、`systems/ui.js`、`index.html`）：拆分原本 `fetchLeaderboard` 為 `fetchVictoryRecords()`（勝利，最多 100 筆，按 version_order.desc / play_time.asc / boss_kill_time.asc 排序）與 `fetchDefeatRecords(limit)`（失敗，按 version_order.desc / play_time.desc / score.desc 排序）；排行榜開啟時先抓勝利記錄，計算剩餘名額再抓失敗記錄，合併後存入 `allRows`；`loadPage` 改為純前端切片分頁，無翻頁 network request；`index.html` fallback 同步更新
 
 ---
 
 ## v0.29.0 - 2026-05-19
 
-### æ–°å¢ž
-- **çœŸå¯¦éŠçŽ©æ™‚é–“è¨ˆæ™‚ç³»çµ±**ï¼ˆ`main.js`ã€`systems/gameState.js`ã€`systems/organs.js`ã€`systems/evolution.js`ã€`systems/boss.js`ã€`systems/ui.js`ï¼‰ï¼šæ–°å¢ž `realPlayTime`ã€`_playTimerStart`ã€`_playTimerPaused` ä¸‰å€‹æ¬„ä½è‡³ `gameState`ï¼›æ–°å¢žå…¨åŸŸå‡½å¼ `pausePlayTimer()` / `resumePlayTimer()`ï¼›`gameLoop` æ¯å¹€é€éŽ `_wasPaused` åµæ¸¬æš«åœç‹€æ…‹åˆ‡æ›ä¸¦è‡ªå‹•å‘¼å«å°æ‡‰å‡½å¼ï¼›`handleEliteKill` é–‹é ­/çµå°¾å„å‘¼å« `pausePlayTimer()` / `resumePlayTimer()` ä»¥æŽ’é™¤ç²¾è‹±æ€ªæ“Šæ®ºè·³å¤©çš„æ™‚é–“ï¼›`showSkillTree` èˆ‡ `showVictory` çµæŸæ™‚å‘¼å« `pausePlayTimer()` å®šæ ¼æœ€çµ‚æ™‚é–“ï¼›æŽ’è¡Œæ¦œä¸Šå‚³çš„ `play_time` æ”¹ç”¨ `realPlayTime / 1000`ï¼ˆç§’ï¼‰ï¼ŒæŽ’é™¤æ‰€æœ‰æš«åœä»‹é¢èˆ‡è·³å¤©æ™‚é–“
+### 新增
+- **真實遊玩時間計時系統**（`main.js`、`systems/gameState.js`、`systems/organs.js`、`systems/evolution.js`、`systems/boss.js`、`systems/ui.js`）：新增 `realPlayTime`、`_playTimerStart`、`_playTimerPaused` 三個欄位至 `gameState`；新增全域函式 `pausePlayTimer()` / `resumePlayTimer()`；`gameLoop` 每幀透過 `_wasPaused` 偵測暫停狀態切換並自動呼叫對應函式；`handleEliteKill` 開頭/結尾各呼叫 `pausePlayTimer()` / `resumePlayTimer()` 以排除精英怪擊殺跳天的時間；`showSkillTree` 與 `showVictory` 結束時呼叫 `pausePlayTimer()` 定格最終時間；排行榜上傳的 `play_time` 改用 `realPlayTime / 1000`（秒），排除所有暫停介面與跳天時間
 
 ---
 
 ## v0.28.5 - 2026-05-19
 
-### é‡æ§‹
-- **æ‰‹æ©Ÿç«¯éŠæˆ²ç•«é¢ç¸®æ”¾ç³»çµ±é‡æ§‹**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ–°å¢ž `MOBILE_GAME_SCALE = 0.7` å¸¸æ•¸ï¼›æ‰‹æ©Ÿæ©«å‘é‚è¼¯è§£æžåº¦æ”¹ç‚º `1120Ã—630`ï¼ˆ1600Ã—900 Ã— 0.7ï¼‰ï¼Œæ‰‹æ©Ÿç›´å‘æ”¹ç‚º `630Ã—1120`ï¼ˆé•·çŸ­é‚Šå°èª¿ï¼‰ï¼Œscale çš†ä»¥ `vw / logicW` å¡«æ»¿èž¢å¹•å¯¬åº¦ï¼›ä¿®æ­£ `_setViewSize` å‘¼å«å¾žå¯«æ­» `900` æ”¹ç‚ºæ­£ç¢ºå‚³å…¥ `logicH`
+### 重構
+- **手機端遊戲畫面縮放系統重構**（`systems/ui.js`）：新增 `MOBILE_GAME_SCALE = 0.7` 常數；手機橫向邏輯解析度改為 `1120×630`（1600×900 × 0.7），手機直向改為 `630×1120`（長短邊對調），scale 皆以 `vw / logicW` 填滿螢幕寬度；修正 `_setViewSize` 呼叫從寫死 `900` 改為正確傳入 `logicH`
 
 ---
 
 ## v0.28.4 - 2026-05-18
 
-### ä¿®å¾©
-- **æ­»äº¡å¾Œç„¡å™¨å®˜å»è¢«å¼·åˆ¶é€²å…¥å™¨å®˜ä¿ç•™ç•«é¢**ï¼ˆ`systems/evolution.js`ï¼‰ï¼š`buildSkillTreeOverlay` æ–°å¢žå™¨å®˜åˆ¤æ–·ï¼Œç•¶ `playerOrgans.length === 0 && hiddenOrgans.length === 0` æ™‚ç›´æŽ¥è·³éŽå™¨å®˜ä¿ç•™å€å¡Šï¼Œä¸é¡¯ç¤ºè©² sectionï¼›åŒæ™‚ä¿®æ­£ã€Œå›žé¦–é ã€æŒ‰éˆ•å¾žæ°¸é å°éŽ–æ”¹ç‚º warn-onceï¼ˆé¦–æ¬¡é»žæ“Šé¡¯ç¤ºç¢ºèªè­¦å‘Šï¼Œå†æŒ‰ä¸€æ¬¡æ‰è·³è½‰ï¼‰ï¼Œä¸¦æ–°å¢ž `gameState.homeWarned` æ——æ¨™ï¼›ã€Œå†çŽ©ä¸€å±€ã€æŒ‰éˆ•åŒæ­¥åŠ å…¥ `noOrgansToSelect` åˆ¤æ–·ï¼Œç„¡å™¨å®˜æ™‚ä¸è§¸ç™¼è­¦å‘Šç›´æŽ¥ç¹¼çºŒï¼›æ–°å¢žèªžè¨€ key `warnNoOrganHome`ï¼ˆä¸­è‹±æ–‡ï¼‰
+### 修復
+- **死亡後無器官卻被強制進入器官保留畫面**（`systems/evolution.js`）：`buildSkillTreeOverlay` 新增器官判斷，當 `playerOrgans.length === 0 && hiddenOrgans.length === 0` 時直接跳過器官保留區塊，不顯示該 section；同時修正「回首頁」按鈕從永遠封鎖改為 warn-once（首次點擊顯示確認警告，再按一次才跳轉），並新增 `gameState.homeWarned` 旗標；「再玩一局」按鈕同步加入 `noOrgansToSelect` 判斷，無器官時不觸發警告直接繼續；新增語言 key `warnNoOrganHome`（中英文）
 
 ---
 
 ## v0.28.3 - 2026-05-18
 
-### ä¿®å¾©
-- **åˆ†æ•¸ä¸Šå‚³ 400 éŒ¯èª¤**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`submitScore` å‚³å…¥çš„ `score`ã€`level`ã€`play_time`ã€`boss_kill_time`ã€`version_order` å…¨éƒ¨å¥—ç”¨ `Math.floor()`ï¼Œç¢ºä¿å‚³é€æ•´æ•¸è€Œéžæµ®é»žæ•¸ï¼Œé¿å… Supabase åž‹åˆ¥é©—è­‰å›žå‚³ 400
+### 修復
+- **分數上傳 400 錯誤**（`systems/ui.js`）：`submitScore` 傳入的 `score`、`level`、`play_time`、`boss_kill_time`、`version_order` 全部套用 `Math.floor()`，確保傳送整數而非浮點數，避免 Supabase 型別驗證回傳 400
 
 ---
 
 ## v0.28.2 - 2026-05-18
 
-### ä¿®å¾©
-- **æ­»äº¡å¾Œä¸å‡ºç¾åˆ†æ•¸ä¸Šå‚³å½ˆçª—**ï¼ˆ`systems/evolution.js`ï¼‰ï¼š`showSkillTree()` åŽŸæœ¬ç›´æŽ¥å‘¼å« `buildSkillTreeOverlay(cause)`ï¼Œå®Œå…¨è·³éŽäº†åˆ†æ•¸æäº¤æµç¨‹ï¼›ä¿®å¾©ç‚ºå…ˆå‘¼å« `showScoreSubmitPopup(false, null, () => buildSkillTreeOverlay(cause))`ï¼Œèˆ‡å‹åˆ©ç•«é¢çš„æµç¨‹ä¸€è‡´ï¼›é–‹ç™¼è€…æ¨¡å¼ä¸‹ä»ç›´æŽ¥è·³éŽ
+### 修復
+- **死亡後不出現分數上傳彈窗**（`systems/evolution.js`）：`showSkillTree()` 原本直接呼叫 `buildSkillTreeOverlay(cause)`，完全跳過了分數提交流程；修復為先呼叫 `showScoreSubmitPopup(false, null, () => buildSkillTreeOverlay(cause))`，與勝利畫面的流程一致；開發者模式下仍直接跳過
 
 ---
 
 ## v0.28.1 - 2026-05-18
 
-### ä¿®å¾©
-- **æ©«å‘æ‰‹æ©ŸæŽ’è¡Œæ¦œæŒ‰éˆ•è¢«å°Žèˆªåˆ—é®ä½**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæŽ’è¡Œæ¦œ overlay åœ¨é–‹å•Ÿæ™‚å‹•æ…‹è¨ˆç®—é«˜åº¦ï¼ˆè®€å– game-container çš„ scale å€¼ï¼Œä»¥ `window.innerHeight / scale` ç‚ºä¸Šé™ï¼‰ï¼Œç¢ºä¿ overlay ä¸è¶…å‡ºè¦–çª—ï¼›pagingBar æ”¹ç”¨ `padding-bottom: max(20px, env(safe-area-inset-bottom))`ï¼Œå…¼é¡§ iOS å®‰å…¨å€åŸŸï¼Œä¸¦åŠ å…¥ `flex-shrink:0` é˜²æ­¢è¢«å£“ç¸®
+### 修復
+- **橫向手機排行榜按鈕被導航列遮住**（`systems/ui.js`）：排行榜 overlay 在開啟時動態計算高度（讀取 game-container 的 scale 值，以 `window.innerHeight / scale` 為上限），確保 overlay 不超出視窗；pagingBar 改用 `padding-bottom: max(20px, env(safe-area-inset-bottom))`，兼顧 iOS 安全區域，並加入 `flex-shrink:0` 防止被壓縮
 
 ---
 
 ## v0.28.0 - 2026-05-18
 
-### ä¿®å¾©
-- **è±Žå‘æ‰‹æ©Ÿæ¨¡å¼é–‹å§‹ç•«é¢æœªç¸®æ”¾**ï¼ˆ`systems/ui.js`ã€`systems/evolution.js`ï¼‰ï¼š`showStartScreen()`ã€`showMapSelect()`ã€`showSettings()`ã€`showGuide()`ã€`showLeaderboard()`ã€`buildSkillTreeOverlay(fromHome/startAfter)` é–‹é ­å‡åŠ å…¥ `applyDeviceMode()`ï¼Œç¢ºä¿æ‰€æœ‰ç•«é¢éƒ½æ­£ç¢ºå¥—ç”¨æ‰‹æ©Ÿç¸®æ”¾
-- **éžéŠæˆ²ç•«é¢å‡ºç¾è™›æ“¬æ–æ¡¿**ï¼ˆ`systems/gameState.js`ã€`main.js`ã€`systems/ui.js`ï¼‰ï¼šæ–°å¢ž `gameState.gameStarted` æ——æ¨™ï¼ˆé è¨­ `false`ï¼‰ï¼Œ`initializeGame()` æ™‚è¨­ç‚º `true`ï¼›`_joyPaused()` åŠ å…¥ `!gameState.gameStarted` åˆ¤æ–·ï¼Œé¦–é /æŠ€èƒ½æ¨¹/è¨­å®šç­‰ç•«é¢æ–æ¡¿ä¸å†å‡ºç¾
-- **æŽ’è¡Œæ¦œè¢«æ–æ¡¿å±¤é®ä½ç„¡æ³•é»žæ“Š**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæŽ’è¡Œæ¦œ overlay z-index å¾ž 300 æå‡è‡³ 500ï¼Œé—œé–‰æŒ‰éˆ•åŠ ä¸Š `pointer-events:all`
+### 修復
+- **豎向手機模式開始畫面未縮放**（`systems/ui.js`、`systems/evolution.js`）：`showStartScreen()`、`showMapSelect()`、`showSettings()`、`showGuide()`、`showLeaderboard()`、`buildSkillTreeOverlay(fromHome/startAfter)` 開頭均加入 `applyDeviceMode()`，確保所有畫面都正確套用手機縮放
+- **非遊戲畫面出現虛擬搖桿**（`systems/gameState.js`、`main.js`、`systems/ui.js`）：新增 `gameState.gameStarted` 旗標（預設 `false`），`initializeGame()` 時設為 `true`；`_joyPaused()` 加入 `!gameState.gameStarted` 判斷，首頁/技能樹/設定等畫面搖桿不再出現
+- **排行榜被搖桿層遮住無法點擊**（`systems/ui.js`）：排行榜 overlay z-index 從 300 提升至 500，關閉按鈕加上 `pointer-events:all`
 
-### æ–°å¢ž
-- **é–‹å§‹æµç¨‹åŠ å…¥æŠ€èƒ½æ¨¹å‰ç½®**ï¼ˆ`systems/ui.js`ã€`systems/evolution.js`ï¼‰ï¼šé›£åº¦èˆ‡è§’è‰²é¸æ“‡é çš„ã€Œé–‹å§‹éŠæˆ² â†’ã€æŒ‰éˆ•ï¼Œè‹¥ `savedOrgans` ç‚ºç©ºå‰‡å¼·åˆ¶å…ˆé€²å…¥æŠ€èƒ½æ¨¹ï¼›æŠ€èƒ½æ¨¹æ­¤æ¨¡å¼åº•éƒ¨åƒ…é¡¯ç¤ºã€Œé–‹å§‹éŠæˆ² â†’ã€æŒ‰éˆ•ï¼Œé»žæ“Šå¾Œæ‰çœŸæ­£å•Ÿå‹•éŠæˆ²ï¼›æœ‰å™¨å®˜è³‡æ–™å‰‡ç›´æŽ¥é–‹å§‹
-- **çµç®—ç•«é¢å…©é¡†æŒ‰éˆ•**ï¼ˆ`systems/evolution.js`ã€`systems/boss.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼šæ­»äº¡/é€¾æ™‚æŠ€èƒ½æ¨¹ç•«é¢èˆ‡å‹åˆ©ç•«é¢åº•éƒ¨æ”¹ç‚ºã€ŒðŸ’¾ ä¿å­˜ä¸¦è¿”å›žé¦–é ã€+ã€Œâš”ï¸ å†ä¾†ä¸€å ´ã€ï¼›æœªé¸å™¨å®˜é»žã€Œä¿å­˜ä¸¦è¿”å›žã€æ™‚é¡¯ç¤º 3 ç§’è­¦å‘Šæ©«å¹…ï¼›ã€Œå†ä¾†ä¸€å ´ã€ç¬¬ä¸€æ¬¡é»žæ“Šåœ¨æœªé¸å™¨å®˜æ™‚é¡¯ç¤ºç¢ºèªæç¤ºï¼Œç¬¬äºŒæ¬¡æ‰çœŸæ­£é–‹å§‹ï¼ˆé€éŽ `gameState.playAgainWarned` è¿½è¹¤ï¼‰
-- æ–°å¢ž `gameState.lastDifficulty` è¨˜éŒ„ä¸Šå±€é›£åº¦ã€`gameState.playAgainWarned` è¿½è¹¤æ˜¯å¦å·²æé†’
-- æ–°å¢žèªžè¨€ keyï¼š`btnSaveAndHome`ã€`warnNoOrganLine1`ã€`warnNoOrganLine2`ã€`warnNoOrganPlay`ï¼ˆä¸­è‹±æ–‡ï¼‰
+### 新增
+- **開始流程加入技能樹前置**（`systems/ui.js`、`systems/evolution.js`）：難度與角色選擇頁的「開始遊戲 →」按鈕，若 `savedOrgans` 為空則強制先進入技能樹；技能樹此模式底部僅顯示「開始遊戲 →」按鈕，點擊後才真正啟動遊戲；有器官資料則直接開始
+- **結算畫面兩顆按鈕**（`systems/evolution.js`、`systems/boss.js`、`lang/zh-TW.js`、`lang/en.js`）：死亡/逾時技能樹畫面與勝利畫面底部改為「💾 保存並返回首頁」+「⚔️ 再來一場」；未選器官點「保存並返回」時顯示 3 秒警告橫幅；「再來一場」第一次點擊在未選器官時顯示確認提示，第二次才真正開始（透過 `gameState.playAgainWarned` 追蹤）
+- 新增 `gameState.lastDifficulty` 記錄上局難度、`gameState.playAgainWarned` 追蹤是否已提醒
+- 新增語言 key：`btnSaveAndHome`、`warnNoOrganLine1`、`warnNoOrganLine2`、`warnNoOrganPlay`（中英文）
 
 ---
 
 ## v0.27.1 - 2026-05-18
 
-### æ–°å¢ž
-- **æŽ’è¡Œæ¦œé˜²ä½œå¼Šæ©Ÿåˆ¶**ï¼ˆ`systems/gameState.js`ã€`systems/ui.js`ã€`systems/boss.js`ã€`systems/daynight.js`ã€`main.js`ï¼‰ï¼šæ–°å¢ž `gameState.devModeUsed` æ——æ¨™ï¼Œå•Ÿå‹•é–‹ç™¼è€…æ¨¡å¼æ™‚è¨­ç‚º `true` ä¸”æœ¬å±€ä¸å¯é‡ç½®ï¼›éŠæˆ²çµæŸæ™‚è‹¥åµæ¸¬åˆ°æ——æ¨™ï¼Œå®Œå…¨è·³éŽåˆ†æ•¸ä¸Šå‚³å½ˆçª—ä¸¦æ–¼çµæŸç•«é¢é¡¯ç¤ºã€Œâš ï¸ æœ¬å±€ä½¿ç”¨äº†é–‹ç™¼è€…æ¨¡å¼ï¼Œåˆ†æ•¸ä¸è¨ˆå…¥æŽ’è¡Œæ¦œã€ï¼›`initializeGame()` é‡æ–°é–‹å±€æ™‚é‡ç½®ç‚º `false`
+### 新增
+- **排行榜防作弊機制**（`systems/gameState.js`、`systems/ui.js`、`systems/boss.js`、`systems/daynight.js`、`main.js`）：新增 `gameState.devModeUsed` 旗標，啟動開發者模式時設為 `true` 且本局不可重置；遊戲結束時若偵測到旗標，完全跳過分數上傳彈窗並於結束畫面顯示「⚠️ 本局使用了開發者模式，分數不計入排行榜」；`initializeGame()` 重新開局時重置為 `false`
 
 ---
 
 ## v0.27.0 - 2026-05-18
 
-### æ–°å¢ž
-- **Supabase å…¨çƒæŽ’è¡Œæ¦œç³»çµ±**ï¼ˆ`config/supabase.js`ã€`systems/ui.js`ã€`systems/boss.js`ã€`systems/daynight.js`ã€`lang/zh-TW.js`ã€`lang/en.js`ã€`index.html`ï¼‰ï¼šä¸²æŽ¥ Supabase REST APIï¼Œå¯¦ä½œå®Œæ•´æŽ’è¡Œæ¦œåŠŸèƒ½
-- **é¦–é  TOP 10 æµ®çª—**ï¼ˆ`systems/ui.js`ï¼‰ï¼šé¦–é å³å´æ–°å¢žå›ºå®šæµ®çª—ï¼Œè‡ªå‹•è®€å–å‰10åï¼Œé¡¯ç¤ºæŽ’ååœ–ç¤ºã€åå­—ã€éŠçŽ©æ™‚é–“ã€å‹è² çµæžœ
-- **å®Œæ•´æŽ’è¡Œæ¦œä»‹é¢**ï¼ˆ`systems/ui.js`ï¼‰ï¼šé»žã€ŒðŸ† æŽ’è¡Œæ¦œã€é–‹å•Ÿå…¨å±æŽ’è¡Œæ¦œï¼Œè¡¨æ ¼å«æŽ’å/ç‰ˆæœ¬/æ—¥æœŸ/åå­—/éŠçŽ©æ™‚é–“/åˆ†æ•¸/ç­‰ç´š/çµæžœï¼Œå‰ä¸‰åæœ‰é‡‘éŠ€éŠ…åº•è‰²ï¼›æ”¯æ´éµç›¤ A/â†â†’/D ç¿»é ï¼Œæ¯é 20ç­†åˆ†é è®€å–
-- **åˆ†æ•¸æäº¤å½ˆçª—**ï¼ˆ`systems/ui.js`ï¼‰ï¼šéŠæˆ²çµæŸï¼ˆæ­»äº¡/å‹åˆ©ï¼‰å‰å½ˆå‡ºåå­—è¼¸å…¥è¦–çª—ï¼Œæäº¤æˆ–è·³éŽå¾Œé€²å…¥çµæŸç•«é¢ï¼›ä¸Šå‚³æ¬„ä½å« name/score/level/play_time/is_victory/boss_kill_time/version/version_order
-- **çš‡å† æŽ’ååœ–ç¤º**ï¼ˆ`index.html`ï¼‰ï¼šCSS ç¹ªè£½é‡‘éŠ€éŠ…ä¸‰è‰²çš‡å† ï¼ˆ`buildCrown()`ï¼‰ï¼Œ4â€“10åðŸŽ–ï¸ï¼Œ11åå¾Œé¡¯ç¤ºæ•¸å­—
-- **Boss ç”Ÿæˆæ™‚é–“è¨˜éŒ„**ï¼ˆ`systems/boss.js`ï¼‰ï¼š`spawnBoss()` è¨˜éŒ„ `gameState.bossSpawnTime`ï¼Œæ“Šæ®ºå¾Œè¨ˆç®— `boss_kill_time` ç§’æ•¸ä¸Šå‚³
-- **é¦–é æ–°å¢žæŽ’è¡Œæ¦œæŒ‰éˆ•**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæŒ‰éˆ•é †åºèª¿æ•´ç‚ºé–‹å§‹éŠæˆ² / æŠ€èƒ½æ¨¹ / éŠæˆ²èªªæ˜Ž / æŽ’è¡Œæ¦œ / è¨­å®š
-- **é›™èªžæ”¯æ´**ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼šæ–°å¢ž21å€‹æŽ’è¡Œæ¦œç›¸é—œ lang key
+### 新增
+- **Supabase 全球排行榜系統**（`config/supabase.js`、`systems/ui.js`、`systems/boss.js`、`systems/daynight.js`、`lang/zh-TW.js`、`lang/en.js`、`index.html`）：串接 Supabase REST API，實作完整排行榜功能
+- **首頁 TOP 10 浮窗**（`systems/ui.js`）：首頁右側新增固定浮窗，自動讀取前10名，顯示排名圖示、名字、遊玩時間、勝負結果
+- **完整排行榜介面**（`systems/ui.js`）：點「🏆 排行榜」開啟全屏排行榜，表格含排名/版本/日期/名字/遊玩時間/分數/等級/結果，前三名有金銀銅底色；支援鍵盤 A/←→/D 翻頁，每頁20筆分頁讀取
+- **分數提交彈窗**（`systems/ui.js`）：遊戲結束（死亡/勝利）前彈出名字輸入視窗，提交或跳過後進入結束畫面；上傳欄位含 name/score/level/play_time/is_victory/boss_kill_time/version/version_order
+- **皇冠排名圖示**（`index.html`）：CSS 繪製金銀銅三色皇冠（`buildCrown()`），4–10名🎖️，11名後顯示數字
+- **Boss 生成時間記錄**（`systems/boss.js`）：`spawnBoss()` 記錄 `gameState.bossSpawnTime`，擊殺後計算 `boss_kill_time` 秒數上傳
+- **首頁新增排行榜按鈕**（`systems/ui.js`）：按鈕順序調整為開始遊戲 / 技能樹 / 遊戲說明 / 排行榜 / 設定
+- **雙語支援**（`lang/zh-TW.js`、`lang/en.js`）：新增21個排行榜相關 lang key
 
 ---
 
 ## v0.26.1 - 2026-05-17
 
-### ä¿®å¾©
-- **æ‰‹æ©Ÿç‰ˆèªªæ˜Žç¬¬1é å·¦åŠç¼ºå°‘å…©é …**ï¼ˆ`systems/ui.js`ï¼‰ï¼š`buildPage0()` æ‰‹æ©Ÿåˆ†æ”¯å·¦æ¬„è£œä¸Š `guideFruit`ï¼ˆåƒæžœå­ï¼‰èˆ‡ `guideGoal`ï¼ˆç›®æ¨™ï¼‰ï¼Œèˆ‡æ¡Œæ©Ÿç‰ˆ5é …ä¸€è‡´
+### 修復
+- **手機版說明第1頁左半缺少兩項**（`systems/ui.js`）：`buildPage0()` 手機分支左欄補上 `guideFruit`（吃果子）與 `guideGoal`（目標），與桌機版5項一致
 
 ---
 
 ## v0.26.0 - 2026-05-17
 
-### æ–°å¢ž
-- **éŠæˆ²èªªæ˜Žç³»çµ±å…¨é¢é‡æ§‹**ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ã€`lang.js`ã€`systems/ui.js`ã€`index.html`ï¼‰ï¼šèªªæ˜Žä»‹é¢ç”±èˆŠç‰ˆ `guidePages` é™£åˆ—æ”¹ç‚ºæ‰å¹³ lang key æž¶æ§‹ï¼Œæ”¯æ´é€ key fallbackï¼ˆç•¶å‰èªžè¨€ â†’ en â†’ zh-TWï¼‰
-- **èªªæ˜Žé æ“´å……è‡³4é **ï¼ˆ`systems/ui.js`ï¼‰ï¼šç¬¬1é åŸºæœ¬æ“ä½œï¼ˆæ¡Œæ©Ÿï¼‰æˆ–å·¦å³åˆ†æ¬„è§¸æŽ§æ“ä½œï¼ˆæ‰‹æ©Ÿï¼‰ã€ç¬¬2é å™¨å®˜ç³»çµ±ã€ç¬¬3é é€²åŒ–ç³»çµ±ã€ç¬¬4é å°åœ°åœ–èªªæ˜Žï¼›æ¡Œæ©Ÿæ‰‹æ©Ÿé æ•¸çµ±ä¸€
-- **æ‰‹æ©Ÿç¬¬1é è§¸æŽ§ç¤ºæ„åœ–**ï¼ˆ`systems/ui.js`ï¼‰ï¼šå³åŠæ¬„æ–°å¢žæ©«å‘æ¨¡å¼ç¤ºæ„åœ–ï¼ˆ144Ã—80pxï¼Œå·¦30%æ”»æ“Šå€/å³30%æ–æ¡¿å€ï¼‰èˆ‡ç›´å‘æ¨¡å¼ç¤ºæ„åœ–ï¼ˆ90Ã—108pxï¼Œä¸Š60%éŠæˆ²ç•«é¢/ä¸‹40%æ”»æ“Š+æ–æ¡¿ï¼‰ï¼Œä½¿ç”¨çµ•å°å®šä½ HTML div ç¹ªè£½
-- **èªªæ˜Žä»‹é¢éµç›¤æ›é **ï¼ˆ`systems/ui.js`ï¼‰ï¼šé–‹å•Ÿèªªæ˜Žæ™‚ç›£è½ `D/â†’`ï¼ˆä¸‹ä¸€é ï¼‰ã€`A/â†`ï¼ˆä¸Šä¸€é ï¼‰ï¼›`hideGuide()` è‡ªå‹•ç§»é™¤ç›£è½å™¨ï¼ˆ`_guideKeyHandler`ï¼‰ï¼Œé˜²æ­¢æ®˜ç•™
-- **å°åœ°åœ–åœ–ä¾‹å‹•ç•«**ï¼ˆ`index.html`ã€`systems/ui.js`ï¼‰ï¼šæ–°å¢ž `@keyframes dotBlink`ï¼ˆopacity é–ƒçˆï¼ŒçŽ©å®¶/è‰é£Ÿç²¾è‹±/è‚‰é£Ÿç²¾è‹±ï¼‰èˆ‡ `@keyframes dotGlow`ï¼ˆbox-shadow å…‰æšˆï¼Œä¸‰ç¨®Bossï¼‰ï¼Œéœ§å€æ”¹ç”¨æ–¹å½¢è‰²å¡Šï¼ˆrgba(255,255,255,0.3)ï¼‰
-- **å¤§é‡æ–°å¢ž lang key**ï¼ˆ`lang/zh-TW.js`ã€`lang/en.js`ï¼‰ï¼šæ–°å¢ž `guideTitle/guidePage/guideClose/guidePrev/guideNext`ã€ç¬¬1é æ¡Œæ©Ÿ5æ¢ã€æ‰‹æ©Ÿ6æ¢ã€è§¸æŽ§2æ¢ã€ç¬¬2é å™¨å®˜7æ¢ã€ç¬¬3é é€²åŒ–5æ¢ã€ç¬¬4é åœ°åœ–10æ¢ï¼Œå…±æ–°å¢ž40+ keys
+### 新增
+- **遊戲說明系統全面重構**（`lang/zh-TW.js`、`lang/en.js`、`lang.js`、`systems/ui.js`、`index.html`）：說明介面由舊版 `guidePages` 陣列改為扁平 lang key 架構，支援逐 key fallback（當前語言 → en → zh-TW）
+- **說明頁擴充至4頁**（`systems/ui.js`）：第1頁基本操作（桌機）或左右分欄觸控操作（手機）、第2頁器官系統、第3頁進化系統、第4頁小地圖說明；桌機手機頁數統一
+- **手機第1頁觸控示意圖**（`systems/ui.js`）：右半欄新增橫向模式示意圖（144×80px，左30%攻擊區/右30%搖桿區）與直向模式示意圖（90×108px，上60%遊戲畫面/下40%攻擊+搖桿），使用絕對定位 HTML div 繪製
+- **說明介面鍵盤換頁**（`systems/ui.js`）：開啟說明時監聽 `D/→`（下一頁）、`A/←`（上一頁）；`hideGuide()` 自動移除監聽器（`_guideKeyHandler`），防止殘留
+- **小地圖圖例動畫**（`index.html`、`systems/ui.js`）：新增 `@keyframes dotBlink`（opacity 閃爍，玩家/草食精英/肉食精英）與 `@keyframes dotGlow`（box-shadow 光暈，三種Boss），霧區改用方形色塊（rgba(255,255,255,0.3)）
+- **大量新增 lang key**（`lang/zh-TW.js`、`lang/en.js`）：新增 `guideTitle/guidePage/guideClose/guidePrev/guideNext`、第1頁桌機5條、手機6條、觸控2條、第2頁器官7條、第3頁進化5條、第4頁地圖10條，共新增40+ keys
 
 ---
 
 ## v0.25.0 - 2026-05-17
 
-### æ–°å¢ž
-- **æ©«å‘æ‰‹æ©Ÿæ–æ¡¿å‹•æ…‹å®šä½**ï¼ˆ`systems/ui.js`ï¼‰ï¼šç§»é™¤æ©«å‘æ¨¡å¼å›ºå®šåº•ç’°ï¼ˆ`vwÃ—0.85, vhÃ—0.5`ï¼‰ï¼Œæ”¹ç‚ºçŽ©å®¶åœ¨æ–æ¡¿å€ä»»æ„ä½ç½®æŒ‰ä¸‹æ™‚ï¼Œä»¥è©²è§¸é»žç‚ºæ–æ¡¿ä¸­å¿ƒå‹•æ…‹ç”Ÿæˆï¼›`onStart` ç§»é™¤ `orientation === 'landscape'` åˆ†æ”¯ï¼Œå…©å€‹æ–¹å‘çµ±ä¸€ä½¿ç”¨ `_joyBaseX = x; _joyBaseY = y`
-- **æ”»æ“Šå€é»žæ“Šè¦–è¦ºå›žé¥‹**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ–°å¢ž `_atkFeedbackTime / _atkFeedbackX / _atkFeedbackY` ä¸‰å€‹ç‹€æ…‹è®Šæ•¸ï¼›æ”»æ“Šå€ `touchstart` è§¸ç™¼æ™‚è¨˜éŒ„åº§æ¨™èˆ‡æ™‚é–“ï¼›`_renderMobileOverlay` æ¯å¹€åœ¨é»žæ“Šä½ç½®ç¹ªè£½åŠé€æ˜Ž âš”ï¸ï¼Œ300ms å…§ç·šæ€§æ·¡å‡º
-- **æ©«å‘æ‰‹æ©Ÿè§¸æŽ§å€åŸŸè¦–è¦ºæç¤ºé‡ç¹ª**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ”»æ“Šå€èˆ‡æ–æ¡¿å€å„ä»¥ `rgba(255,255,255,0.1)` ç´°é‚Šæ¡†æ¨™ç¤ºç¯„åœï¼›æ”»æ“Šå€ä¸­å¤® âš”ï¸ é€æ˜Žåº¦é™è‡³ 0.1ï¼›æ–æ¡¿å€æ”¹ç‚º 0.1 é€æ˜Žåº¦çš„å¤–ç’° + å…§åœˆæç¤ºåœ“ï¼Œæ›¿ä»£åŽŸæœ¬ 0.2 é€æ˜Žåº¦å›ºå®šåº•ç’°
-- **`_renderMobileOverlay` æ¯å¹€åˆ·æ–°**ï¼ˆ`systems/ui.js`ã€`main.js`ï¼‰ï¼šåœ¨ `drawGame()` æœ«å°¾åŠ å…¥ `if (gameState.isMobile) _renderMobileOverlay()`ï¼Œç¢ºä¿æ”»æ“Šé»žæ“Šæ·¡å‡ºå‹•ç•«æ–¼æ¯å¹€æ­£ç¢ºæ¸²æŸ“ï¼›åŽŸè§¸æŽ§äº‹ä»¶å…§çš„å‘¼å«ä¿ç•™ä»¥ç¶­æŒå³æ™‚åæ‡‰
+### 新增
+- **橫向手機搖桿動態定位**（`systems/ui.js`）：移除橫向模式固定底環（`vw×0.85, vh×0.5`），改為玩家在搖桿區任意位置按下時，以該觸點為搖桿中心動態生成；`onStart` 移除 `orientation === 'landscape'` 分支，兩個方向統一使用 `_joyBaseX = x; _joyBaseY = y`
+- **攻擊區點擊視覺回饋**（`systems/ui.js`）：新增 `_atkFeedbackTime / _atkFeedbackX / _atkFeedbackY` 三個狀態變數；攻擊區 `touchstart` 觸發時記錄座標與時間；`_renderMobileOverlay` 每幀在點擊位置繪製半透明 ⚔️，300ms 內線性淡出
+- **橫向手機觸控區域視覺提示重繪**（`systems/ui.js`）：攻擊區與搖桿區各以 `rgba(255,255,255,0.1)` 細邊框標示範圍；攻擊區中央 ⚔️ 透明度降至 0.1；搖桿區改為 0.1 透明度的外環 + 內圈提示圓，替代原本 0.2 透明度固定底環
+- **`_renderMobileOverlay` 每幀刷新**（`systems/ui.js`、`main.js`）：在 `drawGame()` 末尾加入 `if (gameState.isMobile) _renderMobileOverlay()`，確保攻擊點擊淡出動畫於每幀正確渲染；原觸控事件內的呼叫保留以維持即時反應
 
 ---
 
 ## v0.24.2 - 2026-05-17
 
-### ä¿®å¾©
-- **å°åœ°åœ–æ—¥æœˆåœ–ç¤ºå››è§’é¡è‰²ç•°å¸¸**ï¼ˆ`systems/ui.js`ï¼‰ï¼šç§»é™¤ `_drawSunMoonIndicator()` ä¸­å°æ•´å€‹ 24Ã—24 ç•«å¸ƒçš„ `rgba(0,0,0,0.7)` èƒŒæ™¯å¡«è‰²ï¼›åœ“å½¢åœ–ç¤ºä»¥å¤–çš„å››è§’ç¾åœ¨ä¿æŒé€æ˜Žï¼Œç”±çˆ¶å®¹å™¨ `#minimap-info` çš„èƒŒæ™¯è‡ªç„¶ç©¿é€ï¼Œæ¶ˆé™¤é›™å±¤ç–ŠåŠ å°Žè‡´å››è§’é¡è‰²åæš—çš„å•é¡Œ
+### 修復
+- **小地圖日月圖示四角顏色異常**（`systems/ui.js`）：移除 `_drawSunMoonIndicator()` 中對整個 24×24 畫布的 `rgba(0,0,0,0.7)` 背景填色；圓形圖示以外的四角現在保持透明，由父容器 `#minimap-info` 的背景自然穿透，消除雙層疊加導致四角顏色偏暗的問題
 
 ---
 
 ## v0.24.1 - 2026-05-17
 
-### ä¿®å¾©
-- **æ‰‹æ©Ÿå°åœ°åœ–ç¸®å°è‡³ 200Ã—200**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ–°å¢ž `_mmSize()` å›žå‚³ `isMobile ? 200 : 300`ï¼›`drawMinimap()` æ¯å¹€æ¯”å°ä¸¦å‹•æ…‹èª¿æ•´ `minimapCanvas.width/height`ï¼›`_drawMinimapFog()` çš„æš«å­˜ç•«å¸ƒ RC æ”¹ç‚º `mm+30`ï¼Œæœ€çµ‚ drawImage è¼¸å‡ºè‡³ mmÃ—mmï¼›`_drawMinimapEntities()` scale æ”¹ç‚º `mm/MAP_WIDTH`ï¼ˆæ‰‹æ©Ÿ 1/40ï¼Œæ¡Œæ©Ÿ 1/26.7ï¼‰ï¼›`#minimap-info` è³‡è¨Šåˆ—å¯¬åº¦è·Ÿéš¨ canvas è‡ªå‹•ç¸®å°ï¼›æ¡Œæ©Ÿç¶­æŒ 300Ã—300 ä¸å—å½±éŸ¿
-- **è¨­å®šæŒ‰éˆ•æ¯å¹€é‡å»º DOM å°Žè‡´ click å¤±æ•ˆ**ï¼ˆ`systems/ui.js`ï¼‰ï¼šå·¦ä¸Šè§’ UI æ”¹ç‚º `_initTopLeftUI()` ä¸€æ¬¡å»ºç«‹ç©©å®šçµæ§‹ï¼Œ`addEventListener` ç¶å®šè¨­å®šæŒ‰éˆ•ï¼Œ`updateUI()` åƒ…æ›´æ–° `#tl-xp-text`ã€`#tl-xp-bar` æ•¸å€¼åŠ hearts canvas
+### 修復
+- **手機小地圖縮小至 200×200**（`systems/ui.js`）：新增 `_mmSize()` 回傳 `isMobile ? 200 : 300`；`drawMinimap()` 每幀比對並動態調整 `minimapCanvas.width/height`；`_drawMinimapFog()` 的暫存畫布 RC 改為 `mm+30`，最終 drawImage 輸出至 mm×mm；`_drawMinimapEntities()` scale 改為 `mm/MAP_WIDTH`（手機 1/40，桌機 1/26.7）；`#minimap-info` 資訊列寬度跟隨 canvas 自動縮小；桌機維持 300×300 不受影響
+- **設定按鈕每幀重建 DOM 導致 click 失效**（`systems/ui.js`）：左上角 UI 改為 `_initTopLeftUI()` 一次建立穩定結構，`addEventListener` 綁定設定按鈕，`updateUI()` 僅更新 `#tl-xp-text`、`#tl-xp-bar` 數值及 hearts canvas
 
 ---
 
 ## v0.24.0 - 2026-05-17
 
-### æ–°å¢ž
-- **å¿ƒå½¢è¡€é‡ UI**ï¼ˆ`systems/ui.js`ï¼‰ï¼šç§»é™¤ HP æ•¸å­—ï¼Œæ”¹ä»¥å¿ƒå½¢ Canvas é¡¯ç¤ºï¼›æ¯é¡†å¿ƒä»£è¡¨ 20HPï¼Œå¡«å……æ¯”ä¾‹ `clamp((hp - i*20)/20, 0, 1)`ï¼Œç´…è‰²å¾žå·¦å´å¡«å……ï¼Œç©ºå¿ƒéƒ¨åˆ†é»‘è‰²åŠé€æ˜Žï¼›æœ€å¤š 10 é¡†ä¸€è¡Œï¼Œè¶…éŽæ›è¡Œï¼›`_heartPath()` ç”¨ Bezier æ›²ç·šç¹ªè£½ 24Ã—24 å¿ƒå½¢
-- **å·¦ä¸Šè§’ UI é‡æ§‹**ï¼ˆ`systems/ui.js`ã€`index.html`ï¼‰ï¼šæ”¹ç‚º `inline-flex` ç¸±å‘å®¹å™¨ï¼›ç¬¬ä¸€è¡Œä¸¦æŽ’ âš™ï¸ æŒ‰éˆ•ã€ðŸ¦ åœ–ç¤ºï¼ˆ28pxï¼‰ã€Lv/XP æ–‡å­—ï¼‹é€²åº¦æ¢ï¼›ç¬¬äºŒè¡Œå¿ƒå½¢è¡€æ¢ï¼›æ•´é«”åŒ…è¦† `rgba(0,0,0,0.6)` åŠé€æ˜ŽèƒŒæ™¯ï¼›XP é€²åº¦æ¢å¯¬åº¦è‡ªå‹•è·Ÿéš¨å¿ƒæ¢å¯¬åº¦ï¼ˆ`width:100%`ï¼‰
-- **âš™ï¸ è¨­å®šæŒ‰éˆ•**ï¼ˆ`systems/ui.js`ï¼‰ï¼šåµŒå…¥å·¦ä¸Šè§’ UIï¼Œ`pointer-events:all` ç©¿é€ overlayï¼Œé»žæ“Šè§¸ç™¼ `showSettings()`ï¼›é›»è…¦ç‰ˆ Esc éµç¶­æŒåŽŸæœ‰é–‹å•Ÿé‚è¼¯ï¼ˆ`systems/input.js`ï¼‰
-- **ç›´å‘æ‰‹æ©Ÿ 1000Ã—900 é‚è¼¯è§£æžåº¦**ï¼ˆ`systems/ui.js`ã€`systems/map.js`ï¼‰ï¼šç›´å‘æ¨¡å¼ä¸‹ canvas åŠå®¹å™¨æ”¹ç‚º 1000Ã—900ï¼Œ`scale = vw/1000` å¡«æ»¿èž¢å¹•å¯¬åº¦ï¼›`VIEW_W/VIEW_H` ç”± `const` æ”¹ç‚º `let`ï¼Œ`_setViewSize()` çµ±ä¸€ç®¡ç†ï¼›æ©«å‘/æ¡Œæ©Ÿç¶­æŒ 1600Ã—900 ä¸å—å½±éŸ¿ï¼›camera é‚Šç•Œè‡ªå‹•æ›´æ–°ï¼ˆVIEW_WÃ—0.25 = 250pxï¼‰ï¼Œç›´å‘æç¤ºæ¢åœç”¨
-- **æ©«å‘æ‰‹æ©Ÿæ”»æ“Šå€å’Œæ–æ¡¿ç²¾ç¢ºåŒ–**ï¼ˆ`systems/ui.js`ï¼‰ï¼šæ”»æ“Šå€ç¸®è‡³å·¦å´ 30%ï¼ˆæ°´å¹³ï¼‰Ã— ä¸­é–“ 60%ï¼ˆåž‚ç›´ï¼Œ20%~80%ï¼‰ï¼›æ–æ¡¿å€ç¸®è‡³å³å´ 30% Ã— ä¸­é–“ 60%ï¼›æ–æ¡¿åº•ç’°å›ºå®šé¡¯ç¤ºæ–¼å³å´ä¸­å¤®ï¼ˆ`vwÃ—0.85, vhÃ—0.5`ï¼‰ï¼Œå•Ÿå‹•å¾Œ base éŽ–å®šä¸­å¤®ã€knob éš¨è§¸é»žåç§»ï¼›âš”ï¸ æç¤ºç§»è‡³æ”»æ“Šå€æ­£ä¸­å¤®
+### 新增
+- **心形血量 UI**（`systems/ui.js`）：移除 HP 數字，改以心形 Canvas 顯示；每顆心代表 20HP，填充比例 `clamp((hp - i*20)/20, 0, 1)`，紅色從左側填充，空心部分黑色半透明；最多 10 顆一行，超過換行；`_heartPath()` 用 Bezier 曲線繪製 24×24 心形
+- **左上角 UI 重構**（`systems/ui.js`、`index.html`）：改為 `inline-flex` 縱向容器；第一行並排 ⚙️ 按鈕、🐦 圖示（28px）、Lv/XP 文字＋進度條；第二行心形血條；整體包覆 `rgba(0,0,0,0.6)` 半透明背景；XP 進度條寬度自動跟隨心條寬度（`width:100%`）
+- **⚙️ 設定按鈕**（`systems/ui.js`）：嵌入左上角 UI，`pointer-events:all` 穿透 overlay，點擊觸發 `showSettings()`；電腦版 Esc 鍵維持原有開啟邏輯（`systems/input.js`）
+- **直向手機 1000×900 邏輯解析度**（`systems/ui.js`、`systems/map.js`）：直向模式下 canvas 及容器改為 1000×900，`scale = vw/1000` 填滿螢幕寬度；`VIEW_W/VIEW_H` 由 `const` 改為 `let`，`_setViewSize()` 統一管理；橫向/桌機維持 1600×900 不受影響；camera 邊界自動更新（VIEW_W×0.25 = 250px），直向提示條停用
+- **橫向手機攻擊區和搖桿精確化**（`systems/ui.js`）：攻擊區縮至左側 30%（水平）× 中間 60%（垂直，20%~80%）；搖桿區縮至右側 30% × 中間 60%；搖桿底環固定顯示於右側中央（`vw×0.85, vh×0.5`），啟動後 base 鎖定中央、knob 隨觸點偏移；⚔️ 提示移至攻擊區正中央
 
 ---
 
 ## v0.23.0 - 2026-05-17
 
-### æ–°å¢ž
-- **æ‰‹æ©Ÿè§¸æŽ§æ”¯æ´ç³»çµ±**ï¼ˆ`systems/ui.js`ã€`systems/gameState.js`ã€`systems/player.js`ã€`index.html`ï¼‰ï¼š
-  - **è£ç½®åµæ¸¬**ï¼š`detectMobile()`ï¼ˆontouchstart æˆ– vw â‰¤ 768ï¼‰ã€`getOrientation()`ã€`applyDeviceMode()`
-  - **è¨­å®šä»‹é¢ã€Œè£ç½®æ¨¡å¼ã€å€å¡Š**ï¼šä¸‰é¡†æŒ‰éˆ•ï¼ˆè‡ªå‹•åµæ¸¬ / ðŸ“± æ‰‹æ©Ÿæ¨¡å¼ / ðŸ–¥ï¸ é›»è…¦æ¨¡å¼ï¼‰ï¼Œå³æ™‚å¥—ç”¨ä¸¦å­˜å…¥ `localStorage`
-  - **ç•«é¢è‡ªå‹•ç¸®æ”¾**ï¼š`_applyMobileScale()` ç”¨ `CSS transform: scale()` ç¸®æ”¾ `#game-container`ï¼Œæ©«å‘å¡«æ»¿å¯¬åº¦ï¼Œè±Žå‘ä¿ç•™ä¸‹æ–¹ 40% çµ¦æ“æŽ§å€ï¼Œä¸æ”¹è®ŠéŠæˆ²å…§éƒ¨åº§æ¨™
-  - **æ–¹å‘æç¤ºæ¢**ï¼šè±Žå‘æ‰‹æ©Ÿæ™‚åœ¨é ‚éƒ¨é¡¯ç¤ºé»ƒè‰²å¯é—œé–‰æç¤ºæ¢ï¼Œæ—‹è½‰æ©«å‘å¾Œè‡ªå‹•éš±è—
-  - **è™›æ“¬æ–æ¡¿**ï¼šå³åŠèž¢å¹•ï¼ˆæ©«å‘ï¼‰æˆ–å³åŠä¸‹ 40%ï¼ˆè±Žå‘ï¼‰ï¼Œå¤–åœˆ 60pxï¼å…§åœˆ 25pxï¼Œæµ®å‹•å¼ï¼Œ`mobileInput.dx/dy` é©…å‹•çŽ©å®¶ç§»å‹•
-  - **æ”»æ“Šå€åŸŸ**ï¼šæ©«å‘ç‚ºå·¦åŠèž¢å¹•æ•´å€ï¼ˆâš”ï¸ opacity 0.2 æç¤ºï¼‰ï¼Œè±Žå‘ç‚ºå·¦åŠä¸‹ 40% ä¸­å¤®åœ“å½¢æŒ‰éˆ•ï¼ˆâš”ï¸ï¼Œr=40pxï¼‰ï¼Œtap è§¸ç™¼ `playerAttack()`ï¼Œæ²¿ç”¨æ—¢æœ‰å†·å»é‚è¼¯
-  - `viewport` meta æ¨™ç±¤é˜²æ­¢æ‰‹æ©Ÿç€è¦½å™¨è‡ªå‹•ç¸®æ”¾
+### 新增
+- **手機觸控支援系統**（`systems/ui.js`、`systems/gameState.js`、`systems/player.js`、`index.html`）：
+  - **裝置偵測**：`detectMobile()`（ontouchstart 或 vw ≤ 768）、`getOrientation()`、`applyDeviceMode()`
+  - **設定介面「裝置模式」區塊**：三顆按鈕（自動偵測 / 📱 手機模式 / 🖥️ 電腦模式），即時套用並存入 `localStorage`
+  - **畫面自動縮放**：`_applyMobileScale()` 用 `CSS transform: scale()` 縮放 `#game-container`，橫向填滿寬度，豎向保留下方 40% 給操控區，不改變遊戲內部座標
+  - **方向提示條**：豎向手機時在頂部顯示黃色可關閉提示條，旋轉橫向後自動隱藏
+  - **虛擬搖桿**：右半螢幕（橫向）或右半下 40%（豎向），外圈 60px／內圈 25px，浮動式，`mobileInput.dx/dy` 驅動玩家移動
+  - **攻擊區域**：橫向為左半螢幕整區（⚔️ opacity 0.2 提示），豎向為左半下 40% 中央圓形按鈕（⚔️，r=40px），tap 觸發 `playerAttack()`，沿用既有冷卻邏輯
+  - `viewport` meta 標籤防止手機瀏覽器自動縮放
 
-### ä¿®å¾©
-- **æ‰‹æ©Ÿæ¨¡å¼å…¨èž¢å¹•ç¶ è‰²é®ç½©**ï¼š`canvas { background-color }` æ”¹ç‚º `#gameCanvas { background-color: #549954 }`ï¼Œé¿å… `#joystick-canvas` ç¹¼æ‰¿ç¶ è‰²è“‹ä½æ‰€æœ‰ overlay
+### 修復
+- **手機模式全螢幕綠色遮罩**：`canvas { background-color }` 改為 `#gameCanvas { background-color: #549954 }`，避免 `#joystick-canvas` 繼承綠色蓋住所有 overlay
 
 ---
 
 ## v0.22.0 - 2026-05-17
 
-### æ–°å¢ž
-- **å°åœ°åœ– UI ç³»çµ±**ï¼ˆ`systems/ui.js`ã€`index.html`ï¼‰ï¼š
-  - **åœ°å½¢åº•åœ–**ï¼šå°‡ 400Ã—400 `terrainMap` é æ¸²æŸ“ç‚ºé›¢å± canvasï¼Œç¸®æ”¾è‡³ 300Ã—300 é¡¯ç¤ºï¼Œç¨®å­ä¸è®Šæ™‚å¿«å–å¾©ç”¨
-  - **å¤ªé™½æœˆäº®æŒ‡ç¤ºå™¨**ï¼ˆ`sunmoonCanvas` 24Ã—24ï¼‰ï¼šä¾æ—¥å¤œé€±æœŸé€²åº¦ç¹ªè£½çƒé«”æ—‹è½‰å‹•ç•«ï¼ˆæ©¢åœ“é‚Šç•Œç®—æ³•ï¼‰ï¼Œèˆ‡æ™‚é–“ä¸¦æŽ’æ–¼å°åœ°åœ–è³‡è¨Šåˆ—å³å´
-  - **è¿·éœ§ç³»çµ±**ï¼ˆ`_drawMinimapFog`ï¼‰ï¼š400Ã—400 `fogMap` å¸ƒæž—é™£åˆ—é©…å‹•ï¼Œæ¯å¹€æ¸…é™¤ camera è¦–é‡Žå°æ‡‰æ ¼ï¼ˆå«ç’°å½¢åŒ…è£ï¼‰ï¼›æŽ¡ç”¨ 330Ã—330 è¶…å°ºå¯¸æš«å­˜ç•«å¸ƒè§£æ±º blur kernel é‚Šç·£ç¨€é‡‹å•é¡Œï¼Œæœ€çµ‚è£åˆ‡ä¸­å¤® 300Ã—300 è¼¸å‡ºï¼›ç™½å¤©ç–ŠåŠ é›²éœ§æè³ªï¼ˆ70 å€‹å›ºå®šç¨®å­å¾‘å‘æ¼¸å±¤åœ“ï¼Œ`source-atop` åˆæˆï¼‰
-  - **ç”Ÿç‰©èˆ‡çŽ©å®¶æ¨™è¨˜**ï¼ˆ`_drawMinimapEntities`ï¼‰ï¼šçŽ©å®¶ç™½/ç¶ é–ƒçˆé»žï¼ˆæ°¸é é¡¯ç¤ºï¼‰ã€ä¸­ç«‹ç”Ÿç‰©æ©˜é»žã€æ•µæ„ç”Ÿç‰©ç´…é»žã€ç²¾è‹±æ€ªé‡‘é»žã€Boss æ·±ç´…å¸¶æ©˜æé‚Šï¼ˆå¾Œå››è€…åƒ…åœ¨å·²æ­é–‹è¿·éœ§å€åŸŸé¡¯ç¤ºï¼‰
-  - ç§»é™¤èˆŠç‰ˆå³ä¸Šè§’æ–‡å­— UIï¼ˆæ™‚é–“ã€æ—¥å¤œã€åœ°å½¢æ¨™ç¤ºï¼‰ï¼Œæ•´åˆè‡³ `#minimap-info` è³‡è¨Šåˆ—
+### 新增
+- **小地圖 UI 系統**（`systems/ui.js`、`index.html`）：
+  - **地形底圖**：將 400×400 `terrainMap` 預渲染為離屏 canvas，縮放至 300×300 顯示，種子不變時快取復用
+  - **太陽月亮指示器**（`sunmoonCanvas` 24×24）：依日夜週期進度繪製球體旋轉動畫（橢圓邊界算法），與時間並排於小地圖資訊列右側
+  - **迷霧系統**（`_drawMinimapFog`）：400×400 `fogMap` 布林陣列驅動，每幀清除 camera 視野對應格（含環形包裝）；採用 330×330 超尺寸暫存畫布解決 blur kernel 邊緣稀釋問題，最終裁切中央 300×300 輸出；白天疊加雲霧材質（70 個固定種子徑向漸層圓，`source-atop` 合成）
+  - **生物與玩家標記**（`_drawMinimapEntities`）：玩家白/綠閃爍點（永遠顯示）、中立生物橘點、敵意生物紅點、精英怪金點、Boss 深紅帶橘描邊（後四者僅在已揭開迷霧區域顯示）
+  - 移除舊版右上角文字 UI（時間、日夜、地形標示），整合至 `#minimap-info` 資訊列
 
 ---
 
 ## v0.21.0 - 2026-05-16
 
-### ä¿®å¾©
-- **åœ°åœ–é‚Šç•Œåœ°å½¢ä¸é€£çºŒ**ï¼ˆ`systems/map.js`ï¼‰ï¼š
-  - `labelBiomeRegions` flood fill æ”¹ç‚ºç’°å½¢ï¼š`nr/nc` æ”¹ç”¨æ¨¡é‹ç®—ï¼ˆ`% gridH / % gridW`ï¼‰å–ä»£é‚Šç•ŒæŽ’é™¤ï¼Œä½¿ä¸Šä¸‹å·¦å³é‚Šç•Œçš„åŒç”Ÿæ…‹æ ¼æ­£ç¢ºé€£é€šæˆåŒä¸€ region
-  - `mergeSmallRegions` é„°æŽ¥åœ–å»ºç«‹æ”¹ç‚ºç’°å½¢ï¼šä»¥ `ADJ_DIRS` å››æ–¹å‘ + æ¨¡é‹ç®—å–ä»£åªå¾€å³å¾€ä¸‹çš„é›™å‘æŽƒæï¼Œç¢ºä¿å·¦å³é‚Šç•Œ/ä¸Šä¸‹é‚Šç•Œçš„ä¸åŒ region æ­£ç¢ºå»ºç«‹é„°æŽ¥é—œä¿‚
-  - `buildTerrainCanvas` é‚Šç•Œç™½ç·šæ”¹ç‚ºç’°å½¢ï¼šä»¥ `(gx+1)%cols`ã€`(gy+1)%rows` å–ä»£ `gx+1 < cols`ã€`gy+1 < rows`ï¼Œä½¿æœ€å¾Œä¸€æ¬„/æœ€å¾Œä¸€åˆ—èˆ‡ç¬¬ä¸€æ¬„/ç¬¬ä¸€åˆ—åœ¨åœ°å½¢ä¸åŒæ™‚ä¹Ÿèƒ½ç•«å‡ºé‚Šç•Œç·š
+### 修復
+- **地圖邊界地形不連續**（`systems/map.js`）：
+  - `labelBiomeRegions` flood fill 改為環形：`nr/nc` 改用模運算（`% gridH / % gridW`）取代邊界排除，使上下左右邊界的同生態格正確連通成同一 region
+  - `mergeSmallRegions` 鄰接圖建立改為環形：以 `ADJ_DIRS` 四方向 + 模運算取代只往右往下的雙向掃描，確保左右邊界/上下邊界的不同 region 正確建立鄰接關係
+  - `buildTerrainCanvas` 邊界白線改為環形：以 `(gx+1)%cols`、`(gy+1)%rows` 取代 `gx+1 < cols`、`gy+1 < rows`，使最後一欄/最後一列與第一欄/第一列在地形不同時也能畫出邊界線
 
 ---
 
 ## v0.20.0 - 2026-05-16
 
-### æ–°å¢ž
-- **åœ°å½¢ç”Ÿæˆè¦å‰‡æ–‡ä»¶**ï¼ˆ`map/map.md`ï¼‰ï¼šæ–°å¢žåœ°å½¢ç”Ÿæˆè¦å‰‡ä¸‰æ¢ï¼ˆTileable Noiseã€MIN_BIOME_TILES åŒåŒ–ç®—æ³•ã€REQUIRED_BIOMES å®Œæ•´æ€§ï¼‰ã€ä¿è­·å€è¦å‰‡ã€è®Šé‡ä½ç½®è¦ç¯„
-- **4D Tileable Noise**ï¼ˆ`systems/map.js`ï¼‰ï¼š
-  - `_SimplexNoise` æ–°å¢ž `grad4`ï¼ˆ32å€‹4Dæ¢¯åº¦å‘é‡ï¼‰ã€`dot4`ã€`noise4d`ã€`tileableNoise`
-  - `tileableNoise(perm, x, y, W, H)`ï¼šæŠŠæ ¼å­åº§æ¨™æŠ•å½±åˆ° 4D åœ“æŸ±é¢ï¼ˆcos/sinï¼‰ï¼Œä½¿åœ°åœ–å·¦å³ã€ä¸Šä¸‹é‚Šç•Œ Noise å€¼å®Œå…¨é€£çºŒ
-  - `generateTerrain()` æ”¹ç”¨ `tileableNoise` å–ä»£åŽŸæœ¬ `noise2d`
-- **å­¤å³¶åŒåŒ–ç®—æ³•**ï¼ˆ`systems/map.js`ï¼‰ï¼š
-  - `MAP_RULES = { MIN_BIOME_TILES: 250 }`ï¼šå…¨åŸŸé è¨­æœ€å°ç”Ÿæ…‹æ ¼æ•¸
-  - `labelBiomeRegions(terrainMap, gridW, gridH)`ï¼šflood fillï¼ˆDFS + stackï¼‰ï¼Œå›žå‚³ `regionId` äºŒç¶­é™£åˆ—å’Œ `regions` é™£åˆ—ï¼Œæ¯å€‹ region å« `{ id, biome, cells, size, minRow, minCol }`
-  - `mergeSmallRegions(terrainMap, gridW, gridH, minTiles)`ï¼šå»ºç«‹é„°æŽ¥åœ–å¾Œé€ä¸€åŒåŒ– `size < minTiles` çš„å­¤å³¶ï¼Œvalid é¸é …é¸æœ€å°ã€tie é¸æœ€é å·¦ä¸Šï¼›ç„¡ valid æ™‚åˆä½µæœ€å¤§ç›¸é„°å­¤å³¶å¾Œé‡æ–°åˆ¤æ–·
-  - `ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes)`ï¼šç¢ºèªæ‰€æœ‰å¿…è¦ç”Ÿæ…‹å­˜åœ¨ï¼Œå›žå‚³ bool
-- **`generateTerrain()` å®Œæ•´æµç¨‹æ›´æ–°**ï¼šTileable Noise â†’ ä¿è­·å€ â†’ `mergeSmallRegions` â†’ `ensureRequiredBiomes`ï¼ˆæœ€å¤š 10 æ¬¡æ–° seed é‡è©¦ï¼›è¶…éŽå‰‡ minTiles/2 å†è©¦ä¸€æ¬¡ï¼‰
-- **`map/easymap.js`**ï¼š`terrain` å€å¡Šæ–°å¢ž `minBiomeTiles: 250` å’Œ `requiredBiomes: ['forest', 'ocean', 'desert']`
+### 新增
+- **地形生成規則文件**（`map/map.md`）：新增地形生成規則三條（Tileable Noise、MIN_BIOME_TILES 同化算法、REQUIRED_BIOMES 完整性）、保護區規則、變量位置規範
+- **4D Tileable Noise**（`systems/map.js`）：
+  - `_SimplexNoise` 新增 `grad4`（32個4D梯度向量）、`dot4`、`noise4d`、`tileableNoise`
+  - `tileableNoise(perm, x, y, W, H)`：把格子座標投影到 4D 圓柱面（cos/sin），使地圖左右、上下邊界 Noise 值完全連續
+  - `generateTerrain()` 改用 `tileableNoise` 取代原本 `noise2d`
+- **孤島同化算法**（`systems/map.js`）：
+  - `MAP_RULES = { MIN_BIOME_TILES: 250 }`：全域預設最小生態格數
+  - `labelBiomeRegions(terrainMap, gridW, gridH)`：flood fill（DFS + stack），回傳 `regionId` 二維陣列和 `regions` 陣列，每個 region 含 `{ id, biome, cells, size, minRow, minCol }`
+  - `mergeSmallRegions(terrainMap, gridW, gridH, minTiles)`：建立鄰接圖後逐一同化 `size < minTiles` 的孤島，valid 選項選最小、tie 選最靠左上；無 valid 時合併最大相鄰孤島後重新判斷
+  - `ensureRequiredBiomes(terrainMap, gridW, gridH, requiredBiomes)`：確認所有必要生態存在，回傳 bool
+- **`generateTerrain()` 完整流程更新**：Tileable Noise → 保護區 → `mergeSmallRegions` → `ensureRequiredBiomes`（最多 10 次新 seed 重試；超過則 minTiles/2 再試一次）
+- **`map/easymap.js`**：`terrain` 區塊新增 `minBiomeTiles: 250` 和 `requiredBiomes: ['forest', 'ocean', 'desert']`
 
 ---
 
 ## v0.19.0 - 2026-05-16
 
-### æ–°å¢ž
-- **åœ°åœ–ç³»çµ±é‡æ§‹**ï¼ˆ`systems/map.js`ï¼‰ï¼š
-  - å¾ž `camera.js` ç§»å…¥ `getBiome`ã€`getBgColor`ï¼›å¾ž `spawning.js` ç§»å…¥ `generateTrees`ï¼›å¾ž `gameState.js` ç§»å…¥ `MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H`
-  - æ–°å¢ž `TILE_SIZE = 20`ã€`NOISE_SCALE = 0.003`ã€`BIOME_COLOR`
-  - æ–°å¢žç´” JS Simplex Noise å¯¦ä½œï¼ˆ`_SimplexNoise.buildPerm` + `noise2d`ï¼Œä¸ä¾è³´å¤–éƒ¨å‡½å¼åº«ï¼‰
-  - æ–°å¢ž `generateTerrain()`ï¼šæ¯å±€éš¨æ©Ÿ seedï¼Œç”Ÿæˆ 400Ã—400 æ ¼ terrainMapï¼ˆä¸­å¿ƒ 400px å¼·åˆ¶æ£®æž—ï¼Œnoise > 0.2 æ£®æž—ï¼Œ< -0.2 æµ·æ´‹ï¼Œå…¶é¤˜æ²™æ¼ ï¼‰
-  - æ–°å¢ž `buildTerrainCanvas()`ï¼šæŠŠ terrainMap é æ¸²æŸ“è‡³ 8000Ã—8000 é›¢å± Canvasï¼Œå«åœ°å½¢é‚Šç•Œç·šï¼ˆç›¸é„°æ ¼ä¸åŒæ™‚ç•« 2px åŠé€æ˜Žç™½ç·šï¼‰
-  - æ–°å¢ž `drawTerrain()`ï¼šæ”¯æ´åœ°åœ–ç’°ç¹žçš„é›¢å± Canvas blitï¼ˆæœ€å¤š 4 æ¬¡ drawImageï¼‰ï¼Œå¤œæ™šç–ŠåŠ  `rgba(0,0,0,0.4)` é®ç½©ï¼›å–ä»£åŽŸæœ¬ `getBgColor` ç´”è‰²èƒŒæ™¯
-  - `getBiome(x, y)` æ”¹ç‚ºè®€å– `gameState.terrainMap`ï¼Œæœªå°±ç·’æ™‚ fallback èˆŠå…¬å¼
-  - `generateTerrain()` è®€å– `gameState.currentMap.terrain` åƒæ•¸ï¼Œfallback è‡³å¸¸æ•¸é è¨­å€¼
-- **`map/` è³‡æ–™å¤¾**ï¼š
-  - `map/map.md`ï¼šåœ°åœ–è¨­è¨ˆæ–‡ä»¶
-  - `map/easymap.js`ï¼ˆ`EASY_MAP`ï¼‰ï¼šç°¡å–®é›£åº¦é…ç½®ï¼ˆåœ°å½¢åƒæ•¸ã€ç”Ÿç‰©å€çŽ‡ã€ç²¾è‹±æ€ª 3 å¤œé…ç½®ã€Boss é ç•™çµæ§‹ï¼‰
-- **é›£åº¦èˆ‡è§’è‰²é¸æ“‡ä»‹é¢**ï¼ˆ`systems/ui.js`ï¼‰ï¼š
-  - æ–°å¢ž `showMapSelect()`ï¼šé»žã€Œé–‹å§‹éŠæˆ²ã€å¾Œé¡¯ç¤ºé¸æ“‡é ï¼Œé›£åº¦ï¼ˆç°¡å–®å¯é¸ / æ™®é€šå›°é›£åœ°ç„ðŸ”’ï¼‰+ è§’è‰²ï¼ˆå™ªéµ‘å¯é¸ / å³å°‡æŽ¨å‡ºðŸ”’ï¼‰é›™æ¬„ä½ˆå±€ï¼Œé¸ä¸­é«˜äº®é‡‘æ¡†ï¼Œæ”¯æ´ä¸­è‹±é›™èªž
-  - é¸æ“‡å¾Œ `gameState.currentMap = EASY_MAP`ï¼Œå›žé¦–é æŒ‰éˆ•æ¢å¾© `showStartScreen`
-  - `showStartScreen` çš„ã€Œé–‹å§‹éŠæˆ²ã€æ”¹ç‚ºå‘¼å« `showMapSelect()`
-- **èªžè¨€éµ**ï¼ˆ`zh-TW.js` / `en.js`ï¼‰ï¼šæ–°å¢ž `selectTitle` / `difficultyLabel` / `characterLabel` / `diffEasy~Hell` / `charKoel` / `charSoon` / `btnBack` / `btnStart`
-- **`gameState`**ï¼šæ–°å¢ž `currentMap: null`ã€`terrainMap: null`ã€`mapSeed: 0`
+### 新增
+- **地圖系統重構**（`systems/map.js`）：
+  - 從 `camera.js` 移入 `getBiome`、`getBgColor`；從 `spawning.js` 移入 `generateTrees`；從 `gameState.js` 移入 `MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H`
+  - 新增 `TILE_SIZE = 20`、`NOISE_SCALE = 0.003`、`BIOME_COLOR`
+  - 新增純 JS Simplex Noise 實作（`_SimplexNoise.buildPerm` + `noise2d`，不依賴外部函式庫）
+  - 新增 `generateTerrain()`：每局隨機 seed，生成 400×400 格 terrainMap（中心 400px 強制森林，noise > 0.2 森林，< -0.2 海洋，其餘沙漠）
+  - 新增 `buildTerrainCanvas()`：把 terrainMap 預渲染至 8000×8000 離屏 Canvas，含地形邊界線（相鄰格不同時畫 2px 半透明白線）
+  - 新增 `drawTerrain()`：支援地圖環繞的離屏 Canvas blit（最多 4 次 drawImage），夜晚疊加 `rgba(0,0,0,0.4)` 遮罩；取代原本 `getBgColor` 純色背景
+  - `getBiome(x, y)` 改為讀取 `gameState.terrainMap`，未就緒時 fallback 舊公式
+  - `generateTerrain()` 讀取 `gameState.currentMap.terrain` 參數，fallback 至常數預設值
+- **`map/` 資料夾**：
+  - `map/map.md`：地圖設計文件
+  - `map/easymap.js`（`EASY_MAP`）：簡單難度配置（地形參數、生物倍率、精英怪 3 夜配置、Boss 預留結構）
+- **難度與角色選擇介面**（`systems/ui.js`）：
+  - 新增 `showMapSelect()`：點「開始遊戲」後顯示選擇頁，難度（簡單可選 / 普通困難地獄🔒）+ 角色（噪鵑可選 / 即將推出🔒）雙欄佈局，選中高亮金框，支援中英雙語
+  - 選擇後 `gameState.currentMap = EASY_MAP`，回首頁按鈕恢復 `showStartScreen`
+  - `showStartScreen` 的「開始遊戲」改為呼叫 `showMapSelect()`
+- **語言鍵**（`zh-TW.js` / `en.js`）：新增 `selectTitle` / `difficultyLabel` / `characterLabel` / `diffEasy~Hell` / `charKoel` / `charSoon` / `btnBack` / `btnStart`
+- **`gameState`**：新增 `currentMap: null`、`terrainMap: null`、`mapSeed: 0`
 
-### èª¿æ•´
-- `systems/camera.js`ï¼šç§»é™¤ `getBiome`ã€`getBgColor`ï¼ˆå·²ç§»è‡³ `map.js`ï¼‰
-- `systems/spawning.js`ï¼šç§»é™¤ `generateTrees`ï¼ˆå·²ç§»è‡³ `map.js`ï¼‰
-- `systems/gameState.js`ï¼šç§»é™¤ `MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H`ï¼ˆå·²ç§»è‡³ `map.js`ï¼‰
-- `systems/ui.js`ï¼š`drawGame()` èƒŒæ™¯æ”¹ç‚º `drawTerrain()` å–ä»£èˆŠ `getBgColor` å¡«è‰²
+### 調整
+- `systems/camera.js`：移除 `getBiome`、`getBgColor`（已移至 `map.js`）
+- `systems/spawning.js`：移除 `generateTrees`（已移至 `map.js`）
+- `systems/gameState.js`：移除 `MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H`（已移至 `map.js`）
+- `systems/ui.js`：`drawGame()` 背景改為 `drawTerrain()` 取代舊 `getBgColor` 填色
 
 ---
 
 ## v0.18.1 - 2026-05-16
 
-### æ–‡ä»¶
-- **æ–°å¢ž `.claude/instructions.md`**ï¼šæ¯æ¬¡å°è©±å‰è‡ªå‹•è®€å–çš„é–‹ç™¼è¦å‰‡ï¼ŒåŒ…å« MAIN.md / CHANGELOG.md / VERSION_RULES.md è®€å–é †åºã€å¿…å®ˆé–‹ç™¼è¦å‰‡ï¼ˆ`gameLoop` ç¦æ­¢å­—é¢ `\n`ã€æ¨¡çµ„åŒ–è¦ç¯„ç­‰ï¼‰èˆ‡ä¿®æ”¹å®Œæˆå¾Œçš„å›ºå®šæµç¨‹
-- **æ›´æ–° `MAIN.md`**ï¼š
-  - `systems/elite.js` å€å¡Šç§»é™¤ `drawEliteArrow`ï¼ˆå·²åˆä½µè‡³ utils.jsï¼‰ï¼Œæ–°å¢žå‚™è¨»èªªæ˜Ž
-  - `systems/boss.js` å€å¡Šç§»é™¤ `drawBossArrow`ï¼ˆå·²åˆä½µè‡³ utils.jsï¼‰ï¼Œæ–°å¢žå‚™è¨»èªªæ˜Ž
-  - æ–°å¢ž `systems/utils.js` å®Œæ•´å‡½å¼èªªæ˜Žå€å¡Šï¼Œå«å„å‡½å¼åƒæ•¸èˆ‡ç”¨é€”ã€ç¹ªè£½é †åºè¦ç¯„ï¼ˆåå­—â†’è¡€æ¢â†’æœ¬é«”ï¼Œå„å±¤ 4px é–“è·ï¼‰
+### 文件
+- **新增 `.claude/instructions.md`**：每次對話前自動讀取的開發規則，包含 MAIN.md / CHANGELOG.md / VERSION_RULES.md 讀取順序、必守開發規則（`gameLoop` 禁止字面 `\n`、模組化規範等）與修改完成後的固定流程
+- **更新 `MAIN.md`**：
+  - `systems/elite.js` 區塊移除 `drawEliteArrow`（已合併至 utils.js），新增備註說明
+  - `systems/boss.js` 區塊移除 `drawBossArrow`（已合併至 utils.js），新增備註說明
+  - 新增 `systems/utils.js` 完整函式說明區塊，含各函式參數與用途、繪製順序規範（名字→血條→本體，各層 4px 間距）
 
 ---
 
 ## v0.18.0 - 2026-05-16
 
-### æ–°å¢ž
-- **`systems/utils.js`**ï¼šæ–°å¢ž 4 å€‹å…±ç”¨ç¹ªåœ–å·¥å…·å‡½å¼ï¼Œä¾›ç²¾è‹±æ€ªèˆ‡ Boss ç³»çµ±å…±äº«
-  - `drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius)`ï¼šçµ±ä¸€ç®­é ­ç¹ªè£½ï¼Œè·é›¢å›ºå®šç‚º `playerRadius + 20px`ï¼Œæ¯ 0.5 ç§’åœ¨é€æ˜Žåº¦ 0.6â†”1.0 ä¹‹é–“é–ƒçˆ
-  - `drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height)`ï¼šè¡€æ¢ç¹ªè£½
-  - `drawNameTag(sx, sy, name, color, font)`ï¼šåå­—æ¨™ç±¤ç¹ªè£½
-  - `drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur)`ï¼šå¸¶å…‰æšˆçš„åœ“å½¢ç¹ªè£½
+### 新增
+- **`systems/utils.js`**：新增 4 個共用繪圖工具函式，供精英怪與 Boss 系統共享
+  - `drawArrow(px, py, targetWorldX, targetWorldY, color, playerRadius)`：統一箭頭繪製，距離固定為 `playerRadius + 20px`，每 0.5 秒在透明度 0.6↔1.0 之間閃爍
+  - `drawHealthBar(sx, sy, hp, maxHp, width, fillColor, bgColor, height)`：血條繪製
+  - `drawNameTag(sx, sy, name, color, font)`：名字標籤繪製
+  - `drawGlowEffect(sx, sy, radius, fillColor, glowColor, glowBlur)`：帶光暈的圓形繪製
 
-### ä¿®å¾©
-- **ç²¾è‹±æ€ªç¹ªè£½é †åº**ï¼ˆ`systems/elite.js`ï¼‰ï¼šä¿®æ­£é¡¯ç¤ºå±¤æ¬¡ç‚ºã€Œåå­—åœ¨ä¸Šã€è¡€æ¢åœ¨ä¸­ã€æœ¬é«”åœ¨ä¸‹ã€ï¼Œå„å±¤é–“è· 4pxï¼›æ”¹ç”¨ `drawGlowEffect`ã€`drawHealthBar`ã€`drawNameTag`
-- **ç²¾è‹±æ€ªç®­é ­å„ªå…ˆæ¬Š**ï¼ˆ`systems/elite.js`ï¼‰ï¼šç•¶ç²¾è‹±æ€ªèˆ‡ Boss åŒæ™‚åœ¨èž¢å¹•å¤–æ™‚ï¼Œåªé¡¯ç¤º Boss ç®­é ­ï¼›æ”¹ç”¨ `drawArrow`
-- **ç®­é ­è·é›¢çµ±ä¸€**ï¼šç²¾è‹±æ€ªèˆ‡ Boss ç®­é ­è·é›¢çµ±ä¸€ç‚º `playerRadius + 20px`ï¼ˆåŽŸç²¾è‹±æ€ªç‚ºå›ºå®šåç§»ã€åŽŸ Boss ç‚º `30px`ï¼‰
-- **`systems/boss.js`**ï¼š`drawBossArrow` æ”¹ç”¨ `drawArrow`
+### 修復
+- **精英怪繪製順序**（`systems/elite.js`）：修正顯示層次為「名字在上、血條在中、本體在下」，各層間距 4px；改用 `drawGlowEffect`、`drawHealthBar`、`drawNameTag`
+- **精英怪箭頭優先權**（`systems/elite.js`）：當精英怪與 Boss 同時在螢幕外時，只顯示 Boss 箭頭；改用 `drawArrow`
+- **箭頭距離統一**：精英怪與 Boss 箭頭距離統一為 `playerRadius + 20px`（原精英怪為固定偏移、原 Boss 為 `30px`）
+- **`systems/boss.js`**：`drawBossArrow` 改用 `drawArrow`
 
 ---
 
 ## v0.17.0 - 2026-05-16
 
-### é‡æ§‹
-- **å®Œæ•´æ¨¡çµ„åŒ–**ï¼šå°‡ `index.html` å…§åµŒçš„ ~4000 è¡Œ JavaScript å…¨æ•¸æ‹†åˆ†ç‚º 19 å€‹ç¨ç«‹ JS æ¨¡çµ„ï¼Œindex.html ç²¾ç°¡è‡³ç´” HTML + CSS + `<script>` æ¨™ç±¤ï¼ˆ205 è¡Œï¼‰
-  - `config/`ï¼š`gameConfig.js` / `organs.js` / `creatures.js` / `evolution.js`ï¼ˆéœæ…‹è³‡æ–™å¸¸æ•¸ï¼‰
-  - `lang.js` + `lang/zh-TW.js` + `lang/en.js`ï¼ˆå¤šèªžç³»ï¼‰
-  - `systems/`ï¼š`gameState` / `audio` / `camera` / `input` / `spawning` / `player` / `combat` / `organs` / `evolution` / `creatures` / `elite` / `boss` / `daynight` / `ui`ï¼ˆå…± 14 å€‹ç³»çµ±æ¨¡çµ„ï¼‰
-  - `main.js`ï¼š`isGamePaused` / `gameLoop` / `initializeGame` / `window.onload`
-- **æ–°å¢ž `MAIN.md`**ï¼šè¨˜éŒ„å®Œæ•´æ¨¡çµ„æž¶æ§‹ã€è¼‰å…¥é †åºã€è·¨æ¨¡çµ„ä¾è³´é—œä¿‚èˆ‡é‡è¦è¨­è¨ˆæ³¨æ„äº‹é …
+### 重構
+- **完整模組化**：將 `index.html` 內嵌的 ~4000 行 JavaScript 全數拆分為 19 個獨立 JS 模組，index.html 精簡至純 HTML + CSS + `<script>` 標籤（205 行）
+  - `config/`：`gameConfig.js` / `organs.js` / `creatures.js` / `evolution.js`（靜態資料常數）
+  - `lang.js` + `lang/zh-TW.js` + `lang/en.js`（多語系）
+  - `systems/`：`gameState` / `audio` / `camera` / `input` / `spawning` / `player` / `combat` / `organs` / `evolution` / `creatures` / `elite` / `boss` / `daynight` / `ui`（共 14 個系統模組）
+  - `main.js`：`isGamePaused` / `gameLoop` / `initializeGame` / `window.onload`
+- **新增 `MAIN.md`**：記錄完整模組架構、載入順序、跨模組依賴關係與重要設計注意事項
 
 ---
 
 ## v0.16.0 - 2026-05-15
 
-### æ–°å¢ž
-- **å¤šèªžç³»ç³»çµ±**ï¼šæ–°å¢žç¹é«”ä¸­æ–‡ / English åˆ‡æ›ï¼Œæ‰€æœ‰ UIã€å™¨å®˜ã€æŠ€èƒ½ã€é€²åŒ–ã€çµ„åˆã€Bossã€ç²¾è‹±ã€Guide å…§å®¹çš†æ”¯æ´é›™èªž
-  - æ–°å¢ž `lang.js` ç¨ç«‹æª”æ¡ˆï¼Œé›†ä¸­æ”¶ç´ `LANG_LIST`ã€`LANG` å­—å…¸èˆ‡ `applyLanguage()`ã€`t(key, params?)` å·¥å…·ï¼›å¯å¤–åŒ…çµ¦è­¯è€…ç›´æŽ¥ç·¨è¼¯
-  - `applyLanguage(lang)` æŠŠç•¶å‰èªžè¨€å¯«å›ž `ORGANS / HIDDEN_ORGANS / SKILLS / EVOLUTION_PATHS / COMBOS / ELITE_CONFIG / BOSS_CONFIG`ï¼Œæ—¢æœ‰ `.name`/`.desc` è®€å–è‡ªå‹•è·Ÿè‘—åˆ‡æ›
-  - `t(key, params?)` æä¾› UI å­—ä¸²æŸ¥æ‰¾ï¼Œæ”¯æ´ `{token}` æ›¿æ›ï¼ˆå¦‚ `bossAppeared` çš„ `{name}`ã€`rerollBtn` çš„ `{n}`ï¼‰
-  - ç¼ºéµæ™‚è‡ªå‹• fallback å›ž zh-TWï¼Œé¿å…æ–°å¢ž key å»å¿˜è¨˜ç¿»å…¶ä»–èªžè¨€æ™‚æ•´æ®µç©ºç™½
-- **èªžè¨€è¨­å®š**ï¼šè¨­å®šé¢æ¿æœ€ä¸Šæ–¹æ–°å¢žã€Œèªžè¨€è¨­å®šã€å€å¡Šï¼Œæä¾›ã€Œç¹é«”ä¸­æ–‡ / Englishã€æŒ‰éˆ•ï¼›ç•¶å‰èªžè¨€ä»¥é‡‘è‰²é«˜äº®
-  - åˆ‡æ›å¾Œå³æ™‚åˆ·æ–°æ‰€æœ‰é–‹å•Ÿä¸­çš„ä»‹é¢ï¼ˆé¦–é  / è¨­å®š / Guide / æŠ€èƒ½æ¨¹ï¼‰ï¼Œç„¡éœ€é‡æ•´
-  - èªžè¨€å¯«å…¥ `gameSettings.language`ï¼Œä¸‹æ¬¡å•Ÿå‹•è‡ªå‹•è¼‰å…¥
-- **éŠæˆ²èªªæ˜Ž (Guide) ä»‹é¢**ï¼šé¦–é ã€ŒðŸ“– éŠæˆ²èªªæ˜Žã€æŒ‰éˆ•é€²å…¥ï¼ŒåŠé€æ˜Žé»‘è‰²é®ç½©ã€3 é åˆ†é 
-  - ä¸Šæ–¹é¡¯ç¤ºã€Œ{cur} / {total}ã€é ç¢¼èˆ‡é é¢å‰¯æ¨™é¡Œï¼›å·¦å³ç®­é ­åˆ‡æ›é é¢ï¼ˆé¦–å°¾è‡ªå‹•ç¦ç”¨ï¼‰ï¼›åº•éƒ¨ã€Œé—œé–‰ã€å›žé¦–é 
-  - ç¬¬ 1 é ã€ŒåŸºæœ¬æ“ä½œã€ã€ç¬¬ 2 é ã€Œå™¨å®˜ç³»çµ±ã€ã€ç¬¬ 3 é ã€Œé€²åŒ–ç³»çµ±ã€å…§å®¹é›™èªž
+### 新增
+- **多語系系統**：新增繁體中文 / English 切換，所有 UI、器官、技能、進化、組合、Boss、精英、Guide 內容皆支援雙語
+  - 新增 `lang.js` 獨立檔案，集中收納 `LANG_LIST`、`LANG` 字典與 `applyLanguage()`、`t(key, params?)` 工具；可外包給譯者直接編輯
+  - `applyLanguage(lang)` 把當前語言寫回 `ORGANS / HIDDEN_ORGANS / SKILLS / EVOLUTION_PATHS / COMBOS / ELITE_CONFIG / BOSS_CONFIG`，既有 `.name`/`.desc` 讀取自動跟著切換
+  - `t(key, params?)` 提供 UI 字串查找，支援 `{token}` 替換（如 `bossAppeared` 的 `{name}`、`rerollBtn` 的 `{n}`）
+  - 缺鍵時自動 fallback 回 zh-TW，避免新增 key 卻忘記翻其他語言時整段空白
+- **語言設定**：設定面板最上方新增「語言設定」區塊，提供「繁體中文 / English」按鈕；當前語言以金色高亮
+  - 切換後即時刷新所有開啟中的介面（首頁 / 設定 / Guide / 技能樹），無需重整
+  - 語言寫入 `gameSettings.language`，下次啟動自動載入
+- **遊戲說明 (Guide) 介面**：首頁「📖 遊戲說明」按鈕進入，半透明黑色遮罩、3 頁分頁
+  - 上方顯示「{cur} / {total}」頁碼與頁面副標題；左右箭頭切換頁面（首尾自動禁用）；底部「關閉」回首頁
+  - 第 1 頁「基本操作」、第 2 頁「器官系統」、第 3 頁「進化系統」內容雙語
 
-### èª¿æ•´
-- **é¦–é æŒ‰éˆ•é †åº**ï¼šé–‹å§‹éŠæˆ² â†’ æŠ€èƒ½æ¨¹ â†’ éŠæˆ²èªªæ˜Ž â†’ è¨­å®šï¼ˆæ–°å¢ž Guide å…¥å£ï¼‰
-- **`gameState`** æ–°å¢ž `language` æ¬„ä½ï¼Œé è¨­ `zh-TW`ï¼›`DEFAULT_SETTINGS` åŒæ­¥åŠ å…¥ `language`
-- **`loadSettings()`** è¼‰å…¥èªžè¨€ä¸¦å‘¼å« `applyLanguage()`ï¼Œç¢ºä¿è³‡æ–™è¡¨åˆå§‹åŒ–å³ç‚ºä½¿ç”¨è€…é¸çš„èªžè¨€
-- **`updateUI()` HUD æ–‡å­—**æ”¹ç”¨ `t()`ï¼šæ™‚é–“ã€æ—¥å¤œç‹€æ…‹ã€åœ°å½¢ã€é–‹ç™¼è€…çµ±è¨ˆ
-- **è¨­å®š / æŠ€èƒ½æ¨¹ / å™¨å®˜é¸æ“‡ / éš±è—å™¨å®˜é¸æ“‡ / å‹åˆ© / æ­»äº¡ / æ™‚é–“è€—ç›¡ / Day-Night åˆ‡æ› / ç²¾è‹± / Boss / å‡ç´š / é‡é¸ / Tooltip / HUD å™¨å®˜æ¡†** ç­‰æ‰€æœ‰å¯è¦‹æ–‡å­—å…¨é¢æ”¹ç”¨ `t()` èˆ‡ `LANG` å­—å…¸
-- **`_keyDisplay()`** ã€Œæ»‘é¼ å·¦éµã€æ”¹ç”¨ `t('mouseLeft')`ï¼Œè·Ÿéš¨èªžè¨€é¡¯ç¤º
+### 調整
+- **首頁按鈕順序**：開始遊戲 → 技能樹 → 遊戲說明 → 設定（新增 Guide 入口）
+- **`gameState`** 新增 `language` 欄位，預設 `zh-TW`；`DEFAULT_SETTINGS` 同步加入 `language`
+- **`loadSettings()`** 載入語言並呼叫 `applyLanguage()`，確保資料表初始化即為使用者選的語言
+- **`updateUI()` HUD 文字**改用 `t()`：時間、日夜狀態、地形、開發者統計
+- **設定 / 技能樹 / 器官選擇 / 隱藏器官選擇 / 勝利 / 死亡 / 時間耗盡 / Day-Night 切換 / 精英 / Boss / 升級 / 重選 / Tooltip / HUD 器官框** 等所有可見文字全面改用 `t()` 與 `LANG` 字典
+- **`_keyDisplay()`** 「滑鼠左鍵」改用 `t('mouseLeft')`，跟隨語言顯示
 
-### æ–‡ä»¶
-- **`lang.js` é–‹é ­åŠ å…¥ç¿»è­¯å¤–åŒ…èªªæ˜Ž**ï¼šæ­¥é©Ÿã€{token} è¦å‰‡ã€å¿…é ˆç¶­æŒ key çµæ§‹ã€ä¸å¯æ”¹å‹•åº•éƒ¨å·¥å…·å‡½å¼
-- **`gameConfig.js` é–‹é ­åŠ å…¥å¤šèªžç³»èªªæ˜Ž**ï¼šè³‡æ–™è¡¨ä¿ç•™ä¸­æ–‡é è¨­å€¼ï¼Œåˆ‡æ›èªžè¨€æ™‚ç”± `applyLanguage()` è¦†å¯«
+### 文件
+- **`lang.js` 開頭加入翻譯外包說明**：步驟、{token} 規則、必須維持 key 結構、不可改動底部工具函式
+- **`gameConfig.js` 開頭加入多語系說明**：資料表保留中文預設值，切換語言時由 `applyLanguage()` 覆寫
 
 ---
 
 ## v0.15.3 - 2026-05-14
 
-### ä¿®å¾©
-- **éš±è—å™¨å®˜é¸å®Œå¾ŒéŠæˆ²å¡æ­»ã€æœªè·³å‡ºæŽ’éšŠä¸­çš„æ™®é€šå™¨å®˜é¸æ“‡**ï¼šv0.15.1 å°‡ `showHiddenOrganSelection` çš„ `closeOverlay` æ”¹ç‚ºåœ¨ `pending > 0` æ™‚ä¿ç•™ `organSelectionActive = true` ä¸¦ç›´æŽ¥å‘¼å« `showOrganSelection()`ï¼Œä½† `showOrganSelection` å…¥å£æœƒæª¢æŸ¥ `organSelectionActive`ï¼Œçœ‹åˆ° true ä¾¿å†æ¬¡ `pendingOrganSelections++` ä¸¦ returnï¼Œå°Žè‡´ active=true ä½†ç„¡ overlay è€Œå¡æ­»ã€‚ä¿®æ­£ç‚ºå…ˆè¨­ `organSelectionActive = false` ä¸¦é‡ç½® `lastTimeTick`ï¼Œå†å‘¼å« `showOrganSelection()` é–‹å•Ÿä¸‹ä¸€å€‹ overlayï¼ˆæ•´æ®µåŒæ­¥åŸ·è¡Œï¼Œç„¡ç•«é¢å¹€ç©ºéš™è®“éŠæˆ²æ„å¤–æ¢å¾©è·‘ï¼‰
+### 修復
+- **隱藏器官選完後遊戲卡死、未跳出排隊中的普通器官選擇**：v0.15.1 將 `showHiddenOrganSelection` 的 `closeOverlay` 改為在 `pending > 0` 時保留 `organSelectionActive = true` 並直接呼叫 `showOrganSelection()`，但 `showOrganSelection` 入口會檢查 `organSelectionActive`，看到 true 便再次 `pendingOrganSelections++` 並 return，導致 active=true 但無 overlay 而卡死。修正為先設 `organSelectionActive = false` 並重置 `lastTimeTick`，再呼叫 `showOrganSelection()` 開啟下一個 overlay（整段同步執行，無畫面幀空隙讓遊戲意外恢復跑）
 
 ---
 
 ## v0.15.2 - 2026-05-14
 
-### ä¿®å¾©
-- **ç²¾è‹±æ“Šæ®ºæ™‚éš±è—å™¨å®˜èˆ‡å‡ç´šé¸æ“‡ç–Šå±¤**ï¼š`handleEliteKill` åŽŸæœ¬å…ˆå‘¼å« `addXP()`ï¼Œè‹¥æ­¤æ™‚è§¸ç™¼å‡ç´šæœƒç›´æŽ¥é–‹å•Ÿå™¨å®˜é¸æ“‡ç•«é¢ï¼ˆ`organSelectionActive` æ­¤æ™‚ç‚º falseï¼‰ï¼Œå†å‘¼å« `showHiddenOrganSelection()` ä¾¿é€ æˆå…©å€‹ overlay åŒæ™‚å­˜åœ¨ã€`pendingOrganSelections` æœªæ­£ç¢ºéžå¢žçš„å•é¡Œã€‚ä¿®æ­£ç‚ºï¼šå…ˆè¨ˆç®—ä¸¦å‘¼å« `showHiddenOrganSelection()`ï¼ˆè¨­ `organSelectionActive = true`ï¼‰ï¼Œä¹‹å¾Œ `addXP()` è‹¥è§¸ç™¼å‡ç´šæœƒæ­£ç¢ºèµ° `pendingOrganSelections++` æŽ’éšŠï¼Œç¢ºä¿å…©è€…ä¾åºé¡¯ç¤ºè€Œéžç–Šå±¤
+### 修復
+- **精英擊殺時隱藏器官與升級選擇疊層**：`handleEliteKill` 原本先呼叫 `addXP()`，若此時觸發升級會直接開啟器官選擇畫面（`organSelectionActive` 此時為 false），再呼叫 `showHiddenOrganSelection()` 便造成兩個 overlay 同時存在、`pendingOrganSelections` 未正確遞增的問題。修正為：先計算並呼叫 `showHiddenOrganSelection()`（設 `organSelectionActive = true`），之後 `addXP()` 若觸發升級會正確走 `pendingOrganSelections++` 排隊，確保兩者依序顯示而非疊層
 
 ---
 
 ## v0.15.1 - 2026-05-14
 
-### ä¿®å¾©
-- **éš±è—å™¨å®˜é¸æ“‡å¾ŒéŠæˆ²çŸ­æš«æ¢å¾©**ï¼š`showHiddenOrganSelection` çš„ `closeOverlay` åŽŸæœ¬å…ˆå°‡ `organSelectionActive = false` å†æª¢æŸ¥ `pendingOrganSelections`ï¼Œå°Žè‡´æœ‰ä¸€å¹€ç©ºéš™è®“éŠæˆ²ç¹¼çºŒé‹è¡Œã€‚ä¿®æ­£ç‚ºï¼šæœ‰ pending æ™‚ç›´æŽ¥ `pendingOrganSelections--` ä¸¦å‘¼å« `showOrganSelection()`ï¼Œä¿æŒ `organSelectionActive = true` ä¸ä¸­æ–·ï¼›ç„¡ pending æ™‚æ‰è¨­ `organSelectionActive = false` ä¸¦é‡ç½® `lastTimeTick`
+### 修復
+- **隱藏器官選擇後遊戲短暫恢復**：`showHiddenOrganSelection` 的 `closeOverlay` 原本先將 `organSelectionActive = false` 再檢查 `pendingOrganSelections`，導致有一幀空隙讓遊戲繼續運行。修正為：有 pending 時直接 `pendingOrganSelections--` 並呼叫 `showOrganSelection()`，保持 `organSelectionActive = true` 不中斷；無 pending 時才設 `organSelectionActive = false` 並重置 `lastTimeTick`
 
 ---
 
 ## v0.15.0 - 2026-05-14
 
-### æ–°å¢ž
-- **Tooltip å·¥å…·æç¤ºç³»çµ±**ï¼šæ»‘é¼ ç§»åˆ°å™¨å®˜/æŠ€èƒ½/é€²åŒ–é¸é …ä¸Šæ™‚ï¼Œé¡¯ç¤ºåŠé€æ˜Žæ·±è‰²æµ®å‹•æç¤ºæ¡†ï¼ˆ`position:fixed`ï¼Œè·Ÿéš¨æ»‘é¼ ï¼Œé è¿‘å³é‚Šç•Œè‡ªå‹•ç¿»è‡³å·¦å´ï¼‰
-  - **å·¦ä¸‹è§’ HUD å™¨å®˜æ¸…å–®ï¼ˆcanvasï¼‰**ï¼šé€éŽ `_organHitRegions` é™£åˆ—æ¯å¹€è¨˜éŒ„å„åˆ—ç¯„åœï¼Œcanvas `mousemove` å‘½ä¸­å¾Œé¡¯ç¤ºå™¨å®˜åç¨±ã€ç•¶å‰ç­‰ç´š/æœ€å¤§ç­‰ç´šã€åŸºç¤Žæ•ˆæžœèªªæ˜Žï¼›éš±è—å™¨å®˜æ¨™ç¤ºã€Œâœ¨ éš±è—å™¨å®˜ã€ï¼›è‹¥å·²èˆ‡çµ„åˆæ­æ“‹åŒæ™‚è£å‚™å‰‡é¡¯ç¤ºã€Œâš¡ çµ„åˆæ•ˆæžœã€ï¼›é€²åŒ–è·¯ç·šåŒæ¨£é¡¯ç¤ºç•¶å‰ç­‰ç´šèªªæ˜Ž
-  - **å™¨å®˜é¸æ“‡ç•«é¢**ï¼šæ‡¸åœæ™®é€šå™¨å®˜/å‡ç´šé¸é …æ™‚é¡¯ç¤ºæœ¬æ¬¡å‡ç´šèªªæ˜Žèˆ‡çµ„åˆæ•ˆæžœæç¤ºï¼›æ‡¸åœé€²åŒ–è·¯ç·šæ™‚é¡¯ç¤ºè©²ç­‰ç´šèªªæ˜Ž
-  - **éš±è—å™¨å®˜æŽ‰è½é¸æ“‡ç•«é¢**ï¼šæ‡¸åœé¸é …æ™‚é¡¯ç¤ºéš±è—å™¨å®˜åç¨±èˆ‡æ•ˆæžœèªªæ˜Ž
-  - **æŠ€èƒ½æ¨¹ä»‹é¢**ï¼šæ‡¸åœæŠ€èƒ½å¡ç‰‡æ™‚é¡¯ç¤ºæŠ€èƒ½èªªæ˜Žï¼›æ‡¸åœæ­»äº¡å¾Œ/é¦–é çš„å™¨å®˜ä¿ç•™å¡ç‰‡æ™‚é¡¯ç¤ºå™¨å®˜æ•ˆæžœèªªæ˜Žï¼›æ‡¸åœéš±è—å™¨å®˜å¡ç‰‡æ™‚é¡¯ç¤ºé‡‘è‰²ã€Œâœ¨ éš±è—å™¨å®˜ã€æ¨™ç¤º
-  - é—œé–‰æ‰€æœ‰ overlay æ™‚è‡ªå‹•å‘¼å« `hideTooltip()` é˜²æ­¢æ®˜ç•™
+### 新增
+- **Tooltip 工具提示系統**：滑鼠移到器官/技能/進化選項上時，顯示半透明深色浮動提示框（`position:fixed`，跟隨滑鼠，靠近右邊界自動翻至左側）
+  - **左下角 HUD 器官清單（canvas）**：透過 `_organHitRegions` 陣列每幀記錄各列範圍，canvas `mousemove` 命中後顯示器官名稱、當前等級/最大等級、基礎效果說明；隱藏器官標示「✨ 隱藏器官」；若已與組合搭擋同時裝備則顯示「⚡ 組合效果」；進化路線同樣顯示當前等級說明
+  - **器官選擇畫面**：懸停普通器官/升級選項時顯示本次升級說明與組合效果提示；懸停進化路線時顯示該等級說明
+  - **隱藏器官掉落選擇畫面**：懸停選項時顯示隱藏器官名稱與效果說明
+  - **技能樹介面**：懸停技能卡片時顯示技能說明；懸停死亡後/首頁的器官保留卡片時顯示器官效果說明；懸停隱藏器官卡片時顯示金色「✨ 隱藏器官」標示
+  - 關閉所有 overlay 時自動呼叫 `hideTooltip()` 防止殘留
 
 ---
 
 ## v0.14.1 - 2026-05-14
 
-### èª¿æ•´
-- **é¦–é æŠ€èƒ½æ¨¹ä¸Šå±€å™¨å®˜å€å¡Š**ï¼šç”±ç´”åƒè€ƒé¡¯ç¤ºæ”¹ç‚ºå®Œæ•´äº’å‹•é¸æ“‡ä»‹é¢ï¼›å¾ž `lastRunOrgans` è¼‰å…¥ä¸Šå±€å™¨å®˜ï¼Œæ™®é€šå™¨å®˜ä¾ `organMemory` æŠ€èƒ½ç­‰ç´šé™åˆ¶å¯é¸æ•¸é‡ï¼Œéš±è—å™¨å®˜æœ€å¤šé¸1å€‹ï¼›é¸ä¸­é¡¯ç¤ºé‡‘è‰²é«˜äº®ï¼Œå³æ™‚å¯«å…¥ `savedOrgans`/`savedHiddenOrgans`ï¼›æ¨™é¡Œæ”¹ç‚ºã€ŒðŸ“¦ é¸æ“‡ç¹¼æ‰¿ä¸Šå±€å™¨å®˜ï¼ˆæœ€å¤š N å€‹ï¼‰ã€ï¼›é¦–é é–‹å•ŸæŠ€èƒ½æ¨¹æ™‚åŒæ­¥å¾ž localStorage è¼‰å…¥æ­£ç¢ºçš„æŠ€èƒ½ç­‰ç´šèˆ‡æŠ€èƒ½é»žæ•¸
-- **è¨­å®šã€Œé‡å•ŸéŠæˆ²ã€ä¿ç•™å™¨å®˜è¨˜éŒ„**ï¼šä¸­é€”é‡å•Ÿå‰å‘¼å« `saveLastRunOrgans()` å­˜å…¥ `lastRunOrgans`ï¼Œä¸¦ç¢ºä¿ `skillPoints` å·²å¯«å…¥ localStorageï¼Œé˜²æ­¢ä¸­é€”çµæŸæå¤±è¨˜éŒ„
+### 調整
+- **首頁技能樹上局器官區塊**：由純參考顯示改為完整互動選擇介面；從 `lastRunOrgans` 載入上局器官，普通器官依 `organMemory` 技能等級限制可選數量，隱藏器官最多選1個；選中顯示金色高亮，即時寫入 `savedOrgans`/`savedHiddenOrgans`；標題改為「📦 選擇繼承上局器官（最多 N 個）」；首頁開啟技能樹時同步從 localStorage 載入正確的技能等級與技能點數
+- **設定「重啟遊戲」保留器官記錄**：中途重啟前呼叫 `saveLastRunOrgans()` 存入 `lastRunOrgans`，並確保 `skillPoints` 已寫入 localStorage，防止中途結束損失記錄
 
 ---
 
 ## v0.14.0 - 2026-05-14
 
-### èª¿æ•´
-- **é¦–é ç§»é™¤éµç›¤é€²å…¥**ï¼šé¦–é ä¸å†ç›£è½ keydown äº‹ä»¶ï¼Œåªæœ‰é»žæ“Šã€Œâ–¶ é–‹å§‹éŠæˆ²ã€æŒ‰éˆ•æ‰èƒ½é€²å…¥éŠæˆ²
-- **é¦–é ä¸‰æŒ‰éˆ•é¸å–®**ï¼šã€Œâ–¶ é–‹å§‹éŠæˆ²ã€ã€ã€ŒðŸŒ¿ æŠ€èƒ½æ¨¹ã€ã€ã€Œâš™ï¸ è¨­å®šã€ç”±ä¸Šåˆ°ä¸‹æŽ’åˆ—
+### 調整
+- **首頁移除鍵盤進入**：首頁不再監聽 keydown 事件，只有點擊「▶ 開始遊戲」按鈕才能進入遊戲
+- **首頁三按鈕選單**：「▶ 開始遊戲」、「🌿 技能樹」、「⚙️ 設定」由上到下排列
 
-### æ–°å¢ž
-- **é¦–é æŠ€èƒ½æ¨¹**ï¼šé»žæ“Šã€ŒðŸŒ¿ æŠ€èƒ½æ¨¹ã€å‘¼å« `buildSkillTreeOverlay(null, true)`ï¼›fromHome æ¨¡å¼ä¸‹éš±è—å™¨å®˜ä¿ç•™å€å¡Šã€é¡¯ç¤ºã€ŒðŸŒ¿ æŠ€èƒ½æ¨¹ã€æ¨™é¡Œã€åº•éƒ¨æ”¹ç‚ºã€Œé—œé–‰ã€æŒ‰éˆ•ï¼ˆé»žæ“Šå¾Œç§»é™¤ overlay å›žåˆ°é¦–é ï¼‰ï¼›overlay z-index 210ï¼Œç–Šåœ¨é¦–é ä¹‹ä¸Šï¼›å‡ç´šå’Œé‡ç½®æŒ‰éˆ•é€éŽ `_skillTreeFromHome` å…¨åŸŸæ——æ¨™ä¿ç•™èªžå¢ƒ
-- **é¦–é è¨­å®š**ï¼šé»žæ“Šã€Œâš™ï¸ è¨­å®šã€å‘¼å« `showSettings(true)`ï¼›fromHome æ¨¡å¼ä¸‹ overlay z-index 210ï¼Œåº•éƒ¨æŒ‰éˆ•æ–‡å­—æ”¹ç‚ºã€Œé—œé–‰ã€ï¼ˆåŠŸèƒ½ç›¸åŒï¼šå„²å­˜ä¸¦é—œé–‰ overlayï¼‰ï¼›é—œé–‰å¾Œå›žåˆ°é¦–é 
+### 新增
+- **首頁技能樹**：點擊「🌿 技能樹」呼叫 `buildSkillTreeOverlay(null, true)`；fromHome 模式下隱藏器官保留區塊、顯示「🌿 技能樹」標題、底部改為「關閉」按鈕（點擊後移除 overlay 回到首頁）；overlay z-index 210，疊在首頁之上；升級和重置按鈕透過 `_skillTreeFromHome` 全域旗標保留語境
+- **首頁設定**：點擊「⚙️ 設定」呼叫 `showSettings(true)`；fromHome 模式下 overlay z-index 210，底部按鈕文字改為「關閉」（功能相同：儲存並關閉 overlay）；關閉後回到首頁
 
 ---
 
 ## v0.13.9 - 2026-05-14
 
-### æ–°å¢ž
-- **ä¸Šå±€å™¨å®˜è‡ªå‹•å„²å­˜**ï¼šçŽ©å®¶æ­»äº¡æˆ–å‹åˆ©æ™‚ï¼Œé€éŽ `saveLastRunOrgans()` æŠŠæœ¬å±€æ‰€æœ‰æ™®é€šå™¨å®˜ï¼ˆå«ç­‰ç´šï¼‰å’Œéš±è—å™¨å®˜å­˜å…¥ `localStorage.lastRunOrgans`ï¼›ä¸å— `SAVE_VERSION` æ¸…é™¤å½±éŸ¿ï¼Œæ°¸ä¹…ä¿ç•™
-- **æŠ€èƒ½æ¨¹ã€Œä¸Šå±€éºç•™å™¨å®˜ã€å€å¡Š**ï¼šæŠ€èƒ½æ¨¹ä»‹é¢æœ€ä¸‹æ–¹æ–°å¢žç°è‰²ç´”é–±è®€å€å¡Šï¼Œåˆ—å‡ºä¸Šå±€æ‰€æœ‰å™¨å®˜åç¨±èˆ‡ç­‰ç´šï¼›ç„¡è¨˜éŒ„æ™‚é¡¯ç¤ºã€Œå°šç„¡è¨˜éŒ„ã€
-- **ã€ŒðŸ  å›žåˆ°é¦–é ã€+ã€Œâš”ï¸ å†ä¾†ä¸€å ´ã€é›™æŒ‰éˆ•**ï¼šæ­»äº¡æŠ€èƒ½æ¨¹å’Œå‹åˆ©ç•«é¢åº•éƒ¨çš„ã€Œé‡æ–°é–‹å§‹ã€å‡æ›æˆå…©å€‹ä¸¦æŽ’æŒ‰éˆ•ï¼›ã€Œå›žåˆ°é¦–é ã€è¿”å›žèµ·å§‹ç•«é¢ï¼Œã€Œå†ä¾†ä¸€å ´ã€é€éŽ `sessionStorage` æ¨™è¨˜å¾Œ reload è‡ªå‹•è·³éŽé¦–é ç›´æŽ¥é–‹å§‹æ–°ä¸€å±€
+### 新增
+- **上局器官自動儲存**：玩家死亡或勝利時，透過 `saveLastRunOrgans()` 把本局所有普通器官（含等級）和隱藏器官存入 `localStorage.lastRunOrgans`；不受 `SAVE_VERSION` 清除影響，永久保留
+- **技能樹「上局遺留器官」區塊**：技能樹介面最下方新增灰色純閱讀區塊，列出上局所有器官名稱與等級；無記錄時顯示「尚無記錄」
+- **「🏠 回到首頁」+「⚔️ 再來一場」雙按鈕**：死亡技能樹和勝利畫面底部的「重新開始」均換成兩個並排按鈕；「回到首頁」返回起始畫面，「再來一場」透過 `sessionStorage` 標記後 reload 自動跳過首頁直接開始新一局
 
 ---
 
 ## v0.13.8 - 2026-05-14
 
-### èª¿æ•´
-- **ç²¾è‹±æ€ªåµæ¸¬ç¯„åœ**ï¼š`aggroRange` 250 â†’ 1000
-- **Boss å…¨åœ–è¿½æ“Š**ï¼šä¸‰å€‹ Boss çš„ `aggroRange` çµ±ä¸€æ”¹ç‚º `99999`ï¼ˆç­‰åŒå…¨åœ°åœ–è¿½æ“Šï¼‰ï¼Œå®šç¾©æ–¼ `gameConfig.js` çš„ `BOSS_CONFIG`ï¼Œæ–°å¢ž Boss è‡ªå‹•ç¹¼æ‰¿
+### 調整
+- **精英怪偵測範圍**：`aggroRange` 250 → 1000
+- **Boss 全圖追擊**：三個 Boss 的 `aggroRange` 統一改為 `99999`（等同全地圖追擊），定義於 `gameConfig.js` 的 `BOSS_CONFIG`，新增 Boss 自動繼承
 
-### æ–°å¢ž
-- **Boss æ–¹å‘ç®­é ­**ï¼šBoss ä¸åœ¨è¦–é‡Žæ™‚ï¼ŒçŽ©å®¶å‘¨åœ 30px è™•é¡¯ç¤ºæŒ‡å‘ Boss çš„é–ƒçˆç®­é ­ï¼ˆ500ms é–“éš” 0.6â†”1.0 é€æ˜Žåº¦ï¼‰ï¼›é€²å…¥è¦–é‡Žå¾Œè‡ªå‹•æ¶ˆå¤±ã€‚å„ Boss ç®­é ­é¡è‰²æ²¿ç”¨ `glowColor`ï¼šé»‘ç†Š `#8B4513`ã€å¤§ç™½é¯Š `#1a3a5c`ã€æ²™æ¼ è çŽ‹ `#8B6914`
+### 新增
+- **Boss 方向箭頭**：Boss 不在視野時，玩家周圍 30px 處顯示指向 Boss 的閃爍箭頭（500ms 間隔 0.6↔1.0 透明度）；進入視野後自動消失。各 Boss 箭頭顏色沿用 `glowColor`：黑熊 `#8B4513`、大白鯊 `#1a3a5c`、沙漠蠍王 `#8B6914`
 
 ---
 
 ## v0.13.7 - 2026-05-14
 
-### ä¿®å¾©
-- **éš±è—å™¨å®˜é¸æ“‡å¾ŒéŠæˆ²æœªæš«åœ**ï¼š`showHiddenOrganSelection` çš„ `closeOverlay` è£œä¸Š `pendingOrganSelections` æª¢æŸ¥â€”â€”é—œé–‰éš±è—å™¨å®˜ç•«é¢å¾Œè‹¥æœ‰å¾…è™•ç†çš„å‡ç´šé¸æ“‡ï¼Œç«‹åˆ»å‘¼å« `showOrganSelection()`ï¼ˆåŒæ­¥åŸ·è¡Œï¼Œä¸æœƒæœ‰ä»»ä½•ä¸€å¹€è®“éŠæˆ²ç¹¼çºŒé‹è¡Œï¼‰
+### 修復
+- **隱藏器官選擇後遊戲未暫停**：`showHiddenOrganSelection` 的 `closeOverlay` 補上 `pendingOrganSelections` 檢查——關閉隱藏器官畫面後若有待處理的升級選擇，立刻呼叫 `showOrganSelection()`（同步執行，不會有任何一幀讓遊戲繼續運行）
 
 ---
 
 ## v0.13.6 - 2026-05-14
 
-### èª¿æ•´
-- **éŠæˆ²è¦–çª—æ”¾å¤§**ï¼šç•«å¸ƒå¾ž 800Ã—600 æ“´å¤§è‡³ 1600Ã—900ï¼›`#game-container` CSSã€`<canvas>` å±¬æ€§ã€`gameState.canvasWidth/Height`ã€`VIEW_W/VIEW_H` å¸¸æ•¸åŒæ­¥æ›´æ–°
-- **è¦–è§’è§¸ç™¼é‚Šç•Œæ›´æ–°**ï¼šæ°´å¹³é‚Šç•Œ 25% = 400pxï¼Œåž‚ç›´é‚Šç•Œ 25% = 225pxï¼ˆç”± `VIEW_W/VIEW_H` è‡ªå‹•è¨ˆç®—ï¼Œç„¡éœ€æ‰‹å‹•ä¿®æ”¹ `updateCamera`ï¼‰
-- **ç›¸æ©Ÿåˆå§‹ä½ç½®æ›´æ–°**ï¼š`camera.x` 3600 â†’ 3200ï¼ˆ4000 - 1600/2ï¼‰ï¼Œ`camera.y` 3700 â†’ 3550ï¼ˆ4000 - 900/2ï¼‰ï¼Œç¢ºä¿çŽ©å®¶å‡ºç”Ÿæ–¼åœ°åœ–æ­£ä¸­å¤®
+### 調整
+- **遊戲視窗放大**：畫布從 800×600 擴大至 1600×900；`#game-container` CSS、`<canvas>` 屬性、`gameState.canvasWidth/Height`、`VIEW_W/VIEW_H` 常數同步更新
+- **視角觸發邊界更新**：水平邊界 25% = 400px，垂直邊界 25% = 225px（由 `VIEW_W/VIEW_H` 自動計算，無需手動修改 `updateCamera`）
+- **相機初始位置更新**：`camera.x` 3600 → 3200（4000 - 1600/2），`camera.y` 3700 → 3550（4000 - 900/2），確保玩家出生於地圖正中央
 
 ---
 
 ## v0.13.5 - 2026-05-14
 
-### ä¿®å¾©
-- **Bug 1 â€” è¨­å®šä»‹é¢é–‹å•ŸæœŸé–“æ™‚é–“ç¹¼çºŒå€’æ•¸**ï¼š`hideSettings()` é—œé–‰è¨­å®šæ™‚é‡ç½® `gameState.lastTimeTick`ï¼Œé˜²æ­¢é—œé–‰å¾Œè£œç®—æš«åœæœŸé–“çš„æ™‚é–“
-- **Bug 2 â€” æŒ‰éµé‡æ–°ç¶å®šç„¡åæ‡‰**ï¼šå®Œå…¨é‡å¯«ç¶å®šç³»çµ±ï¼šhandler ä»¥å…¨åŸŸè®Šæ•¸ï¼ˆ`_settingsKeyHandler`ã€`_settingsMouseHandler`ï¼‰å„²å­˜ç¢ºä¿å¯æ¸…é™¤ï¼›æ•ç²éšŽæ®µæ””æˆª Esc ä»¥å–æ¶ˆç¶å®šè€Œéžé—œé–‰è¨­å®šï¼›æ–°å¢ž 350ms é–ƒçˆå‹•ç•«ï¼ˆ`_rebindBlink`ï¼‰ï¼›5 ç§’ç„¡æ“ä½œè‡ªå‹•å–æ¶ˆï¼ˆ`_rebindTimeout`ï¼‰ï¼›æˆåŠŸç¶å®šæ’­æ”¾ç¢ºèªéŸ³æ•ˆ
-- **Bug 3 â€” é¸æ“‡ç•«é¢é–‹å•Ÿæ™‚éŠæˆ²æœªå®Œå…¨æš«åœ**ï¼šæ–°å¢ž `isGamePaused()` çµ±ä¸€æš«åœåˆ¤æ–·ï¼Œ`gameLoop` æ”¹ç”¨æ­¤å‡½å¼ï¼›`showSkillTree()` è¨­å®š `gameState.skillTreeOpen = true`ï¼Œ`showVictory()` è¨­å®š `gameState.victory = true`ï¼Œç¢ºä¿æŠ€èƒ½æ¨¹èˆ‡å‹åˆ©ç•«é¢é–‹å•Ÿæ™‚éŠæˆ²é‚è¼¯å®Œå…¨åœæ­¢
+### 修復
+- **Bug 1 — 設定介面開啟期間時間繼續倒數**：`hideSettings()` 關閉設定時重置 `gameState.lastTimeTick`，防止關閉後補算暫停期間的時間
+- **Bug 2 — 按鍵重新綁定無反應**：完全重寫綁定系統：handler 以全域變數（`_settingsKeyHandler`、`_settingsMouseHandler`）儲存確保可清除；捕獲階段攔截 Esc 以取消綁定而非關閉設定；新增 350ms 閃爍動畫（`_rebindBlink`）；5 秒無操作自動取消（`_rebindTimeout`）；成功綁定播放確認音效
+- **Bug 3 — 選擇畫面開啟時遊戲未完全暫停**：新增 `isGamePaused()` 統一暫停判斷，`gameLoop` 改用此函式；`showSkillTree()` 設定 `gameState.skillTreeOpen = true`，`showVictory()` 設定 `gameState.victory = true`，確保技能樹與勝利畫面開啟時遊戲邏輯完全停止
 
 ---
 
 ## v0.13.4 - 2026-05-14
 
-### æ–°å¢ž
-- **éŸ³æ•ˆç³»çµ±**ï¼šæ–°å¢ž `AudioManager` ç‰©ä»¶ï¼Œçµ±ä¸€ç®¡ç†æ‰€æœ‰éŸ³æ•ˆèˆ‡èƒŒæ™¯éŸ³æ¨‚ï¼›éŸ³æ•ˆæª”æ¡ˆè·¯å¾‘å®šç¾©æ–¼ `gameConfig.js` çš„ `AUDIO_FILES` å¸¸æ•¸
-- **èƒŒæ™¯éŸ³æ¨‚**ï¼šç™½å¤©/ç„¡ç²¾è‹±æ€ªå¤œæ™šæ’­æ”¾ `Morning Theme`ï¼Œç²¾è‹±æ€ªå¤œæ™šèˆ‡ Boss å‡ºç¾å¾Œåˆ‡æ› `Boss Theme`ï¼Œåˆ‡æ›æ™‚æ·¡å‡ºæ·¡å…¥ 0.5 ç§’
-- **Boss å‡ºç¾å‰éˆ´è²**ï¼šè· Boss å‡ºç¾ç´„ 5 ç§’å‰ï¼ˆtimeRemaining â‰¤ 80ï¼‰æ’­æ”¾ `Boss_bell1.mp3`
-- **éŸ³æ•ˆè§¸ç™¼**ï¼šæ”»æ“Šï¼ˆæ™®é€š/æš´æ“Šå„è‡ªéŸ³æ•ˆï¼Œå¤šç›®æ¨™ä»»ä¸€æš´æ“Š=æš´æ“ŠéŸ³æ•ˆï¼‰ã€å—å‚·ã€æ­»äº¡ã€å‡ç´šã€åƒæžœå­ã€å‹åˆ©
-- **è¨­å®šä»‹é¢**ï¼šæŒ‰ `Esc` é–‹å•Ÿ/é—œé–‰ï¼ŒéŠæˆ²æš«åœï¼›åŠé€æ˜Žé®ç½©è¦†è“‹ç•«é¢
-  - **éŸ³é‡è¨­å®š**ï¼šç¸½éŸ³é‡ã€éŸ³æ¨‚éŸ³é‡ã€éŸ³æ•ˆéŸ³é‡å„æœ‰æ»‘æ¡¿ï¼ˆ0-100ï¼Œæ­¥é€²10ï¼‰èˆ‡é–‹é—œ Toggleï¼Œå³æ™‚ç”Ÿæ•ˆ
-  - **æŒ‰éµè¨­å®š**ï¼šç§»å‹•ä¸Š/ä¸‹/å·¦/å³ã€æ”»æ“Šéµå„å¯é»žæ“Šé‡æ–°ç¶å®šï¼ˆéµç›¤æˆ–æ»‘é¼ å·¦éµï¼‰ï¼Œç®­é ­éµ/æ»‘é¼ å·¦éµç‚ºå¸¸é§å‚™ç”¨
-  - **å…¶ä»–è¨­å®š**ï¼šé‡å•ŸéŠæˆ²æŒ‰éˆ•ï¼ˆç¢ºèªå°è©±æ¡†ï¼‰ã€æ¢å¾©åŽŸå» è¨­å®šæŒ‰éˆ•
-  - **åº•éƒ¨**ï¼šã€Œå„²å­˜ä¸¦è¿”å›žã€é—œé–‰ä»‹é¢ç¹¼çºŒéŠæˆ²
-- **è¨­å®šæŒä¹…åŒ–**ï¼šéŸ³é‡èˆ‡æŒ‰éµè¨­å®šå­˜æ–¼ `localStorage.gameSettings`ï¼Œä¸å— `SAVE_VERSION` æ¸…é™¤å½±éŸ¿
-- **æŒ‰éµç³»çµ±**ï¼šç§»å‹•æŒ‰éµæ”¹ç‚ºè®€å– `gameState.settings.keys`ï¼Œæ”¯æ´ä½¿ç”¨è€…è‡ªè¨‚ä¸»è¦æŒ‰éµ
+### 新增
+- **音效系統**：新增 `AudioManager` 物件，統一管理所有音效與背景音樂；音效檔案路徑定義於 `gameConfig.js` 的 `AUDIO_FILES` 常數
+- **背景音樂**：白天/無精英怪夜晚播放 `Morning Theme`，精英怪夜晚與 Boss 出現後切換 `Boss Theme`，切換時淡出淡入 0.5 秒
+- **Boss 出現前鈴聲**：距 Boss 出現約 5 秒前（timeRemaining ≤ 80）播放 `Boss_bell1.mp3`
+- **音效觸發**：攻擊（普通/暴擊各自音效，多目標任一暴擊=暴擊音效）、受傷、死亡、升級、吃果子、勝利
+- **設定介面**：按 `Esc` 開啟/關閉，遊戲暫停；半透明遮罩覆蓋畫面
+  - **音量設定**：總音量、音樂音量、音效音量各有滑桿（0-100，步進10）與開關 Toggle，即時生效
+  - **按鍵設定**：移動上/下/左/右、攻擊鍵各可點擊重新綁定（鍵盤或滑鼠左鍵），箭頭鍵/滑鼠左鍵為常駐備用
+  - **其他設定**：重啟遊戲按鈕（確認對話框）、恢復原廠設定按鈕
+  - **底部**：「儲存並返回」關閉介面繼續遊戲
+- **設定持久化**：音量與按鍵設定存於 `localStorage.gameSettings`，不受 `SAVE_VERSION` 清除影響
+- **按鍵系統**：移動按鍵改為讀取 `gameState.settings.keys`，支援使用者自訂主要按鍵
 
 ---
 
 ## v0.13.3 - 2026-05-12
 
-### èª¿æ•´
-- **ç²¾è‹±æ€ªç®­é ­è·é›¢**ï¼šç®­é ­å¾žçŽ©å®¶ä¸­å¿ƒè·é›¢ 20px â†’ 50pxï¼›çŽ©å®¶åŠå¾‘æ¯è¶…å‡ºåŸºç¤Žå€¼ï¼ˆ10ï¼‰1pxï¼Œç®­é ­è·é›¢é¡å¤– +1pxï¼Œç¢ºä¿æ°¸é é¡¯ç¤ºåœ¨çŽ©å®¶åœ“åœˆå¤–å´
+### 調整
+- **精英怪箭頭距離**：箭頭從玩家中心距離 20px → 50px；玩家半徑每超出基礎值（10）1px，箭頭距離額外 +1px，確保永遠顯示在玩家圓圈外側
 
-### æ–°å¢ž
-- **å­˜æª”ç‰ˆæœ¬è™Ÿç³»çµ±**ï¼š`GAME_INFO` æ–°å¢ž `SAVE_VERSION: "1.0"`ï¼›éŠæˆ²å•Ÿå‹•æ™‚æ¯”å° localStorage å­˜æª”ç‰ˆæœ¬ï¼Œç‰ˆæœ¬ä¸ä¸€è‡´æˆ–ä¸å­˜åœ¨æ™‚è‡ªå‹•æ¸…é™¤æ‰€æœ‰å­˜æª”ï¼ˆ`playerSkills`ã€`skillPoints`ã€`savedOrgans`ã€`savedHiddenOrgans`ï¼‰ï¼Œä¸¦å¯«å…¥ç•¶å‰ç‰ˆæœ¬è™Ÿ
+### 新增
+- **存檔版本號系統**：`GAME_INFO` 新增 `SAVE_VERSION: "1.0"`；遊戲啟動時比對 localStorage 存檔版本，版本不一致或不存在時自動清除所有存檔（`playerSkills`、`skillPoints`、`savedOrgans`、`savedHiddenOrgans`），並寫入當前版本號
 
 ---
 
 ## v0.13.2 - 2026-05-12
 
-### ä¿®å¾©
-- **Bug1 éš±è—å™¨å®˜ç¹¼æ‰¿æ”¹ç‚ºä¸»å‹•é¸æ“‡**ï¼šéŠæˆ²çµæŸå¾Œä¸å†è‡ªå‹•ç¹¼æ‰¿å…¨éƒ¨éš±è—å™¨å®˜ï¼›æŠ€èƒ½æ¨¹ä»‹é¢æ–°å¢žã€Œâœ¨ é¸æ“‡ä¿ç•™ä¸€å€‹éš±è—å™¨å®˜ï¼ˆå¯ä¸é¸ï¼‰ã€å€å¡Šï¼ŒçŽ©å®¶é»žæ“Šé¸å®š 1 å€‹æˆ–è·³éŽï¼›æ™®é€šå™¨å®˜èˆ‡éš±è—å™¨å®˜å„è‡ªç¨ç«‹é¸æ“‡
+### 修復
+- **Bug1 隱藏器官繼承改為主動選擇**：遊戲結束後不再自動繼承全部隱藏器官；技能樹介面新增「✨ 選擇保留一個隱藏器官（可不選）」區塊，玩家點擊選定 1 個或跳過；普通器官與隱藏器官各自獨立選擇
 
-### èª¿æ•´
-- **ç›¸æ©Ÿè§¸ç™¼è·é›¢**ï¼šé‚Šç•Œè§¸ç™¼æ¯”ä¾‹ 20% â†’ 25%ï¼Œè¦–è§’è·Ÿéš¨æ›´ç©æ¥µ
-- **ç”Ÿç‰©åç¨±é¡¯ç¤º**ï¼šæ‰€æœ‰å¸¶æœ‰ `name` å±¬æ€§çš„ç”Ÿç‰©ï¼ˆå« Bossï¼‰åœ¨è¡€æ¢æ­£ä¸Šæ–¹ä»¥ 12px ç™½è‰²æ–‡å­— + é»‘è‰²é™°å½±é¡¯ç¤ºåç¨±
-- **Boss ç™¼å…‰æ•ˆæžœ**ï¼šBoss ç¹ªè£½æ”¹ç”¨ `shadowBlur` é–ƒçˆç™¼å…‰ï¼Œå„åœ°å½¢ Boss å°ˆå±¬ç™¼å…‰é¡è‰²ï¼ˆé»‘ç†Š `#8B4513`ã€å¤§ç™½é¯Š `#1a3a5c`ã€è çŽ‹ `#8B6914`ï¼‰ï¼›`BOSS_CONFIG` æ–°å¢ž `glowColor` æ¬„ä½
-- **é«”åž‹èˆ‡æ”»æ“Šç¯„åœ 1:1 åŒæ­¥**ï¼šä¿®æ­£ `applyOrganEffects` å’Œ `applyHiddenOrganEffects` çš„ `radiusAdd` å…¬å¼ï¼Œæ”¹ç‚ºå…ˆä»¥èˆŠåŠå¾‘è¨ˆç®—æ¯”ä¾‹å¢žé‡å†åŠ åŠå¾‘ï¼Œç¢ºä¿æ”»æ“Šç¯„åœèˆ‡é«”åž‹ç­‰æ¯”ä¾‹å¢žåŠ 
-- **åŽšçš® Lv2/Lv3**ï¼š`radiusAdd` ç”± 1 æ”¹ç‚º 2ï¼ˆå°æ‡‰é«”åž‹+20%ï¼‰ï¼ŒåŒæ™‚æ›´æ–°æè¿°æ–‡å­—
-- **å¼·å¤§çš„å¿ƒè‡Ÿ**ï¼šç§»é™¤ `attackRangeAdd: 5` é¡å¤–åŠ æˆï¼Œæ”»æ“Šç¯„åœæ”¹ç”± `radiusAdd` ç­‰æ¯”ä¾‹å…¬å¼è¨ˆç®—ï¼›æ›´æ–°æè¿°
-- **å¼·å¤§çš„æ‰‹è‡‚**ï¼šç§»é™¤ `attackRangeAdd: 5` é¡å¤–åŠ æˆï¼Œæ”»æ“Šç¯„åœæ”¹ç”± `radiusAdd` ç­‰æ¯”ä¾‹å…¬å¼è¨ˆç®—ï¼›æ›´æ–°æè¿°
+### 調整
+- **相機觸發距離**：邊界觸發比例 20% → 25%，視角跟隨更積極
+- **生物名稱顯示**：所有帶有 `name` 屬性的生物（含 Boss）在血條正上方以 12px 白色文字 + 黑色陰影顯示名稱
+- **Boss 發光效果**：Boss 繪製改用 `shadowBlur` 閃爍發光，各地形 Boss 專屬發光顏色（黑熊 `#8B4513`、大白鯊 `#1a3a5c`、蠍王 `#8B6914`）；`BOSS_CONFIG` 新增 `glowColor` 欄位
+- **體型與攻擊範圍 1:1 同步**：修正 `applyOrganEffects` 和 `applyHiddenOrganEffects` 的 `radiusAdd` 公式，改為先以舊半徑計算比例增量再加半徑，確保攻擊範圍與體型等比例增加
+- **厚皮 Lv2/Lv3**：`radiusAdd` 由 1 改為 2（對應體型+20%），同時更新描述文字
+- **強大的心臟**：移除 `attackRangeAdd: 5` 額外加成，攻擊範圍改由 `radiusAdd` 等比例公式計算；更新描述
+- **強大的手臂**：移除 `attackRangeAdd: 5` 額外加成，攻擊範圍改由 `radiusAdd` 等比例公式計算；更新描述
 
 ---
 
 ## v0.13.1 - 2026-05-12
 
-### ä¿®å¾©
-- **Bug1 æŠ€èƒ½æ¨¹æ»¾è¼ª**ï¼šæŠ€èƒ½æ¨¹ overlay åŠ å…¥ `wheel` äº‹ä»¶ `stopPropagation`ï¼Œä¸¦æ”¹ç”¨ `overflow-y:scroll` ç¢ºä¿æ²å‹•ä¸å¤–æº¢è‡³é é¢
-- **Bug2 å¹¸é‹é‡é¸æ¬¡æ•¸**ï¼šé‡é¸æ¬¡æ•¸æ”¹ç‚ºå…¨å±€è¨ˆæ•¸ `gameState.player.rerollsRemaining`ï¼Œæ•´å ´éŠæˆ²å…±ç”¨ï¼ˆè€Œéžæ¯æ¬¡é¸æ“‡ç•«é¢é‡ç½®ï¼‰ï¼›æ¬¡æ•¸è€—ç›¡å¾ŒæŒ‰éˆ•è®Šç°ä¸å¯é»žæ“Š
-- **Bug3 éš±è—å™¨å®˜ç¹¼æ‰¿é¡¯ç¤º**ï¼šæŠ€èƒ½æ¨¹ä»‹é¢æ–°å¢žã€Œâœ¨ ä»¥ä¸‹éš±è—å™¨å®˜å°‡è‡ªå‹•ç¹¼æ‰¿ã€å€å¡Šï¼Œä»¥é‡‘è‰²é‚Šæ¡†åˆ—å‡ºæ‰€æœ‰æŒæœ‰çš„éš±è—å™¨å®˜ï¼Œè®“çŽ©å®¶çœ‹åˆ°ç¹¼æ‰¿æ¸…å–®
-- **Bug4 è¨˜æ†¶å™¨å®˜ä¿ç•™æ•¸é‡**ï¼šç§»é™¤ä¿ç•™æ•¸ä¸Šé™ `Math.min(3,â€¦)`ï¼ŒLv3 ç¾å¯æ­£ç¢ºä¿ç•™ 4 å€‹å™¨å®˜ï¼ˆ0ç´š=1å€‹ï¼Œ1ç´š=2å€‹ï¼Œ2ç´š=3å€‹ï¼Œ3ç´š=4å€‹ï¼‰ï¼›æ›´æ–° `gameConfig.js` èªªæ˜Žæ–‡å­—
+### 修復
+- **Bug1 技能樹滾輪**：技能樹 overlay 加入 `wheel` 事件 `stopPropagation`，並改用 `overflow-y:scroll` 確保捲動不外溢至頁面
+- **Bug2 幸運重選次數**：重選次數改為全局計數 `gameState.player.rerollsRemaining`，整場遊戲共用（而非每次選擇畫面重置）；次數耗盡後按鈕變灰不可點擊
+- **Bug3 隱藏器官繼承顯示**：技能樹介面新增「✨ 以下隱藏器官將自動繼承」區塊，以金色邊框列出所有持有的隱藏器官，讓玩家看到繼承清單
+- **Bug4 記憶器官保留數量**：移除保留數上限 `Math.min(3,…)`，Lv3 現可正確保留 4 個器官（0級=1個，1級=2個，2級=3個，3級=4個）；更新 `gameConfig.js` 說明文字
 
 ---
 
 ## v0.13.0 - 2026-05-12
 
-### ä¿®å¾©
-- **å™¨å®˜å‡ç´šæ§½ä½è¨ˆç®—**ï¼š`organSlotsUsed` æ”¹ç‚ºæ‰€æœ‰å™¨å®˜ç­‰ç´šç¸½å’Œï¼ˆLv.3 ä½”3æ§½ã€Lv.2 ä½”2æ§½ã€Lv.1 ä½”1æ§½ï¼‰ï¼Œé€²åŒ–è§¸ç™¼æ¢ä»¶æ”¹ç‚º `organSlotsUsed >= organSlots`
+### 修復
+- **器官升級槽位計算**：`organSlotsUsed` 改為所有器官等級總和（Lv.3 佔3槽、Lv.2 佔2槽、Lv.1 佔1槽），進化觸發條件改為 `organSlotsUsed >= organSlots`
 
-### æ–°å¢ž
-- **æŠ€èƒ½æ¨¹é‡ç½®æŒ‰éˆ•**ï¼šæŠ€èƒ½æ¨¹ä»‹é¢æ–°å¢žã€Œé‡ç½®æŠ€èƒ½é»žã€æŒ‰éˆ•ï¼Œå½ˆå‡ºç¢ºèªå°è©±æ¡†å¾Œæ­¸é›¶å…¨éƒ¨æŠ€èƒ½ï¼Œè¿”é‚„å·²èŠ±è²»é»žæ•¸
-- **æŠ€èƒ½ï¼šå¹¸é‹é‡é¸**ï¼ˆMax 3 ç´šï¼‰ï¼šå™¨å®˜é¸æ“‡ç•«é¢æ–°å¢žã€Œé‡æ–°éš¨æ©Ÿã€æŒ‰éˆ•ï¼Œæ¯å±€æ¯æ¬¡é¸æ“‡å¯ç”¨æ¬¡æ•¸=æŠ€èƒ½ç­‰ç´š
-- **æŠ€èƒ½ï¼šæ”¶é›†æˆç™®**ï¼ˆMax 3 ç´šï¼‰ï¼šæ¯ç´šå¢žåŠ  10px æ”¶é›†ç¯„åœï¼ˆæžœå­å’Œå±é«”ï¼‰
-- **æŠ€èƒ½ï¼šææ€–ä¹‹ç‰™**ï¼ˆMax 5 ç´šï¼‰ï¼šæ¯ç´šå¢žåŠ  2 é»žæ”»æ“ŠåŠ›ï¼›ç¬¬ 5 ç´šæ™‚é–‹å±€ç›´æŽ¥ç²å¾—ç ç‰™ Lv.1
-- **æ¯’åˆºä¸»å‹•æ”»æ“Š**ï¼šæ¯’åˆº Lv.1 æ–°å¢žåŸºç¤Žæ”»æ“ŠåŠ› +1ï¼Œå¯è§¸ç™¼çŽ©å®¶ä¸»å‹•æ”»æ“Šï¼Œæ”»æ“Šæ™‚é™„åŠ ä¸­æ¯’æ•ˆæžœï¼›æ–°æ‰‹ä¿è­·é‚è¼¯è¦–ç‚ºæ”»æ“Šå™¨å®˜ï¼ˆåŽŸæœ¬å°±æ˜¯ attack é¡žåž‹ï¼‰
-- **éš±è—å™¨å®˜ç³»çµ±**ï¼šæ“Šæ•—ç²¾è‹±æ€ªå¾Œæ¯å€‹éš±è—å™¨å®˜æœ‰ 50% æ©ŸçŽ‡æŽ‰è½ï¼Œä»¥é‡‘è‰²é‚Šæ¡†é¸æ“‡ä»‹é¢å‘ˆç¾ï¼ˆæ¨™é¡Œã€Œâœ¨ éš±è—å™¨å®˜æŽ‰è½ï¼ã€ï¼‰ï¼›å¤šå€‹åŒæ™‚æŽ‰è½åªèƒ½é¸ 1 å€‹ï¼›ä¸ä½”æ™®é€šå™¨å®˜æ§½ä½ï¼›æ­»äº¡å¾Œè‡ªå‹•ç¹¼æ‰¿è‡³ä¸‹ä¸€å±€
-- **éš±è—å™¨å®˜ - å¼·å¤§çš„å¿ƒè‡Ÿ**ï¼šç§»é€Ÿ+0.2ã€æ”»æ“Š+5ã€HPä¸Šé™+100ã€é«”åž‹+20%ã€æ”»æ“Šç¯„åœ+10%
-- **éš±è—å™¨å®˜ - å¼·å¤§çš„å¤§è…¿**ï¼šç§»é€Ÿ+1ã€é«”åž‹+20%
-- **éš±è—å™¨å®˜ - å¼·å¤§çš„æ‰‹è‡‚**ï¼šæ”¶é›†ç¯„åœ+15pxã€æ”»æ“Šç¯„åœ+10%ã€é«”åž‹+20%
-- `gameConfig.js` æ–°å¢ž `HIDDEN_ORGANS` å¸¸æ•¸å®šç¾©ä¸‰å€‹éš±è—å™¨å®˜
-- å™¨å®˜æ¸…å–®å·¦ä¸‹è§’æœ€åº•éƒ¨ä»¥é‡‘è‰²æ–‡å­—é¡¯ç¤ºå·²æŒæœ‰çš„éš±è—å™¨å®˜ï¼ˆã€Œâœ¨ å™¨å®˜åç¨±ã€ï¼‰
+### 新增
+- **技能樹重置按鈕**：技能樹介面新增「重置技能點」按鈕，彈出確認對話框後歸零全部技能，返還已花費點數
+- **技能：幸運重選**（Max 3 級）：器官選擇畫面新增「重新隨機」按鈕，每局每次選擇可用次數=技能等級
+- **技能：收集成癮**（Max 3 級）：每級增加 10px 收集範圍（果子和屍體）
+- **技能：恐怖之牙**（Max 5 級）：每級增加 2 點攻擊力；第 5 級時開局直接獲得獠牙 Lv.1
+- **毒刺主動攻擊**：毒刺 Lv.1 新增基礎攻擊力 +1，可觸發玩家主動攻擊，攻擊時附加中毒效果；新手保護邏輯視為攻擊器官（原本就是 attack 類型）
+- **隱藏器官系統**：擊敗精英怪後每個隱藏器官有 50% 機率掉落，以金色邊框選擇介面呈現（標題「✨ 隱藏器官掉落！」）；多個同時掉落只能選 1 個；不佔普通器官槽位；死亡後自動繼承至下一局
+- **隱藏器官 - 強大的心臟**：移速+0.2、攻擊+5、HP上限+100、體型+20%、攻擊範圍+10%
+- **隱藏器官 - 強大的大腿**：移速+1、體型+20%
+- **隱藏器官 - 強大的手臂**：收集範圍+15px、攻擊範圍+10%、體型+20%
+- `gameConfig.js` 新增 `HIDDEN_ORGANS` 常數定義三個隱藏器官
+- 器官清單左下角最底部以金色文字顯示已持有的隱藏器官（「✨ 器官名稱」）
 
 ---
 
 ## v0.12.0 - 2026-05-11
 
-### æ–°å¢ž
-- ç„¡ç¸«å¾ªç’°åœ°åœ–ï¼ˆç’°å½¢ä¸–ç•Œï¼‰ï¼šçŽ©å®¶èµ°åˆ°é‚Šç•Œè‡ªå‹•å¾žå°å´å‡ºç¾
-- `wrappedDistance(x1,y1,x2,y2)` â€” è¨ˆç®—ç’°ç¹žä¸–ç•Œä¸­çš„æœ€çŸ­è·é›¢
-- `wrappedDelta(ax,ay,bx,by)` â€” å›žå‚³æœ€çŸ­è·¯å¾‘æ–¹å‘å‘é‡ï¼ˆdx/dyï¼‰
-- `worldToScreen` åŠ å…¥ç’°ç¹žä¿®æ­£ï¼Œè·¨é‚Šç•Œç‰©ä»¶æ­£ç¢ºé¡¯ç¤ºæ–¼èž¢å¹•
+### 新增
+- 無縫循環地圖（環形世界）：玩家走到邊界自動從對側出現
+- `wrappedDistance(x1,y1,x2,y2)` — 計算環繞世界中的最短距離
+- `wrappedDelta(ax,ay,bx,by)` — 回傳最短路徑方向向量（dx/dy）
+- `worldToScreen` 加入環繞修正，跨邊界物件正確顯示於螢幕
 
-### èª¿æ•´
-- çŽ©å®¶ç§»å‹•æ”¹ç‚ºç’°ç¹žï¼ˆæ¨¡é‹ç®—ï¼‰ï¼Œä¸å†è¢«é‚Šç•Œé˜»æ“‹
-- `moveCreature` æ”¹ç‚ºç’°ç¹žï¼Œæ‰€æœ‰ç”Ÿç‰©ï¼ˆä¸­ç«‹/æ•µæ„/ç²¾è‹±/Bossï¼‰éƒ½èƒ½ç©¿è¶Šé‚Šç•Œ
-- ç›¸æ©Ÿè¿½è¹¤æ”¹ç‚ºç’°ç¹žæ„ŸçŸ¥ï¼Œè·¨é‚Šç•Œæ™‚å¹³æ»‘éŽæ¸¡
-- æ‰€æœ‰ AI çš„è·é›¢åµæ¸¬ï¼ˆaggroã€æ”»æ“Šç¯„åœã€é€ƒè·‘ï¼‰æ”¹ç”¨ `wrappedDistance`
-- æ‰€æœ‰ AI ç§»å‹•æ–¹å‘æ”¹ç”¨ `wrappedDelta` å–æœ€çŸ­è·¯å¾‘
-- æžœå­æ‹¾å–ã€å¯¶ç‰©ç¢°æ’žã€å¤§è…¦æ³¢ã€åƒå±é«”ç­‰çŽ©å®¶è¡Œå‹•æ”¹ç”¨ `wrappedDistance`
-- ç²¾è‹±æ€ªæ–¹å‘ç®­é ­æ”¹ç”¨ `wrappedDelta` è¨ˆç®—æ­£ç¢ºæ–¹å‘
+### 調整
+- 玩家移動改為環繞（模運算），不再被邊界阻擋
+- `moveCreature` 改為環繞，所有生物（中立/敵意/精英/Boss）都能穿越邊界
+- 相機追蹤改為環繞感知，跨邊界時平滑過渡
+- 所有 AI 的距離偵測（aggro、攻擊範圍、逃跑）改用 `wrappedDistance`
+- 所有 AI 移動方向改用 `wrappedDelta` 取最短路徑
+- 果子拾取、寶物碰撞、大腦波、吃屍體等玩家行動改用 `wrappedDistance`
+- 精英怪方向箭頭改用 `wrappedDelta` 計算正確方向
 
 ---
 
 ## v0.11.1 - 2026-05-11
 
-### æ–°å¢ž
-- ç²¾è‹±æ€ªæ–¹å‘æŒ‡ç¤ºç®­é ­ï¼šç²¾è‹±æ€ªåœ¨èž¢å¹•å¤–æ™‚ï¼Œæ–¼çŽ©å®¶åœ“å½¢å¤–åœ 20px è™•é¡¯ç¤ºæœå‘ç®­é ­
-- ç®­é ­é¡è‰²ï¼šè‰é£Ÿæ€§ç²¾è‹±é‡‘è‰²ï¼ˆ#FFD700ï¼‰ï¼Œè‚‰é£Ÿæ€§ç²¾è‹±ç´«è‰²ï¼ˆ#9B59B6ï¼‰
-- ç®­é ­æ¯ 0.5 ç§’åœ¨é€æ˜Žåº¦ 0.6â†”1.0 ä¹‹é–“é–ƒçˆï¼Œç²¾è‹±é€²å…¥èž¢å¹•ç¯„åœå¾Œè‡ªå‹•æ¶ˆå¤±
-- ç²¾è‹±æ€ªç”Ÿæˆæ™‚éš¨æ©Ÿåˆ†é… `diet`ï¼ˆherbivore / carnivoreï¼‰æ¬„ä½
+### 新增
+- 精英怪方向指示箭頭：精英怪在螢幕外時，於玩家圓形外圍 20px 處顯示朝向箭頭
+- 箭頭顏色：草食性精英金色（#FFD700），肉食性精英紫色（#9B59B6）
+- 箭頭每 0.5 秒在透明度 0.6↔1.0 之間閃爍，精英進入螢幕範圍後自動消失
+- 精英怪生成時隨機分配 `diet`（herbivore / carnivore）欄位
 
 ---
 
 ## v0.11.0 - 2026-05-11
 
-### ä¿®å¾©
-- Bug 1ï¼šå™¨å®˜æ§½ä½æ”¹ç”¨ `organs.length` è¨ˆç®—ï¼Œå‡ç´šå™¨å®˜ä¸å†ä½”ç”¨é¡å¤–æ§½ä½
-- Bug 2ï¼šæµ·æ´‹æ•µæ„ç”Ÿç‰©é¡è‰²æ”¹ç‚º `#CC4466`ï¼ˆç²‰ç´…ï¼‰ã€æ²™æ¼ æ”¹ç‚º `#CC8800`ï¼ˆæ©™é»ƒï¼‰ï¼Œé¿å…èˆ‡èƒŒæ™¯æ··è‰²
-- Bug 3ï¼šç§»é™¤å…¨åŸŸæžœå­æ•¸é‡ä¸Šé™ï¼ˆåŽŸ 80 é¡†ï¼‰ï¼Œæ¯æ£µæ¨¹åƒ…å—è‡ªèº«ä¸Šé™ï¼ˆå¤§æ¨¹5/å°æ¨¹3ï¼‰æŽ§åˆ¶ï¼›æ¯å¹€å‹•æ…‹æŽƒæé™„è¿‘æžœå­æ•¸
+### 修復
+- Bug 1：器官槽位改用 `organs.length` 計算，升級器官不再佔用額外槽位
+- Bug 2：海洋敵意生物顏色改為 `#CC4466`（粉紅）、沙漠改為 `#CC8800`（橙黃），避免與背景混色
+- Bug 3：移除全域果子數量上限（原 80 顆），每棵樹僅受自身上限（大樹5/小樹3）控制；每幀動態掃描附近果子數
 
-### æ–°å¢ž
-- é–‹ç™¼è€…æ¨¡å¼é¢æ¿é ‚éƒ¨æ–°å¢žå³æ™‚çµ±è¨ˆï¼šæžœå­ç¸½æ•¸ã€ä¸­ç«‹/æ•µæ„ç”Ÿç‰©æ•¸é‡èˆ‡ä¸Šé™ï¼Œæ¯å¹€æ›´æ–°
-- `gameConfig.js` æ–°å¢ž `GAME_TIMING` å¸¸æ•¸è¨˜éŒ„æ™‚æ®µé‚Šç•Œ
+### 新增
+- 開發者模式面板頂部新增即時統計：果子總數、中立/敵意生物數量與上限，每幀更新
+- `gameConfig.js` 新增 `GAME_TIMING` 常數記錄時段邊界
 
-### èª¿æ•´
-- éŠæˆ²æ™‚é–“å¾ž 20 åˆ†é˜ç¸®çŸ­ç‚º **10 åˆ†é˜**ï¼ˆ1200 ç§’ â†’ 600 ç§’ï¼‰
-- æ—¥å¤œå¾ªç’°ï¼šæ¯æ®µå¾ž 150 ç§’ç¸®çŸ­ç‚º **75 ç§’**ï¼ˆ1 åˆ† 15 ç§’ï¼‰ï¼Œå…± 8 æ®µ
-- ç”Ÿç‰©å¼·åŒ–å€çŽ‡è¨ˆç®—é€±æœŸå°æ‡‰æ›´æ–°ï¼ˆæ¯ 150 ç§’ä¸€ç´šï¼‰
+### 調整
+- 遊戲時間從 20 分鐘縮短為 **10 分鐘**（1200 秒 → 600 秒）
+- 日夜循環：每段從 150 秒縮短為 **75 秒**（1 分 15 秒），共 8 段
+- 生物強化倍率計算週期對應更新（每 150 秒一級）
 
 ---
 
 ## v0.10.2 - 2026-05-11
 
-### ä¿®å¾©
-- æ¨¹æœ¨æžœå­è¨ˆæ™‚å™¨æ”¹ç‚º `deltaTime` ç´¯åŠ ï¼ˆ`tree.fruitTimer += dt`ï¼‰ï¼Œç”Ÿç”¢å¾Œé‡ç½®ç‚º 0ï¼Œé¿å…è·³å¹€èª¤å·®
-- Dev æ¨¡å¼æ–¼æ¯æ£µæ¨¹ä¸Šæ–¹é¡¯ç¤ºã€Œé™„è¿‘æžœå­æ•¸/æœ€å¤§ä¸Šé™ã€ï¼ˆé‡‘è‰²æ–‡å­—ï¼‰
-- `initializeGame` ç¢ºä¿ `fruitTimer: 0` èˆ‡ `treeSize: 'large'/'small'` æ­£ç¢ºåˆå§‹åŒ–
+### 修復
+- 樹木果子計時器改為 `deltaTime` 累加（`tree.fruitTimer += dt`），生產後重置為 0，避免跳幀誤差
+- Dev 模式於每棵樹上方顯示「附近果子數/最大上限」（金色文字）
+- `initializeGame` 確保 `fruitTimer: 0` 與 `treeSize: 'large'/'small'` 正確初始化
 
-### èª¿æ•´
-- ç”Ÿç‰©åˆ†æ•£æ ¼å¾ž 4Ã—4ï¼ˆæ¯æ ¼ 2000pxï¼‰æ“´å¤§ç‚º **5Ã—5ï¼ˆæ¯æ ¼ 1600pxï¼‰**ï¼Œè¦†è“‹ 8000Ã—8000 å…¨åœ–
-- åˆå§‹ç”Ÿæˆï¼šä¸­ç«‹ç”Ÿç‰© 50 éš»ï¼ˆ25 æ ¼ Ã— 2ï¼‰ã€æ•µæ„ç”Ÿç‰© 25 éš»ï¼ˆ25 æ ¼ Ã— 1ï¼‰
-- æœ€å¤§ä¸Šé™ï¼šä¸­ç«‹ç”Ÿç‰© **50 éš»**ï¼ˆåŽŸ 30ï¼‰ã€æ•µæ„ç”Ÿç‰© **35 éš»**ï¼ˆåŽŸ 20ï¼‰
-- `spawnCreatureAtEdge()` åŠ æ¬Šæ ¼é¸æ©Ÿåˆ¶åŒæ­¥æ›´æ–°ç‚º 5Ã—5 é…ç½®
+### 調整
+- 生物分散格從 4×4（每格 2000px）擴大為 **5×5（每格 1600px）**，覆蓋 8000×8000 全圖
+- 初始生成：中立生物 50 隻（25 格 × 2）、敵意生物 25 隻（25 格 × 1）
+- 最大上限：中立生物 **50 隻**（原 30）、敵意生物 **35 隻**（原 20）
+- `spawnCreatureAtEdge()` 加權格選機制同步更新為 5×5 配置
 
 ---
 
 ## v0.10.1 - 2026-05-11
 
-### æ–°å¢ž
-- æ¨¹æœ¨åˆ†å¤§/å°å…©ç¨®ï¼šå¤§æ¨¹ï¼ˆåŠå¾‘ 25â€“35pxï¼Œä½” 40%ï¼‰å’Œå°æ¨¹ï¼ˆ12â€“20pxï¼Œä½” 60%ï¼‰
-- æ¯æ£µæ¨¹ç¨ç«‹ç®¡ç†é™„è¿‘æžœå­ç”Ÿç”¢ï¼ˆ`tree.fruitTimer` / `tree.fruitCount`ï¼‰ï¼Œå–ä»£å…¨åŸŸ `manageFruitSpawning`
-- å¤§æ¨¹ï¼šé™„è¿‘ 80px æœ€å¤š 5 é¡†ï¼Œå°æ¨¹ï¼š60px æœ€å¤š 3 é¡†ï¼›æžœå­é–“éš” 9s/19.5s/30sï¼ˆä¾é™„è¿‘ 0/1/2+é¡†æ±ºå®šï¼‰
-- `spawnFruitFromTree(tree)` å‡½å¼ï¼šåœ¨æ¨¹åŠå¾‘+20px ç¯„åœå…§ç”Ÿæˆæžœå­
-- ç”Ÿç‰©åˆå§‹ç”ŸæˆæŽ¡ç”¨ 4Ã—4 æ ¼ï¼ˆæ¯æ ¼ 2000Ã—2000pxï¼‰åˆ†æ•£æ©Ÿåˆ¶ï¼Œæ¯æ ¼è‡³å°‘ 1 éš»
-- `spawnCreatureAtEdge()` æ”¹ç‚ºåŠ æ¬Šéš¨æ©Ÿé¸æ ¼ç¹æ®–ï¼šå­˜æ´»è¶Šå°‘çš„æ ¼å­è¢«é¸ä¸­æ©ŸçŽ‡è¶Šé«˜
+### 新增
+- 樹木分大/小兩種：大樹（半徑 25–35px，佔 40%）和小樹（12–20px，佔 60%）
+- 每棵樹獨立管理附近果子生產（`tree.fruitTimer` / `tree.fruitCount`），取代全域 `manageFruitSpawning`
+- 大樹：附近 80px 最多 5 顆，小樹：60px 最多 3 顆；果子間隔 9s/19.5s/30s（依附近 0/1/2+顆決定）
+- `spawnFruitFromTree(tree)` 函式：在樹半徑+20px 範圍內生成果子
+- 生物初始生成採用 4×4 格（每格 2000×2000px）分散機制，每格至少 1 隻
+- `spawnCreatureAtEdge()` 改為加權隨機選格繁殖：存活越少的格子被選中機率越高
 
-### èª¿æ•´
-- åˆå§‹ç”Ÿæˆï¼šæ¨¹æœ¨ 150 æ£µã€æžœå­ 80 é¡†ï¼ˆå¾žå„æ£µæ¨¹åˆ†æ•£ç”Ÿæˆï¼‰ã€ä¸­ç«‹ç”Ÿç‰© 20 éš»ï¼ˆ4Ã—4 æ ¼ï¼‰ã€æ•µæ„ç”Ÿç‰© 10 éš»
-- æœ€å¤§ä¸Šé™ï¼šä¸­ç«‹ç”Ÿç‰© 30 éš»ã€æ•µæ„ç”Ÿç‰© 20 éš»
+### 調整
+- 初始生成：樹木 150 棵、果子 80 顆（從各棵樹分散生成）、中立生物 20 隻（4×4 格）、敵意生物 10 隻
+- 最大上限：中立生物 30 隻、敵意生物 20 隻
 
 ---
 
 ## v0.10.0 - 2026-05-11
 
-### æ–°å¢ž
-- å¤§åœ°åœ–ç¬¬äºŒéšŽæ®µï¼šåœ°åœ–å¾ž 2400Ã—1800 æ“´å¤§è‡³ 8000Ã—8000ï¼Œè¦–çª—ä»ç¶­æŒ 800Ã—600
-- ä¸‰ç¨®åœ°å½¢å€åŸŸï¼šæ£®æž—ï¼ˆä¸­å¤® 2000px åŠå¾‘ï¼‰ã€æµ·æ´‹ï¼ˆx>5000 æˆ– y>5000ï¼‰ã€æ²™æ¼ ï¼ˆå…¶é¤˜ï¼‰
-- `getBiome(x, y)` å‡½å¼ï¼šæ ¹æ“šä¸–ç•Œåº§æ¨™å›žå‚³åœ°å½¢ 'forest' / 'ocean' / 'desert'
-- `getBgColor()` å‡½å¼ï¼šä¾çŽ©å®¶ä½ç½®è¨ˆç®—èƒŒæ™¯é¡è‰²ï¼Œåœ°å½¢é‚Šç•Œ 200px éŽæ¸¡æ¼¸è®Š
-- åœ°å½¢è¦–è¦ºï¼šæ£®æž—ç¶ ã€æµ·æ´‹è—ã€æ²™æ¼ æ²™è‰²ï¼Œå¤œæ™šå„æœ‰å°æ‡‰æ·±è‰²ç‰ˆæœ¬
-- åœ°å½¢å°ˆå±¬æ¨¹æœ¨é¡è‰²ï¼šæ£®æž—æ·±ç¶ ã€æµ·æ´‹æ·±è—ï¼ˆçŠç‘šï¼‰ã€æ²™æ¼ æ©„æ¬–è‰²ï¼ˆä»™äººæŽŒï¼‰
-- åœ°å½¢å°ˆå±¬æžœå­é¡è‰²ï¼šæ£®æž—ç´…ã€æµ·æ´‹è—ï¼ˆè—»é¡žï¼‰ã€æ²™æ¼ æ©™
-- åœ°å½¢å°ˆå±¬ç”Ÿç‰©é¡è‰²ï¼šä¸­ç«‹/æ•µæ„ç”Ÿç‰©ä¾æ‰€åœ¨åœ°å½¢å¥—ç”¨è—/é»ƒè‰²èª¿
-- ä¸‰ç¨®åœ°å½¢ Bossï¼ˆç”±çŽ©å®¶æ‰€åœ¨åœ°å½¢æ±ºå®šï¼‰ï¼šæ£®æž—é»‘ç†Šï¼ˆç¾æœ‰ï¼‰ã€æµ·æ´‹å¤§ç™½é¯Šï¼ˆHP 600ã€é€Ÿåº¦ 1.3ã€å‚·å®³ 18ï¼‰ã€æ²™æ¼ è çŽ‹ï¼ˆHP 550ã€é€Ÿåº¦ 1.2ã€å‚·å®³ 20ï¼‰ï¼›Boss é…ç½®ç§»è‡³ `BOSS_CONFIG`ï¼ˆ`gameConfig.js`ï¼‰
-- å³ä¸Šè§’æ–°å¢žåœ°å½¢é¡¯ç¤ºï¼šã€ŒðŸŒ² æ£®æž—ã€/ã€ŒðŸŒŠ æµ·æ´‹ã€/ã€ŒðŸœï¸ æ²™æ¼ ã€
+### 新增
+- 大地圖第二階段：地圖從 2400×1800 擴大至 8000×8000，視窗仍維持 800×600
+- 三種地形區域：森林（中央 2000px 半徑）、海洋（x>5000 或 y>5000）、沙漠（其餘）
+- `getBiome(x, y)` 函式：根據世界座標回傳地形 'forest' / 'ocean' / 'desert'
+- `getBgColor()` 函式：依玩家位置計算背景顏色，地形邊界 200px 過渡漸變
+- 地形視覺：森林綠、海洋藍、沙漠沙色，夜晚各有對應深色版本
+- 地形專屬樹木顏色：森林深綠、海洋深藍（珊瑚）、沙漠橄欖色（仙人掌）
+- 地形專屬果子顏色：森林紅、海洋藍（藻類）、沙漠橙
+- 地形專屬生物顏色：中立/敵意生物依所在地形套用藍/黃色調
+- 三種地形 Boss（由玩家所在地形決定）：森林黑熊（現有）、海洋大白鯊（HP 600、速度 1.3、傷害 18）、沙漠蠍王（HP 550、速度 1.2、傷害 20）；Boss 配置移至 `BOSS_CONFIG`（`gameConfig.js`）
+- 右上角新增地形顯示：「🌲 森林」/「🌊 海洋」/「🏜️ 沙漠」
 
-### èª¿æ•´
-- çŽ©å®¶å‡ºç”Ÿé»žæ”¹ç‚ºåœ°åœ–ä¸­å¤® (4000, 4000)ï¼Œåˆå§‹æ”å½±æ©Ÿå°é½Š (3600, 3700)
-- æ¨¹æœ¨å¢žè‡³ 100 æ£µï¼›åˆå§‹æžœå­ 50 é¡†ï¼ŒMAX_FRUITS 80
-- åˆå§‹ä¸­ç«‹ç”Ÿç‰© 8 éš»ï¼ˆæœ€å¤š 20ï¼‰ï¼Œåˆå§‹æ•µæ„ç”Ÿç‰© 5 éš»ï¼ˆæœ€å¤š 15ï¼‰
-- å‹åˆ©ç•«é¢ Boss åç¨±å‹•æ…‹é¡¯ç¤ºï¼ˆä¾æ“Šæ®ºçš„ Boss ç¨®é¡žï¼‰
+### 調整
+- 玩家出生點改為地圖中央 (4000, 4000)，初始攝影機對齊 (3600, 3700)
+- 樹木增至 100 棵；初始果子 50 顆，MAX_FRUITS 80
+- 初始中立生物 8 隻（最多 20），初始敵意生物 5 隻（最多 15）
+- 勝利畫面 Boss 名稱動態顯示（依擊殺的 Boss 種類）
 
-### ä¿®å¾©
-- `updateNeutralCreatures()` æ”»æ“Šåž‹ç”Ÿç‰©è¿½æ“Š/æ¼«éŠå’Œé€ƒè·‘ç§»å‹•é‚Šç•Œä»ä½¿ç”¨èˆŠçš„ 800Ã—600 é™åˆ¶ï¼Œæ”¹ç‚º MAP_WIDTH/MAP_HEIGHT
-- `devSpawnNeutral/devSpawnHostile` ç”Ÿæˆé‚Šç•ŒåŒæ­¥ä¿®æ­£ç‚º MAP_WIDTH/MAP_HEIGHT
+### 修復
+- `updateNeutralCreatures()` 攻擊型生物追擊/漫遊和逃跑移動邊界仍使用舊的 800×600 限制，改為 MAP_WIDTH/MAP_HEIGHT
+- `devSpawnNeutral/devSpawnHostile` 生成邊界同步修正為 MAP_WIDTH/MAP_HEIGHT
 
 ---
 
 ## v0.9.4 - 2026-05-11
 
-### æ–°å¢ž
-- å¤§åœ°åœ–ç¬¬ä¸€éšŽæ®µï¼šåœ°åœ–å¯¦éš›å°ºå¯¸å¾ž 800Ã—600 æ“´å¤§è‡³ 2400Ã—1800ï¼Œè¦–çª—é¡¯ç¤ºç¶­æŒ 800Ã—600
-- æ–°å¢ž `MAP_WIDTH / MAP_HEIGHT / VIEW_W / VIEW_H` å¸¸æ•¸ï¼Œ`gameState.camera { x, y }` è¦–è§’åç§»
-- `worldToScreen(wx, wy)` å‡½å¼ï¼šç¹ªè£½æ™‚çµ±ä¸€æ›ç®—ä¸–ç•Œâ†’èž¢å¹•åº§æ¨™
-- `updateCamera()` å¹³æ»‘è¦–è§’è·Ÿéš¨ï¼šçŽ©å®¶é€²å…¥è¦–çª—é‚Šç•Œ 20%ï¼ˆ160px / 120pxï¼‰æ‰é–‹å§‹ç§»å‹•ï¼ŒLerp ä¿‚æ•¸ 0.15ï¼Œè¦–è§’å¤¾åœ¨åœ°åœ–é‚Šç•Œå…§
-- çŽ©å®¶å‡ºç”Ÿé»žæ”¹ç‚ºåœ°åœ–ä¸­å¤® (1200, 900)ï¼Œåˆå§‹æ”å½±æ©Ÿå°é½ŠçŽ©å®¶ (800, 600)
+### 新增
+- 大地圖第一階段：地圖實際尺寸從 800×600 擴大至 2400×1800，視窗顯示維持 800×600
+- 新增 `MAP_WIDTH / MAP_HEIGHT / VIEW_W / VIEW_H` 常數，`gameState.camera { x, y }` 視角偏移
+- `worldToScreen(wx, wy)` 函式：繪製時統一換算世界→螢幕座標
+- `updateCamera()` 平滑視角跟隨：玩家進入視窗邊界 20%（160px / 120px）才開始移動，Lerp 係數 0.15，視角夾在地圖邊界內
+- 玩家出生點改為地圖中央 (1200, 900)，初始攝影機對齊玩家 (800, 600)
 
-### èª¿æ•´
-- æ‰€æœ‰ draw å‡½å¼ï¼ˆæ¨¹æœ¨ã€æžœå­ã€å±é«”ã€ç”Ÿç‰©ã€å¯¶ç‰©ã€Bossã€ç²¾è‹±æ€ªã€çŽ©å®¶ï¼‰å¥—ç”¨ worldToScreen + cullingï¼Œèž¢å¹•å¤– Â±50px ä¸ç¹ªè£½
-- `showFloatingText` / `showXPPopup` æ”¹ç‚ºå‚³å…¥ä¸–ç•Œåº§æ¨™ï¼Œè½‰æ›å¾Œè²¼åˆ° DOM
-- æ‰€æœ‰ç”Ÿç‰©ç”Ÿæˆã€wander target æ”¹ç”¨ MAP_WIDTH/HEIGHTï¼›æ¨¹æœ¨å¢žè‡³ 60 æ£µï¼ŒMAX_FRUITS å¢žè‡³ 60
-- `gameLoop` åŠ å…¥ `updateCamera()` å‘¼å«ï¼ˆåœ¨ `updatePlayerMovement` ä¹‹å¾Œï¼‰
-- UIï¼ˆHP/XP åˆ—ã€æ™‚é–“æ¬„ã€å™¨å®˜æ¸…å–®ã€è¨Šæ¯æç¤ºï¼‰å›ºå®šèž¢å¹•åº§æ¨™ï¼Œä¸è·Ÿéš¨ camera
+### 調整
+- 所有 draw 函式（樹木、果子、屍體、生物、寶物、Boss、精英怪、玩家）套用 worldToScreen + culling，螢幕外 ±50px 不繪製
+- `showFloatingText` / `showXPPopup` 改為傳入世界座標，轉換後貼到 DOM
+- 所有生物生成、wander target 改用 MAP_WIDTH/HEIGHT；樹木增至 60 棵，MAX_FRUITS 增至 60
+- `gameLoop` 加入 `updateCamera()` 呼叫（在 `updatePlayerMovement` 之後）
+- UI（HP/XP 列、時間欄、器官清單、訊息提示）固定螢幕座標，不跟隨 camera
 
 ---
 
 ## v0.9.3 - 2026-05-10
 
-### èª¿æ•´
-- çŽ©å®¶è§’è‰²è¼ªå»“ï¼šç§»é™¤ç™½å¤©è¼ªå»“ï¼Œå¤œæ™šç¶­æŒèž¢å…‰ç¶ ï¼ˆ#00ff88ï¼ŒåŠå¾‘+3pxï¼Œé€æ˜Žåº¦ 0.9ï¼‰
+### 調整
+- 玩家角色輪廓：移除白天輪廓，夜晚維持螢光綠（#00ff88，半徑+3px，透明度 0.9）
 
 ---
 
 ## v0.9.2 - 2026-05-10
 
-### æ–°å¢ž
-- çŽ©å®¶è§’è‰²è¼ªå»“ï¼šç™½å¤©é¡¯ç¤ºç™½è‰²è¼ªå»“ï¼ˆåŠå¾‘+2pxï¼Œé€æ˜Žåº¦ 0.8ï¼‰ï¼Œå¤œæ™šé¡¯ç¤ºèž¢å…‰ç¶ è¼ªå»“ï¼ˆ#00ff88ï¼ŒåŠå¾‘+3pxï¼Œé€æ˜Žåº¦ 0.9ï¼‰ï¼Œæå‡å¤œé–“å¯è¦‹åº¦
+### 新增
+- 玩家角色輪廓：白天顯示白色輪廓（半徑+2px，透明度 0.8），夜晚顯示螢光綠輪廓（#00ff88，半徑+3px，透明度 0.9），提升夜間可見度
 
 ---
 
 ## v0.9.1 - 2026-05-10
 
-### ä¿®å¾©
-- ç²¾è‹±æ€ªæ“Šæ®ºå¾Œæœªè·³åˆ°ç™½å¤©ï¼š`handleEliteKill()` ä¾ç•¶å‰å¤œæ™šç›¸ä½è¨ˆç®—ä¸‹ä¸€å€‹ç™½å¤©æ™‚é–“é»žï¼ˆ`1200 - (phaseIndex + 1) * 150`ï¼‰ï¼Œè¨­å®š `timeRemaining` å¾Œç«‹å³å‘¼å« `updateDayNightCycle()`ï¼Œå†è¦†å¯«è¨Šæ¯ç‚ºã€Œâ˜€ï¸ ç²¾è‹±å·²æ»…ï¼é»Žæ˜Žæå‰åˆ°ä¾†ï¼ã€
+### 修復
+- 精英怪擊殺後未跳到白天：`handleEliteKill()` 依當前夜晚相位計算下一個白天時間點（`1200 - (phaseIndex + 1) * 150`），設定 `timeRemaining` 後立即呼叫 `updateDayNightCycle()`，再覆寫訊息為「☀️ 精英已滅！黎明提前到來！」
 
-### æ–°å¢ž
-- å·¦ä¸‹è§’å™¨å®˜æ¸…å–®é ‚éƒ¨æ–°å¢žæ§½ä½è¡Œã€Œå™¨å®˜ï¼šX / Yã€ï¼Œæ§½ä½å·²æ»¿æ™‚ä»¥é‡‘è‰²é¡¯ç¤ºã€Œâœ¨å¯é€²åŒ–ã€ï¼›å™¨å®˜æ¡†é«˜åº¦å›ºå®šåŒ…å«æ­¤è¡Œï¼ˆå³ä½¿å™¨å®˜æ¸…å–®ç‚ºç©ºä¹Ÿé¡¯ç¤ºï¼‰
+### 新增
+- 左下角器官清單頂部新增槽位行「器官：X / Y」，槽位已滿時以金色顯示「✨可進化」；器官框高度固定包含此行（即使器官清單為空也顯示）
 
 ---
 
 ## v0.9.0 - 2026-05-10
 
-### æ–°å¢ž
-- ç²¾è‹±æ€ªç³»çµ±ï¼šæ¯æ™šï¼ˆç¬¬ 1ï½ž3 å¤œï¼‰é»‘å¤œé–‹å§‹æ™‚å¾žåœ°åœ–é‚Šç·£ç”Ÿæˆä¸€éš»ç²¾è‹±æ€ªï¼Œå…±ä¸‰å€‹ç­‰ç´šï¼ˆâ˜…/â˜…â˜…/â˜…â˜…â˜…ï¼‰ï¼Œæ•¸å€¼éš¨å¤œæ™šéžå¢žï¼ˆHPÃ—5/7.5/10ã€é€Ÿåº¦ 1.3/1.5/1.7ã€å‚·å®³ 12/15/18ï¼‰
-- æ“Šæ®ºç²¾è‹±æ€ªï¼šçµ¦äºˆ 150/225/300 XP å’Œ 1 å€‹æŠ€èƒ½é»žï¼Œèž¢å¹•è¨Šæ¯æç¤ºï¼›æ­»äº¡ç”± `handleEliteKill()` çµ±ä¸€è™•ç†ï¼ˆæ”¯æ´ç›´æŽ¥æ”»æ“Šã€åˆºç”²åå‚·ã€æµè¡€ã€ä¸­æ¯’å››æ¢è·¯å¾‘ï¼‰
-- ç²¾è‹±æ€ªå­˜æ´»è‡³é»Žæ˜Žæ™‚è‡ªå‹•æ’¤é€€ï¼Œè¨Šæ¯é¡¯ç¤ºã€Œç²¾è‹±æ€ªæ’¤é€€äº†ã€
-- è¦–è¦ºï¼šé‡‘è‰²å…‰æšˆï¼ˆshadowBlurï¼‰ã€ç´«è‰² HP æ¢ã€é‡‘è‰²æ˜Ÿè™Ÿæ¨™ç±¤
-- `ELITE_CONFIG` åŠ å…¥ `gameConfig.js`ï¼Œçµ±ä¸€ç®¡ç†ä¸‰å€‹ç­‰ç´šçš„æ•¸å€¼èˆ‡æ¨™ç±¤
+### 新增
+- 精英怪系統：每晚（第 1～3 夜）黑夜開始時從地圖邊緣生成一隻精英怪，共三個等級（★/★★/★★★），數值隨夜晚遞增（HP×5/7.5/10、速度 1.3/1.5/1.7、傷害 12/15/18）
+- 擊殺精英怪：給予 150/225/300 XP 和 1 個技能點，螢幕訊息提示；死亡由 `handleEliteKill()` 統一處理（支援直接攻擊、刺甲反傷、流血、中毒四條路徑）
+- 精英怪存活至黎明時自動撤退，訊息顯示「精英怪撤退了」
+- 視覺：金色光暈（shadowBlur）、紫色 HP 條、金色星號標籤
+- `ELITE_CONFIG` 加入 `gameConfig.js`，統一管理三個等級的數值與標籤
 
 ---
 
 ## v0.8.6 - 2026-05-10
 
-### èª¿æ•´
-- å·¦ä¸‹è§’é€²åŒ–ç‹€æ…‹æ”¹ç‚ºé¡¯ç¤ºæ‰€æœ‰å·²è§£éŽ–è·¯ç·šï¼ˆæ¯æ¢å„ä½”ä¸€è¡Œï¼‰ï¼Œæ ¼å¼ç‚ºã€ŒðŸŒ¿ è‰é£Ÿæ€§ Lv.Xã€ï¼Œæœªè§£éŽ–çš„è·¯ç·šï¼ˆç­‰ç´š 0ï¼‰ä¸é¡¯ç¤ºï¼›é€²åŒ–æ¡†é«˜åº¦å‹•æ…‹éš¨è§£éŽ–æ•¸é‡èª¿æ•´ï¼Œèˆ‡å™¨å®˜æ¡†å’Œç‰ˆæœ¬è³‡è¨Šä¸é‡ç–Š
+### 調整
+- 左下角進化狀態改為顯示所有已解鎖路線（每條各佔一行），格式為「🌿 草食性 Lv.X」，未解鎖的路線（等級 0）不顯示；進化框高度動態隨解鎖數量調整，與器官框和版本資訊不重疊
 
 ---
 
 ## v0.8.5 - 2026-05-10
 
-### ä¿®å¾©
-- HP é¡¯ç¤ºå°æ•¸é»žï¼š`updateUI()` æ”¹ç”¨ `Math.round()` å–æ•´
-- é€£çºŒå‡å¤šç´šå°Žè‡´å™¨å®˜é‡è¤‡ï¼šæ–°å¢ž `pendingOrganSelections` è¨ˆæ•¸å™¨ï¼Œé¸æ“‡ç•«é¢é–‹å•Ÿä¸­æ™‚æŽ’éšŠç­‰å¾…ï¼Œé—œé–‰å¾Œä¾åºé¡¯ç¤ºä¸‹ä¸€å€‹
-- æ™‚é–“è€—ç›¡ç„¡æ³•é€²å…¥æŠ€èƒ½æ¨¹ï¼š`updateTimer()` æ”¹å‘¼å« `showSkillTree('timeout')`ï¼Œèµ°èˆ‡æ­»äº¡ç›¸åŒçš„å™¨å®˜ä¿ç•™â†’æŠ€èƒ½æ¨¹æµç¨‹ï¼›æŠ€èƒ½æ¨¹æ¨™é¡Œå‹•æ…‹é¡¯ç¤ºã€Œâ° æ™‚é–“è€—ç›¡ã€æˆ–ã€ŒðŸ’€ ä½ æ­»äº†ã€
-- åˆºç”²åå½ˆå‚·å®³è‡´æ­»ä¸çµ¦ç¶“é©—ï¼š`applyDamageToPlayer()` çš„åå½ˆå‚·å®³å¾ŒåŠ å…¥æ­»äº¡åˆ¤å®šï¼Œå‘¼å« `handleKill()` çµ¦äºˆ XPï¼›Boss è¢«åå‚·æ“Šæ®ºåŒæ¨£è§¸ç™¼å‹åˆ©ç•«é¢
+### 修復
+- HP 顯示小數點：`updateUI()` 改用 `Math.round()` 取整
+- 連續升多級導致器官重複：新增 `pendingOrganSelections` 計數器，選擇畫面開啟中時排隊等待，關閉後依序顯示下一個
+- 時間耗盡無法進入技能樹：`updateTimer()` 改呼叫 `showSkillTree('timeout')`，走與死亡相同的器官保留→技能樹流程；技能樹標題動態顯示「⏰ 時間耗盡」或「💀 你死了」
+- 刺甲反彈傷害致死不給經驗：`applyDamageToPlayer()` 的反彈傷害後加入死亡判定，呼叫 `handleKill()` 給予 XP；Boss 被反傷擊殺同樣觸發勝利畫面
 
 ---
 
 ## v0.8.4 - 2026-05-10
 
-### ä¿®å¾©
-- å·¦ä¸‹è§’ UI é‡ç–Šï¼šå™¨å®˜æ¡†åº•éƒ¨é‚Šç•Œæ”¹ç‚ºå‹•æ…‹è¨ˆç®—ï¼Œå›ºå®šç‚ºç‰ˆæœ¬è³‡è¨Šå€åŸŸï¼ˆ46pxï¼‰ä¸Šæ–¹ï¼Œç”±ä¸Šåˆ°ä¸‹é †åºç‚ºé€²åŒ–ç‹€æ…‹â†’å™¨å®˜æ¸…å–®â†’ç©ºè¡Œâ†’Â© Goblinnestâ†’v0.8.4
+### 修復
+- 左下角 UI 重疊：器官框底部邊界改為動態計算，固定為版本資訊區域（46px）上方，由上到下順序為進化狀態→器官清單→空行→© Goblinnest→v0.8.4
 
 ---
 
 ## v0.8.3 - 2026-05-10
 
-### æ–°å¢ž
-- Boss ç³»çµ±ï¼šå‰©é¤˜ 150 ç§’æ™‚åœ°åœ–é‚Šç·£ç”Ÿæˆé»‘ç†Šï¼ˆHP 500ï¼Œå‚·å®³ 15ï¼‰ï¼Œæ“Šæ•—å¾Œé¡¯ç¤ºå‹åˆ©ç•«é¢ä¸¦çµ¦äºˆ 500 XP å’Œ 1 å€‹æŠ€èƒ½é»ž
-- é–‹å§‹ç•«é¢ï¼šéŠæˆ²è¼‰å…¥å¾Œå…ˆé¡¯ç¤ºæ¨™é¡Œç•«é¢ï¼ŒæŒ‰ä»»æ„éµæˆ–é»žæ“ŠæŒ‰éˆ•é€²å…¥éŠæˆ²
-- ä½œè€…èˆ‡ç‰ˆæœ¬è³‡è¨Šï¼šç•«å¸ƒå·¦ä¸‹è§’ã€éŠæˆ²çµæŸç•«é¢ã€å‹åˆ©ç•«é¢å‡é¡¯ç¤º Â© Goblinnest å’Œç‰ˆæœ¬è™Ÿ
-- `GAME_INFO` å¸¸æ•¸åŠ å…¥ `gameConfig.js`ï¼Œçµ±ä¸€ç®¡ç†æ¨™é¡Œã€å‰¯æ¨™é¡Œã€ä½œè€…ã€ç‰ˆæœ¬è™Ÿ
+### 新增
+- Boss 系統：剩餘 150 秒時地圖邊緣生成黑熊（HP 500，傷害 15），擊敗後顯示勝利畫面並給予 500 XP 和 1 個技能點
+- 開始畫面：遊戲載入後先顯示標題畫面，按任意鍵或點擊按鈕進入遊戲
+- 作者與版本資訊：畫布左下角、遊戲結束畫面、勝利畫面均顯示 © Goblinnest 和版本號
+- `GAME_INFO` 常數加入 `gameConfig.js`，統一管理標題、副標題、作者、版本號
 
-### ä¿®å¾©
-- å™¨å®˜é¸æ“‡æœŸé–“æ™‚é–“ç¹¼çºŒæµé€ï¼ˆé—œé–‰é¸æ“‡ç•«é¢å¾Œè£œç®—æš«åœæ™‚é•·ï¼‰
-- éŠæˆ²çµæŸé‡æ–°é–‹å§‹æŒ‰éˆ•ç„¡æ³•é»žæ“Šï¼ˆ`#ui-overlay` æœ‰ `pointer-events:none` å°Žè‡´ï¼‰
-- å¤§è…¦å™¨å®˜æ‹¾å–ç¯„åœæœªå¥—ç”¨è‡³å±é«”é€²é£Ÿè·é›¢åˆ¤æ–·
-- æ¯’å‚·èˆ‡æµè¡€è‡´æ­»çš„ç”Ÿç‰©ä¸çµ¦äºˆæ“Šæ®º XP åŠ `showXPPopup` è¦–è¦ºæç¤º
-- è‚‰é£Ÿé«˜ç­‰ç´šåŠ å¿«é€²é£Ÿä½†ç¸½ XP èˆ‡å›žè¡€åŒæ­¥æ¸›å°‘ï¼ˆæ”¹ç‚ºå›ºå®šç¸½é‡ï¼Œåƒ…é€Ÿåº¦éš¨ç­‰ç´šæå‡ï¼‰
+### 修復
+- 器官選擇期間時間繼續流逝（關閉選擇畫面後補算暫停時長）
+- 遊戲結束重新開始按鈕無法點擊（`#ui-overlay` 有 `pointer-events:none` 導致）
+- 大腦器官拾取範圍未套用至屍體進食距離判斷
+- 毒傷與流血致死的生物不給予擊殺 XP 及 `showXPPopup` 視覺提示
+- 肉食高等級加快進食但總 XP 與回血同步減少（改為固定總量，僅速度隨等級提升）
 
-### èª¿æ•´
-- æå–å…±ç”¨ `handleKill()` å‡½å¼ï¼Œçµ±ä¸€ç›´æŽ¥æ”»æ“Šã€æµè¡€ã€ä¸­æ¯’ä¸‰æ¢æ­»äº¡è·¯å¾‘çš„æ“Šæ®ºé‚è¼¯
+### 調整
+- 提取共用 `handleKill()` 函式，統一直接攻擊、流血、中毒三條死亡路徑的擊殺邏輯
 
 ---
 
 ## v0.8.2 - 2026-05-10
 
-### æ–°å¢ž
-- åˆ†æ®µåƒå±é«”ç³»çµ±ï¼šæ¯ 0.5 ç§’ä¸€å€‹ tickï¼Œé€²åº¦æ¢å¾žæ©™è‰²æ¼¸è®Šæ·±ç´…ï¼Œé›¢é–‹ç¯„åœé€²åº¦ä¿ç•™
-- æµ®å‹•æ–‡å­—æç¤ºï¼šå±é«”é€²é£Ÿé¡¯ç¤º +XPï¼ˆç¶ ï¼‰å’Œ +HPï¼ˆç²‰ï¼‰ï¼›æµè¡€é¡¯ç¤ºã€Œè¡€ -Xã€ï¼ˆæ·±ç´… 11pxï¼‰ï¼›ä¸­æ¯’é¡¯ç¤ºã€Œæ¯’ -Xã€ï¼ˆç´« 11pxï¼‰
-- æ•µæ„ç”Ÿç‰©èˆ‡æžœå­ç”Ÿæˆé€Ÿåº¦åŠ é€Ÿé‚è¼¯ï¼šå ´ä¸Šæ•¸é‡ç‚º 0 æ™‚é–“éš”ç¸®çŸ­ 70%
-- ä¸­ç«‹ç”Ÿç‰©åƒæžœå­å¾Œæˆé•·ï¼šæ¯é¡† hp/maxHp +3ã€é€Ÿåº¦ +0.05ï¼Œåƒæ»¿ 5 é¡†å¾Œè½‰ç‚ºæ”»æ“Šåž‹ï¼ˆæ©™ç´…è‰²ï¼‰
-- æ–°æ‰‹ä¿è­·ï¼šç­‰ç´š 1â€“3 ä¸”ç„¡æ”»æ“Šå™¨å®˜æ™‚ï¼Œå¼·åˆ¶è‡³å°‘ä¸€å€‹å™¨å®˜é¸é …ç‚ºæ”»æ“Šé¡ž
+### 新增
+- 分段吃屍體系統：每 0.5 秒一個 tick，進度條從橙色漸變深紅，離開範圍進度保留
+- 浮動文字提示：屍體進食顯示 +XP（綠）和 +HP（粉）；流血顯示「血 -X」（深紅 11px）；中毒顯示「毒 -X」（紫 11px）
+- 敵意生物與果子生成速度加速邏輯：場上數量為 0 時間隔縮短 70%
+- 中立生物吃果子後成長：每顆 hp/maxHp +3、速度 +0.05，吃滿 5 顆後轉為攻擊型（橙紅色）
+- 新手保護：等級 1–3 且無攻擊器官時，強制至少一個器官選項為攻擊類
 
-### ä¿®å¾©
-- ä¸­ç«‹ç”Ÿç‰©ç¼ºå°‘ `diet` å±¬æ€§å°Žè‡´å¾žæœªè§¸ç™¼è‰é£Ÿè¡Œç‚º
-- æ•µæ„ç”Ÿç‰©æ“Šæ®ºä¸­ç«‹ç”Ÿç‰©å¾Œæœªæ­£ç¢ºå›žåˆ°å·¡é‚ç‹€æ…‹
+### 修復
+- 中立生物缺少 `diet` 屬性導致從未觸發草食行為
+- 敵意生物擊殺中立生物後未正確回到巡邏狀態
 
 ---
 
 ## v0.8.1 - 2026-05-10
 
-### æ–°å¢ž
-- å™¨å®˜å‡ç´šç³»çµ±ï¼šæ¯å€‹å™¨å®˜æœ€å¤šå‡è‡³ 3 ç´šï¼Œå‡ç´šä½”ç”¨å™¨å®˜æ§½ä½ï¼Œæ•ˆæžœç‚ºå¢žé‡ç–ŠåŠ 
-- çµ„åˆæ•ˆæžœæç¤ºï¼šé¸æ“‡å™¨å®˜æ™‚è‹¥å·²æŒæœ‰çµ„åˆæ‰€éœ€å¤¥ä¼´ï¼Œé¡¯ç¤ºçµ„åˆæ•ˆæžœæç¤ºæ–‡å­—
-- `gameConfig.js` å¤–éƒ¨é…ç½®æª”ï¼šå°‡æ‰€æœ‰ç”Ÿç‰©æ•¸å€¼ã€å™¨å®˜è³‡æ–™ã€çµ„åˆæ•ˆæžœã€æŠ€èƒ½ã€é€²åŒ–è·¯ç·šæå–è‡³ç¨ç«‹æª”æ¡ˆ
-- äº”ç¨®å™¨å®˜çµ„åˆæ•ˆæžœï¼šèŸ¹é‰—+æ¯’åˆºã€é¾œæ®¼+åˆºç”²ã€å¤§è…¦+çœŸè¦–ä¹‹çœ¼ã€åŽšçš®+è¶…è‡ªç„¶å›žå¾©ã€çœŸè¦–ä¹‹çœ¼+ç ç‰™
+### 新增
+- 器官升級系統：每個器官最多升至 3 級，升級佔用器官槽位，效果為增量疊加
+- 組合效果提示：選擇器官時若已持有組合所需夥伴，顯示組合效果提示文字
+- `gameConfig.js` 外部配置檔：將所有生物數值、器官資料、組合效果、技能、進化路線提取至獨立檔案
+- 五種器官組合效果：蟹鉗+毒刺、龜殼+刺甲、大腦+真視之眼、厚皮+超自然回復、真視之眼+獠牙
 
-### ä¿®å¾©
-- XP é–€æª»èˆ‡ç­‰ç´šå‡ç´šä½¿ç”¨å…©å¥—ç¨ç«‹è¨ˆæ•¸å™¨ï¼Œåˆä½µç‚ºä»¥ç­‰ç´šå‡ç´šè§¸ç™¼å™¨å®˜é¸æ“‡
-- æ•µæ„ç”Ÿç‰©é€Ÿåº¦èˆ‡å‚·å®³æœªå¥—ç”¨ä¸Šé™ï¼ˆé€Ÿåº¦ä¸Šé™ 2.5ã€å‚·å®³ä¸Šé™ 20ï¼‰
-- é€²åŒ–é¸é …ä¸å‡ºç¾ï¼š`organSlots += 3` ä½ç½®éŒ¯èª¤ï¼Œç§»è‡³ `applyEvolutionLevelEffect()`
+### 修復
+- XP 門檻與等級升級使用兩套獨立計數器，合併為以等級升級觸發器官選擇
+- 敵意生物速度與傷害未套用上限（速度上限 2.5、傷害上限 20）
+- 進化選項不出現：`organSlots += 3` 位置錯誤，移至 `applyEvolutionLevelEffect()`
 
 ---
 
 ## v0.8.0 - 2026-05-10
 
-### æ–°å¢ž
-- æŠ€èƒ½æ¨¹ç³»çµ±ï¼šæ­»äº¡å¾Œé¡¯ç¤ºæŠ€èƒ½æ¨¹ï¼Œå¯å‡ç´šå…­ç¨®æ°¸ä¹…æŠ€èƒ½ï¼ˆå¼·å£¯é«”é­„ã€æ•æ·èº«æ‰‹ã€æŽ¡é›†å°ˆå®¶ã€çµäººæœ¬èƒ½ã€é ‘å¼·æ„å¿—ã€è¨˜æ†¶å™¨å®˜ï¼‰
-- æŠ€èƒ½é»žæ•¸ç³»çµ±ï¼šæ¯æ¬¡æ­»äº¡ç²å¾— 1 é»žï¼ŒæŠ€èƒ½é»žæ•¸è·¨å±€ä¿å­˜è‡³ localStorage
-- æ­»äº¡ä¿ç•™å™¨å®˜ï¼šæ­»äº¡å¾Œå¯é¸æ“‡æœ€å¤š 1 å€‹å™¨å®˜å¸¶å…¥ä¸‹ä¸€å±€ï¼ˆè¨˜æ†¶å™¨å®˜æŠ€èƒ½å¯å¢žåŠ ä¸Šé™è‡³ 3 å€‹ï¼‰
-- é€²åŒ–ç³»çµ±ï¼šè‰é£Ÿæ€§ / è‚‰é£Ÿæ€§ / é›œé£Ÿæ€§ä¸‰æ¢è·¯ç·šï¼Œå„ 3 ç´šï¼Œå™¨å®˜æ§½ä½æ»¿æ™‚è§¸ç™¼é€²åŒ–é¸æ“‡
-- é ‘å¼·æ„å¿—ï¼šæ¯å±€è§¸ç™¼ä¸€æ¬¡ï¼Œæ­»äº¡æ™‚ä¿ç•™ 10%Ã—ç­‰ç´šçš„ HP
+### 新增
+- 技能樹系統：死亡後顯示技能樹，可升級六種永久技能（強壯體魄、敏捷身手、採集專家、獵人本能、頑強意志、記憶器官）
+- 技能點數系統：每次死亡獲得 1 點，技能點數跨局保存至 localStorage
+- 死亡保留器官：死亡後可選擇最多 1 個器官帶入下一局（記憶器官技能可增加上限至 3 個）
+- 進化系統：草食性 / 肉食性 / 雜食性三條路線，各 3 級，器官槽位滿時觸發進化選擇
+- 頑強意志：每局觸發一次，死亡時保留 10%×等級的 HP
 
 ---
 
 ## v0.7.0 - 2026-05-10
 
-### æ–°å¢ž
-- æ—¥å¤œå¾ªç’°ï¼šæ¯ 150 ç§’äº¤æ›¿ç™½å¤©/å¤œæ™šï¼Œå¤œæ™šæ•µæ„ç”Ÿç‰©é€Ÿåº¦èˆ‡å‚·å®³æå‡
-- å€’æ•¸è¨ˆæ™‚ï¼š20 åˆ†é˜éŠæˆ²æ™‚é™ï¼Œæ™‚é–“è€—ç›¡é¡¯ç¤ºéŠæˆ²çµæŸç•«é¢
-- ç”Ÿç‰©ç¹æ®–ç³»çµ±ï¼šä¸­ç«‹å’Œæ•µæ„ç”Ÿç‰©ä¾æ™‚é–“é–“éš”åœ¨åœ°åœ–é‚Šç·£è£œå……ç”Ÿæˆ
-- ç”Ÿç‰©å¼·åº¦éš¨æ™‚é–“æå‡ï¼ˆ`creatureStrengthMultiplier`ï¼‰
+### 新增
+- 日夜循環：每 150 秒交替白天/夜晚，夜晚敵意生物速度與傷害提升
+- 倒數計時：20 分鐘遊戲時限，時間耗盡顯示遊戲結束畫面
+- 生物繁殖系統：中立和敵意生物依時間間隔在地圖邊緣補充生成
+- 生物強度隨時間提升（`creatureStrengthMultiplier`）
 
 ---
 
 ## v0.6.0 - 2026-05-10
 
-### æ–°å¢ž
-- çŽ©å®¶æ”»æ“Šç³»çµ±ï¼šé»žæ“Šæ”»æ“Šï¼Œç¯„åœå…§æ‰€æœ‰ç”Ÿç‰©å—åˆ°å‚·å®³ï¼›æ”¯æ´æ”»é€Ÿã€æš´æ“Šã€æµè¡€ã€ä¸­æ¯’ã€æšˆçœ©æ•ˆæžœ
-- åˆºç”²åå‚·æ©Ÿåˆ¶
-- å¿µåŠ›æ³¢ï¼ˆå¤§è…¦å™¨å®˜ï¼‰ç¯„åœå‚·å®³
-- å¯¶ç‰©ç³»çµ±ï¼šæ“Šæ®ºç”Ÿç‰©æœ‰æ©ŸçŽ‡æŽ‰è½å¯¶ç‰©ï¼ŒçŽ©å®¶æŽ¥è§¸å¾Œç²å¾— XP
-- é–‹ç™¼è€…æ¨¡å¼ï¼šéš±è—é¢æ¿ï¼Œå¯å¿«é€Ÿç”Ÿæˆæžœå­ã€ç”Ÿç‰©ï¼Œå¿«é€²æ™‚é–“ã€è£œå…… HP/XP
+### 新增
+- 玩家攻擊系統：點擊攻擊，範圍內所有生物受到傷害；支援攻速、暴擊、流血、中毒、暈眩效果
+- 刺甲反傷機制
+- 念力波（大腦器官）範圍傷害
+- 寶物系統：擊殺生物有機率掉落寶物，玩家接觸後獲得 XP
+- 開發者模式：隱藏面板，可快速生成果子、生物，快進時間、補充 HP/XP
 
 ---
 
 ## v0.5.0 - 2026-05-10
 
-### æ–°å¢ž
-- å™¨å®˜ç³»çµ±ï¼šå‡ç´šæ™‚æä¾›ä¸‰å€‹éš¨æ©Ÿå™¨å®˜é¸é …ï¼ˆæ”»æ“Š / é˜²ç¦¦ / éˆåŠ›ä¸‰é¡žå…± 12 ç¨®ï¼‰
-- å™¨å®˜æ•ˆæžœå³æ™‚å¥—ç”¨è‡³çŽ©å®¶å±¬æ€§ï¼ˆæ”»æ“ŠåŠ›ã€é€Ÿåº¦ã€HPä¸Šé™ã€å‚·å®³æ¸›å…ç­‰ï¼‰
-- å™¨å®˜æ¸…å–®é¡¯ç¤ºæ–¼ç•«å¸ƒå·¦ä¸‹è§’
+### 新增
+- 器官系統：升級時提供三個隨機器官選項（攻擊 / 防禦 / 靈力三類共 12 種）
+- 器官效果即時套用至玩家屬性（攻擊力、速度、HP上限、傷害減免等）
+- 器官清單顯示於畫布左下角
 
 ---
 
 ## v0.4.0 - 2026-05-10
 
-### æ–°å¢ž
-- æ•µæ„ç”Ÿç‰© AIï¼šå·¡é‚ã€è¿½æ“Šã€æ”»æ“ŠçŽ©å®¶å’Œä¸­ç«‹ç”Ÿç‰©ä¸‰ç¨®ç‹€æ…‹
-- æ•µæ„ç”Ÿç‰©æ„ŸçŸ¥ç¯„åœï¼ˆ`aggroRange`ï¼‰ã€æ”»æ“Šç¯„åœã€æ”»æ“Šå†·å»
-- æ“Šæ®ºç”Ÿç‰©æŽ‰è½å±é«”ï¼Œè‚‰é£Ÿåž‹æ•µæ„ç”Ÿç‰©æœƒé£Ÿç”¨å±é«”å¼·åŒ–å±¬æ€§
-- `applyDamageToPlayer()` å‚·å®³è¨ˆç®—ï¼ˆå«å‚·å®³æ¸›å…èˆ‡åå‚·ï¼‰
-- çŽ©å®¶æ­»äº¡å¾Œé€²å…¥æ­»äº¡ç•«é¢ï¼ˆå‰æœŸç‰ˆæœ¬ç‚ºç©ºç™½é ï¼‰
+### 新增
+- 敵意生物 AI：巡邏、追擊、攻擊玩家和中立生物三種狀態
+- 敵意生物感知範圍（`aggroRange`）、攻擊範圍、攻擊冷卻
+- 擊殺生物掉落屍體，肉食型敵意生物會食用屍體強化屬性
+- `applyDamageToPlayer()` 傷害計算（含傷害減免與反傷）
+- 玩家死亡後進入死亡畫面（前期版本為空白頁）
 
 ---
 
 ## v0.3.0 - 2026-05-10
 
-### æ–°å¢ž
-- ä¸­ç«‹ç”Ÿç‰© AIï¼šè‰é£Ÿæ€§èˆ‡é›œé£Ÿæ€§ï¼Œä¾æ“šé£Ÿæ€§åœ¨åœ°åœ–ä¸Šå°‹æ‰¾æžœå­
-- ä¸­ç«‹ç”Ÿç‰©é€ƒè·‘èˆ‡åæ“Šè¡Œç‚ºï¼ˆ`fleeRange`ã€`fightBackRange`ã€`canFight`ï¼‰
-- ä¸­ç«‹ç”Ÿç‰©è¡€æ¢é¡¯ç¤º
+### 新增
+- 中立生物 AI：草食性與雜食性，依據食性在地圖上尋找果子
+- 中立生物逃跑與反擊行為（`fleeRange`、`fightBackRange`、`canFight`）
+- 中立生物血條顯示
 
 ---
 
 ## v0.2.0 - 2026-05-10
 
-### æ–°å¢ž
-- æžœå­ç³»çµ±ï¼šåœ°åœ–éš¨æ©Ÿç”Ÿæˆæžœå­ï¼ŒçŽ©å®¶æŽ¥è§¸å¾Œç²å¾— XP
-- æžœå­å®šæ™‚è£œå……ï¼ˆç™½å¤© 8 ç§’ã€å¤œæ™š 16 ç§’ï¼‰
-- XP é”åˆ°é–€æª»å¾Œå‡ç´šï¼Œé¡¯ç¤ºå‡ç´šæç¤ºæ–‡å­—
+### 新增
+- 果子系統：地圖隨機生成果子，玩家接觸後獲得 XP
+- 果子定時補充（白天 8 秒、夜晚 16 秒）
+- XP 達到門檻後升級，顯示升級提示文字
 
 ---
 
 ## v0.1.0 - 2026-05-10
 
-### æ–°å¢ž
-- 800Ã—600 ç•«å¸ƒåœ°åœ–ï¼Œéš¨æ©Ÿç”Ÿæˆæ¨¹æœ¨ä½œç‚ºè£é£¾
-- çŽ©å®¶è§’è‰²ï¼ˆé»‘è‰²åœ“å½¢ï¼‰ï¼ŒWASD éµç›¤ç§»å‹•
-- ç•«é¢ UIï¼šHP æ¢ã€XP æ¢ã€æ™‚é–“é¡¯ç¤ºã€æ—¥å¤œç‹€æ…‹
-- `gameState` å…¨å±€ç‹€æ…‹ç®¡ç†ç‰©ä»¶
-- `requestAnimationFrame` ä¸»éŠæˆ²å¾ªç’°
+### 新增
+- 800×600 畫布地圖，隨機生成樹木作為裝飾
+- 玩家角色（黑色圓形），WASD 鍵盤移動
+- 畫面 UI：HP 條、XP 條、時間顯示、日夜狀態
+- `gameState` 全局狀態管理物件
+- `requestAnimationFrame` 主遊戲循環
