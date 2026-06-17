@@ -45,6 +45,10 @@ const HYENA_PACK_KEEP_RANGE = CREATURE_AI_CONFIG.hyena.packKeepRange;
 const HYENA_PACK_LEAVE_GRACE = CREATURE_AI_CONFIG.hyena.packLeaveGraceMs;
 const HYENA_PACK_LIMIT = CREATURE_AI_CONFIG.hyena.packLimit;
 const HYENA_ATTACK_TURN_CD = CREATURE_AI_CONFIG.hyena.attackTurnCooldownMs;
+const HYENA_SURROUND_ATTACKERS = CREATURE_AI_CONFIG.hyena.surroundAttackers || 2;
+const HYENA_ATTACK_COMMIT_MS = CREATURE_AI_CONFIG.hyena.attackCommitMs || 2400;
+const HYENA_PACK_FOCUS_MS = CREATURE_AI_CONFIG.hyena.packFocusMs || 5000;
+const GIANT_PLAYER_AGGRO_MS = CREATURE_AI_CONFIG.giant?.playerAggroMs || 5000;
 const CREATURE_NAME_FONT_SIZE = 12;
 const CREATURE_TEAM_FONT_SIZE = 6;
 
@@ -141,10 +145,12 @@ function _tryMeleeAttack(creature, target, targetType, distance, attackRange, no
 
     if (creature._meleeState === 'striking') {
         if (now >= creature._meleeActiveEnd) {
-            if (!creature._meleeHasHit && target && target.hp !== 0 && distance <= hitGraceRange) {
+            const didHit = !creature._meleeHasHit && target && target.hp !== 0 && distance <= hitGraceRange;
+            if (didHit) {
                 creature._meleeHasHit = true;
                 onHit();
             }
+            _finishHyenaAttackTurn(creature, now);
             creature._meleeFlashUntil = now + CREATURE_AI_CONFIG.meleeAttack.strikeFlashMs;
             creature._meleeState = 'recovering';
         }
@@ -913,6 +919,34 @@ function _assignHyenaPackName() {
 
 function _hyenaPackMembers(hyena) {
     if (!hyena.packName) return [hyena];
+    const candidates = gameState.hostileCreatures.filter(c =>
+        c.speciesId === 'hyena' &&
+        c.hp > 0 &&
+        c.packGroup === hyena.packGroup &&
+        c.biome === hyena.biome &&
+        c.packName === hyena.packName
+    );
+    const local = [];
+    const queue = [hyena];
+    const seen = new Set();
+    while (queue.length > 0) {
+        const current = queue.shift();
+        if (!current || seen.has(current)) continue;
+        seen.add(current);
+        if (!candidates.includes(current)) continue;
+        local.push(current);
+        for (const other of candidates) {
+            if (seen.has(other)) continue;
+            if (wrappedDistance(current.x, current.y, other.x, other.y) <= HYENA_PACK_KEEP_RANGE) {
+                queue.push(other);
+            }
+        }
+    }
+    return local;
+}
+
+function _allNamedHyenaPackMembers(hyena) {
+    if (!hyena.packName) return [hyena];
     return gameState.hostileCreatures.filter(c =>
         c.speciesId === 'hyena' &&
         c.hp > 0 &&
@@ -920,6 +954,22 @@ function _hyenaPackMembers(hyena) {
         c.biome === hyena.biome &&
         c.packName === hyena.packName
     );
+}
+
+function _localHyenaMergePack(hyena, closeMate) {
+    const names = new Set([hyena.packName, closeMate.packName].filter(Boolean));
+    return gameState.hostileCreatures.filter(c => {
+        if (c.speciesId !== 'hyena' || c.hp <= 0) return false;
+        if (c.packGroup !== hyena.packGroup || c.biome !== hyena.biome) return false;
+        if (c === hyena || c === closeMate) return true;
+        const nearSeed =
+            wrappedDistance(c.x, c.y, hyena.x, hyena.y) <= HYENA_PACK_MERGE_RANGE ||
+            wrappedDistance(c.x, c.y, closeMate.x, closeMate.y) <= HYENA_PACK_MERGE_RANGE;
+        if (!c.packName) return nearSeed;
+        if (!names.has(c.packName)) return false;
+        return wrappedDistance(c.x, c.y, hyena.x, hyena.y) <= HYENA_PACK_KEEP_RANGE ||
+            wrappedDistance(c.x, c.y, closeMate.x, closeMate.y) <= HYENA_PACK_KEEP_RANGE;
+    });
 }
 
 function _trimHyenaPack(pack) {
@@ -939,7 +989,7 @@ function _nearestHyenaPackMate(hyena) {
     if (!hyena.packName) return null;
     let nearest = null;
     let nearestDist = Infinity;
-    for (const mate of _hyenaPackMembers(hyena)) {
+    for (const mate of _allNamedHyenaPackMembers(hyena)) {
         if (mate === hyena || mate.hp <= 0) continue;
         const d = wrappedDistance(hyena.x, hyena.y, mate.x, mate.y);
         if (d < nearestDist) {
@@ -968,13 +1018,7 @@ function _updateHyenaPack(hyena) {
 
     if (closeMate) {
         const sharedName = hyena.packName || closeMate.packName || _assignHyenaPackName();
-        const mergePack = gameState.hostileCreatures.filter(c =>
-            c.speciesId === 'hyena' &&
-            c.hp > 0 &&
-            c.packGroup === hyena.packGroup &&
-            c.biome === hyena.biome &&
-            (c === hyena || c === closeMate || c.packName === hyena.packName || c.packName === closeMate.packName)
-        );
+        const mergePack = _localHyenaMergePack(hyena, closeMate);
         _trimHyenaPack(mergePack);
         for (const member of mergePack.slice(0, HYENA_PACK_LIMIT)) member.packName = sharedName;
     }
@@ -988,7 +1032,7 @@ function _updateHyenaPack(hyena) {
 
     const samePack = _hyenaPackMembers(hyena);
     const nearestMate = _nearestHyenaPackMate(hyena);
-    const hasNearbyMate = nearestMate && nearestMate.dist <= HYENA_PACK_KEEP_RANGE;
+    const hasNearbyMate = samePack.some(m => m !== hyena);
     if (!hasNearbyMate) {
         hyena.packMates = [];
         hyena._returnToPackTarget = nearestMate ? nearestMate.mate : null;
@@ -1084,17 +1128,173 @@ function _getHyenaAttackPack(hyena) {
         .slice(0, HYENA_PACK_LIMIT);
 }
 
-function _syncHyenaAttackTurn(hyena, pack, now) {
+export function _getHyenaLocalPackCount(hyena) {
+    return _hyenaPackMembers(hyena).length;
+}
+
+function _chooseHyenaPackLeader(pack, currentLeader = null) {
+    if (currentLeader && currentLeader.hp > 0 && pack.includes(currentLeader)) return currentLeader;
+    let best = null;
+    let bestScore = -Infinity;
+    for (const member of pack) {
+        if (member.hp <= 0) continue;
+        const hpRatio = _hyenaHpRatio(member);
+        let centrality = 0;
+        for (const other of pack) {
+            if (other === member || other.hp <= 0) continue;
+            const d = wrappedDistance(member.x, member.y, other.x, other.y);
+            centrality += 1 / Math.max(1, d);
+        }
+        const score = hpRatio * 2 + centrality * 300 + (member.isKiller ? 0.35 : 0);
+        if (score > bestScore) {
+            bestScore = score;
+            best = member;
+        }
+    }
+    return best || pack[0] || null;
+}
+
+function _setHyenaPackFocus(hyena, target, targetType, now = Date.now()) {
+    if (hyena.speciesId !== 'hyena' || !target) return;
+    const pack = _getHyenaAttackPack(hyena);
+    const currentLeader = pack.find(m => m._hyenaPackLeaderUntil && now < m._hyenaPackLeaderUntil);
+    const leader = _chooseHyenaPackLeader(pack, currentLeader);
+    for (const member of pack) {
+        member._hyenaPackLeader = leader;
+        member._hyenaPackLeaderUntil = now + HYENA_PACK_FOCUS_MS;
+        member._hyenaPackFocusTarget = target;
+        member._hyenaPackFocusType = targetType;
+        member._hyenaPackFocusUntil = now + HYENA_PACK_FOCUS_MS;
+        if (targetType === 'player' || member === leader) {
+            member.state = 'chasing';
+            member.target = target;
+            member.targetType = targetType;
+        }
+    }
+}
+
+function _applyHyenaPackFocus(hyena, now = Date.now()) {
+    if (hyena.speciesId !== 'hyena') return null;
+    const target = hyena._hyenaPackFocusTarget;
+    if (!target || target.hp <= 0 || now >= (hyena._hyenaPackFocusUntil || 0)) {
+        hyena._hyenaPackFocusTarget = null;
+        hyena._hyenaPackFocusType = null;
+        return null;
+    }
+    const leader = hyena._hyenaPackLeader;
+    if (leader && leader.hp > 0 && now < (hyena._hyenaPackLeaderUntil || 0)) {
+        const dToLeader = wrappedDistance(hyena.x, hyena.y, leader.x, leader.y);
+        if (hyena !== leader && dToLeader > HYENA_PACK_KEEP_RANGE * 0.75) {
+            hyena._returnToPackTarget = leader;
+            return null;
+        }
+    }
+    return {
+        target,
+        targetType: hyena._hyenaPackFocusType || (target === gameState.player ? 'player' : 'neutral'),
+    };
+}
+
+export function notifyCreatureHitByPlayer(creature, now = Date.now()) {
+    if (!creature || creature.hp <= 0) return;
+    if (creature.isGiantized || creature.isAlpha) {
+        creature._playerAggroUntil = now + GIANT_PLAYER_AGGRO_MS;
+        creature.guardianTarget = null;
+        creature.isFleeing = false;
+        creature._seekingFruit = false;
+        creature._fruitTarget = null;
+        creature.state = 'chasing';
+        creature.target = gameState.player;
+        creature.targetType = 'player';
+    }
+    if (creature.speciesId === 'hyena') {
+        if (!creature.packName && creature.packGroup) {
+            creature.packName = _assignHyenaPackName();
+        }
+        _setHyenaPackFocus(creature, gameState.player, 'player', now);
+    }
+}
+
+function _hyenaHpRatio(member) {
+    return member.hp / Math.max(member.maxHp || member.hp || 1, 1);
+}
+
+function _isHyenaCommittedAttacker(member, now) {
+    return member &&
+        member.hp > 0 &&
+        member._attackTurn &&
+        member._attackState === 'attacking' &&
+        (member._meleeState || now < (member._attackCommitUntil || 0));
+}
+
+export function _selectHyenaSurroundAttackers(pack, target, now = Date.now()) {
+    if (!pack.length || !target) return [];
+    const desired = Math.min(HYENA_SURROUND_ATTACKERS, pack.length);
+    const { rear } = _hyenaSurroundAngles(target, pack.length);
+    const committed = pack
+        .filter(member => _isHyenaCommittedAttacker(member, now))
+        .map(member => {
+            const { dx, dy } = wrappedDelta(target.x, target.y, member.x, member.y);
+            return {
+                member,
+                inMeleeFlow: member._meleeState ? 1 : 0,
+                dist: Math.sqrt(dx * dx + dy * dy),
+            };
+        })
+        .sort((a, b) => (b.inMeleeFlow - a.inMeleeFlow) || (a.dist - b.dist))
+        .slice(0, desired)
+        .map(entry => entry.member);
+    const selected = [...committed];
+    const candidates = pack
+        .filter(member =>
+            member.hp > 0 &&
+            !selected.includes(member) &&
+            _hyenaHpRatio(member) > CREATURE_AI_CONFIG.hyena.lowHpRatio &&
+            !(member._attackState === 'retreating' && now < (member._attackTurnUntil || 0))
+        )
+        .map(member => {
+            const { dx, dy } = wrappedDelta(target.x, target.y, member.x, member.y);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx);
+            const meleeRange = _bodyMeleeRange(member, target, member.attackRange);
+            const distScore = dist / Math.max(1, meleeRange);
+            const angleScore = _angleDiff(angle, rear);
+            return { member, score: distScore + angleScore * 0.25 };
+        })
+        .sort((a, b) => a.score - b.score);
+
+    for (const candidate of candidates) {
+        if (selected.length >= desired) break;
+        selected.push(candidate.member);
+    }
+    if (selected.length < desired) {
+        const fallback = pack
+            .filter(member => member.hp > 0 && !selected.includes(member))
+            .map(member => {
+                const { dx, dy } = wrappedDelta(target.x, target.y, member.x, member.y);
+                return { member, dist: Math.sqrt(dx * dx + dy * dy) };
+            })
+            .sort((a, b) => a.dist - b.dist);
+        for (const candidate of fallback) {
+            if (selected.length >= desired) break;
+            selected.push(candidate.member);
+        }
+    }
+    return selected;
+}
+
+function _syncHyenaAttackTurns(hyena, pack, now) {
     if (pack.length <= 1) {
         hyena._attackTurn = true;
         hyena._attackState = 'attacking';
-        return hyena;
+        hyena._attackCommitUntil = now + HYENA_ATTACK_COMMIT_MS;
+        return [hyena];
     }
     const isSurroundPack = pack.length >= CREATURE_AI_CONFIG.hyena.surroundMinSize;
     const viablePack = isSurroundPack
         ? pack.filter(m =>
             m.hp > 0 &&
-            (m.hp / Math.max(m.maxHp || m.hp || 1, 1)) > CREATURE_AI_CONFIG.hyena.lowHpRatio &&
+            _hyenaHpRatio(m) > CREATURE_AI_CONFIG.hyena.lowHpRatio &&
             !(m._attackState === 'retreating' && now < (m._attackTurnUntil || 0))
         )
         : pack;
@@ -1102,20 +1302,26 @@ function _syncHyenaAttackTurn(hyena, pack, now) {
     let attacker = pack.find(m => m._attackTurn);
 
     if (isSurroundPack && hyena.target === gameState.player) {
-        const chosen = _bestHyenaSurroundAttacker(turnPack, gameState.player);
-        if (chosen && (!attacker || attacker !== chosen || now >= (attacker._attackTurnUntil || 0))) {
-            attacker = chosen;
-            for (const member of pack) {
-                member._attackTurn = member === attacker;
-                member._attackState = member === attacker ? 'attacking' : 'waiting';
+        const attackers = _selectHyenaSurroundAttackers(turnPack, gameState.player, now);
+        for (const member of pack) {
+            const isAttacker = attackers.includes(member);
+            const keepCommitted = _isHyenaCommittedAttacker(member, now);
+            member._attackTurn = isAttacker || keepCommitted;
+            if (isAttacker || keepCommitted) {
+                member._attackState = 'attacking';
+                if (!_isHyenaCommittedAttacker(member, now)) {
+                    member._attackCommitUntil = now + HYENA_ATTACK_COMMIT_MS;
+                }
+            } else {
+                member._attackState = 'waiting';
+                member._attackCommitUntil = 0;
             }
-            attacker._attackTurnUntil = now + HYENA_ATTACK_TURN_CD;
         }
-        return attacker || hyena;
+        return attackers;
     }
 
     if (attacker && attacker.hp > 0 && attacker._attackState === 'retreating' && now < (attacker._attackTurnUntil || 0)) {
-        return attacker;
+        return [attacker];
     }
     if (!attacker || attacker.hp <= 0 || attacker._attackState !== 'attacking' || now >= (attacker._attackTurnUntil || 0)) {
         const lastIndex = turnPack.indexOf(attacker);
@@ -1124,10 +1330,25 @@ function _syncHyenaAttackTurn(hyena, pack, now) {
         for (const member of pack) {
             member._attackTurn = member === attacker;
             member._attackState = member === attacker ? 'attacking' : 'waiting';
+            member._attackCommitUntil = member === attacker ? now + HYENA_ATTACK_COMMIT_MS : 0;
         }
         attacker._attackTurnUntil = now + HYENA_ATTACK_TURN_CD;
     }
-    return attacker;
+    return [attacker];
+}
+
+function _forceHyenaOpportunityAttack(hyena, now) {
+    hyena._attackTurn = true;
+    hyena._attackState = 'attacking';
+    hyena._attackCommitUntil = now + HYENA_ATTACK_COMMIT_MS;
+}
+
+function _finishHyenaAttackTurn(creature, now) {
+    if (creature.speciesId !== 'hyena' || creature.targetType !== 'player') return;
+    creature._attackTurn = false;
+    creature._attackState = 'retreating';
+    creature._attackTurnUntil = now + HYENA_ATTACK_TURN_CD;
+    creature._attackCommitUntil = 0;
 }
 
 function _angleDiff(a, b) {
@@ -1187,9 +1408,10 @@ export function _hyenaWheelPosition(hyena, pack, target, now = Date.now()) {
                 angle = candidate;
             }
         }
+        const packSizeBonus = Math.max(0, pack.length - cfg.surroundMinSize) * (cfg.surroundOrbitPerExtra || 0);
         const orbit = Math.max(
             target.radius + hyena.attackRange + spacing,
-            cfg.surroundOrbit + spacing * Math.min(pack.length, 8) / 3
+            cfg.surroundOrbit + packSizeBonus + spacing * Math.min(pack.length, 8) / 3
         );
         return {
             x: target.x + Math.cos(angle) * orbit,
@@ -1468,7 +1690,10 @@ export function updateNeutralCreatures() {
 
                 // 搜尋攻擊目標（guardianTarget 優先 > 敵意生物 > 玩家，草食性Lv4+除外）
                 let giantTarget = null, giantTargetDist = creature.aggroRange;
-                if (creature.guardianTarget && creature.guardianTarget.hp > 0) {
+                if (creature._playerAggroUntil && now < creature._playerAggroUntil) {
+                    giantTarget = p;
+                    giantTargetDist = wrappedDistance(creature.x, creature.y, p.x, p.y);
+                } else if (creature.guardianTarget && creature.guardianTarget.hp > 0) {
                     // guardianTarget 優先，忽略 aggroRange 限制
                     giantTarget = creature.guardianTarget;
                 } else {
@@ -2033,6 +2258,15 @@ export function updateHostileCreatures() {
         }
 
         // 殺手化特殊戰術：攻擊巨人，血量低且巨人血量高時撤退轉移目標
+        if (creature.speciesId === 'hyena') {
+            const packFocus = _applyHyenaPackFocus(creature, now);
+            if (packFocus) {
+                bestTarget = packFocus.target;
+                bestDist = wrappedDistance(creature.x, creature.y, bestTarget.x, bestTarget.y);
+                bestType = packFocus.targetType;
+            }
+        }
+
         if (creature.isKiller && bestTarget && (bestTarget.isGiantized || bestTarget.isAlpha)) {
             const killerHpRatio = creature.hp / creature.maxHp;
             const giantHpRatio  = bestTarget.hp / bestTarget.maxHp;
@@ -2123,11 +2357,17 @@ export function updateHostileCreatures() {
             const t = creature.target;
             const { dx, dy } = wrappedDelta(creature.x, creature.y, t.x, t.y);
             const dist = Math.sqrt(dx * dx + dy * dy);
+            const meleeRange = _bodyMeleeRange(creature, t, creature.attackRange);
 
             if (creature.speciesId === 'hyena' && creature.targetType === 'player') {
                 const pack = _getHyenaAttackPack(creature);
-                const attacker = _syncHyenaAttackTurn(creature, pack, now);
-                if (creature !== attacker || creature._attackState === 'retreating') {
+                const attackers = _syncHyenaAttackTurns(creature, pack, now);
+                let isAttacker = attackers.includes(creature) || _isHyenaCommittedAttacker(creature, now);
+                if (!isAttacker && creature._attackState === 'waiting' && dist <= meleeRange) {
+                    _forceHyenaOpportunityAttack(creature, now);
+                    isAttacker = true;
+                }
+                if (!isAttacker || creature._attackState === 'retreating') {
                     const wheelPos = _hyenaWheelPosition(creature, pack, t);
                     const { dx: wdx, dy: wdy } = wrappedDelta(creature.x, creature.y, wheelPos.x, wheelPos.y);
                     const wheelDist = Math.sqrt(wdx * wdx + wdy * wdy);
@@ -2145,7 +2385,6 @@ export function updateHostileCreatures() {
                 }
             }
 
-            const meleeRange = _bodyMeleeRange(creature, t, creature.attackRange);
             if (dist <= meleeRange) {
                 _tryMeleeAttack(creature, t, creature.targetType, dist, meleeRange, now, () => {
                     if (creature.targetType === 'player') {
@@ -2172,10 +2411,6 @@ export function updateHostileCreatures() {
                             dmg = creature.damage * (creature._finalAtkMult || 1.0);
                         }
                         applyDamageToPlayer(dmg, creature);
-                        if (creature.speciesId === 'hyena') {
-                            creature._attackState = 'retreating';
-                            creature._attackTurnUntil = now + HYENA_ATTACK_TURN_CD;
-                        }
                     } else if (creature.targetType === 'neutral') {
                         creature.target.hp -= creature.damage;
                         if (creature.target.hp <= 0) {
@@ -2391,9 +2626,7 @@ export function drawHostileCreatures() {
             }
             // ── 鬣狗隊名標籤 ──
             if (creature.speciesId === 'hyena' && creature.packName) {
-                const packCount = gameState.hostileCreatures.filter(
-                    c => c.speciesId === 'hyena' && c.packGroup === creature.packGroup && c.packName === creature.packName && c.hp > 0
-                ).length;
+                const packCount = _getHyenaLocalPackCount(creature);
                 _drawCenteredCreatureText(
                     creature.packName + '(' + Math.min(packCount, HYENA_PACK_LIMIT) + '/' + HYENA_PACK_LIMIT + ')',
                     s.x,

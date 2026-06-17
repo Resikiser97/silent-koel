@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 
 vi.mock('../../systems/gameState.js', () => ({
-    gameState: { cameraZoom: 1, isMobile: false, player: { x: 100, y: 100, radius: 20, lastMoveDir: { dx: 1, dy: 0 } } },
+    gameState: {
+        cameraZoom: 1,
+        isMobile: false,
+        hostileCreatures: [],
+        player: { x: 100, y: 100, radius: 20, lastMoveDir: { dx: 1, dy: 0 } },
+    },
     ctx: null,
 }));
 vi.mock('../../systems/map.js', () => ({
@@ -34,7 +39,7 @@ vi.mock('../../lang.js', () => ({
     t: (k) => k,
 }));
 
-let gameState, _effSpeed, _shouldFleeFromGiant, _getHyenaPackBonus, _hyenaWheelPosition;
+let gameState, _effSpeed, _shouldFleeFromGiant, _getHyenaPackBonus, _hyenaWheelPosition, _selectHyenaSurroundAttackers, _getHyenaLocalPackCount, notifyCreatureHitByPlayer;
 
 beforeAll(async () => {
     ({ gameState } = await import('../../systems/gameState.js'));
@@ -43,6 +48,9 @@ beforeAll(async () => {
     _shouldFleeFromGiant = mod._shouldFleeFromGiant;
     _getHyenaPackBonus = mod._getHyenaPackBonus;
     _hyenaWheelPosition = mod._hyenaWheelPosition;
+    _selectHyenaSurroundAttackers = mod._selectHyenaSurroundAttackers;
+    _getHyenaLocalPackCount = mod._getHyenaLocalPackCount;
+    notifyCreatureHitByPlayer = mod.notifyCreatureHitByPlayer;
 });
 
 // ── _effSpeed ─────────────────────────────────────────────────
@@ -140,5 +148,104 @@ describe('_hyenaWheelPosition', () => {
 
         expect(posA.y).toBeGreaterThan(gameState.player.y);
         expect(posB.y).toBeLessThan(gameState.player.y);
+    });
+});
+
+describe('_selectHyenaSurroundAttackers', () => {
+    it('pack 4+ selects two attackers and prefers nearby hyenas over perfect-but-far formation spots', () => {
+        gameState.player.x = 100;
+        gameState.player.y = 100;
+        gameState.player.radius = 10;
+        gameState.player.lastMoveDir = { dx: 1, dy: 0 };
+
+        const nearA = { x: 120, y: 100, radius: 10, attackRange: 20, hp: 50, maxHp: 50 };
+        const nearB = { x: 100, y: 125, radius: 10, attackRange: 20, hp: 50, maxHp: 50 };
+        const farRear = { x: -60, y: 100, radius: 10, attackRange: 20, hp: 50, maxHp: 50 };
+        const farSide = { x: 100, y: -80, radius: 10, attackRange: 20, hp: 50, maxHp: 50 };
+        const attackers = _selectHyenaSurroundAttackers([nearA, nearB, farRear, farSide], gameState.player, 1000);
+
+        expect(attackers).toHaveLength(2);
+        expect(attackers).toContain(nearA);
+        expect(attackers).toContain(nearB);
+    });
+
+    it('keeps a hyena that already started melee flow committed as an attacker', () => {
+        gameState.player.x = 100;
+        gameState.player.y = 100;
+        gameState.player.radius = 10;
+
+        const committed = {
+            x: 200, y: 100, radius: 10, attackRange: 20,
+            hp: 50, maxHp: 50,
+            _attackTurn: true,
+            _attackState: 'attacking',
+            _meleeState: 'preparing',
+            _attackCommitUntil: 0,
+        };
+        const nearA = { x: 115, y: 100, radius: 10, attackRange: 20, hp: 50, maxHp: 50 };
+        const nearB = { x: 100, y: 120, radius: 10, attackRange: 20, hp: 50, maxHp: 50 };
+        const farSide = { x: 100, y: -80, radius: 10, attackRange: 20, hp: 50, maxHp: 50 };
+        const attackers = _selectHyenaSurroundAttackers([committed, nearA, nearB, farSide], gameState.player, 1000);
+
+        expect(attackers).toHaveLength(2);
+        expect(attackers).toContain(committed);
+    });
+});
+
+describe('_getHyenaLocalPackCount', () => {
+    it('does not count same-name hyenas that are outside the local pack range', () => {
+        const nearA = { x: 0, y: 0, speciesId: 'hyena', hp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        const nearB = { x: 200, y: 0, speciesId: 'hyena', hp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        const far = { x: 2000, y: 0, speciesId: 'hyena', hp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        gameState.hostileCreatures = [nearA, nearB, far];
+
+        expect(_getHyenaLocalPackCount(nearA)).toBe(2);
+        expect(_getHyenaLocalPackCount(far)).toBe(1);
+    });
+
+    it('counts chained nearby packmates as one local pack', () => {
+        const a = { x: 0, y: 0, speciesId: 'hyena', hp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        const b = { x: 700, y: 0, speciesId: 'hyena', hp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        const c = { x: 1400, y: 0, speciesId: 'hyena', hp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        gameState.hostileCreatures = [a, b, c];
+
+        expect(_getHyenaLocalPackCount(a)).toBe(3);
+    });
+});
+
+describe('notifyCreatureHitByPlayer', () => {
+    it('forces giantized creatures to target the player for a short aggro window', () => {
+        const giant = {
+            hp: 100,
+            isGiantized: true,
+            guardianTarget: { hp: 100 },
+            isFleeing: true,
+            _seekingFruit: true,
+            _fruitTarget: { x: 1, y: 1 },
+        };
+
+        notifyCreatureHitByPlayer(giant, 1000);
+
+        expect(giant._playerAggroUntil).toBe(6000);
+        expect(giant.guardianTarget).toBe(null);
+        expect(giant.isFleeing).toBe(false);
+        expect(giant.state).toBe('chasing');
+        expect(giant.target).toBe(gameState.player);
+        expect(giant.targetType).toBe('player');
+    });
+
+    it('sets local hyena pack focus to the player when one member is hit', () => {
+        const a = { x: 0, y: 0, speciesId: 'hyena', hp: 50, maxHp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        const b = { x: 100, y: 0, speciesId: 'hyena', hp: 50, maxHp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        const far = { x: 2000, y: 0, speciesId: 'hyena', hp: 50, maxHp: 50, packGroup: 1, biome: 'desert', packName: 'Pack' };
+        gameState.hostileCreatures = [a, b, far];
+
+        notifyCreatureHitByPlayer(a, 2000);
+
+        expect(a._hyenaPackFocusTarget).toBe(gameState.player);
+        expect(b._hyenaPackFocusTarget).toBe(gameState.player);
+        expect(far._hyenaPackFocusTarget).toBeUndefined();
+        expect(a.targetType).toBe('player');
+        expect(b.targetType).toBe('player');
     });
 });

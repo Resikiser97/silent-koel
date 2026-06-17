@@ -4,11 +4,15 @@
 - `config/creatures.js` / `systems/creatures.js`：新增生物 AI 手感第一版設定與共用近戰攻擊節奏，所有近戰生物攻擊改為前搖、命中、後搖三段式，並在 Canvas 上顯示攻擊提示圈（前搖紅圈、命中白圈、後搖灰圈）
 - `systems/creatures.js`：新增通用生物分離邏輯，肉食性敵人與鬣狗會保持體積距離避免重疊，草食性生物允許較近距離抱團，巨人/Alpha 使用更高推開權重
 - `config/creatures.js` / `systems/creatures.js`：新增鬣狗第二階段隊伍行為，1~3 隻維持試探輪流，4 隻以上改以玩家移動方向為基準包圍左右/後方並保留前方缺口；包圍型低血鬣狗優先不當攻擊者
+- `config/creatures.js` / `systems/creatures.js`：鬣狗新增本地隊長與 pack focus，玩家攻擊任一鬣狗時，附近同隊鬣狗會短暫集火玩家並更傾向跟隊長行動
 - `config/creatures.js` / `systems/creatures.js`：新增巨人/Alpha 隊伍 regroup 行為，低血或離隊太遠的巨人隊伍成員會往 Alpha 或隊伍中血量較穩定的核心靠攏
 - `config/creatures.js` / `systems/elite.js`：三犬精英近戰接入前搖、命中窗、後搖三段式提示，並改用體型計算的近戰命中範圍；傷害沿用主線精英數值公式
 
 ### 調整
 - `systems/creatures.js`：鬣狗 4 隻以上包圍時改為依目前位置重新分配角色，最適合目前攻擊角度且非低血/退回中的鬣狗會成為 Attacker；非攻擊者選最近的外圈 slot，不再因玩家突然轉向而強制穿過玩家中心換位
+- `systems/creatures.js`：鬣狗 4 隻以上改為 2 隻主攻擊者，攻擊者會完成一次攻擊流程後才退回隊形；外圈鬣狗在玩家貼近時可觸發機會攻擊
+- `systems/creatures.js`：鬣狗 pack 改為本地連通隊伍判定，遠方同名鬣狗不再被計入目前小隊或包圍攻擊；隊伍人數越多，包圍圈會依 `surroundOrbitPerExtra` 放大
+- `systems/creatures.js` / `systems/combat.js` / `systems/player.js`：玩家命中巨人或 Alpha 後會觸發 5000ms 激怒仇恨，目標立即切換為玩家；玩家命中鬣狗會觸發附近本地隊伍短暫集火玩家
 - `systems/player.js` / `systems/input.js` / `systems/mobile.js` / `main.js`：阿奇爾子彈半徑改隨玩家體型等比例縮放，3 格充能發射時子彈半徑額外 ×2；手動/手機/自動發射統一使用同一套充能傷害、暴擊、射程與子彈半徑公式
 - `systems/creatures.js`：近戰前搖期間會以慢速追蹤目標，命中瞬間仍重新檢查距離；目標離太遠會取消攻擊，避免紅圈無限維持或隔空命中
 - `systems/creatures.js`：命中階段改為真正的 Strike window，白圈期間不會立刻扣血，時間跑完時才做最終距離判定並閃一下出手光，之後進入後搖 CD

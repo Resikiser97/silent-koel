@@ -48,11 +48,18 @@ export const CREATURE_AI_CONFIG = {
         packLeaveGraceMs: 3000,
         packLimit: 20,
         attackTurnCooldownMs: 600,
+        surroundAttackers: 2,
+        attackCommitMs: 2400,
         surroundMinSize: 4,
         lowHpRatio: 0.3,
         probeOrbit: 85,
         surroundOrbit: 95,
+        surroundOrbitPerExtra: 18,
         surroundArcDeg: 240,
+        packFocusMs: 5000,
+    },
+    giant: {
+        playerAggroMs: 5000,
     },
     alpha: {
         regroupCheckMs: 1000,

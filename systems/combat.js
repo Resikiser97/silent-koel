@@ -24,6 +24,7 @@ import { showFloatingText } from './feedback.js';
 import { getOrganLevel, getOrganCumulative, handleEliteKill, applyOrganEffects } from './organs.js';
 import { handleTutorialStumpKill } from './tutorial.js';
 import { applyDamageToPlayer, handleKill, handleGiantKill } from './damage.js';
+import { notifyCreatureHitByPlayer } from './creatures.js';
 
 const _comboCrabGlovesEffects = COMBOS.find(combo => combo.key === 'comboCrabGloves').effects;
 
@@ -104,6 +105,7 @@ export function playerAttack() {
         if (isElite || isBoss || c.isGiantized || c.isKiller) gameState.topBarTarget = c;
 
         c.hp -= dmg;
+        notifyCreatureHitByPlayer(c, now);
         showFloatingText(c.x, c.y - 15, (isCrit ? '⚡' : '') + dmg, isCrit ? '#FFD700' : '#FF4444', 16, true);
 
         // 嘴器Lv3：命中施加減速（韌性縮短）
