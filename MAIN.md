@@ -1048,4 +1048,14 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 ### handleEliteKill 執行順序（v0.15.2 修復）
 `showHiddenOrganSelection()` **必須在** `addXP()` 之前呼叫，否則器官選擇與升級界面會疊層。
 
-### sho
+### showHiddenOrganSelection closeOverlay 順序（v0.15.3 修復）
+`gameState.organSelectionActive = false` **必須在** `showOrganSelection()` 之前設定，
+否則選擇隱藏器官後關閉 overlay 時遊戲會短暫恢復。
+
+### 模組載入方式
+專案使用 **ES Modules**，所有檔案透過 `import`/`export` 互相依賴，`main.js` 為主要入口。
+跨檔案呼叫必須透過 `import` 明確引入，不存在全域作用域自動共享。
+
+### script 標籤位置
+`main.js` 以 `<script type="module" src="./main.js">` 單一標籤載入（位於 `index.html` body 末端）。
+其餘所有檔案透過 ESM `import` 引入，不使用獨立 `<script src>` 標籤。

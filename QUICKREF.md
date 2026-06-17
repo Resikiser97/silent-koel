@@ -196,3 +196,4 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | 數值修改 | 只能在 `config/` 資料夾修改，不要在 systems/ 寫死數值 |
 | gameLoop | 絕對不能出現字面上的 `\n` 字符 |
 | 版本號格式 | 四段 `v0.x.y.z`；排行榜 `version_order` 取第二段 x，同一個 x 的記錄互相競爭（x 升版時排行榜重置） |
+| 容器 `innerHTML = ''` 重建會讓捲動歸零 | 任何左側目錄/列表類 UI 若每次互動都整個清空重建容器，`scrollTop` 會被歸零造成畫面回彈；正確做法是重繪前用 `_captureSidebarScroll()` 存 `scrollTop`，重繪後用 `_restoreSidebarScroll()` 還原（見 `systems/ui.js` 圖鑑三分頁，v0.1.25.7）；同類面板更好的作法是面板骨架只建立一次，互動時呼叫內部 `refresh()` 就地更新（見 `systems/mutation.js` `showMutationPanel()`） |

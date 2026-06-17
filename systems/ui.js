@@ -1296,6 +1296,12 @@ export function showCompendium(startTab) {
     let curOrganEntryId = null;
     let curEvoEntryId = null;
 
+    // 桌機版左側目錄可收合分組：各分頁各自獨立的「目前展開分組」FIFO 陣列
+    // （陣列第一個 = 最早展開，超出可視高度時優先淘汰）。預設全部收合。
+    let _guideExpandedSections = [];
+    let _organsExpandedSections = [];
+    let _evoExpandedSections = [];
+
     const overlay = document.createElement('div');
     overlay.id = 'compendium-overlay';
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:215;pointer-events:all;color:white;font-family:Arial,sans-serif;';
@@ -1367,6 +1373,70 @@ export function showCompendium(startTab) {
         if (savedTop != null) sidebar.scrollTop = savedTop;
     }
 
+    // 桌機版左側目錄可收合分組：共用 builder
+    // sidebar：已建立好樣式的容器 DOM（呼叫端負責 append 到 container 並處理捲動還原）
+    // sections：[{ id, color, label(已轉成純文字字串), entries:[{id,label(已轉成純文字字串)}] }]
+    // getCurId()/setCurId(id)：讀取/寫入該分頁目前選中的條目 id（呼叫端的模組變數）
+    // expandedArr：該分頁的展開分組 FIFO 陣列（會被就地修改，呼叫端應傳入持久陣列本體）
+    // onEntryClick(entryId)：點擊條目時呼叫（負責 setCurId + 整頁重繪）
+    // rerenderTab()：點擊分組標題（展開/收合）時呼叫，重新執行整個分頁的 render function
+    function _buildCollapsibleSidebar(sidebar, sections, getCurId, setCurId, expandedArr, onEntryClick, rerenderTab) {
+        function isExpanded(sid) { return expandedArr.indexOf(sid) !== -1; }
+
+        function renderOnce() {
+            sidebar.innerHTML = '';
+            sections.forEach(function (section) {
+                var expanded = isExpanded(section.id);
+                var secH = document.createElement('div');
+                secH.style.cssText = 'font-size:12px;font-weight:bold;color:' + section.color + ';' +
+                    'padding:6px 8px 2px 8px;border-left:3px solid ' + section.color + ';' +
+                    'margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;cursor:pointer;' +
+                    'display:flex;align-items:center;justify-content:space-between;';
+                secH.innerHTML = '<span>' + _esc(section.label) + '</span><span style="margin-left:4px;opacity:0.6;">' + (expanded ? '▾' : '▸') + '</span>';
+                secH.onclick = function () {
+                    var idx = expandedArr.indexOf(section.id);
+                    if (idx !== -1) expandedArr.splice(idx, 1);
+                    else expandedArr.push(section.id);
+                    rerenderTab();
+                };
+                sidebar.appendChild(secH);
+
+                if (expanded) {
+                    section.entries.forEach(function (entry) {
+                        var isSel = entry.id === getCurId();
+                        var entryColor = entry.color || section.color;
+                        var item = document.createElement('div');
+                        item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
+                            'color:' + (isSel ? '#fff' : '#bbb') + ';' +
+                            'background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
+                            'border-left:2px solid ' + (isSel ? entryColor : 'transparent') + ';';
+                        item.textContent = entry.label;
+                        item.onclick = function () { onEntryClick(entry.id); };
+                        sidebar.appendChild(item);
+                    });
+                }
+            });
+        }
+
+        renderOnce();
+
+        // 展開分組造成目錄總高度超出可視範圍時，淘汰「最早展開」的分組（FIFO，至少保留 1 個展開）；
+        // 若被淘汰分組剛好包含目前選中條目，自動切換到仍展開分組中（依原始順序）第一個條目
+        while (sidebar.scrollHeight > sidebar.clientHeight + 1 && expandedArr.length > 1) {
+            var evictedId = expandedArr.shift();
+            var evictedSection = sections.filter(function (s) { return s.id === evictedId; })[0];
+            if (evictedSection && evictedSection.entries.some(function (e) { return e.id === getCurId(); })) {
+                for (var i = 0; i < sections.length; i++) {
+                    if (expandedArr.indexOf(sections[i].id) !== -1 && sections[i].entries.length) {
+                        setCurId(sections[i].entries[0].id);
+                        break;
+                    }
+                }
+            }
+            renderOnce();
+        }
+    }
+
     // Guide 分頁：從 COMPENDIUM_DATA 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
     function _renderGuide(container) {
         if (typeof COMPENDIUM_DATA === 'undefined') {
@@ -1393,10 +1463,8 @@ export function showCompendium(startTab) {
             return null;
         }
 
-        var found = _findEntry(curGuideEntryId);
-        if (!found) {
+        if (!_findEntry(curGuideEntryId)) {
             curGuideEntryId = COMPENDIUM_DATA.sections[0].entries[0].id;
-            found = _findEntry(curGuideEntryId);
         }
 
         if (gameState.isMobile) {
@@ -1437,6 +1505,7 @@ export function showCompendium(startTab) {
             }, 0);
 
             // 內容區
+            var found = _findEntry(curGuideEntryId);
             var contentArea = document.createElement('div');
             contentArea.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
             if (found) {
@@ -1458,37 +1527,36 @@ export function showCompendium(startTab) {
             container.appendChild(contentArea);
 
         } else {
-            // ── 桌機版：左欄目錄（160px）+ 右欄內容
+            // ── 桌機版：左欄目錄（160px，可收合分組）+ 右欄內容
             container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
 
             var sidebar = document.createElement('div');
             sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
             sidebar.setAttribute('data-comp-sidebar', '1');
-
-            COMPENDIUM_DATA.sections.forEach(function (section) {
-                var secH = document.createElement('div');
-                secH.style.cssText = 'font-size:10px;font-weight:bold;color:' + section.color + ';' +
-                    'padding:6px 8px 2px 8px;border-left:3px solid ' + section.color + ';' +
-                    'margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
-                secH.textContent = section.label[lang] || section.label['zh-TW'];
-                sidebar.appendChild(secH);
-
-                section.entries.forEach(function (entry) {
-                    var isSel = entry.id === curGuideEntryId;
-                    var item = document.createElement('div');
-                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
-                        'color:' + (isSel ? '#fff' : '#bbb') + ';' +
-                        'background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
-                        'border-left:2px solid ' + (isSel ? section.color : 'transparent') + ';';
-                    item.textContent = entry.title[lang] || entry.title['zh-TW'];
-                    (function (eid) {
-                        item.onclick = function () { curGuideEntryId = eid; _renderGuide(container); };
-                    })(entry.id);
-                    sidebar.appendChild(item);
-                });
-            });
             container.appendChild(sidebar);
+
+            var guideSections = COMPENDIUM_DATA.sections.map(function (section) {
+                return {
+                    id: section.id,
+                    color: section.color,
+                    label: section.label[lang] || section.label['zh-TW'],
+                    entries: section.entries.map(function (entry) {
+                        return { id: entry.id, label: entry.title[lang] || entry.title['zh-TW'] };
+                    })
+                };
+            });
+            _buildCollapsibleSidebar(
+                sidebar, guideSections,
+                function () { return curGuideEntryId; },
+                function (id) { curGuideEntryId = id; },
+                _guideExpandedSections,
+                function (eid) { curGuideEntryId = eid; _renderGuide(container); },
+                function () { _renderGuide(container); }
+            );
             _restoreSidebarScroll(sidebar, _savedSidebarTop);
+
+            // FIFO 淘汰可能已改變 curGuideEntryId，重新查找
+            var found = _findEntry(curGuideEntryId);
 
             var rightPane = document.createElement('div');
             rightPane.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
@@ -1550,19 +1618,18 @@ export function showCompendium(startTab) {
 
         if (!curOrganEntryId) curOrganEntryId = organSections[0].entries[0].id;
 
-        var foundEntry = null, foundSection = null;
-        for (var si = 0; si < organSections.length; si++) {
-            for (var ei = 0; ei < organSections[si].entries.length; ei++) {
-                if (organSections[si].entries[ei].id === curOrganEntryId) {
-                    foundEntry = organSections[si].entries[ei];
-                    foundSection = organSections[si];
+        function _findOrganEntry(id) {
+            for (var si = 0; si < organSections.length; si++) {
+                for (var ei = 0; ei < organSections[si].entries.length; ei++) {
+                    if (organSections[si].entries[ei].id === id) {
+                        return { entry: organSections[si].entries[ei], section: organSections[si] };
+                    }
                 }
             }
+            return null;
         }
-        if (!foundEntry) {
+        if (!_findOrganEntry(curOrganEntryId)) {
             curOrganEntryId = organSections[0].entries[0].id;
-            foundEntry = organSections[0].entries[0];
-            foundSection = organSections[0];
         }
 
         function _entryLabel(entry) {
@@ -1659,31 +1726,39 @@ export function showCompendium(startTab) {
             setTimeout(function() { var el = tabStrip.children[selIdx]; if (el) el.scrollIntoView({ block: 'nearest', inline: 'center' }); }, 0);
             var ca = document.createElement('div');
             ca.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
-            _buildOrganContent(ca, foundEntry, foundSection);
+            var mFound = _findOrganEntry(curOrganEntryId);
+            _buildOrganContent(ca, mFound.entry, mFound.section);
             container.appendChild(ca);
         } else {
             container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
             var sidebar = document.createElement('div');
             sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
             sidebar.setAttribute('data-comp-sidebar', '1');
-            organSections.forEach(function(sec) {
-                var sh = document.createElement('div');
-                sh.style.cssText = 'font-size:10px;font-weight:bold;color:' + sec.color + ';padding:6px 8px 2px 8px;border-left:3px solid ' + sec.color + ';margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
-                sh.textContent = sec.label;
-                sidebar.appendChild(sh);
-                sec.entries.forEach(function(entry) {
-                    var isSel = entry.id === curOrganEntryId;
-                    var item = document.createElement('div');
-                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
-                        'color:' + (isSel ? '#fff' : '#bbb') + ';background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
-                        'border-left:2px solid ' + (isSel ? sec.color : 'transparent') + ';';
-                    item.textContent = _entryLabel(entry);
-                    (function(eid) { item.onclick = function() { curOrganEntryId = eid; _renderOrgans(container); }; })(entry.id);
-                    sidebar.appendChild(item);
-                });
-            });
             container.appendChild(sidebar);
+
+            var organSectionsForSidebar = organSections.map(function (sec) {
+                return {
+                    id: sec.id,
+                    color: sec.color,
+                    label: sec.label,
+                    entries: sec.entries.map(function (entry) {
+                        return { id: entry.id, label: _entryLabel(entry) };
+                    })
+                };
+            });
+            _buildCollapsibleSidebar(
+                sidebar, organSectionsForSidebar,
+                function () { return curOrganEntryId; },
+                function (id) { curOrganEntryId = id; },
+                _organsExpandedSections,
+                function (eid) { curOrganEntryId = eid; _renderOrgans(container); },
+                function () { _renderOrgans(container); }
+            );
             _restoreSidebarScroll(sidebar, _savedSidebarTop);
+
+            // FIFO 淘汰可能已改變 curOrganEntryId，重新查找
+            var dFound = _findOrganEntry(curOrganEntryId);
+            var foundEntry = dFound.entry, foundSection = dFound.section;
             var rp = document.createElement('div');
             rp.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
             _buildOrganContent(rp, foundEntry, foundSection);
@@ -1714,19 +1789,18 @@ export function showCompendium(startTab) {
 
         if (!curEvoEntryId) curEvoEntryId = evoSections[0].entries[0].id;
 
-        var foundEntry = null, foundSection = null;
-        for (var si = 0; si < evoSections.length; si++) {
-            for (var ei = 0; ei < evoSections[si].entries.length; ei++) {
-                if (evoSections[si].entries[ei].id === curEvoEntryId) {
-                    foundEntry = evoSections[si].entries[ei];
-                    foundSection = evoSections[si];
+        function _findEvoEntry(id) {
+            for (var si = 0; si < evoSections.length; si++) {
+                for (var ei = 0; ei < evoSections[si].entries.length; ei++) {
+                    if (evoSections[si].entries[ei].id === id) {
+                        return { entry: evoSections[si].entries[ei], section: evoSections[si] };
+                    }
                 }
             }
+            return null;
         }
-        if (!foundEntry) {
+        if (!_findEvoEntry(curEvoEntryId)) {
             curEvoEntryId = evoSections[0].entries[0].id;
-            foundEntry = evoSections[0].entries[0];
-            foundSection = evoSections[0];
         }
 
         function _buildEvoContent(pane, entry) {
@@ -1800,35 +1874,42 @@ export function showCompendium(startTab) {
             setTimeout(function() { var el = tabStrip.children[selIdx]; if (el) el.scrollIntoView({ block: 'nearest', inline: 'center' }); }, 0);
             var ca = document.createElement('div');
             ca.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
-            _buildEvoContent(ca, foundEntry);
+            var mFound = _findEvoEntry(curEvoEntryId);
+            _buildEvoContent(ca, mFound.entry);
             container.appendChild(ca);
         } else {
             container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
             var sidebar = document.createElement('div');
             sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
             sidebar.setAttribute('data-comp-sidebar', '1');
-            evoSections.forEach(function(sec) {
-                var sh = document.createElement('div');
-                sh.style.cssText = 'font-size:10px;font-weight:bold;color:' + sec.color + ';padding:6px 8px 2px 8px;border-left:3px solid ' + sec.color + ';margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
-                sh.textContent = sec.label;
-                sidebar.appendChild(sh);
-                sec.entries.forEach(function(entry) {
-                    var isSel = entry.id === curEvoEntryId;
-                    var eLabel = entry.type === 'path' ? (entry.data.icon + ' ' + entry.data.name) : entry.data.name;
-                    var item = document.createElement('div');
-                    item.style.cssText = 'padding:5px 8px 5px 10px;cursor:pointer;font-size:12px;line-height:1.4;' +
-                        'color:' + (isSel ? '#fff' : '#bbb') + ';background:' + (isSel ? 'rgba(255,255,255,0.08)' : 'transparent') + ';' +
-                        'border-left:2px solid ' + (isSel ? entry.color : 'transparent') + ';';
-                    item.textContent = eLabel;
-                    (function(eid) { item.onclick = function() { curEvoEntryId = eid; _renderEvo(container); }; })(entry.id);
-                    sidebar.appendChild(item);
-                });
-            });
             container.appendChild(sidebar);
+
+            var evoSectionsForSidebar = evoSections.map(function (sec) {
+                return {
+                    id: sec.id,
+                    color: sec.color,
+                    label: sec.label,
+                    entries: sec.entries.map(function (entry) {
+                        var eLabel = entry.type === 'path' ? (entry.data.icon + ' ' + entry.data.name) : entry.data.name;
+                        return { id: entry.id, label: eLabel, color: entry.color };
+                    })
+                };
+            });
+            _buildCollapsibleSidebar(
+                sidebar, evoSectionsForSidebar,
+                function () { return curEvoEntryId; },
+                function (id) { curEvoEntryId = id; },
+                _evoExpandedSections,
+                function (eid) { curEvoEntryId = eid; _renderEvo(container); },
+                function () { _renderEvo(container); }
+            );
             _restoreSidebarScroll(sidebar, _savedSidebarTop);
+
+            // FIFO 淘汰可能已改變 curEvoEntryId，重新查找
+            var dFound = _findEvoEntry(curEvoEntryId);
             var rp = document.createElement('div');
             rp.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
-            _buildEvoContent(rp, foundEntry);
+            _buildEvoContent(rp, dFound.entry);
             container.appendChild(rp);
         }
     }
@@ -3447,4 +3528,43 @@ export function buildEndGameOverlay(options) {
     btnRow.appendChild(warnEl);
 
     const rowInner = document.createElement('div');
-    rowInner.style.cssText = options.buttonInnerSt
+    rowInner.style.cssText = options.buttonInnerStyle;
+    (options.secondaryButtons || []).forEach(buttonDef => {
+        const btn = document.createElement('button');
+        btn.style.cssText = buttonDef.style;
+        btn.textContent = buttonDef.text;
+        if (buttonDef.warningText) {
+            let warned = false;
+            btn.onclick = () => {
+                if (!warned) {
+                    warned = true;
+                    warnEl.textContent = buttonDef.warningText;
+                    warnEl.style.display = 'block';
+                    return;
+                }
+                buttonDef.onClick();
+            };
+        } else {
+            btn.onclick = buttonDef.onClick;
+        }
+        rowInner.appendChild(btn);
+    });
+    btnRow.appendChild(rowInner);
+    overlay.appendChild(btnRow);
+
+    if (options.footerText) {
+        const footer = document.createElement('div');
+        footer.style.cssText = options.footerStyle;
+        footer.textContent = options.footerText;
+        overlay.appendChild(footer);
+    }
+
+    if (options.devWarningText) {
+        const devWarn = document.createElement('div');
+        devWarn.style.cssText = options.devWarningStyle;
+        devWarn.textContent = options.devWarningText;
+        overlay.appendChild(devWarn);
+    }
+
+    return overlay;
+}

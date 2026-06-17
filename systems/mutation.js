@@ -491,4 +491,3 @@ export function _syncMutationSkillPoints() {
         ? gameState.mutationSkills._points : 0;
     gameState.mutationSkillPoints = Math.max(calculated, savedPoints);
 }
-                                                                  
