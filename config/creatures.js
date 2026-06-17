@@ -23,6 +23,18 @@ export const ELITE_CONFIG = {
     ]
 };
 
+// 靜音獵隊（犬/隼）精英怪擊殺獎勵，依星級（1/2/3）給予
+// 來源：systems/elite.js _handleHunterEliteKill，搬至此處供 compendium_data.js 動態引用
+export const HUNTER_ELITE_REWARDS = {
+    1: { xp: 200, skillPts: 2, mutPts: 1 },
+    2: { xp: 350, skillPts: 3, mutPts: 2 },
+    3: { xp: 500, skillPts: 4, mutPts: 3 },
+};
+
+// 靜音獵隊精英怪毒抗（0 = 無抗性）
+// 注意：與 ELITE_CONFIG.base.poisonResist（0.2）是兩個獨立值，前者為舊系統已無地圖使用
+export const HUNTER_ELITE_POISON_RESIST = 0;
+
 // =============================================================
 // 生態生物種類（v0.36.0）
 // 每個生態區各有一種草系（herbivore）和一種肉系（carnivore）

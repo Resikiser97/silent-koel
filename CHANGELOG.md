@@ -1,3 +1,20 @@
+## v0.1.25.8 - 2026-06-17
+
+### 新增
+- `config/compendium_data.js`：圖鑑新增「角色」條目（噪鵑 / 阿奇爾：起始進化、起始器官、攻速、F技）
+- `config/compendium_data.js`：圖鑑新增「成就與永久加成」條目（36成就、跨局加成種類、紅點機制、入口）
+- `config/compendium_data.js`：圖鑑新增「排行榜與名人堂」條目（排行榜、趣味榜、名人堂、TOP5側欄）
+- `config/compendium_data.js`：圖鑑新增「Boss 出現機制」條目（Easy/Normal 第四夜 Boss 開局隨機）
+- `config/compendium_data.js`：「器官系統」補採集範圍說明；「技能樹」補全 9 種技能名稱；「基本操作」F鍵改為依角色說明
+
+### 修復
+- `config/compendium_data.js`：移除 `typeof X !== 'undefined'` 全域偵測寫法，改為明確 ESM import（`BOSS_CONFIG` / `ELITE_CONFIG` / `EVOLUTION_PATHS` / `EASY_MAP` / `NORMAL_MAP` / `HARD_MAP`），修正 Boss / 精英怪數值顯示 undefined / NaN
+- `config/compendium_data.js`：精英怪條目（`id: 'elite'`）全面重寫：修正毒抗（20%→0%）、修正出場機制（三犬順序開局隨機，非固定）、修正擊殺獎勵數字、補充困難難度犬隼各自固定數值與技能說明
+- `config/creatures.js`：新增 `HUNTER_ELITE_REWARDS`、`HUNTER_ELITE_POISON_RESIST` export，供圖鑑動態引用
+- `systems/elite.js`：移除本地 `_HUNTER_ELITE_REWARDS` 常數，改 import `HUNTER_ELITE_REWARDS`；`poisonResist` 改用 `HUNTER_ELITE_POISON_RESIST`
+
+---
+
 ## v0.1.25.7 - 2026-06-17
 
 ### 修復

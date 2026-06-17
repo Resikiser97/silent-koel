@@ -1,21 +1,24 @@
 // =============================================================
 // 遊戲圖鑑資料 — COMPENDIUM_DATA
 // 定義四大分類：遊戲機制 / Biome / Boss / 生物百科
-// 此檔案必須在 map/normalmap.js 之後、systems/ui.js 之前載入
-// 數值動態引用 BOSS_CONFIG / ELITE_CONFIG / EVOLUTION_PATHS /
-//              EASY_MAP / NORMAL_MAP（需先載入）
 // =============================================================
+
+import { BOSS_CONFIG, ELITE_CONFIG, HUNTER_ELITE_REWARDS, HUNTER_ELITE_POISON_RESIST } from './creatures.js';
+import { EVOLUTION_PATHS }           from './evolution.js';
+import { HARD_ELITE_CONFIG }         from './gameConfig.js';
+import { EASY_MAP }                  from '../map/easymap.js';
+import { NORMAL_MAP }                from '../map/normalmap.js';
+import { HARD_MAP }                  from '../map/hardmap.js';
 
 export const COMPENDIUM_DATA = (function () {
 
-    // ── 安全取得 config 全域常數
-    const _boss = (typeof BOSS_CONFIG !== 'undefined') ? BOSS_CONFIG : {};
-    const _ec   = (typeof ELITE_CONFIG !== 'undefined') ? ELITE_CONFIG
-                : { nights: [{},{},{}], base: { hp: 50, poisonResist: 0.2 } };
-    const _ev   = (typeof EVOLUTION_PATHS !== 'undefined') ? EVOLUTION_PATHS : {};
-    const _easyBosses   = (typeof EASY_MAP   !== 'undefined' && EASY_MAP.bosses)   ? EASY_MAP.bosses   : [];
-    const _normalBosses = (typeof NORMAL_MAP !== 'undefined' && NORMAL_MAP.bosses) ? NORMAL_MAP.bosses : [];
-    const _hardBosses   = (typeof HARD_MAP   !== 'undefined' && HARD_MAP.bosses)   ? HARD_MAP.bosses   : [];
+    // ── 取得 config 常數（|| 防止資料結構缺欄位）
+    const _boss = BOSS_CONFIG || {};
+    const _ec   = ELITE_CONFIG || { nights: [{},{},{}], base: { hp: 50, poisonResist: 0.2 } };
+    const _ev   = EVOLUTION_PATHS || {};
+    const _easyBosses   = (EASY_MAP   && EASY_MAP.bosses)   ? EASY_MAP.bosses   : [];
+    const _normalBosses = (NORMAL_MAP && NORMAL_MAP.bosses) ? NORMAL_MAP.bosses : [];
+    const _hardBosses   = (HARD_MAP   && HARD_MAP.bosses)   ? HARD_MAP.bosses   : [];
 
     // 取得指定 biome 的 Easy / Normal / Hard boss config
     function _eb(biome) {
@@ -51,8 +54,8 @@ export const COMPENDIUM_DATA = (function () {
                         id: 'basic_controls',
                         title: { 'zh-TW': '基本操作', 'en': 'Basic Controls' },
                         content: {
-                            'zh-TW': '移動使用 WASD 或方向鍵，攻擊使用空白鍵或滑鼠左鍵，按 Esc 開啟設定。走過果子即可自動吸收 XP。按 Z 鍵切換自動攻擊模式（需先裝備攻擊器官）。按 F 鍵（可自訂）使用閃現技能，瞬間位移並獲得短暫無敵。手機玩家以搖桿移動、右下角攻擊按鈕進行攻擊，攻擊區正上方為閃現按鈕。',
-                            'en': 'Move with WASD or Arrow Keys, attack with Space or Left Click, and open Settings with Esc. Walk over fruits to collect XP automatically. Press Z to toggle Auto Attack (requires an attack organ). Press F (customizable) to use the Dash skill — an instant teleport with brief invincibility. Mobile players use the joystick to move and the attack zone button to attack; the dash button sits just above the attack zone.'
+                            'zh-TW': '移動使用 WASD 或方向鍵，攻擊使用空白鍵或滑鼠左鍵，按 Esc 開啟設定。走過果子即可自動吸收 XP。按 Z 鍵切換自動攻擊模式（需先裝備攻擊器官）。按 F 鍵（可自訂）使用特殊技能，效果依角色不同，詳見角色說明。手機玩家以搖桿移動、右下角攻擊按鈕進行攻擊，攻擊區正上方為特殊技能按鈕。',
+                            'en': 'Move with WASD or Arrow Keys, attack with Space or Left Click, and open Settings with Esc. Walk over fruits to collect XP automatically. Press Z to toggle Auto Attack (requires an attack organ). Press F (customizable) to use your special skill — the effect varies by character, see the Characters entry for details. Mobile players use the joystick to move and the attack zone button to attack; the special skill button sits just above the attack zone.'
                         }
                     },
                     {
@@ -61,6 +64,14 @@ export const COMPENDIUM_DATA = (function () {
                         content: {
                             'zh-TW': '你有 10 分鐘（600 秒）在 8000×8000 的無縫循環世界中生存並擊敗最終 Boss。世界分為白天與夜晚，每 75 秒交替一次，共 8 個時段（4 白天、4 夜晚）。每個夜晚出現一隻精英怪，擊敗後立即迎來黎明。第四個夜晚為 Boss 夜，剩餘 150 秒時 Boss 降臨並全圖追擊，擊敗即獲勝。時間歸零或死亡則遊戲結束，可前往技能樹保留成果。',
                             'en': 'You have 10 minutes (600 seconds) to survive and defeat the final Boss in an 8000×8000 seamlessly looping world. Day and night alternate every 75 seconds across 8 phases (4 days, 4 nights). Each night spawns one Elite — defeating it ends the night early. The 4th night is Boss Night: the Boss spawns with 150 seconds remaining and hunts you across the entire map. Defeat it to win. Running out of time or dying ends the run; visit the Skill Tree to keep your progress.'
+                        }
+                    },
+                    {
+                        id: 'characters',
+                        title: { 'zh-TW': '角色', 'en': 'Characters' },
+                        content: {
+                            'zh-TW': '目前提供兩個可選角色，各有不同的起始條件與特殊技能。\n\n🐦 噪鵑（The Koel）\n起始進化：草食性 Lv1。起始器官：無。HP 100，陸地速度 4.5，攻擊間隔 1000ms（1 次/秒）。\nF 技「閃現」：瞬間位移至指示方向，並獲得 500ms 無敵，冷卻 15 秒。\n\n🐟 阿奇爾（Archerfish）\n起始進化：肉食性 Lv1。起始器官：嘴器 Lv3（直接獲得三級嘴器效果）。HP 60，陸地速度 2.0，水中速度自動提升 50%；遠程攻擊，攻擊間隔 1500ms。\nF 技「衝刺」：啟動後 3 秒內大幅加速（水中 +5、陸地 +3），衝刺期間碰觸敵人可使其暈眩 500ms，冷卻 15 秒。',
+                            'en': 'Two characters are available, each with distinct starting conditions and a unique special skill.\n\n🐦 The Koel\nStarting evolution: Herbivore Lv1. Starting organs: none. HP 100, land speed 4.5, attack interval 1000ms (1 hit/sec).\nF skill "Dash": instant teleport in the aimed direction with 500ms of invincibility. 15-second cooldown.\n\n🐟 Archerfish\nStarting evolution: Carnivore Lv1. Starting organs: Mouth Organ Lv3 (fully leveled from the start). HP 60, land speed 2.0, water speed automatically +50%; ranged attacks, attack interval 1500ms.\nF skill "Sprint": a 3-second burst of high speed (water +5 / land +3) that stuns any enemy you collide with for 500ms. 15-second cooldown.'
                         }
                     },
                     {
@@ -75,8 +86,8 @@ export const COMPENDIUM_DATA = (function () {
                         id: 'organ_system',
                         title: { 'zh-TW': '器官系統', 'en': 'Organ System' },
                         content: {
-                            'zh-TW': '器官分為攻擊⚔️、防禦🛡️、靈力🔮三大類，共 15 種普通器官，各有 Lv1~3，每級各佔一個槽位。擊敗精英怪有 50% 機率掉落隱藏器官（不佔普通槽位）。兩種器官同時達到 Lv3 可觸發「組合效果」，大幅強化能力。死亡後依「記憶器官」技能等級可保留 0~3 個器官到下一局。體型類器官增加半徑，半徑越大攻擊範圍越廣。',
-                            'en': 'Organs come in three types: Attack ⚔️, Defense 🛡️, and Spirit 🔮 — 15 standard organs total, each with Lv1~3, and each level occupying one slot. Defeating Elites has a 50% chance to drop a Hidden Organ (no slot cost). Two organs both at Lv3 can trigger a "Combo Effect" for a major power boost. After death, the Organ Memory skill lets you keep 0~3 organs into the next run. Size organs raise your radius, which directly increases your attack range.'
+                            'zh-TW': '器官分為攻擊⚔️、防禦🛡️、靈力🔮三大類，共 15 種普通器官，各有 Lv1~3，每級各佔一個槽位。擊敗精英怪有 50% 機率掉落隱藏器官（不佔普通槽位）。兩種器官同時達到 Lv3 可觸發「組合效果」，大幅強化能力。死亡後依「記憶器官」技能等級可保留 0~3 個器官到下一局。體型類器官增加半徑，半徑越大攻擊範圍越廣。\n採集範圍影響果子、屍體、白骨的拾取距離，來源包含體型（體型類器官）、器官效果（大腦各級 +10/+15/+15px，強大的手臂 +15px）及技能效果（收集成癮每級 +10px）。',
+                            'en': 'Organs come in three types: Attack ⚔️, Defense 🛡️, and Spirit 🔮 — 15 standard organs total, each with Lv1~3, and each level occupying one slot. Defeating Elites has a 50% chance to drop a Hidden Organ (no slot cost). Two organs both at Lv3 can trigger a "Combo Effect" for a major power boost. After death, the Organ Memory skill lets you keep 0~3 organs into the next run. Size organs raise your radius, which directly increases your attack range.\nPickup range determines how far you can collect fruits, corpses, and bones. It comes from body size (size organs), organ effects (Brain adds +10/+15/+15px per level; Strong Arms +15px), and skill effects (Collection Addiction adds +10px per level).'
                         }
                     },
                     {
@@ -107,8 +118,8 @@ export const COMPENDIUM_DATA = (function () {
                         id: 'skill_tree',
                         title: { 'zh-TW': '技能樹', 'en': 'Skill Tree' },
                         content: {
-                            'zh-TW': '技能樹跨局持久保存，是遊戲的長期成長核心。技能點來源：精英怪擊殺（第 1/2/3 夜各 +1/+1/+2）、Boss 擊殺（+3）、存活時間獎勵與等級獎勵（結算時計算）。共 9 種技能，升至第 N 級費 N 點。推薦新手優先升：強壯體魄（起始 HP+）、採集專家（果子 XP+）、記憶器官（死亡保留器官數）。技能點可重置，不需擔心選錯。',
-                            'en': 'The Skill Tree persists between runs and is the foundation of long-term progression. Skill points come from Elite kills (+1/+1/+2 across Nights 1~3), Boss kill (+3), survival time bonus, and level bonus (both calculated at the end screen). There are 9 skills; reaching level N costs N points. Beginners should prioritize Vitality (starting HP), Forager (fruit XP), and Organ Memory (keep organs after death). Points can be fully reset at any time.'
+                            'zh-TW': '技能樹跨局持久保存，是遊戲的長期成長核心。技能點來源：精英怪擊殺（第 1/2/3 夜各 +1/+1/+2）、Boss 擊殺（+3）、存活時間獎勵與等級獎勵（結算時計算）。升至第 N 級費 N 點，技能點可隨時重置。\n完整 9 種技能：強壯體魄、敏捷身手、採集專家、獵人本能、頑強意志、記憶器官、幸運重選、收集成癮、恐怖之牙。各技能詳細等級數值可在「進化系統 > 技能樹」分頁查看。\n推薦新手優先升：強壯體魄（起始 HP+）、採集專家（果子 XP+）、記憶器官（死亡保留器官數）。',
+                            'en': 'The Skill Tree persists between runs and is the foundation of long-term progression. Skill points come from Elite kills (+1/+1/+2 across Nights 1~3), Boss kill (+3), survival time bonus, and level bonus (both calculated at the end screen). Reaching level N costs N points; points can be fully reset at any time.\nAll 9 skills: Vitality, Agility, Forager, Hunter Instinct, Tenacity, Organ Memory, Lucky Reroll, Collection Addiction, Terrible Fang. Detailed per-level values are shown in the Evolution System > Skill Tree tab.\nBeginners should prioritize Vitality (starting HP), Forager (fruit XP), and Organ Memory (keep organs after death).'
                         }
                     },
                     {
@@ -117,6 +128,22 @@ export const COMPENDIUM_DATA = (function () {
                         content: {
                             'zh-TW': '遊戲提供三個難度。\n🌿 簡單：生物強度正常、Boss 較為溫和，適合熟悉遊戲機制的入門選擇；每夜出現三犬精英（靜音獵隊）。\n⚔️ 普通：生物全面強化（HP/速度/傷害均提升）、追擊範圍更廣，並開放巨人化、殺手化、精英/Boss 回血等特殊機制；Boss 擁有各自獨特技能；每夜出現三犬精英。\n🗡️ 困難：生物強度 ×2.5、追擊範圍 600px，精英/Boss 不回血，精英怪改為靜音獵隊三隼（幽靈隼/暗影隼/毒霧隼），第四夜 Boss 為困難專屬的黑色獵人（5管血條制）。建議先通關普通難度再挑戰。',
                             'en': 'Three difficulty modes are available.\n🌿 Easy: standard creature stats and milder Bosses — ideal for learning the game. Silent Hunter dog Elites appear each night.\n⚔️ Normal: all creatures are stronger (HP, speed, damage boosted), aggro range wider, and special mechanics are unlocked: Giantization, Killer-mode, and Elite/Boss HP regeneration. Bosses have unique skills. Silent Hunter dog Elites appear each night.\n🗡️ Hard: creature strength ×2.5, aggro range 600px, no Elite/Boss regeneration. Elites are replaced by the Silent Hunter Falcon squad (Specter / Shadow / Venom Falcon). The Night 4 Boss is the exclusive Black Hunter (5 health bars). Recommended: clear Normal before attempting Hard.'
+                        }
+                    },
+                    {
+                        id: 'achievements',
+                        title: { 'zh-TW': '成就與永久加成', 'en': 'Achievements & Permanent Bonuses' },
+                        content: {
+                            'zh-TW': '遊戲共有 36 個成就，解鎖後提供永久加成，效果跨局保留，不受遊戲重置影響。\n加成種類包含：攻擊力、HP上限、速度、攻速、果子 XP、擊殺 XP、特殊技能冷卻縮短、器官槽上限、全屬性百分比、變異兌換折扣、暴擊率、採集/攻擊範圍等。\n成就格子顯示紅點（🔴）時表示有尚未查看的新成就，點開查看後紅點消除。\n從首頁右上角的 🏆 成就按鈕進入查看。',
+                            'en': 'There are 36 achievements in total. Each unlocked achievement provides a permanent bonus that carries over across all runs regardless of resets.\nBonus types include: attack power, max HP, speed, attack speed, fruit XP, kill XP, special skill cooldown reduction, organ slot count, all-stats percentage, mutation exchange discount, crit chance, pickup range, attack range, and more.\nA red dot (🔴) on an achievement tile means it has not been viewed yet — opening it clears the indicator.\nAccess achievements via the 🏆 button in the top-right corner of the home screen.'
+                        }
+                    },
+                    {
+                        id: 'leaderboard',
+                        title: { 'zh-TW': '排行榜與名人堂', 'en': 'Leaderboard & Hall of Fame' },
+                        content: {
+                            'zh-TW': '遊戲提供三類線上紀錄系統，可從首頁進入查看。\n📊 排行榜：依難度分別記錄玩家的通關分數與最佳成績。\n🎯 趣味榜：11 種特殊分類排名，例如最速通關、最速死亡、巨人獵人（擊殺最多巨人化生物）、最高等級、白骨精（累積最多白骨）等，展示各類挑戰的頂尖玩家。\n🏛️ 名人堂：保存各類別代表性最高紀錄，展示玩家的歷史最佳表現。\n首頁側欄目前顯示 TOP5 排行摘要。',
+                            'en': 'Three online record systems are available from the home screen.\n📊 Leaderboard: records best scores per difficulty for victory and completion runs.\n🎯 Fun Boards: 11 special categories — including Fastest Clear, Fastest Death, Giant Hunter (most giant kills), Highest Level, Bone Collector (most bones accumulated), and more — showcasing top players in each challenge.\n🏛️ Hall of Fame: preserves the all-time best records across categories, spotlighting players\' greatest historical achievements.\nThe home screen sidebar currently shows a TOP5 leaderboard summary.'
                         }
                     },
                     {
@@ -182,6 +209,14 @@ export const COMPENDIUM_DATA = (function () {
                 label: { 'zh-TW': 'Boss', 'en': 'Boss' },
                 entries: [
                     {
+                        id: 'boss_spawn_mechanic',
+                        title: { 'zh-TW': 'Boss 出現機制', 'en': 'Boss Spawn Mechanic' },
+                        content: {
+                            'zh-TW': 'Boss 在第四夜剩餘 150 秒時降臨，並開始全圖追擊玩家。\n簡單與普通難度：第四夜的 Boss 種類在本局遊戲開始時隨機決定，不一定取決於玩家當下所在的生態區——即使玩家站在森林，也可能迎來大白鯊而非黑熊。建議觀察 Boss 降臨時的公告確認對手是誰，再決定交戰策略。\n困難難度：固定出現黑色獵人，不受此規則影響。',
+                            'en': 'The Boss descends when 150 seconds remain in the fourth night and begins hunting you across the entire map.\nEasy and Normal difficulty: which Boss appears in Night 4 is determined randomly at the start of the run — it is not necessarily tied to the biome you are currently standing in. You might face the Great White Shark even while standing in the Forest. Watch the Boss announcement when it arrives to confirm your opponent before committing to a strategy.\nHard difficulty: the Black Hunter always appears and is not affected by this rule.'
+                        }
+                    },
+                    {
                         id: 'black_bear',
                         title: { 'zh-TW': '🌿 黑熊', 'en': '🌿 Black Bear' },
                         content: {
@@ -236,11 +271,60 @@ export const COMPENDIUM_DATA = (function () {
                 entries: [
                     {
                         id: 'elite',
-                        title: { 'zh-TW': '精英怪', 'en': 'Elite Creatures' },
-                        content: {
-                            'zh-TW': '精英怪是每個夜晚出現的特殊強敵，對毒傷有 ' + bPr + '% 減免。擊殺後立即結束當夜，並有 50% 機率獲得隱藏器官，畫面頂部顯示血條與方向箭頭。\n【簡單/普通難度】每夜出現靜音獵隊犬族成員：\n★ 幽靈犬（第一夜）：近戰、HP ' + (bHp * n1.hpMult) + '，擊殺 +' + n1.xp + ' XP、+1 技能點、+1 變異點。\n★★ 暗影犬（第二夜）：近戰、HP ' + (bHp * n2.hpMult) + '，+' + n2.xp + ' XP、+1 技能點、+2 變異點。\n★★★ 毒霧犬（第三夜）：近戰+毒霧、HP ' + (bHp * n3.hpMult) + '，+' + n3.xp + ' XP、+2 技能點、+3 變異點。\n普通難度下精英怪具備回血特性。\n【困難難度】每夜隨機出現隼族（幽靈隼/暗影隼/毒霧隼），均為遠程攻擊且數值更高；精英不回血。',
-                            'en': 'Elites are powerful special enemies that appear each night, with ' + bPr + '% poison resistance. Defeating one ends the current night early with a 50% chance to drop a Hidden Organ; a health bar and direction arrow appear on screen.\n[Easy / Normal] The Silent Hunter dog squad appears each night:\n★ Specter Dog (Night 1): melee, HP ' + (bHp * n1.hpMult) + ', kill rewards +' + n1.xp + ' XP, +1 skill pt, +1 mutation pt.\n★★ Shadow Dog (Night 2): melee, HP ' + (bHp * n2.hpMult) + ', +' + n2.xp + ' XP, +1 skill pt, +2 mutation pts.\n★★★ Venom Dog (Night 3): melee + poison fog, HP ' + (bHp * n3.hpMult) + ', +' + n3.xp + ' XP, +2 skill pts, +3 mutation pts.\nIn Normal mode Elites regenerate HP over time.\n[Hard] A falcon-type Elite (Specter / Shadow / Venom Falcon) appears each night — all ranged, higher stats, and no HP regeneration.'
-                        }
+                        title: { 'zh-TW': '⭐精英怪', 'en': '⭐ Elite Creatures' },
+                        content: (function () {
+                            const eStr  = EASY_MAP.elites   || [];
+                            const nStr  = NORMAL_MAP.elites || [];
+                            const eHpM  = EASY_MAP.creatureStrength.hostile.hpMultiplier;
+                            const nHpM  = NORMAL_MAP.creatureStrength.hostile.hpMultiplier;
+                            const bHp2  = ELITE_CONFIG.base.hp;
+                            const eHp   = [0,1,2].map(function(i){ return bHp2 * (eStr[i] ? eStr[i].hpMultiplier : 1) * eHpM; });
+                            const nHp   = [0,1,2].map(function(i){ return bHp2 * (nStr[i] ? nStr[i].hpMultiplier : 1) * nHpM; });
+                            const r1    = HUNTER_ELITE_REWARDS[1], r2 = HUNTER_ELITE_REWARDS[2], r3 = HUNTER_ELITE_REWARDS[3];
+                            const pr    = Math.round(HUNTER_ELITE_POISON_RESIST * 100);
+                            const hc    = HARD_ELITE_CONFIG;
+                            const zhTW =
+                                '精英怪是每個夜晚出現的特殊強敵，擊殺後立即結束當夜，有 50% 機率獲得隱藏器官。畫面頂部顯示血條與方向箭頭。靜音獵隊精英怪毒抗 ' + pr + '%（不受毒傷影響）。★／★★／★★★ 在本條目中一律代表「出場夜晚順序」（第1夜／第2夜／第3夜），所有難度通用，不代表強弱排名。\n\n' +
+                                '【簡單 / 普通難度 — 靜音獵隊犬族】\n' +
+                                '每局開始時，幽靈犬、暗影犬、毒霧犬三者的出場順序由本局隨機決定，不是固定的「幽靈犬＝第一夜」。三犬本身數值相同，強弱完全取決於落在哪一夜。\n' +
+                                '★ 第一夜：簡單 HP ' + eHp[0] + '／普通 HP ' + nHp[0] + '，擊殺 +' + r1.xp + ' XP、+' + r1.skillPts + ' 技能點、+' + r1.mutPts + ' 變異點。\n' +
+                                '★★ 第二夜：簡單 HP ' + eHp[1] + '／普通 HP ' + nHp[1] + '，擊殺 +' + r2.xp + ' XP、+' + r2.skillPts + ' 技能點、+' + r2.mutPts + ' 變異點。\n' +
+                                '★★★ 第三夜：簡單 HP ' + eHp[2] + '／普通 HP ' + nHp[2] + '，擊殺 +' + r3.xp + ' XP、+' + r3.skillPts + ' 技能點、+' + r3.mutPts + ' 變異點。\n' +
+                                '普通難度下精英怪具備回血特性，簡單難度不回血。擊殺獎勵（XP/技能點/變異點）兩難度相同，只看星級。\n\n' +
+                                '【困難難度 — 靜音獵隊混合隊伍】\n' +
+                                '開局時隨機決定整局使用犬族或隼族（各 50%），全局不混搭。星級同樣代表出場順序（第1夜★、第2夜★★、第3夜★★★），但困難難度三隻的數值天生不同，哪一隻落在哪一夜也是開局隨機洗牌決定——所以★／★★／★★★不是固定對應某個數字，而是「這局可能是以下三者之一」：\n' +
+                                '犬族（近戰）三選一：幽靈犬 HP' + hc.specterDog.hp + '／傷害' + hc.specterDog.damage + '，暗影犬 HP' + hc.shadowDog.hp + '／傷害' + hc.shadowDog.damage + '，毒霧犬 HP' + hc.venomDog.hp + '／傷害' + hc.venomDog.damage + '。\n' +
+                                '隼族（遠程）三選一：幽靈隼 HP' + hc.specterFalcon.hp + '／傷害' + hc.specterFalcon.damage + '，暗影隼 HP' + hc.shadowFalcon.hp + '／傷害' + hc.shadowFalcon.damage + '，毒霧隼 HP' + hc.venomFalcon.hp + '／傷害' + hc.venomFalcon.damage + '。\n' +
+                                '技能（固定跟隨身份，與星級／出場夜晚無關）：\n' +
+                                '幽靈犬：一般近戰攻擊，無特殊技能。\n' +
+                                '暗影犬：一般近戰攻擊，無特殊技能。\n' +
+                                '毒霧犬：近戰咬擊附帶中毒。\n' +
+                                '幽靈隼：蓄力瞄準後發射單發精準追蹤彈。\n' +
+                                '暗影隼：近距離' + hc.shadowFalcon.pellets + ' 連發散彈攻擊。\n' +
+                                '毒霧隼：雙技能輪替——毒牆封路／回旋毒牙，皆附帶中毒。\n' +
+                                '困難難度精英怪不回血。';
+                            const en =
+                                'Elites are powerful special enemies that appear each night — defeating one ends the current night early with a 50% chance to drop a Hidden Organ. A health bar and direction arrow appear at the top of the screen. Silent Hunter Elites have ' + pr + '% poison resistance. Star tiers (★ / ★★ / ★★★) always represent night-appearance order (Night 1 / Night 2 / Night 3) across every difficulty — never relative power.\n\n' +
+                                '[Easy / Normal — Silent Hunter Dog Squad]\n' +
+                                'At the start of each run, the order in which Specter Dog, Shadow Dog, and Venom Dog appear is decided randomly — it is not fixed as "Specter Dog = Night 1." All three dogs share the same base stats; actual strength depends purely on which night they are assigned to.\n' +
+                                '★ Night 1: Easy HP ' + eHp[0] + ' / Normal HP ' + nHp[0] + ' — kill rewards +' + r1.xp + ' XP, +' + r1.skillPts + ' skill pts, +' + r1.mutPts + ' mutation pt.\n' +
+                                '★★ Night 2: Easy HP ' + eHp[1] + ' / Normal HP ' + nHp[1] + ' — kill rewards +' + r2.xp + ' XP, +' + r2.skillPts + ' skill pts, +' + r2.mutPts + ' mutation pts.\n' +
+                                '★★★ Night 3: Easy HP ' + eHp[2] + ' / Normal HP ' + nHp[2] + ' — kill rewards +' + r3.xp + ' XP, +' + r3.skillPts + ' skill pts, +' + r3.mutPts + ' mutation pts.\n' +
+                                'In Normal mode Elites regenerate HP; in Easy mode they do not. Kill rewards (XP / skill pts / mutation pts) are the same for both difficulties — only the star tier matters.\n\n' +
+                                '[Hard — Silent Hunter Mixed Squad]\n' +
+                                'At run start, a coin-flip determines whether the entire run uses the Dog squad or the Falcon squad (50/50); the two never mix within a run. The star tier still marks appearance order (Night 1 ★, Night 2 ★★, Night 3 ★★★), but in Hard mode each individual has its own fixed stats, and which one lands on which night is shuffled at run start — so ★ / ★★ / ★★★ do not map to one fixed number; each night slot could be any of the three.\n' +
+                                'Dog squad (melee) — one of three: Specter Dog HP ' + hc.specterDog.hp + ' / dmg ' + hc.specterDog.damage + ', Shadow Dog HP ' + hc.shadowDog.hp + ' / dmg ' + hc.shadowDog.damage + ', Venom Dog HP ' + hc.venomDog.hp + ' / dmg ' + hc.venomDog.damage + '.\n' +
+                                'Falcon squad (ranged) — one of three: Specter Falcon HP ' + hc.specterFalcon.hp + ' / dmg ' + hc.specterFalcon.damage + ', Shadow Falcon HP ' + hc.shadowFalcon.hp + ' / dmg ' + hc.shadowFalcon.damage + ', Venom Falcon HP ' + hc.venomFalcon.hp + ' / dmg ' + hc.venomFalcon.damage + '.\n' +
+                                'Skills (tied to identity, independent of star tier / night):\n' +
+                                'Specter Dog: standard melee attack, no special skill.\n' +
+                                'Shadow Dog: standard melee attack, no special skill.\n' +
+                                'Venom Dog: melee bite applies poison.\n' +
+                                'Specter Falcon: charges, then fires a single precise tracking shot.\n' +
+                                'Shadow Falcon: close-range ' + hc.shadowFalcon.pellets + '-pellet shotgun burst.\n' +
+                                'Venom Falcon: alternates two skills — poison-wall barrage / spinning poison fangs, both apply poison.\n' +
+                                'Hard mode Elites do not regenerate HP.';
+                            return { 'zh-TW': zhTW, 'en': en };
+                        })()
                     },
                     {
                         id: 'moose',

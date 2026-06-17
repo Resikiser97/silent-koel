@@ -8,7 +8,7 @@
 import { gameState, ctx } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H } from './map.js';
 import { worldToScreen, wrappedDelta } from './camera.js';
-import { ELITE_CONFIG } from '../config/creatures.js';
+import { ELITE_CONFIG, HUNTER_ELITE_REWARDS, HUNTER_ELITE_POISON_RESIST } from '../config/creatures.js';
 import { HARD_ELITE_CONFIG } from '../config/gameConfig.js';
 import { AudioManager } from './audio.js';
 import { moveCreature } from './spawning.js';
@@ -33,11 +33,6 @@ const _HUNTER_ELITE_META = {
 
 const _HUNTER_ELITE_STARS = ['★', '★★', '★★★'];
 
-const _HUNTER_ELITE_REWARDS = {
-    1: { xp: 200, skillPts: 2, mutPts: 1 },
-    2: { xp: 350, skillPts: 3, mutPts: 2 },
-    3: { xp: 500, skillPts: 4, mutPts: 3 },
-};
 
 export function initEliteOrder() {
     const seed = gameState.mapSeed || Math.random() * 65536;
@@ -121,7 +116,7 @@ function _spawnHunterElite(nightNum, eliteType) {
         attackRange: cfg.type === 'ranged' ? (cfg.range || 900) : 28,
         attackCooldown: 0,
         state: 'patrolling',
-        poisonResist: 0,
+        poisonResist: HUNTER_ELITE_POISON_RESIST,
         wanderTarget: null, lastWanderTime: Date.now(),
         label: star + ' ' + meta.label,
         color: meta.color,
@@ -204,7 +199,7 @@ export function spawnEliteCreature(nightNum) {
 
 // ── Hunter 精英怪死亡獎勵（不含 addXP，xp 由呼叫端決定時機）
 export function _handleHunterEliteKill(elite) {
-    const rewards = _HUNTER_ELITE_REWARDS[elite.starTier] || _HUNTER_ELITE_REWARDS[1];
+    const rewards = HUNTER_ELITE_REWARDS[elite.starTier] || HUNTER_ELITE_REWARDS[1];
     gameState.skillPoints += rewards.skillPts;
     storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
     gameState.mutationSkillPoints = (gameState.mutationSkillPoints || 0) + rewards.mutPts;

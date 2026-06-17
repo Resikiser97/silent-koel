@@ -35,7 +35,7 @@
 | `gameConfig.js` | GAME_INFO（版本號）、GAME_TIMING、AUDIO_FILES、FIXED_DELTA |
 | `characters.js` | CHARACTERS 角色定義常數 |
 | `organs.js` | ORGANS（15種）、HIDDEN_ORGANS（4種）、COMBOS、poisonSac |
-| `creatures.js` | CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG |
+| `creatures.js` | CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG、HUNTER_ELITE_REWARDS、HUNTER_ELITE_POISON_RESIST |
 | `evolution.js` | EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種） |
 | `patchnotes.js` | PATCH_NOTES 陣列，最新版本置頂；v0.1.25.3 起保留 v0.1.22.1 以上公告 |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |

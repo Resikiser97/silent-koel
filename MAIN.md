@@ -1,4 +1,4 @@
-## v0.1.25.7
+## v0.1.25.8
 
 # The Silent Koel — 模組架構說明
 
@@ -8,6 +8,7 @@
 config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES, HARD_ELITE_CONFIG
 config/organs.js          ORGANS, HIDDEN_ORGANS, COMBOS
 config/creatures.js       CREATURE_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人，v0.1.0.0）
+                          HUNTER_ELITE_REWARDS, HUNTER_ELITE_POISON_RESIST（靜音獵隊獎勵與毒抗，v0.1.25.8）
 config/evolution.js       EVOLUTION_PATHS, SKILLS
 config/patchnotes.js      PATCH_NOTES（v0.1.25.3 起玩家公告保留 v0.1.22.1 以上）
 config/compendium_data.js COMPENDIUM_DATA（四大圖鑑分類，需在 map/normalmap.js 之後載入）
@@ -117,7 +118,7 @@ systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCrea
                           _getHunterEliteType, _spawnHunterElite, _handleHunterEliteKill（靜音獵隊精英怪，v0.1.0.0）
                           _fireEliteFalconProjectile, _fireVenomFalconShot, _updateEliteVenomPuddle
                           _updateHunterEliteChase, _drawHunterElite
-                          _HUNTER_ELITE_META, _HUNTER_ELITE_STAR, _HUNTER_ELITE_REWARDS（顯示常數）
+                          _HUNTER_ELITE_META, _HUNTER_ELITE_STAR（顯示常數；_HUNTER_ELITE_REWARDS 已搬至 config/creatures.js，elite.js 改 import 使用）
 systems/boss.js           spawnBoss, updateBoss, showVictory
                           handleBossKill（統一 Boss 死亡路由，支援黑色獵人多管血條，v0.1.0.0）
                           _spawnHunterBoss, _updateHunterBoss（黑色獵人 Boss 系統，v0.1.0.0）
