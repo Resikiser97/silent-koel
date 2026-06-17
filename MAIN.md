@@ -1,38 +1,38 @@
-## v0.1.25.9
+﻿## v0.1.26.0
 
-# The Silent Koel — 模組架構說明
+# The Silent Koel â€” æ¨¡çµ„æž¶æ§‹èªªæ˜Ž
 
-## 模組依賴順序（ESM import 鏈，入口為 main.js）
+## æ¨¡çµ„ä¾è³´é †åºï¼ˆESM import éˆï¼Œå…¥å£ç‚º main.jsï¼‰
 
 ```
 config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES, HARD_ELITE_CONFIG
 config/organs.js          ORGANS, HIDDEN_ORGANS, COMBOS
-config/creatures.js       CREATURE_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人，v0.1.0.0）
+config/creatures.js       CREATURE_CONFIG, CREATURE_AI_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人；生物分離/近戰前後搖/鬣狗 pack 數值集中於 CREATURE_AI_CONFIG）
                           HUNTER_ELITE_REWARDS, HUNTER_ELITE_POISON_RESIST（靜音獵隊獎勵與毒抗，v0.1.25.8）
 config/evolution.js       EVOLUTION_PATHS, SKILLS
-config/patchnotes.js      PATCH_NOTES（v0.1.25.3 起玩家公告保留 v0.1.22.1 以上）
-config/compendium_data.js COMPENDIUM_DATA（四大圖鑑分類，需在 map/normalmap.js 之後載入）
-config/characters.js      CHARACTERS（角色定義常數，v0.56.0）
-config/xpConfig.js        XP_CONFIG：採集 XP（fruit.base/foragerPerLevel/noHerbivoreBase）、擊殺 XP（kill.minCreatureBaseXP/hunterPerLevel）、hostile XP 公式（kill.hostile.*）所有常數集中定義（v0.1.24.5）
-config/combatConfig.js    COMBAT_CONFIG.baseAttackIntervalMs（攻擊間隔公式基底，v0.1.24.4）
+config/patchnotes.js      PATCH_NOTESï¼ˆv0.1.25.3 èµ·çŽ©å®¶å…¬å‘Šä¿ç•™ v0.1.22.1 ä»¥ä¸Šï¼‰
+config/compendium_data.js COMPENDIUM_DATAï¼ˆå››å¤§åœ–é‘‘åˆ†é¡žï¼Œéœ€åœ¨ map/normalmap.js ä¹‹å¾Œè¼‰å…¥ï¼‰
+config/characters.js      CHARACTERSï¼ˆè§’è‰²å®šç¾©å¸¸æ•¸ï¼Œv0.56.0ï¼‰
+config/xpConfig.js        XP_CONFIGï¼šæŽ¡é›† XPï¼ˆfruit.base/foragerPerLevel/noHerbivoreBaseï¼‰ã€æ“Šæ®º XPï¼ˆkill.minCreatureBaseXP/hunterPerLevelï¼‰ã€hostile XP å…¬å¼ï¼ˆkill.hostile.*ï¼‰æ‰€æœ‰å¸¸æ•¸é›†ä¸­å®šç¾©ï¼ˆv0.1.24.5ï¼‰
+config/combatConfig.js    COMBAT_CONFIG.baseAttackIntervalMsï¼ˆæ”»æ“Šé–“éš”å…¬å¼åŸºåº•ï¼Œv0.1.24.4ï¼‰
 config/playerStatsFormula.js
                           calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)
-                            → { attack, attackSpeed, hpMax, speed, radius, attackRange, tenacity,
+                            â†’ { attack, attackSpeed, hpMax, speed, radius, attackRange, tenacity,
                                 critChance, critMult, fruitXP, killXP, corpseXP }
-                          第 6 參數 unlockedAchievements（object｜null）：傳入已解鎖成就 map，讓面板顯示值與 runtime 成就加成同步（v0.1.25.0）
-                          attackSpeed 返回欄位：{ final, baseIntervalMs, intervalMs, base, organAdd, achAdd }，Player Stats 顯示角色基底攻速與攻擊間隔（v0.1.25.2）
-                          corpseXP 返回欄位：{ final, base, evoLevel, mutMultiplier, achPercent }，預設肉食性 Lv1 演示（v0.1.25.2）
-                          純資料模組，不 import 任何 systems/；依賴 config/characters.js / config/organs.js / config/evolution.js / config/xpConfig.js / config/achievements.js
-                          支援 organs/hiddenOrgans array 或 object 兩種格式
-                          詳細計算規則與限制見 docs/PLAYER_STATS_FORMULA.md
-                          測試：tests/config/playerStatsFormula.test.js（168 個測試，v0.1.25.2）
+                          ç¬¬ 6 åƒæ•¸ unlockedAchievementsï¼ˆobjectï½œnullï¼‰ï¼šå‚³å…¥å·²è§£éŽ–æˆå°± mapï¼Œè®“é¢æ¿é¡¯ç¤ºå€¼èˆ‡ runtime æˆå°±åŠ æˆåŒæ­¥ï¼ˆv0.1.25.0ï¼‰
+                          attackSpeed è¿”å›žæ¬„ä½ï¼š{ final, baseIntervalMs, intervalMs, base, organAdd, achAdd }ï¼ŒPlayer Stats é¡¯ç¤ºè§’è‰²åŸºåº•æ”»é€Ÿèˆ‡æ”»æ“Šé–“éš”ï¼ˆv0.1.25.2ï¼‰
+                          corpseXP è¿”å›žæ¬„ä½ï¼š{ final, base, evoLevel, mutMultiplier, achPercent }ï¼Œé è¨­è‚‰é£Ÿæ€§ Lv1 æ¼”ç¤ºï¼ˆv0.1.25.2ï¼‰
+                          ç´”è³‡æ–™æ¨¡çµ„ï¼Œä¸ import ä»»ä½• systems/ï¼›ä¾è³´ config/characters.js / config/organs.js / config/evolution.js / config/xpConfig.js / config/achievements.js
+                          æ”¯æ´ organs/hiddenOrgans array æˆ– object å…©ç¨®æ ¼å¼
+                          è©³ç´°è¨ˆç®—è¦å‰‡èˆ‡é™åˆ¶è¦‹ docs/PLAYER_STATS_FORMULA.md
+                          æ¸¬è©¦ï¼štests/config/playerStatsFormula.test.jsï¼ˆ168 å€‹æ¸¬è©¦ï¼Œv0.1.25.2ï¼‰
 
 lang.js                   LANG_LIST, LANG={}, _langPack(), applyLanguage(), t()
 lang/zh-TW.js             LANG['zh-TW']
 lang/en.js                LANG['en']
 
-systems/gameState.js      DEFAULT_SETTINGS, gameState, canvas, ctx, MAP 常數
-systems/gameFlow.js       pausePlayTimer, resumePlayTimer（Stage F 批次 1：從 main.js 抽出，供 boss/organs/evolution/tutorial 使用）
+systems/gameState.js      DEFAULT_SETTINGS, gameState, canvas, ctx, MAP å¸¸æ•¸
+systems/gameFlow.js       pausePlayTimer, resumePlayTimerï¼ˆStage F æ‰¹æ¬¡ 1ï¼šå¾ž main.js æŠ½å‡ºï¼Œä¾› boss/organs/evolution/tutorial ä½¿ç”¨ï¼‰
 systems/map.js            MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H, TILE_SIZE, NOISE_SCALE, MAP_RULES
                           BIOME_COLOR
                           getBiome, getBgColor
@@ -40,139 +40,142 @@ systems/map.js            MAP_WIDTH/HEIGHT/VIEW_W/VIEW_H, TILE_SIZE, NOISE_SCALE
                           generateTerrain, buildTerrainCanvas, drawTerrain
                           generateTrees
 systems/utils.js          drawArrow, drawHealthBar, drawNameTag, drawGlowEffect
-                          applyTenacity（韌性縮短CC時間，v0.56.0）
-                          getGameFont（canvas 字型輔助，依 fontLarge/fontBold 設定動態生成，v0.0.66.1）
+                          applyTenacityï¼ˆéŸŒæ€§ç¸®çŸ­CCæ™‚é–“ï¼Œv0.56.0ï¼‰
+                          getGameFontï¼ˆcanvas å­—åž‹è¼”åŠ©ï¼Œä¾ fontLarge/fontBold è¨­å®šå‹•æ…‹ç”Ÿæˆï¼Œv0.0.66.1ï¼‰
                           spawnLootCircle
 systems/audio.js          AudioManager, initAudio, preloadAllSfxBuffers
-                          playIntroTheme, stopIntroTheme（首頁背景音樂，v0.1.0.1）
+                          playIntroTheme, stopIntroThemeï¼ˆé¦–é èƒŒæ™¯éŸ³æ¨‚ï¼Œv0.1.0.1ï¼‰
 systems/camera.js         wrappedDistance, wrappedDelta, worldToScreen, updateCamera
-                          _updateCameraZoom（視野縮放，重構自 _updateMobileCameraZoom，v0.58.0）
-                          updateCamera：alwaysCenter 設定為 true 時 edgeThreshold=0.5，角色永遠居中（v0.57.5）
-systems/input.js          handleKeyDown, handleKeyUp, _calcMouseWorld, _updateMouseWorld（含設定介面按鍵 handler refs）
+                          _updateCameraZoomï¼ˆè¦–é‡Žç¸®æ”¾ï¼Œé‡æ§‹è‡ª _updateMobileCameraZoomï¼Œv0.58.0ï¼‰
+                          updateCameraï¼šalwaysCenter è¨­å®šç‚º true æ™‚ edgeThreshold=0.5ï¼Œè§’è‰²æ°¸é å±…ä¸­ï¼ˆv0.57.5ï¼‰
+systems/input.js          handleKeyDown, handleKeyUp, _calcMouseWorld, _updateMouseWorldï¼ˆå«è¨­å®šä»‹é¢æŒ‰éµ handler refsï¼‰
 systems/spawning.js       spawnFruitFromTree, spawnFruit, moveCreature
                           _randomPointInBiome, _makeHerbCreature, _makeCarnCreature
-                          spawnBiomeCreatures（開局設 spawnProtectUntil +3s，中心保護區不生肉食怪，v0.0.66.2）
+                          spawnBiomeCreaturesï¼ˆé–‹å±€è¨­ spawnProtectUntil +3sï¼Œä¸­å¿ƒä¿è­·å€ä¸ç”Ÿè‚‰é£Ÿæ€ªï¼Œv0.0.66.2ï¼‰
                           spawnCreatureAtEdgeBiome
-                          updateCreatureSpawning（spawnProtectUntil 期間跳過肉食補充，v0.0.66.2）
-systems/feedback.js       showFloatingText（Canvas 浮動文字，推入 gameState.floatTexts）
-                          showXPPopup（XP 取得浮動文字）
-                          （Stage F 批次 2：從 combat.js / player.js 抽出，v0.1.20.0）
-systems/reward.js         addXP（XP 累加，含技能加成）
-                          checkLevelUp（升級判斷，dispatch CustomEvent('levelUp')）
-                          （Stage F 批次 2：從 player.js 抽出，v0.1.20.1）
-systems/loot.js           _spawnBone（push 白骨到 gameState.bones）
-                          （Stage F 批次 2：從 combat.js 抽出，v0.1.20.1）
+                          updateCreatureSpawningï¼ˆspawnProtectUntil æœŸé–“è·³éŽè‚‰é£Ÿè£œå……ï¼Œv0.0.66.2ï¼‰
+systems/feedback.js       showFloatingTextï¼ˆCanvas æµ®å‹•æ–‡å­—ï¼ŒæŽ¨å…¥ gameState.floatTextsï¼‰
+                          showXPPopupï¼ˆXP å–å¾—æµ®å‹•æ–‡å­—ï¼‰
+                          ï¼ˆStage F æ‰¹æ¬¡ 2ï¼šå¾ž combat.js / player.js æŠ½å‡ºï¼Œv0.1.20.0ï¼‰
+systems/reward.js         addXPï¼ˆXP ç´¯åŠ ï¼Œå«æŠ€èƒ½åŠ æˆï¼‰
+                          checkLevelUpï¼ˆå‡ç´šåˆ¤æ–·ï¼Œdispatch CustomEvent('levelUp')ï¼‰
+                          ï¼ˆStage F æ‰¹æ¬¡ 2ï¼šå¾ž player.js æŠ½å‡ºï¼Œv0.1.20.1ï¼‰
+systems/loot.js           _spawnBoneï¼ˆpush ç™½éª¨åˆ° gameState.bonesï¼‰
+                          ï¼ˆStage F æ‰¹æ¬¡ 2ï¼šå¾ž combat.js æŠ½å‡ºï¼Œv0.1.20.1ï¼‰
 systems/player.js         updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction
                           updatePassiveOrgans, checkXPMilestone
                           findBestPerceptionPath
-                          playerDash（閃現技能：瞬移+無敵+冷卻，v0.53.0）
-                          _collectFruit（果子吸收 XP 共用函式，v0.54.0；v0.57.6 加入草食性判斷：ev.herbivore >= 1 才套正常 XP 計算，否則固定 1 XP）
-                          updateProjectiles, _checkProjectileHit（子彈系統，v0.56.0；v0.57.5 補入 tutorialStump）
-                          _archerAttack, _getArcherShootDir, _findArcherAutoTarget（阿奇爾攻擊，v0.56.0）
-systems/tutorial.js       showTutorial（三步驟教學主入口），spawnTutorialStump，handleTutorialStumpKill
-                          showTutorialCombatHint，showTutorialCombatComplete
-                          resetTutorial（強制重置教學狀態，供 initializeGame 每局呼叫，v0.1.3.6）
-                          （IIFE 模組，掛至 window；v0.43.0 新增，v0.45.0 加入戰鬥教學）
-systems/damage.js         applyDamageToPlayer（玩家受傷、刺甲反傷、tenacity 保命）
-                          handleKill（普通/敵對生物擊殺獎勵；移除已擊殺生物；dispatch eliteKilled）
-                          handleGiantKill（巨人/Alpha 擊殺獎勵）
-                          （Stage F 3a：從 combat.js 抽出，供 boss/player/creatures/elite 共用，v0.1.21.0）
+                          playerDashï¼ˆé–ƒç¾æŠ€èƒ½ï¼šçž¬ç§»+ç„¡æ•µ+å†·å»ï¼Œv0.53.0ï¼‰
+                          _collectFruitï¼ˆæžœå­å¸æ”¶ XP å…±ç”¨å‡½å¼ï¼Œv0.54.0ï¼›v0.57.6 åŠ å…¥è‰é£Ÿæ€§åˆ¤æ–·ï¼šev.herbivore >= 1 æ‰å¥—æ­£å¸¸ XP è¨ˆç®—ï¼Œå¦å‰‡å›ºå®š 1 XPï¼‰
+                          updateProjectiles, _checkProjectileHitï¼ˆå­å½ˆç³»çµ±ï¼Œv0.56.0ï¼›v0.57.5 è£œå…¥ tutorialStumpï¼‰
+                          _archerAttack, _getArcherShootDir, _findArcherAutoTargetï¼ˆé˜¿å¥‡çˆ¾æ”»æ“Šï¼Œv0.56.0ï¼‰
+systems/tutorial.js       showTutorialï¼ˆä¸‰æ­¥é©Ÿæ•™å­¸ä¸»å…¥å£ï¼‰ï¼ŒspawnTutorialStumpï¼ŒhandleTutorialStumpKill
+                          showTutorialCombatHintï¼ŒshowTutorialCombatComplete
+                          resetTutorialï¼ˆå¼·åˆ¶é‡ç½®æ•™å­¸ç‹€æ…‹ï¼Œä¾› initializeGame æ¯å±€å‘¼å«ï¼Œv0.1.3.6ï¼‰
+                          ï¼ˆIIFE æ¨¡çµ„ï¼ŒæŽ›è‡³ windowï¼›v0.43.0 æ–°å¢žï¼Œv0.45.0 åŠ å…¥æˆ°é¬¥æ•™å­¸ï¼‰
+systems/damage.js         applyDamageToPlayerï¼ˆçŽ©å®¶å—å‚·ã€åˆºç”²åå‚·ã€tenacity ä¿å‘½ï¼‰
+                          handleKillï¼ˆæ™®é€š/æ•µå°ç”Ÿç‰©æ“Šæ®ºçŽå‹µï¼›ç§»é™¤å·²æ“Šæ®ºç”Ÿç‰©ï¼›dispatch eliteKilledï¼‰
+                          handleGiantKillï¼ˆå·¨äºº/Alpha æ“Šæ®ºçŽå‹µï¼‰
+                          ï¼ˆStage F 3aï¼šå¾ž combat.js æŠ½å‡ºï¼Œä¾› boss/player/creatures/elite å…±ç”¨ï¼Œv0.1.21.0ï¼‰
 systems/combat.js         playerAttack, setRangedAttackCallback
                           updateStatusEffects, updateCorpseEating, drawCorpseEatingBars
                           updateBoneEating, _addBoneMaterial, _checkPoisonSacUpgrade
                           drawBones
-                          （showFloatingText / _spawnBone / applyDamageToPlayer / handleKill / handleGiantKill 已移至 feedback.js / loot.js / damage.js）
-                          （playerAttack() 將 tutorialStump 加入攻擊目標；v0.45.0）
-                          （playerAttack() 含嘴器減速/鯊魚嗅葉傷害加成/Debuff StartTime；v0.56.0）
+                          ï¼ˆshowFloatingText / _spawnBone / applyDamageToPlayer / handleKill / handleGiantKill å·²ç§»è‡³ feedback.js / loot.js / damage.jsï¼‰
+                          ï¼ˆplayerAttack() å°‡ tutorialStump åŠ å…¥æ”»æ“Šç›®æ¨™ï¼›v0.45.0ï¼‰
+                          ï¼ˆplayerAttack() å«å˜´å™¨æ¸›é€Ÿ/é¯Šé­šå—…è‘‰å‚·å®³åŠ æˆ/Debuff StartTimeï¼›v0.56.0ï¼‰
 systems/organs.js         getOrganLevel, getOrganCumulative, getComboHint, checkComboEffects
                           getOrganSlotsUsed, applyHiddenOrganEffects, applyOrganEffects
                           checkOrganUpgrade, showOrganSelection, drawOrganUI
                           handleEliteKill, showHiddenOrganSelection
-                          _drawCompendiumBtn（繪製 📖 按鈕，設定 _compendiumBtnRegion）
-                          （showOrganSelection() 偵測 tutorialOrganPhase，鎖定第一張攻擊器官；v0.45.0）
+                          _drawCompendiumBtnï¼ˆç¹ªè£½ ðŸ“– æŒ‰éˆ•ï¼Œè¨­å®š _compendiumBtnRegionï¼‰
+                          ï¼ˆshowOrganSelection() åµæ¸¬ tutorialOrganPhaseï¼ŒéŽ–å®šç¬¬ä¸€å¼µæ”»æ“Šå™¨å®˜ï¼›v0.45.0ï¼‰
 systems/mutation.js       initMutationData, saveMutationData, addMutationPoints
-                          DEFAULT_MUTATION_SKILLS, initMutationSkills, _saveMutationSkills, _syncMutationSkillPoints（變異技能樹，v0.0.69.0）
-                          _checkAndRepairMutationSkills（啟動時驗算並修復異常；不在面板開啟時呼叫，v0.1.3.1/v0.1.3.3）
+                          DEFAULT_MUTATION_SKILLS, initMutationSkills, _saveMutationSkills, _syncMutationSkillPointsï¼ˆè®Šç•°æŠ€èƒ½æ¨¹ï¼Œv0.0.69.0ï¼‰
+                          _checkAndRepairMutationSkillsï¼ˆå•Ÿå‹•æ™‚é©—ç®—ä¸¦ä¿®å¾©ç•°å¸¸ï¼›ä¸åœ¨é¢æ¿é–‹å•Ÿæ™‚å‘¼å«ï¼Œv0.1.3.1/v0.1.3.3ï¼‰
                           getMutationUpgradeCost, upgradeMutation
                           applyMutationEffects, applyAllMutationBonuses
                           checkMutationCompensation, showMutationPanel
 systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, applyEvolutionEffects
-                          loadSavedOrgans（獨立函式，v0.57.5；initializeGame() 在 applySkillBonuses() 前呼叫確保器官不丟失；buildSkillTreeOverlay(fromHome) 只讀 skillPoints 不再重複套用）
+                          loadSavedOrgansï¼ˆç¨ç«‹å‡½å¼ï¼Œv0.57.5ï¼›initializeGame() åœ¨ applySkillBonuses() å‰å‘¼å«ç¢ºä¿å™¨å®˜ä¸ä¸Ÿå¤±ï¼›buildSkillTreeOverlay(fromHome) åªè®€ skillPoints ä¸å†é‡è¤‡å¥—ç”¨ï¼‰
                           applySkillBonuses, saveLastRunOrgans, showSkillTree
                           buildSkillTreeOverlay, upgradeSkill
-                          _buildMutationSkillContent, _buildMutRightCol, _refreshMutContentRight（變異面板建立與更新，v0.1.0.1 重構）
-                          _upgradeMutationSkill（變異技能樹子面板，v0.0.69.0）
-                          buildSkillTreeOverlay 模式說明（v0.57.7）：
-                            fromHome / forceStart → 讀 localStorage skillPoints/playerSkills + 讀 lastRunOrgans 顯示繼承器官
-                            postGame → 讀記憶體 gameState.player.organs（遊戲剛結束，資料仍完整）
-                          _grantPoisonSac（雜食性 Lv1 時自動授予毒囊器官）
-systems/creatures.js      _PACK_NAMES / _usedPackNames / resetPackNames()（草食巨人隊伍名稱池，v0.0.66.2；v0.0.68.0 改仿製詞）
-                          _HYENA_PACK_NAMES / _usedHyenaPackNames / _hyenaPackNameMap（鬣狗三國武將名稱池，v0.0.68.0）
-                          drawCreatureShape（物種形狀主分派，含旋轉/翻轉邏輯）
-                          updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯；含Alpha繼承掃描C、巨人推開力G）
+                          _buildMutationSkillContent, _buildMutRightCol, _refreshMutContentRightï¼ˆè®Šç•°é¢æ¿å»ºç«‹èˆ‡æ›´æ–°ï¼Œv0.1.0.1 é‡æ§‹ï¼‰
+                          _upgradeMutationSkillï¼ˆè®Šç•°æŠ€èƒ½æ¨¹å­é¢æ¿ï¼Œv0.0.69.0ï¼‰
+                          buildSkillTreeOverlay æ¨¡å¼èªªæ˜Žï¼ˆv0.57.7ï¼‰ï¼š
+                            fromHome / forceStart â†’ è®€ localStorage skillPoints/playerSkills + è®€ lastRunOrgans é¡¯ç¤ºç¹¼æ‰¿å™¨å®˜
+                            postGame â†’ è®€è¨˜æ†¶é«” gameState.player.organsï¼ˆéŠæˆ²å‰›çµæŸï¼Œè³‡æ–™ä»å®Œæ•´ï¼‰
+                          _grantPoisonSacï¼ˆé›œé£Ÿæ€§ Lv1 æ™‚è‡ªå‹•æŽˆäºˆæ¯’å›Šå™¨å®˜ï¼‰
+systems/creatures.js      _PACK_NAMES / _usedPackNames / resetPackNames()ï¼ˆè‰é£Ÿå·¨äººéšŠä¼åç¨±æ± ï¼Œv0.0.66.2ï¼›v0.0.68.0 æ”¹ä»¿è£½è©žï¼‰
+                          _HYENA_PACK_NAMES / _usedHyenaPackNames / _hyenaPackNameMapï¼ˆé¬£ç‹—ä¸‰åœ‹æ­¦å°‡åç¨±æ± ï¼Œv0.0.68.0ï¼‰
+                          drawCreatureShapeï¼ˆç‰©ç¨®å½¢ç‹€ä¸»åˆ†æ´¾ï¼Œå«æ—‹è½‰/ç¿»è½‰é‚è¼¯ï¼‰
+                          _tryMeleeAttack / _drawAttackTelegraphï¼ˆè¿‘æˆ°å‰æ–/å‘½ä¸­/å¾Œæ–å…±ç”¨æµç¨‹èˆ‡ Canvas æç¤ºåœˆï¼Œv0.1.26.0ï¼‰
+                          _applyCreatureSeparationï¼ˆé€šç”¨ç”Ÿç‰©åˆ†é›¢ï¼šè‚‰é£Ÿé˜²é‡ç–Šã€è‰é£Ÿå¯è¿‘è·é›¢æŠ±åœ˜ã€å·¨äººé«˜æ¬Šé‡æŽ¨é–‹ï¼Œv0.1.26.0ï¼‰
+                          updateNeutralCreaturesï¼ˆä¸‰æ…‹ç§»å‹•ï¼šbiome ç”Ÿç‰©ä¸‰æ…‹ / éž biome èˆŠé‚è¼¯ï¼›å«Alphaç¹¼æ‰¿æŽƒæCã€å·¨äººæŽ¨é–‹åŠ›Gï¼›è¿‘æˆ°æ”¹èµ° _tryMeleeAttackï¼‰
                           drawNeutralCreatures
-                          updateHostileCreatures（三態移動 + hostileEatMeat 門控）
+                          updateHostileCreaturesï¼ˆä¸‰æ…‹ç§»å‹• + hostileEatMeat é–€æŽ§ï¼›è¿‘æˆ°æ”¹èµ° _tryMeleeAttackï¼Œé¬£ç‹— pack å¸¸æ•¸è®€ CREATURE_AI_CONFIGï¼‰
                           drawCorpses, drawHostileCreatures
-                          _effSpeed（嘴器減速有效速度計算，v0.56.0）
+                          _effSpeedï¼ˆå˜´å™¨æ¸›é€Ÿæœ‰æ•ˆé€Ÿåº¦è¨ˆç®—ï¼Œv0.56.0ï¼‰
 systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCreature, drawEliteArrow
-                          _getHunterEliteType, _spawnHunterElite, _handleHunterEliteKill（靜音獵隊精英怪，v0.1.0.0）
+                          ä¸‰çŠ¬ç²¾è‹±è¿‘æˆ°å‰æ–/å‘½ä¸­/å¾Œæ–æç¤ºèˆ‡é«”åž‹å‘½ä¸­ç¯„åœï¼ˆv0.1.26.0ï¼‰
+                          _getHunterEliteType, _spawnHunterElite, _handleHunterEliteKillï¼ˆéœéŸ³çµéšŠç²¾è‹±æ€ªï¼Œv0.1.0.0ï¼‰
                           _fireEliteFalconProjectile, _fireVenomFalconShot, _updateEliteVenomPuddle
                           _updateHunterEliteChase, _drawHunterElite
-                          _HUNTER_ELITE_META, _HUNTER_ELITE_STAR（顯示常數；_HUNTER_ELITE_REWARDS 已搬至 config/creatures.js，elite.js 改 import 使用）
+                          _HUNTER_ELITE_META, _HUNTER_ELITE_STARï¼ˆé¡¯ç¤ºå¸¸æ•¸ï¼›_HUNTER_ELITE_REWARDS å·²æ¬è‡³ config/creatures.jsï¼Œelite.js æ”¹ import ä½¿ç”¨ï¼‰
 systems/boss.js           spawnBoss, updateBoss, showVictory
-                          handleBossKill（統一 Boss 死亡路由，支援黑色獵人多管血條，v0.1.0.0）
-                          _spawnHunterBoss, _updateHunterBoss（黑色獵人 Boss 系統，v0.1.0.0）
-                          _triggerHunterPhaseCheck, _showHunterDialogue（形態切換/台詞，v0.1.0.0）
-                          _fireHunterSniper, _fireHunterShotgun（狙擊/散彈攻擊，v0.1.0.0）
-                          HUNTER_DIALOGUE（台詞常數，v0.1.0.0）
-                          _recordClearStats, _recordBossKill（通關統計，v0.0.69.0）
+                          handleBossKillï¼ˆçµ±ä¸€ Boss æ­»äº¡è·¯ç”±ï¼Œæ”¯æ´é»‘è‰²çµäººå¤šç®¡è¡€æ¢ï¼Œv0.1.0.0ï¼‰
+                          _spawnHunterBoss, _updateHunterBossï¼ˆé»‘è‰²çµäºº Boss ç³»çµ±ï¼Œv0.1.0.0ï¼‰
+                          _triggerHunterPhaseCheck, _showHunterDialogueï¼ˆå½¢æ…‹åˆ‡æ›/å°è©žï¼Œv0.1.0.0ï¼‰
+                          _fireHunterSniper, _fireHunterShotgunï¼ˆç‹™æ“Š/æ•£å½ˆæ”»æ“Šï¼Œv0.1.0.0ï¼‰
+                          HUNTER_DIALOGUEï¼ˆå°è©žå¸¸æ•¸ï¼Œv0.1.0.0ï¼‰
+                          _recordClearStats, _recordBossKillï¼ˆé€šé—œçµ±è¨ˆï¼Œv0.0.69.0ï¼‰
                           drawBoss, drawBossArrow
                           drawBossShape, _drawBear, _drawShark, _drawScorp, _drawHunter, BOSS_COLORS
-                          _drawBossDebuffIcons（血條 Debuff 圖示，v0.56.0）
+                          _drawBossDebuffIconsï¼ˆè¡€æ¢ Debuff åœ–ç¤ºï¼Œv0.56.0ï¼‰
 systems/daynight.js       getDayNightPhaseIndex, applyNightTransition, applyDayTransition
                           updateDayNightCycle
 systems/leaderboard.js    _lbDifficulty, _top10Difficulty, _diffKey
                           showLeaderboard, showScoreSubmitPopup
-                          showFunLeaderboard（趣味排行榜，v0.47.0；👑 最高等級分類 v0.51.0）
+                          showFunLeaderboardï¼ˆè¶£å‘³æŽ’è¡Œæ¦œï¼Œv0.47.0ï¼›ðŸ‘‘ æœ€é«˜ç­‰ç´šåˆ†é¡ž v0.51.0ï¼‰
 systems/chat.js           _sha256, loadChatSettings, saveChatSettings
                           _calcProgressScore, _collectLocalData, _applyRemoteData
-                          chatLogin（查帳/自動註冊/SHA-256/進度比較同步）
+                          chatLoginï¼ˆæŸ¥å¸³/è‡ªå‹•è¨»å†Š/SHA-256/é€²åº¦æ¯”è¼ƒåŒæ­¥ï¼‰
                           chatSaveProgress, chatSyncData, chatLogout
                           initChat, disconnectChat, sendChatMessage
                           buildChatUI, _renderChatSettingsPanel, renderChat
                           showChat, hideChat
                           _saveChatPosition, _loadChatPosition, _makeDraggable
-                          _handlePinCommand, _handleUnpinCommand（GM 置頂/取消置頂）
-                          _lvColor（等級數字 → 顏色 CSS 字串，v0.0.66.0）
-                          _COLOR_MAP（顏色代碼→CSS 色碼對照，v0.0.68.0）
-                          _parseColorTags（[c=color]文字[/c] 彩色字解析；v0.0.66.0；v0.0.68.0 加入 crim）
-                          isVipPlayer（先驅者判斷 TODO 索引，v0.0.66.0，目前回傳 false）
+                          _handlePinCommand, _handleUnpinCommandï¼ˆGM ç½®é ‚/å–æ¶ˆç½®é ‚ï¼‰
+                          _lvColorï¼ˆç­‰ç´šæ•¸å­— â†’ é¡è‰² CSS å­—ä¸²ï¼Œv0.0.66.0ï¼‰
+                          _COLOR_MAPï¼ˆé¡è‰²ä»£ç¢¼â†’CSS è‰²ç¢¼å°ç…§ï¼Œv0.0.68.0ï¼‰
+                          _parseColorTagsï¼ˆ[c=color]æ–‡å­—[/c] å½©è‰²å­—è§£æžï¼›v0.0.66.0ï¼›v0.0.68.0 åŠ å…¥ crimï¼‰
+                          isVipPlayerï¼ˆå…ˆé©…è€…åˆ¤æ–· TODO ç´¢å¼•ï¼Œv0.0.66.0ï¼Œç›®å‰å›žå‚³ falseï¼‰
 systems/mobile.js         detectMobile, getOrientation, applyDeviceMode
                           _attachJoystickListeners, _renderMobileOverlay, _getAttackBtnPos
-                          _dashZone（閃現按鈕矩形範圍判斷，v0.53.0）
-                          _letterboxScale（當前縮放比例 export，v0.1.14.0）
+                          _dashZoneï¼ˆé–ƒç¾æŒ‰éˆ•çŸ©å½¢ç¯„åœåˆ¤æ–·ï¼Œv0.53.0ï¼‰
+                          _letterboxScaleï¼ˆç•¶å‰ç¸®æ”¾æ¯”ä¾‹ exportï¼Œv0.1.14.0ï¼‰
 systems/hud.js            drawGame, updateUI, resetUICache, resetPerceptionCache, drawTopBarUI
-                          drawMinimap（含所有 _minimap 變數 + _minimapAlpha/FadeTimer/StopTimer 透明度計時器，v0.0.66.1）
-                          drawProjectiles（子彈繪製）, updateMinimapFog（小地圖霧效更新）
-                          _drawArcherfish（夜晚三角光圈 + F技紅色三角框，v0.57.4）
+                          drawMinimapï¼ˆå«æ‰€æœ‰ _minimap è®Šæ•¸ + _minimapAlpha/FadeTimer/StopTimer é€æ˜Žåº¦è¨ˆæ™‚å™¨ï¼Œv0.0.66.1ï¼‰
+                          drawProjectilesï¼ˆå­å½ˆç¹ªè£½ï¼‰, updateMinimapFogï¼ˆå°åœ°åœ–éœ§æ•ˆæ›´æ–°ï¼‰
+                          _drawArcherfishï¼ˆå¤œæ™šä¸‰è§’å…‰åœˆ + FæŠ€ç´…è‰²ä¸‰è§’æ¡†ï¼Œv0.57.4ï¼‰
 systems/ui.js             showTooltip, hideTooltip, showMapSelect
-                          buildEndGameOverlay（死亡/勝利結算畫面共用外殼，保留各呼叫點原樣式與二段回首頁警告）
-                          showSplashScreen（開發者 Splash 畫面，v0.1.0.1）
+                          buildEndGameOverlayï¼ˆæ­»äº¡/å‹åˆ©çµç®—ç•«é¢å…±ç”¨å¤–æ®¼ï¼Œä¿ç•™å„å‘¼å«é»žåŽŸæ¨£å¼èˆ‡äºŒæ®µå›žé¦–é è­¦å‘Šï¼‰
+                          showSplashScreenï¼ˆé–‹ç™¼è€… Splash ç•«é¢ï¼Œv0.1.0.1ï¼‰
                           loadSettings, switchLanguage, saveSettings, showSettings, hideSettings
-                          updateTimer, toggleDevMode, dev* 函式
+                          updateTimer, toggleDevMode, dev* å‡½å¼
                           showGuide, hideGuide, showStartScreen
                           showGuideStory, _getGuideStoryPages
                           showPatchNotes, checkPatchNotesPopup
-                          buildEvoLevelDesc（全域，動態生成進化圖鑑描述）
-                          showCompendium → _renderGuide / _renderOrgans / _renderEvo（三分頁均為桌機雙欄/手機 Tab 版面，讀 COMPENDIUM_DATA / ORGANS / EVOLUTION_PATHS / SKILLS）
+                          buildEvoLevelDescï¼ˆå…¨åŸŸï¼Œå‹•æ…‹ç”Ÿæˆé€²åŒ–åœ–é‘‘æè¿°ï¼‰
+                          showCompendium â†’ _renderGuide / _renderOrgans / _renderEvoï¼ˆä¸‰åˆ†é å‡ç‚ºæ¡Œæ©Ÿé›™æ¬„/æ‰‹æ©Ÿ Tab ç‰ˆé¢ï¼Œè®€ COMPENDIUM_DATA / ORGANS / EVOLUTION_PATHS / SKILLSï¼‰
 
 systems/achievements.js   unlockAchievement(id), isUnlocked(id), getUnlockedAchievements()
                           getActiveTitle(), setActiveTitle(title), showAchievements(opts)
-systems/achievementTriggers.js  initAchievementTriggers()（Phase D：監聽 CustomEvent 解鎖成就）
+systems/achievementTriggers.js  initAchievementTriggers()ï¼ˆPhase Dï¼šç›£è½ CustomEvent è§£éŽ–æˆå°±ï¼‰
 
 main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGame
                           startGameWithLoading, startGame CustomEvent listener
-                          pausePlayTimer / resumePlayTimer 由 systems/gameFlow.js re-export
+                          pausePlayTimer / resumePlayTimer ç”± systems/gameFlow.js re-export
                           updateGameLogic, gameLoop, startGameWithLoading, initializeGame, window.onload
 ```
 
@@ -184,879 +187,880 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 
 ## systems/utils.js
 
-所有模組共用的工具函式，在 `gameState.js` 之後、`audio.js` 之前載入。
+æ‰€æœ‰æ¨¡çµ„å…±ç”¨çš„å·¥å…·å‡½å¼ï¼Œåœ¨ `gameState.js` ä¹‹å¾Œã€`audio.js` ä¹‹å‰è¼‰å…¥ã€‚
 
-### 函式列表
+### å‡½å¼åˆ—è¡¨
 
 - `drawArrow(playerScreenX, playerScreenY, targetWorldX, targetWorldY, color, playerRadius)`
-  → 在玩家身上繪製指向目標的箭頭
-  → 距離：`playerRadius + 20px`
-  → 有閃爍效果（每 0.5 秒透明度 0.6↔1.0）
-  → 精英怪和 Boss 同時在螢幕外時只顯示 Boss 箭頭（優先權邏輯在 `drawEliteArrow` 內判斷）
-  → 被 `elite.js` 和 `boss.js` 共用
+  â†’ åœ¨çŽ©å®¶èº«ä¸Šç¹ªè£½æŒ‡å‘ç›®æ¨™çš„ç®­é ­
+  â†’ è·é›¢ï¼š`playerRadius + 20px`
+  â†’ æœ‰é–ƒçˆæ•ˆæžœï¼ˆæ¯ 0.5 ç§’é€æ˜Žåº¦ 0.6â†”1.0ï¼‰
+  â†’ ç²¾è‹±æ€ªå’Œ Boss åŒæ™‚åœ¨èž¢å¹•å¤–æ™‚åªé¡¯ç¤º Boss ç®­é ­ï¼ˆå„ªå…ˆæ¬Šé‚è¼¯åœ¨ `drawEliteArrow` å…§åˆ¤æ–·ï¼‰
+  â†’ è¢« `elite.js` å’Œ `boss.js` å…±ç”¨
 
 - `drawHealthBar(screenX, screenY, hp, maxHp, width, fillColor, bgColor, height)`
-  → 繪製生物血條，`bgColor` 為底色，當前血量用 `fillColor` 顯示
+  â†’ ç¹ªè£½ç”Ÿç‰©è¡€æ¢ï¼Œ`bgColor` ç‚ºåº•è‰²ï¼Œç•¶å‰è¡€é‡ç”¨ `fillColor` é¡¯ç¤º
 
 - `drawNameTag(screenX, screenY, name, color, font)`
-  → 繪製生物名字標籤，`screenY` 為文字基線位置
+  â†’ ç¹ªè£½ç”Ÿç‰©åå­—æ¨™ç±¤ï¼Œ`screenY` ç‚ºæ–‡å­—åŸºç·šä½ç½®
 
 - `drawGlowEffect(screenX, screenY, radius, fillColor, glowColor, glowBlur)`
-  → 繪製帶光暈的填色圓形，精英怪和 Boss 專用
+  â†’ ç¹ªè£½å¸¶å…‰æšˆçš„å¡«è‰²åœ“å½¢ï¼Œç²¾è‹±æ€ªå’Œ Boss å°ˆç”¨
 
 - `spawnLootCircle(cx, cy, items)`
-  → 以圓形平均角度散落掉落物（詳見下方區塊）
+  â†’ ä»¥åœ“å½¢å¹³å‡è§’åº¦æ•£è½æŽ‰è½ç‰©ï¼ˆè©³è¦‹ä¸‹æ–¹å€å¡Šï¼‰
 
 ---
 
-## Boss 動畫系統（v0.49.0）
+## Boss å‹•ç•«ç³»çµ±ï¼ˆv0.49.0ï¼‰
 
-### 架構
+### æž¶æ§‹
 
-| Boss | biome | 形狀函式 |
+| Boss | biome | å½¢ç‹€å‡½å¼ |
 |------|-------|---------|
-| 黑熊 | forest | `_drawBear(ctx, r, t, boss)` |
-| 大白鯊 | ocean | `_drawShark(ctx, r, t, boss)` |
-| 蠍王 | desert | `_drawScorp(ctx, r, t, boss)` |
+| é»‘ç†Š | forest | `_drawBear(ctx, r, t, boss)` |
+| å¤§ç™½é¯Š | ocean | `_drawShark(ctx, r, t, boss)` |
+| è çŽ‹ | desert | `_drawScorp(ctx, r, t, boss)` |
 
-- 主分派：`drawBossShape(ctx, boss, screenX, screenY)` 由 `drawBoss()` 呼叫
-- 顏色常數：`BOSS_COLORS`（`boss.js` 頂部，`bear.limbs = '#7a3d0c'` 比 body 明顯淡，避免同色消失）
-- 完整技術細節：`docs/ANIMATION_GUIDE.md`
+- ä¸»åˆ†æ´¾ï¼š`drawBossShape(ctx, boss, screenX, screenY)` ç”± `drawBoss()` å‘¼å«
+- é¡è‰²å¸¸æ•¸ï¼š`BOSS_COLORS`ï¼ˆ`boss.js` é ‚éƒ¨ï¼Œ`bear.limbs = '#7a3d0c'` æ¯” body æ˜Žé¡¯æ·¡ï¼Œé¿å…åŒè‰²æ¶ˆå¤±ï¼‰
+- å®Œæ•´æŠ€è¡“ç´°ç¯€ï¼š`docs/ANIMATION_GUIDE.md`
 
-### 黑熊（forest）— 三態臂部系統
+### é»‘ç†Šï¼ˆforestï¼‰â€” ä¸‰æ…‹è‡‚éƒ¨ç³»çµ±
 
-- `boss.lastAttackLeg`（`'left'`/`'right'`）：攻擊瞬間記錄「哪腳在前」→ 決定揮哪手
-- `boss.lastAttackCrit`（`boolean`）：是否暴擊（25% 機率，`updateBoss()` 攻擊時設定）
-- 三態：**idle**（雙臂垂下）→ **chasing**（高舉蓄力）→ **attack**（揮下，bell-curve `Math.sin(sinceAtk / 450 * Math.PI)`）
-- 殘影：相同臂在 `atkPhase - 0.22` / `atkPhase - 0.10` 兩層，alpha 10% / 22%
-- 爪痕：普攻 3 條紅線（`#dd2200`），暴擊 6 條橙線（`#ff8800`），畫在 body 表面（不依賴臂位置）
+- `boss.lastAttackLeg`ï¼ˆ`'left'`/`'right'`ï¼‰ï¼šæ”»æ“Šçž¬é–“è¨˜éŒ„ã€Œå“ªè…³åœ¨å‰ã€â†’ æ±ºå®šæ®å“ªæ‰‹
+- `boss.lastAttackCrit`ï¼ˆ`boolean`ï¼‰ï¼šæ˜¯å¦æš´æ“Šï¼ˆ25% æ©ŸçŽ‡ï¼Œ`updateBoss()` æ”»æ“Šæ™‚è¨­å®šï¼‰
+- ä¸‰æ…‹ï¼š**idle**ï¼ˆé›™è‡‚åž‚ä¸‹ï¼‰â†’ **chasing**ï¼ˆé«˜èˆ‰è“„åŠ›ï¼‰â†’ **attack**ï¼ˆæ®ä¸‹ï¼Œbell-curve `Math.sin(sinceAtk / 450 * Math.PI)`ï¼‰
+- æ®˜å½±ï¼šç›¸åŒè‡‚åœ¨ `atkPhase - 0.22` / `atkPhase - 0.10` å…©å±¤ï¼Œalpha 10% / 22%
+- çˆªç—•ï¼šæ™®æ”» 3 æ¢ç´…ç·šï¼ˆ`#dd2200`ï¼‰ï¼Œæš´æ“Š 6 æ¢æ©™ç·šï¼ˆ`#ff8800`ï¼‰ï¼Œç•«åœ¨ body è¡¨é¢ï¼ˆä¸ä¾è³´è‡‚ä½ç½®ï¼‰
 
-### 大白鯊（ocean）— 面向翻轉
+### å¤§ç™½é¯Šï¼ˆoceanï¼‰â€” é¢å‘ç¿»è½‰
 
-- `ctx.scale(-1, 1)` 條件：`player.x < boss.x`（玩家在左則鯊魚朝左）
-- 無需 `_moveAngle`；所有子部件跟著翻轉
+- `ctx.scale(-1, 1)` æ¢ä»¶ï¼š`player.x < boss.x`ï¼ˆçŽ©å®¶åœ¨å·¦å‰‡é¯Šé­šæœå·¦ï¼‰
+- ç„¡éœ€ `_moveAngle`ï¼›æ‰€æœ‰å­éƒ¨ä»¶è·Ÿè‘—ç¿»è½‰
 
-### 蠍王（desert）— 三足步態
+### è çŽ‹ï¼ˆdesertï¼‰â€” ä¸‰è¶³æ­¥æ…‹
 
-- 6 條腿分兩組（Group A：左後/右中/左前；Group B：右後/左中/右前），兩組相差半週期（π）
-- 組內第 2/3 腿各延遲 `step = Math.PI * 0.2`（10% 週期偏移）
-- 端點 y 偏移動畫：`swing = Math.sin(t / legPeriod + legPhase[i])`
-  - `swing > 0`（腳離地）：線條較細（`r × 0.09`）
-  - `swing ≤ 0`（腳落地）：線條較粗（`r × 0.14`）
-- 鉗子夾擊：`atkPhase = Math.sin(sinceAtk / 700 * Math.PI)`，最大 ±0.65 rad（≈ 37°），兩鉗同時向內夾
+- 6 æ¢è…¿åˆ†å…©çµ„ï¼ˆGroup Aï¼šå·¦å¾Œ/å³ä¸­/å·¦å‰ï¼›Group Bï¼šå³å¾Œ/å·¦ä¸­/å³å‰ï¼‰ï¼Œå…©çµ„ç›¸å·®åŠé€±æœŸï¼ˆÏ€ï¼‰
+- çµ„å…§ç¬¬ 2/3 è…¿å„å»¶é² `step = Math.PI * 0.2`ï¼ˆ10% é€±æœŸåç§»ï¼‰
+- ç«¯é»ž y åç§»å‹•ç•«ï¼š`swing = Math.sin(t / legPeriod + legPhase[i])`
+  - `swing > 0`ï¼ˆè…³é›¢åœ°ï¼‰ï¼šç·šæ¢è¼ƒç´°ï¼ˆ`r Ã— 0.09`ï¼‰
+  - `swing â‰¤ 0`ï¼ˆè…³è½åœ°ï¼‰ï¼šç·šæ¢è¼ƒç²—ï¼ˆ`r Ã— 0.14`ï¼‰
+- é‰—å­å¤¾æ“Šï¼š`atkPhase = Math.sin(sinceAtk / 700 * Math.PI)`ï¼Œæœ€å¤§ Â±0.65 radï¼ˆâ‰ˆ 37Â°ï¼‰ï¼Œå…©é‰—åŒæ™‚å‘å…§å¤¾
 
-### spawnBoss() 新增欄位
+### spawnBoss() æ–°å¢žæ¬„ä½
 
-| 欄位 | 初值 | 說明 |
+| æ¬„ä½ | åˆå€¼ | èªªæ˜Ž |
 |------|------|------|
-| `lastAttackCrit` | `false` | 黑熊暴擊旗標 |
-| `lastAttackLeg` | `'left'` | 黑熊最後攻擊腳（決定揮哪手） |
-| `_chargeArrow` | `null` | 大白鯊衝刺箭頭 `{ fromX, fromY, toX, toY }`（warning 瞬間鎖定，cooldown 清除） |
+| `lastAttackCrit` | `false` | é»‘ç†Šæš´æ“Šæ——æ¨™ |
+| `lastAttackLeg` | `'left'` | é»‘ç†Šæœ€å¾Œæ”»æ“Šè…³ï¼ˆæ±ºå®šæ®å“ªæ‰‹ï¼‰ |
+| `_chargeArrow` | `null` | å¤§ç™½é¯Šè¡åˆºç®­é ­ `{ fromX, fromY, toX, toY }`ï¼ˆwarning çž¬é–“éŽ–å®šï¼Œcooldown æ¸…é™¤ï¼‰ |
 
-### Boss 技能視覺特效（v0.50.0 / v0.52.0 重設計）
+### Boss æŠ€èƒ½è¦–è¦ºç‰¹æ•ˆï¼ˆv0.50.0 / v0.52.0 é‡è¨­è¨ˆï¼‰
 
-**大白鯊衝刺箭頭**（`_drawSharkChargeArrow(boss)`）
-- `boss._chargeArrow = { angle, dist, fromX, fromY }`：warning 瞬間鎖定方向和距離
-- `dist = boss.speed × 4 × 0.8 × 60`（實際衝刺距離，世界 px）
-- warning=黃色閃爍，charging=紅色；寬度＝`boss.radius × 2`
-- 在 `drawBoss()` 的 `drawBossShape` **前**呼叫
+**å¤§ç™½é¯Šè¡åˆºç®­é ­**ï¼ˆ`_drawSharkChargeArrow(boss)`ï¼‰
+- `boss._chargeArrow = { angle, dist, fromX, fromY }`ï¼šwarning çž¬é–“éŽ–å®šæ–¹å‘å’Œè·é›¢
+- `dist = boss.speed Ã— 4 Ã— 0.8 Ã— 60`ï¼ˆå¯¦éš›è¡åˆºè·é›¢ï¼Œä¸–ç•Œ pxï¼‰
+- warning=é»ƒè‰²é–ƒçˆï¼Œcharging=ç´…è‰²ï¼›å¯¬åº¦ï¼`boss.radius Ã— 2`
+- åœ¨ `drawBoss()` çš„ `drawBossShape` **å‰**å‘¼å«
 
-**蠍王毒霧（v0.52.0 重設計：定點投擲）**（`_drawVenomEffects(boss)`）
-- 每 5 秒觸發，無距離限制
-- `boss._venomWarning = { x, y, startTime, duration:600 }`：警告光圈（黃色虛線閃爍圓）
-- `gameState.venomPuddles[]`：定點毒霧陣列，每個 `{ x, y, radius:150, startTime, duration:4000, dmgPerSec, lastTick }`
-- 玩家跑出 `radius` 停止受傷；`initializeGame()` 初始化為 `[]`
-- 在 `drawBossShape` **後**呼叫
+**è çŽ‹æ¯’éœ§ï¼ˆv0.52.0 é‡è¨­è¨ˆï¼šå®šé»žæŠ•æ“²ï¼‰**ï¼ˆ`_drawVenomEffects(boss)`ï¼‰
+- æ¯ 5 ç§’è§¸ç™¼ï¼Œç„¡è·é›¢é™åˆ¶
+- `boss._venomWarning = { x, y, startTime, duration:600 }`ï¼šè­¦å‘Šå…‰åœˆï¼ˆé»ƒè‰²è™›ç·šé–ƒçˆåœ“ï¼‰
+- `gameState.venomPuddles[]`ï¼šå®šé»žæ¯’éœ§é™£åˆ—ï¼Œæ¯å€‹ `{ x, y, radius:150, startTime, duration:4000, dmgPerSec, lastTick }`
+- çŽ©å®¶è·‘å‡º `radius` åœæ­¢å—å‚·ï¼›`initializeGame()` åˆå§‹åŒ–ç‚º `[]`
+- åœ¨ `drawBossShape` **å¾Œ**å‘¼å«
 
-**蠍王沙暴**（`_drawSandStormOverlay()`）
+**è çŽ‹æ²™æš´**ï¼ˆ`_drawSandStormOverlay()`ï¼‰
 - `boss._sandStormVisual { startTime, duration:6000 }`
-- 玩家 `getBiome(p.x, p.y) !== 'desert'` 時：`_inSandstorm = false` + 不顯示遮罩
-- `_drawSandStormOverlay()` 在 `hud.js` `drawBossArrow()` 後、UI 前呼叫
+- çŽ©å®¶ `getBiome(p.x, p.y) !== 'desert'` æ™‚ï¼š`_inSandstorm = false` + ä¸é¡¯ç¤ºé®ç½©
+- `_drawSandStormOverlay()` åœ¨ `hud.js` `drawBossArrow()` å¾Œã€UI å‰å‘¼å«
 
-**黑熊暴擊文字**
-- `isCrit === true` 命中時：`showFloatingText(p.x, p.y - 40, 'X熊爪！', '#ff8800', 18)`（顯示在玩家位置）
+**é»‘ç†Šæš´æ“Šæ–‡å­—**
+- `isCrit === true` å‘½ä¸­æ™‚ï¼š`showFloatingText(p.x, p.y - 40, 'Xç†Šçˆªï¼', '#ff8800', 18)`ï¼ˆé¡¯ç¤ºåœ¨çŽ©å®¶ä½ç½®ï¼‰
 
 ---
 
-## 生物視覺系統（v0.48.0）
+## ç”Ÿç‰©è¦–è¦ºç³»çµ±ï¼ˆv0.48.0ï¼‰
 
-### 旋轉模式
+### æ—‹è½‰æ¨¡å¼
 
-| speciesId | 旋轉模式 |
+| speciesId | æ—‹è½‰æ¨¡å¼ |
 |---|---|
-| moose  | 完整旋轉（跟 `_moveAngle`） |
-| beetle | 完整旋轉（跟 `_moveAngle`） |
-| croc   | 完整旋轉（跟 `_moveAngle`） |
-| camel  | 只左右翻轉（`ctx.scale(-1,1)`，cos 正朝右，cos 負朝左） |
-| lynx   | 只左右翻轉（同駱駝） |
-| hyena  | 完全不旋轉，永遠朝上 |
+| moose  | å®Œæ•´æ—‹è½‰ï¼ˆè·Ÿ `_moveAngle`ï¼‰ |
+| beetle | å®Œæ•´æ—‹è½‰ï¼ˆè·Ÿ `_moveAngle`ï¼‰ |
+| croc   | å®Œæ•´æ—‹è½‰ï¼ˆè·Ÿ `_moveAngle`ï¼‰ |
+| camel  | åªå·¦å³ç¿»è½‰ï¼ˆ`ctx.scale(-1,1)`ï¼Œcos æ­£æœå³ï¼Œcos è² æœå·¦ï¼‰ |
+| lynx   | åªå·¦å³ç¿»è½‰ï¼ˆåŒé§±é§ï¼‰ |
+| hyena  | å®Œå…¨ä¸æ—‹è½‰ï¼Œæ°¸é æœä¸Š |
 
-- 主分派函式 `drawCreatureShape(ctx, creature, sx, sy)`：以 `ctx.translate(sx,sy)` 定位，各物種依旋轉模式套用 `ctx.rotate(angle)` 或 `ctx.scale(-1,1)`，再呼叫對應私有形狀函式
-- 所有形狀以 `(0,0)` 為中心，`angle=0` 時頭朝右（+x），尾朝左（-x）
+- ä¸»åˆ†æ´¾å‡½å¼ `drawCreatureShape(ctx, creature, sx, sy)`ï¼šä»¥ `ctx.translate(sx,sy)` å®šä½ï¼Œå„ç‰©ç¨®ä¾æ—‹è½‰æ¨¡å¼å¥—ç”¨ `ctx.rotate(angle)` æˆ– `ctx.scale(-1,1)`ï¼Œå†å‘¼å«å°æ‡‰ç§æœ‰å½¢ç‹€å‡½å¼
+- æ‰€æœ‰å½¢ç‹€ä»¥ `(0,0)` ç‚ºä¸­å¿ƒï¼Œ`angle=0` æ™‚é ­æœå³ï¼ˆ+xï¼‰ï¼Œå°¾æœå·¦ï¼ˆ-xï¼‰
 
-### 顏色常數 `CREATURE_COLORS`
+### é¡è‰²å¸¸æ•¸ `CREATURE_COLORS`
 
-| 物種 | 顏色碼 | 說明 |
+| ç‰©ç¨® | é¡è‰²ç¢¼ | èªªæ˜Ž |
 |------|--------|------|
-| moose | `#8B4513` | 深棕 |
-| beetle | `#1ABC9C` | 青綠 |
-| camel | `#E8C87A` | 淺沙白 |
-| lynx | `#A0826D` | 灰褐 |
-| croc | `#6B8E23` | 橄欖綠 |
-| hyena | `#8B6914` | 深咖啡 |
-| giantized | `#FF8C00` | 巨人化光暈橙 |
-| alpha | `#FFD700` | Alpha 光暈金 |
-| killerBase | `#CC2200` | 殺手化光暈深紅 |
+| moose | `#8B4513` | æ·±æ£• |
+| beetle | `#1ABC9C` | é’ç¶  |
+| camel | `#E8C87A` | æ·ºæ²™ç™½ |
+| lynx | `#A0826D` | ç°è¤ |
+| croc | `#6B8E23` | æ©„æ¬–ç¶  |
+| hyena | `#8B6914` | æ·±å’–å•¡ |
+| giantized | `#FF8C00` | å·¨äººåŒ–å…‰æšˆæ©™ |
+| alpha | `#FFD700` | Alpha å…‰æšˆé‡‘ |
+| killerBase | `#CC2200` | æ®ºæ‰‹åŒ–å…‰æšˆæ·±ç´… |
 
-### 特殊狀態光暈 `_drawCreatureGlow`
+### ç‰¹æ®Šç‹€æ…‹å…‰æšˆ `_drawCreatureGlow`
 
-- 在 `ctx.restore()` 之後以世界座標 `(sx, sy)` 繪製，不跟旋轉
-- Alpha → 金色光圈（radius+6）
-- 巨人化 → 橙色光圈（radius+4）
-- 殺手化 → `killerLevel` 越高越深紅（radius+2）
+- åœ¨ `ctx.restore()` ä¹‹å¾Œä»¥ä¸–ç•Œåº§æ¨™ `(sx, sy)` ç¹ªè£½ï¼Œä¸è·Ÿæ—‹è½‰
+- Alpha â†’ é‡‘è‰²å…‰åœˆï¼ˆradius+6ï¼‰
+- å·¨äººåŒ– â†’ æ©™è‰²å…‰åœˆï¼ˆradius+4ï¼‰
+- æ®ºæ‰‹åŒ– â†’ `killerLevel` è¶Šé«˜è¶Šæ·±ç´…ï¼ˆradius+2ï¼‰
 
-### 繪圖規格文件
+### ç¹ªåœ–è¦æ ¼æ–‡ä»¶
 
-- 詳見 `docs/creature_shapes.md`（完整程式碼 + 設計備注）
-- 詳見 `docs/ANIMATION_GUIDE.md`（Boss / 生物動畫實作指南：踏步、攻擊、特效、Z 軸順序、未來開發者說明）
+- è©³è¦‹ `docs/creature_shapes.md`ï¼ˆå®Œæ•´ç¨‹å¼ç¢¼ + è¨­è¨ˆå‚™æ³¨ï¼‰
+- è©³è¦‹ `docs/ANIMATION_GUIDE.md`ï¼ˆBoss / ç”Ÿç‰©å‹•ç•«å¯¦ä½œæŒ‡å—ï¼šè¸æ­¥ã€æ”»æ“Šã€ç‰¹æ•ˆã€Z è»¸é †åºã€æœªä¾†é–‹ç™¼è€…èªªæ˜Žï¼‰
 
 ---
 
-## 生態生物系統（v0.36.0）
+## ç”Ÿæ…‹ç”Ÿç‰©ç³»çµ±ï¼ˆv0.36.0ï¼‰
 
-### 生物命名
-| 生態區 | 草系             | 肉系           |
+### ç”Ÿç‰©å‘½å
+| ç”Ÿæ…‹å€ | è‰ç³»             | è‚‰ç³»           |
 |--------|-----------------|----------------|
-| 森林   | 駝鹿 (moose)    | 猞猁 (lynx)    |
-| 水潭   | 巨型甲虫 (beetle)| 鱷魚 (croc)    |
-| 沙漠   | 駱駝 (camel)    | 鬣狗 (hyena)   |
+| æ£®æž—   | é§é¹¿ (moose)    | çŒžçŒ (lynx)    |
+| æ°´æ½­   | å·¨åž‹ç”²è™« (beetle)| é±·é­š (croc)    |
+| æ²™æ¼    | é§±é§ (camel)    | é¬£ç‹— (hyena)   |
 
-### 生成規則
-- 草系和肉系只在對應生態區生成（`_randomPointInBiome` 拒絕採樣）
-- 每個物種獨立計算：上限（草系 20 / 肉系 15）、計時器、少於 3 隻間隔 ×0.3（加速 70%）
-- 每隻生物帶 `biome` 和 `speciesId` 屬性
+### ç”Ÿæˆè¦å‰‡
+- è‰ç³»å’Œè‚‰ç³»åªåœ¨å°æ‡‰ç”Ÿæ…‹å€ç”Ÿæˆï¼ˆ`_randomPointInBiome` æ‹’çµ•æŽ¡æ¨£ï¼‰
+- æ¯å€‹ç‰©ç¨®ç¨ç«‹è¨ˆç®—ï¼šä¸Šé™ï¼ˆè‰ç³» 20 / è‚‰ç³» 15ï¼‰ã€è¨ˆæ™‚å™¨ã€å°‘æ–¼ 3 éš»é–“éš” Ã—0.3ï¼ˆåŠ é€Ÿ 70%ï¼‰
+- æ¯éš»ç”Ÿç‰©å¸¶ `biome` å’Œ `speciesId` å±¬æ€§
 
-### 生物基礎屬性
-- **草系**：radius 8、HP 30、speed 2.4、canFight 50%（true 時 damage=3，false 時 damage=0）、diet herbivore
-- **肉系**：radius 10、HP 50、speed 3.6、damage 5、diet carnivore
+### ç”Ÿç‰©åŸºç¤Žå±¬æ€§
+- **è‰ç³»**ï¼šradius 8ã€HP 30ã€speed 2.4ã€canFight 50%ï¼ˆtrue æ™‚ damage=3ï¼Œfalse æ™‚ damage=0ï¼‰ã€diet herbivore
+- **è‚‰ç³»**ï¼šradius 10ã€HP 50ã€speed 3.6ã€damage 5ã€diet carnivore
 
-### 三態移動（biome 生物專屬）
-- **wandering**：每幀角度小幅偏移（±0.12 rad，模擬 Perlin Noise 平滑）
-- **resting**：速度 0~30%，持續 1.5s；玩家（非超友善）或敵意生物靠近 150px 內中斷
-- **attacking / fleeing**：玩家互動觸發（與舊邏輯相同）
-- 草系每 5~15s 有 20% 機率切換為 resting，60% 機率探索最近果子（800px 內），20% 繼續漫遊（v0.42.0 調整）
-- 肉系每 5~15s 有 30% 機率切換為 resting，30% 機率探索最近草系生物（500px 內）
+### ä¸‰æ…‹ç§»å‹•ï¼ˆbiome ç”Ÿç‰©å°ˆå±¬ï¼‰
+- **wandering**ï¼šæ¯å¹€è§’åº¦å°å¹…åç§»ï¼ˆÂ±0.12 radï¼Œæ¨¡æ“¬ Perlin Noise å¹³æ»‘ï¼‰
+- **resting**ï¼šé€Ÿåº¦ 0~30%ï¼ŒæŒçºŒ 1.5sï¼›çŽ©å®¶ï¼ˆéžè¶…å‹å–„ï¼‰æˆ–æ•µæ„ç”Ÿç‰©é è¿‘ 150px å…§ä¸­æ–·
+- **attacking / fleeing**ï¼šçŽ©å®¶äº’å‹•è§¸ç™¼ï¼ˆèˆ‡èˆŠé‚è¼¯ç›¸åŒï¼‰
+- è‰ç³»æ¯ 5~15s æœ‰ 20% æ©ŸçŽ‡åˆ‡æ›ç‚º restingï¼Œ60% æ©ŸçŽ‡æŽ¢ç´¢æœ€è¿‘æžœå­ï¼ˆ800px å…§ï¼‰ï¼Œ20% ç¹¼çºŒæ¼«éŠï¼ˆv0.42.0 èª¿æ•´ï¼‰
+- è‚‰ç³»æ¯ 5~15s æœ‰ 30% æ©ŸçŽ‡åˆ‡æ›ç‚º restingï¼Œ30% æ©ŸçŽ‡æŽ¢ç´¢æœ€è¿‘è‰ç³»ç”Ÿç‰©ï¼ˆ500px å…§ï¼‰
 
-### 簡單地圖限制
-- `hostileEatMeat: false`（EASY_MAP 無此 feature）→ 肉系不會吃屍體成長
-
----
-
-## 普通地圖（NORMAL_MAP）（v0.36.0 / aggroRange 調整 v0.39.0）
-- 地形：中心森林保護區半徑 400px（簡單為 600px）
-- 生物強度倍率全部 ×1.5
-- `aggroRangeOverride: 400`（全局追擊範圍，v0.39.0 由 2000 調整至 400）
-- `removeHostileCap: true`（移除速度/傷害上限）
-- 精英怪：第1夜 ×5/+0.3/×1.5、第2夜 ×10/+0.7/×2.1、第3夜 ×20/+1.5/×2.9
-- Boss：黑熊 HP1500/速9.0/傷30/r33、大白鯊 HP1800/速11.7/傷36/r40、蠍王 HP1650/速10.8/傷40/r37（v0.47.0 速度翻倍）
-- 專屬 features：`giantization`、`killer`、`eliteRegen`、`bossRegen`、`hostileEatMeat`
+### ç°¡å–®åœ°åœ–é™åˆ¶
+- `hostileEatMeat: false`ï¼ˆEASY_MAP ç„¡æ­¤ featureï¼‰â†’ è‚‰ç³»ä¸æœƒåƒå±é«”æˆé•·
 
 ---
 
-## 圓形散落全局函式 spawnLootCircle（v0.35.0）
-
-- **位置**：`systems/utils.js`
-- 所有掉落物統一可經過此函式散落，圓形平均角度，距中點 10~25px 隨機
-- 單個物品時隨機角度；多個物品時等角均分
-- **支援 type**：
-  - `'corpse'`：`data = { multiplier }`，radius 按 multiplier 縮放（1倍=8px，>1倍=8×1.5px）
-  - `'bone'`：直接呼叫 `_spawnBone(x, y, 8)`
-  - `'mutation'`：待 Phase 5 擴充
-
----
-
-## 毒傷減免系統（v0.35.0）
-
-- **精英怪**：20% 減免
-- **Boss 通用**：30% 減免
-- **沙漠蠍王**：50% 減免（通用 30% + 專屬 20%）
-- 減免在 `updateStatusEffects()` 的毒傷 tick 扣血時計算
-- 浮動數字顯示減免後實際扣血值
+## æ™®é€šåœ°åœ–ï¼ˆNORMAL_MAPï¼‰ï¼ˆv0.36.0 / aggroRange èª¿æ•´ v0.39.0ï¼‰
+- åœ°å½¢ï¼šä¸­å¿ƒæ£®æž—ä¿è­·å€åŠå¾‘ 400pxï¼ˆç°¡å–®ç‚º 600pxï¼‰
+- ç”Ÿç‰©å¼·åº¦å€çŽ‡å…¨éƒ¨ Ã—1.5
+- `aggroRangeOverride: 400`ï¼ˆå…¨å±€è¿½æ“Šç¯„åœï¼Œv0.39.0 ç”± 2000 èª¿æ•´è‡³ 400ï¼‰
+- `removeHostileCap: true`ï¼ˆç§»é™¤é€Ÿåº¦/å‚·å®³ä¸Šé™ï¼‰
+- ç²¾è‹±æ€ªï¼šç¬¬1å¤œ Ã—5/+0.3/Ã—1.5ã€ç¬¬2å¤œ Ã—10/+0.7/Ã—2.1ã€ç¬¬3å¤œ Ã—20/+1.5/Ã—2.9
+- Bossï¼šé»‘ç†Š HP1500/é€Ÿ9.0/å‚·30/r33ã€å¤§ç™½é¯Š HP1800/é€Ÿ11.7/å‚·36/r40ã€è çŽ‹ HP1650/é€Ÿ10.8/å‚·40/r37ï¼ˆv0.47.0 é€Ÿåº¦ç¿»å€ï¼‰
+- å°ˆå±¬ featuresï¼š`giantization`ã€`killer`ã€`eliteRegen`ã€`bossRegen`ã€`hostileEatMeat`
 
 ---
 
-## 肉系吃屍體系統（v0.38.0，僅普通地圖）
+## åœ“å½¢æ•£è½å…¨å±€å‡½å¼ spawnLootCircleï¼ˆv0.35.0ï¼‰
 
-### 機制
-- 肉系生物（diet='carnivore'）在漫遊/休息/巡邏狀態時，偵測 60px 內屍體進入 `state: 'eating'`
-- 每 0.5 秒一 tick（`eatTickTimer` 累計 FIXED_DELTA），6 ticks（3秒）完成一具屍體
-- 吃屍體期間 aggroRange×1.5（`eatBaseAggroRange` 記錄進入時的值）；有玩家或中立生物進入臨時 aggroRange → 立刻中斷（進度重置），回到 `patrolling`
-- 吃完一具：`_carnivoreEatCorpse(creature, corpse)`，移除屍體，回復 5% maxHP
-
-### 成長（不累乘，基礎值計算）
-- 每吃1具：HP/速度/攻擊力/體積各 +10% 基礎值（`corpseEaten` 計數）
-- `baseRadius` 在 `_makeCarnCreature` 生成時記錄（與 `baseHp`、`baseSpeed`、`baseDamage` 一起）
+- **ä½ç½®**ï¼š`systems/utils.js`
+- æ‰€æœ‰æŽ‰è½ç‰©çµ±ä¸€å¯ç¶“éŽæ­¤å‡½å¼æ•£è½ï¼Œåœ“å½¢å¹³å‡è§’åº¦ï¼Œè·ä¸­é»ž 10~25px éš¨æ©Ÿ
+- å–®å€‹ç‰©å“æ™‚éš¨æ©Ÿè§’åº¦ï¼›å¤šå€‹ç‰©å“æ™‚ç­‰è§’å‡åˆ†
+- **æ”¯æ´ type**ï¼š
+  - `'corpse'`ï¼š`data = { multiplier }`ï¼Œradius æŒ‰ multiplier ç¸®æ”¾ï¼ˆ1å€=8pxï¼Œ>1å€=8Ã—1.5pxï¼‰
+  - `'bone'`ï¼šç›´æŽ¥å‘¼å« `_spawnBone(x, y, 8)`
+  - `'mutation'`ï¼šå¾… Phase 5 æ“´å……
 
 ---
 
-## 殺手化系統（v0.38.0，僅普通地圖）
+## æ¯’å‚·æ¸›å…ç³»çµ±ï¼ˆv0.35.0ï¼‰
 
-### 觸發
-- `corpseEaten >= 5` 且 `features.killer === true` 時觸發 `_triggerKiller(creature)`
-- `isKiller = true`，`killerCorpseEaten = 0`（殺手化後獨立計數）
-
-### 殺手化數值（基礎值計算，不累乘）
-- aggroRange 翻倍
-- 攻擊力：`baseDamage * (1 + 0.5 + 0.1 * corpseEaten)`（+50% + 之前10%累計）
-- 速度：`baseSpeed * (1 + 0.3 + 0.1 * corpseEaten)`（+30% + 之前10%累計）
-- 每 5 秒回復 1% maxHP（`killerRegenTimer` 計時）
-
-### 殺手化後繼續吃屍體
-- 每多吃 1 具：damage/speed/maxHp/radius 各再 +10% 基礎值（`killerCorpseEaten` 計數）
-- 兩個計數疊加（`corpseEaten + killerCorpseEaten`）
-
-### killerLevel 計數器（v0.46.0）
-- 殺手化觸發時：`killerLevel = 0`
-- 殺手化後每吃一具屍體：`killerLevel++`
-- `_getCreatureDisplayName` 顯示「[物種名] 殺手Lv[N]」（N ≥ 1 時顯示）
-
-### 擊殺獎勵（`handleKillerKill`，`systems/damage.js`）（v0.46.0 更新）
-- XP：`100 + killerLevel × 5 + 獵人本能 × 10`
-- `spawnLootCircle`：2 份 1 倍屍體（原為 3 份）
-- 100% 掉落 1 個變異點；`killerCorpseEaten = N` → N% 機率額外掉 1~N 個
-- 殺手本身屍體正常生成
-
-### 死亡路由
-- `handleKill(c, isHostile)` 開頭檢查 `c.isKiller`，若是則路由至 `handleKillerKill(c)`
+- **ç²¾è‹±æ€ª**ï¼š20% æ¸›å…
+- **Boss é€šç”¨**ï¼š30% æ¸›å…
+- **æ²™æ¼ è çŽ‹**ï¼š50% æ¸›å…ï¼ˆé€šç”¨ 30% + å°ˆå±¬ 20%ï¼‰
+- æ¸›å…åœ¨ `updateStatusEffects()` çš„æ¯’å‚· tick æ‰£è¡€æ™‚è¨ˆç®—
+- æµ®å‹•æ•¸å­—é¡¯ç¤ºæ¸›å…å¾Œå¯¦éš›æ‰£è¡€å€¼
 
 ---
 
-## 生態特性系統（v0.46.0，僅普通地圖）
+## è‚‰ç³»åƒå±é«”ç³»çµ±ï¼ˆv0.38.0ï¼Œåƒ…æ™®é€šåœ°åœ–ï¼‰
 
-每個生態區肉食性物種各有專屬加成，在生態區內強化、離開生態區3秒後加成消失（鱷魚為立即失去）。
+### æ©Ÿåˆ¶
+- è‚‰ç³»ç”Ÿç‰©ï¼ˆdiet='carnivore'ï¼‰åœ¨æ¼«éŠ/ä¼‘æ¯/å·¡é‚ç‹€æ…‹æ™‚ï¼Œåµæ¸¬ 60px å…§å±é«”é€²å…¥ `state: 'eating'`
+- æ¯ 0.5 ç§’ä¸€ tickï¼ˆ`eatTickTimer` ç´¯è¨ˆ FIXED_DELTAï¼‰ï¼Œ6 ticksï¼ˆ3ç§’ï¼‰å®Œæˆä¸€å…·å±é«”
+- åƒå±é«”æœŸé–“ aggroRangeÃ—1.5ï¼ˆ`eatBaseAggroRange` è¨˜éŒ„é€²å…¥æ™‚çš„å€¼ï¼‰ï¼›æœ‰çŽ©å®¶æˆ–ä¸­ç«‹ç”Ÿç‰©é€²å…¥è‡¨æ™‚ aggroRange â†’ ç«‹åˆ»ä¸­æ–·ï¼ˆé€²åº¦é‡ç½®ï¼‰ï¼Œå›žåˆ° `patrolling`
+- åƒå®Œä¸€å…·ï¼š`_carnivoreEatCorpse(creature, corpse)`ï¼Œç§»é™¤å±é«”ï¼Œå›žå¾© 5% maxHP
 
-### 猞猁（lynx）— 森林生態區
-| 狀態 | 暴擊機率 | 暴擊倍率 | 玩家減速 | 減速持續 | 移動速度 |
+### æˆé•·ï¼ˆä¸ç´¯ä¹˜ï¼ŒåŸºç¤Žå€¼è¨ˆç®—ï¼‰
+- æ¯åƒ1å…·ï¼šHP/é€Ÿåº¦/æ”»æ“ŠåŠ›/é«”ç©å„ +10% åŸºç¤Žå€¼ï¼ˆ`corpseEaten` è¨ˆæ•¸ï¼‰
+- `baseRadius` åœ¨ `_makeCarnCreature` ç”Ÿæˆæ™‚è¨˜éŒ„ï¼ˆèˆ‡ `baseHp`ã€`baseSpeed`ã€`baseDamage` ä¸€èµ·ï¼‰
+
+---
+
+## æ®ºæ‰‹åŒ–ç³»çµ±ï¼ˆv0.38.0ï¼Œåƒ…æ™®é€šåœ°åœ–ï¼‰
+
+### è§¸ç™¼
+- `corpseEaten >= 5` ä¸” `features.killer === true` æ™‚è§¸ç™¼ `_triggerKiller(creature)`
+- `isKiller = true`ï¼Œ`killerCorpseEaten = 0`ï¼ˆæ®ºæ‰‹åŒ–å¾Œç¨ç«‹è¨ˆæ•¸ï¼‰
+
+### æ®ºæ‰‹åŒ–æ•¸å€¼ï¼ˆåŸºç¤Žå€¼è¨ˆç®—ï¼Œä¸ç´¯ä¹˜ï¼‰
+- aggroRange ç¿»å€
+- æ”»æ“ŠåŠ›ï¼š`baseDamage * (1 + 0.5 + 0.1 * corpseEaten)`ï¼ˆ+50% + ä¹‹å‰10%ç´¯è¨ˆï¼‰
+- é€Ÿåº¦ï¼š`baseSpeed * (1 + 0.3 + 0.1 * corpseEaten)`ï¼ˆ+30% + ä¹‹å‰10%ç´¯è¨ˆï¼‰
+- æ¯ 5 ç§’å›žå¾© 1% maxHPï¼ˆ`killerRegenTimer` è¨ˆæ™‚ï¼‰
+
+### æ®ºæ‰‹åŒ–å¾Œç¹¼çºŒåƒå±é«”
+- æ¯å¤šåƒ 1 å…·ï¼šdamage/speed/maxHp/radius å„å† +10% åŸºç¤Žå€¼ï¼ˆ`killerCorpseEaten` è¨ˆæ•¸ï¼‰
+- å…©å€‹è¨ˆæ•¸ç–ŠåŠ ï¼ˆ`corpseEaten + killerCorpseEaten`ï¼‰
+
+### killerLevel è¨ˆæ•¸å™¨ï¼ˆv0.46.0ï¼‰
+- æ®ºæ‰‹åŒ–è§¸ç™¼æ™‚ï¼š`killerLevel = 0`
+- æ®ºæ‰‹åŒ–å¾Œæ¯åƒä¸€å…·å±é«”ï¼š`killerLevel++`
+- `_getCreatureDisplayName` é¡¯ç¤ºã€Œ[ç‰©ç¨®å] æ®ºæ‰‹Lv[N]ã€ï¼ˆN â‰¥ 1 æ™‚é¡¯ç¤ºï¼‰
+
+### æ“Šæ®ºçŽå‹µï¼ˆ`handleKillerKill`ï¼Œ`systems/damage.js`ï¼‰ï¼ˆv0.46.0 æ›´æ–°ï¼‰
+- XPï¼š`100 + killerLevel Ã— 5 + çµäººæœ¬èƒ½ Ã— 10`
+- `spawnLootCircle`ï¼š2 ä»½ 1 å€å±é«”ï¼ˆåŽŸç‚º 3 ä»½ï¼‰
+- 100% æŽ‰è½ 1 å€‹è®Šç•°é»žï¼›`killerCorpseEaten = N` â†’ N% æ©ŸçŽ‡é¡å¤–æŽ‰ 1~N å€‹
+- æ®ºæ‰‹æœ¬èº«å±é«”æ­£å¸¸ç”Ÿæˆ
+
+### æ­»äº¡è·¯ç”±
+- `handleKill(c, isHostile)` é–‹é ­æª¢æŸ¥ `c.isKiller`ï¼Œè‹¥æ˜¯å‰‡è·¯ç”±è‡³ `handleKillerKill(c)`
+
+---
+
+## ç”Ÿæ…‹ç‰¹æ€§ç³»çµ±ï¼ˆv0.46.0ï¼Œåƒ…æ™®é€šåœ°åœ–ï¼‰
+
+æ¯å€‹ç”Ÿæ…‹å€è‚‰é£Ÿæ€§ç‰©ç¨®å„æœ‰å°ˆå±¬åŠ æˆï¼Œåœ¨ç”Ÿæ…‹å€å…§å¼·åŒ–ã€é›¢é–‹ç”Ÿæ…‹å€3ç§’å¾ŒåŠ æˆæ¶ˆå¤±ï¼ˆé±·é­šç‚ºç«‹å³å¤±åŽ»ï¼‰ã€‚
+
+### çŒžçŒï¼ˆlynxï¼‰â€” æ£®æž—ç”Ÿæ…‹å€
+| ç‹€æ…‹ | æš´æ“Šæ©ŸçŽ‡ | æš´æ“Šå€çŽ‡ | çŽ©å®¶æ¸›é€Ÿ | æ¸›é€ŸæŒçºŒ | ç§»å‹•é€Ÿåº¦ |
 |------|----------|----------|----------|----------|----------|
-| 在森林 | 50% | ×2 baseDmg | -30% | 3 秒 | ×1.2 |
-| 離森林 ≥3s | 25% | ×1.5 baseDmg | -15% | 1.5 秒 | ×1.0 |
+| åœ¨æ£®æž— | 50% | Ã—2 baseDmg | -30% | 3 ç§’ | Ã—1.2 |
+| é›¢æ£®æž— â‰¥3s | 25% | Ã—1.5 baseDmg | -15% | 1.5 ç§’ | Ã—1.0 |
 
-- 暴擊觸發：`_applyLynxBiomeBonus` 計算 `_critChance`；命中玩家時隨機判定，命中後設定 `p._lynxSlowUntil`、`p._lynxSlowAmt`
-- 玩家被減速期間移動速度乘以 `(1 - lynxSlowAmt)`（`updatePlayerMovement()` 判斷）
+- æš´æ“Šè§¸ç™¼ï¼š`_applyLynxBiomeBonus` è¨ˆç®— `_critChance`ï¼›å‘½ä¸­çŽ©å®¶æ™‚éš¨æ©Ÿåˆ¤å®šï¼Œå‘½ä¸­å¾Œè¨­å®š `p._lynxSlowUntil`ã€`p._lynxSlowAmt`
+- çŽ©å®¶è¢«æ¸›é€ŸæœŸé–“ç§»å‹•é€Ÿåº¦ä¹˜ä»¥ `(1 - lynxSlowAmt)`ï¼ˆ`updatePlayerMovement()` åˆ¤æ–·ï¼‰
 
-### 鱷魚（croc）— 水潭生態區
-| 狀態 | 攻擊加成 | 移動速度 | 死亡翻滾機率 |
+### é±·é­šï¼ˆcrocï¼‰â€” æ°´æ½­ç”Ÿæ…‹å€
+| ç‹€æ…‹ | æ”»æ“ŠåŠ æˆ | ç§»å‹•é€Ÿåº¦ | æ­»äº¡ç¿»æ»¾æ©ŸçŽ‡ |
 |------|----------|----------|-------------|
-| 在水潭 | ×1.2 | ×1.3 | 20% |
-| 離水潭 | ×1.0 | ×1.0 | 0% |
+| åœ¨æ°´æ½­ | Ã—1.2 | Ã—1.3 | 20% |
+| é›¢æ°´æ½­ | Ã—1.0 | Ã—1.0 | 0% |
 
-- 死亡翻滾觸發：對玩家施加 1 秒暈眩（`p._stunUntil = now + 1000`），期間 `updatePlayerMovement()` 直接 return
-- `_applyCrocBiomeBonus` 同時設定 `_biomeAtkMult`、`_biomeSpeedMult`、`_deathRollChance`
+- æ­»äº¡ç¿»æ»¾è§¸ç™¼ï¼šå°çŽ©å®¶æ–½åŠ  1 ç§’æšˆçœ©ï¼ˆ`p._stunUntil = now + 1000`ï¼‰ï¼ŒæœŸé–“ `updatePlayerMovement()` ç›´æŽ¥ return
+- `_applyCrocBiomeBonus` åŒæ™‚è¨­å®š `_biomeAtkMult`ã€`_biomeSpeedMult`ã€`_deathRollChance`
 
-### 鬣狗（hyena）— 沙漠生態區
-- 生成時隨機分配 `packGroup`（1~2），`packMates = []`、`packName = null`，不出生即自動分配隊名
-- `_updateHyenaPack`：每幀掃描 300px 內同 biome 同 packGroup 鬣狗，物理碰面後合併隊名，上限 20 隻
-- `_nearestHyenaPackMate` / `_moveHyenaTowardPack`：隊員超出 800px 後先以歸隊為優先行動，3 秒內沒回到 800px 才離隊
-- 攻擊加成：每多一隻存活 packMate → 攻擊 +20%，速度 +5%
-- `_alertHyenaPack`：鬣狗鎖定目標瞬間，通知 800px 內同 biome、同 packGroup 成員切換為 chasing 同一目標
-- `_getHyenaAttackPack` / `_syncHyenaAttackTurn` / `_hyenaWheelPosition`：攻擊玩家時同隊鬣狗採車輪戰，同時只有 1 隻進入 attacking，輪替 CD 600ms
+### é¬£ç‹—ï¼ˆhyenaï¼‰â€” æ²™æ¼ ç”Ÿæ…‹å€
+- ç”Ÿæˆæ™‚éš¨æ©Ÿåˆ†é… `packGroup`ï¼ˆ1~2ï¼‰ï¼Œ`packMates = []`ã€`packName = null`ï¼Œä¸å‡ºç”Ÿå³è‡ªå‹•åˆ†é…éšŠå
+- `_updateHyenaPack`ï¼šæ¯å¹€æŽƒæ 300px å…§åŒ biome åŒ packGroup é¬£ç‹—ï¼Œç‰©ç†ç¢°é¢å¾Œåˆä½µéšŠåï¼Œä¸Šé™ 20 éš»
+- `_nearestHyenaPackMate` / `_moveHyenaTowardPack`ï¼šéšŠå“¡è¶…å‡º 800px å¾Œå…ˆä»¥æ­¸éšŠç‚ºå„ªå…ˆè¡Œå‹•ï¼Œ3 ç§’å…§æ²’å›žåˆ° 800px æ‰é›¢éšŠ
+- æ”»æ“ŠåŠ æˆï¼šæ¯å¤šä¸€éš»å­˜æ´» packMate â†’ æ”»æ“Š +20%ï¼Œé€Ÿåº¦ +5%
+- `_alertHyenaPack`ï¼šé¬£ç‹—éŽ–å®šç›®æ¨™çž¬é–“ï¼Œé€šçŸ¥ 800px å…§åŒ biomeã€åŒ packGroup æˆå“¡åˆ‡æ›ç‚º chasing åŒä¸€ç›®æ¨™
+- `_getHyenaAttackPack` / `_syncHyenaAttackTurn` / `_hyenaWheelPosition`ï¼šæ”»æ“ŠçŽ©å®¶æ™‚åŒéšŠé¬£ç‹—æŽ¡è»Šè¼ªæˆ°ï¼ŒåŒæ™‚åªæœ‰ 1 éš»é€²å…¥ attackingï¼Œè¼ªæ›¿ CD 600msï¼›1~3 éš»ç¶­æŒè©¦æŽ¢è¼ªæµï¼Œ4 éš»ä»¥ä¸Šæœƒå˜—è©¦åŒ…åœå·¦å³/å¾Œæ–¹ä¸¦ä¿ç•™çŽ©å®¶å‰æ–¹ç¼ºå£ï¼Œä¸¦ä¾ç›®å‰ä½ç½®é‡æ–°åˆ†é… Attackerï¼Œä½Žè¡€/é€€å›žä¸­çš„é¬£ç‹—å„ªå…ˆä¸ç•¶æ”»æ“Šè€…ï¼›éžæ”»æ“Šè€…é¸æœ€è¿‘å¤–åœˆ slotï¼Œé¿å…çŽ©å®¶è½‰å‘æ™‚ç©¿éŽçŽ©å®¶ä¸­å¿ƒæ›ä½
 
-| 狀態 | 基礎攻擊 | 基礎速度 |
+| ç‹€æ…‹ | åŸºç¤Žæ”»æ“Š | åŸºç¤Žé€Ÿåº¦ |
 |------|----------|----------|
-| 在沙漠 | ×1.0 × packBonus | ×1.1 × packBonus |
-| 離沙漠 ≥3s | ×0.5 × packBonus | ×0.5 × packBonus |
+| åœ¨æ²™æ¼  | Ã—1.0 Ã— packBonus | Ã—1.1 Ã— packBonus |
+| é›¢æ²™æ¼  â‰¥3s | Ã—0.5 Ã— packBonus | Ã—0.5 Ã— packBonus |
 
-### 肉食者逃離巨人（`_shouldFleeFromGiant`）
-- **殺手化生物**：`_shouldFleeFromGiant` 直接返回 `false`，永遠不迴避巨人
-- 目標為 **Alpha**（非殺手）：一律逃跑
-- 目標為普通巨人（非殺手）：巨人 HP > 肉食者 HP × 3 → 逃跑
-- 逃跑狀態 `fleeing_giant`：往離最近巨人反方向跑 3 秒，之後切換 `_seekingPrey = true`、`_seekNonGiant = true`（只尋找非巨人化草食性）
+### è‚‰é£Ÿè€…é€ƒé›¢å·¨äººï¼ˆ`_shouldFleeFromGiant`ï¼‰
+- **æ®ºæ‰‹åŒ–ç”Ÿç‰©**ï¼š`_shouldFleeFromGiant` ç›´æŽ¥è¿”å›ž `false`ï¼Œæ°¸é ä¸è¿´é¿å·¨äºº
+- ç›®æ¨™ç‚º **Alpha**ï¼ˆéžæ®ºæ‰‹ï¼‰ï¼šä¸€å¾‹é€ƒè·‘
+- ç›®æ¨™ç‚ºæ™®é€šå·¨äººï¼ˆéžæ®ºæ‰‹ï¼‰ï¼šå·¨äºº HP > è‚‰é£Ÿè€… HP Ã— 3 â†’ é€ƒè·‘
+- é€ƒè·‘ç‹€æ…‹ `fleeing_giant`ï¼šå¾€é›¢æœ€è¿‘å·¨äººåæ–¹å‘è·‘ 3 ç§’ï¼Œä¹‹å¾Œåˆ‡æ› `_seekingPrey = true`ã€`_seekNonGiant = true`ï¼ˆåªå°‹æ‰¾éžå·¨äººåŒ–è‰é£Ÿæ€§ï¼‰
 
-### 殺手戰術邏輯（v0.51.0，`updateHostileCreatures`）
-- 殺手化生物遭遇巨人/Alpha 時進入獨立戰術判斷
-- **撤退條件**：自身 HP < 70% 且 巨人 HP > 70%（雙向不利）
-  - 若 aggroRange 內有落單非巨人化草食性 → 轉移攻擊目標
-  - 否則進入 `fleeing_giant` 暫時撤退
-- **正常攻擊**：不滿足撤退條件時（殺手狀態良好）→ 繼續攻擊巨人
+### æ®ºæ‰‹æˆ°è¡“é‚è¼¯ï¼ˆv0.51.0ï¼Œ`updateHostileCreatures`ï¼‰
+- æ®ºæ‰‹åŒ–ç”Ÿç‰©é­é‡å·¨äºº/Alpha æ™‚é€²å…¥ç¨ç«‹æˆ°è¡“åˆ¤æ–·
+- **æ’¤é€€æ¢ä»¶**ï¼šè‡ªèº« HP < 70% ä¸” å·¨äºº HP > 70%ï¼ˆé›™å‘ä¸åˆ©ï¼‰
+  - è‹¥ aggroRange å…§æœ‰è½å–®éžå·¨äººåŒ–è‰é£Ÿæ€§ â†’ è½‰ç§»æ”»æ“Šç›®æ¨™
+  - å¦å‰‡é€²å…¥ `fleeing_giant` æš«æ™‚æ’¤é€€
+- **æ­£å¸¸æ”»æ“Š**ï¼šä¸æ»¿è¶³æ’¤é€€æ¢ä»¶æ™‚ï¼ˆæ®ºæ‰‹ç‹€æ…‹è‰¯å¥½ï¼‰â†’ ç¹¼çºŒæ”»æ“Šå·¨äºº
 
-### 生態區回歸（biome home-return）
-- 每幀偵測 `_isInHomeBiome(creature)`；不在生態區時：`_leftBiomeTime` 開始計時
-- 每 2 秒更新一個回歸目標點（`_findNearestBiomePoint` 隨機採樣 30 點）
-- 回歸時以 1.3 倍速度移動；回到生態區後清除 `_leftBiomeTime`、`_returnTarget`
-- `_leftBiomeTime` 同時作為猞猁/鬣狗生態區加成的失效計時器
-
----
-
-## 精英/Boss回血（v0.38.0，僅普通地圖）
-
-### 精英怪回血（`features.eliteRegen`）
-- `spawnEliteCreature` 記錄 `elite.tierIndex`（0/1/2）
-- 第1夜：每 5 秒 +1% maxHP；第2夜：+2%；第3夜：+3%
-
-### Boss回血（`features.bossRegen`）
-- 每 3 秒 +2% maxHP（v0.47.0 強化；原為每 10 秒 +10%）
+### ç”Ÿæ…‹å€å›žæ­¸ï¼ˆbiome home-returnï¼‰
+- æ¯å¹€åµæ¸¬ `_isInHomeBiome(creature)`ï¼›ä¸åœ¨ç”Ÿæ…‹å€æ™‚ï¼š`_leftBiomeTime` é–‹å§‹è¨ˆæ™‚
+- æ¯ 2 ç§’æ›´æ–°ä¸€å€‹å›žæ­¸ç›®æ¨™é»žï¼ˆ`_findNearestBiomePoint` éš¨æ©ŸæŽ¡æ¨£ 30 é»žï¼‰
+- å›žæ­¸æ™‚ä»¥ 1.3 å€é€Ÿåº¦ç§»å‹•ï¼›å›žåˆ°ç”Ÿæ…‹å€å¾Œæ¸…é™¤ `_leftBiomeTime`ã€`_returnTarget`
+- `_leftBiomeTime` åŒæ™‚ä½œç‚ºçŒžçŒ/é¬£ç‹—ç”Ÿæ…‹å€åŠ æˆçš„å¤±æ•ˆè¨ˆæ™‚å™¨
 
 ---
 
-## 精英怪死亡掉落（v0.38.0，兩種難度均適用）
-- `handleEliteKill` 呼叫 `spawnLootCircle`：1 個 1 倍屍體 + 4 具白骨
+## ç²¾è‹±/Bosså›žè¡€ï¼ˆv0.38.0ï¼Œåƒ…æ™®é€šåœ°åœ–ï¼‰
+
+### ç²¾è‹±æ€ªå›žè¡€ï¼ˆ`features.eliteRegen`ï¼‰
+- `spawnEliteCreature` è¨˜éŒ„ `elite.tierIndex`ï¼ˆ0/1/2ï¼‰
+- ç¬¬1å¤œï¼šæ¯ 5 ç§’ +1% maxHPï¼›ç¬¬2å¤œï¼š+2%ï¼›ç¬¬3å¤œï¼š+3%
+
+### Bosså›žè¡€ï¼ˆ`features.bossRegen`ï¼‰
+- æ¯ 3 ç§’ +2% maxHPï¼ˆv0.47.0 å¼·åŒ–ï¼›åŽŸç‚ºæ¯ 10 ç§’ +10%ï¼‰
 
 ---
 
-## 巨人化系統（v0.37.0 / v0.1.10.0 重寫，僅普通地圖）
-
-### 觸發
-- 草系生物 `_seekingFruit` 吃滿5顆果子且 `features.giantization === true`
-- 移除舊版激進化（`diet=aggressive`）邏輯，改由巨人化取代
-
-### 巨人化數值（在原本數值基礎上修改）
-- 攻擊力 +20，血量 ×10，體積 ×1.5，aggroRange 400（v0.46.0 由 150 調整）
-- guardianRange 500（守護範圍）
-- 每秒回復 1% maxHP（`giantRegenTimer` 計時）
-- HP ≤ 30% 時：中斷追擊，逃往最近果子方向；每吃1顆果子回復 +10% maxHP（`_updateGiantFlee`）
-- 巨人化後為「無隊伍獨立巨人」，不強制成為隊長（v0.1.10.0 重寫）
-- _seekingFruit 超時保護：開始計時 5 秒強制退出；吃果子後 hp > maxHp * 0.5 立刻退出（v0.1.10.0）
-
-### 組隊（同族同生態，Alpha 誕生後才有隊伍）
-- 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px → HP 較高者升格 Alpha，另一隻成為 packMember（每3秒掃描，v0.1.10.0）
-- 升格 Alpha 後成為隊長，每3秒嘗試招募 800px 內同族草食性，20% 成功率
-- 隊伍上限動態計算：`base 5 + 隊伍內已巨人化成員數`，上限 8 隻（含隊長）
-- 超出 800px 自動掉隊，隊員距離 >600px 時巨人化暫停移動等待
-- 不同隊伍巨人距離過近時互相推開（距離 < radius + 對方radius + 20 → 推開 2px，v0.1.10.0）
-
-### 行為
-- 優先攻擊：guardianRange 內威脅組員的敵意生物（最優先）→ aggroRange 內的敵意生物 / 玩家（草食性Lv4+除外）
-- 無目標時：每3~5秒選最近果子作為移動目標，帶領隊伍前進
-
-### 擊殺獎勵（`handleGiantKill`，`systems/damage.js`）
-- XP：100（+獵人本能加成）
-- `spawnLootCircle`：1個2倍屍體 + 1具白骨
-- 100% 掉落1個變異點；額外10%機率掉 1~3個
+## ç²¾è‹±æ€ªæ­»äº¡æŽ‰è½ï¼ˆv0.38.0ï¼Œå…©ç¨®é›£åº¦å‡é©ç”¨ï¼‰
+- `handleEliteKill` å‘¼å« `spawnLootCircle`ï¼š1 å€‹ 1 å€å±é«” + 4 å…·ç™½éª¨
 
 ---
 
-## Alpha系統（v0.37.0 / v0.1.10.0 重寫，僅普通地圖）
+## å·¨äººåŒ–ç³»çµ±ï¼ˆv0.37.0 / v0.1.10.0 é‡å¯«ï¼Œåƒ…æ™®é€šåœ°åœ–ï¼‰
 
-### 觸發
-- 兩隻無隊伍獨立巨人（同族同生態）距離 ≤ 300px 相遇 → HP 較高者升格 Alpha（v0.1.10.0）
-- `gameState.alphaCreature`：全圖只有1隻 Alpha 的引用
-- 已有 Alpha 時不再觸發新的
-- 單人隊伍（隊長無 packMembers）不能升格 Alpha（v0.1.10.0）
+### è§¸ç™¼
+- è‰ç³»ç”Ÿç‰© `_seekingFruit` åƒæ»¿5é¡†æžœå­ä¸” `features.giantization === true`
+- ç§»é™¤èˆŠç‰ˆæ¿€é€²åŒ–ï¼ˆ`diet=aggressive`ï¼‰é‚è¼¯ï¼Œæ”¹ç”±å·¨äººåŒ–å–ä»£
 
-### Alpha 死後繼承（v0.1.10.0）
-- Alpha 死亡時：`gameState._pendingAlphaInherit = true`
-- 下一幀 `updateNeutralCreatures` 掃描全圖，找出 `packMembers >= 1` 的巨人隊長（隊伍 ≥ 2 隻）
-- 從中選 HP 最高者升格為新 Alpha；無符合條件者不產生新 Alpha
+### å·¨äººåŒ–æ•¸å€¼ï¼ˆåœ¨åŽŸæœ¬æ•¸å€¼åŸºç¤Žä¸Šä¿®æ”¹ï¼‰
+- æ”»æ“ŠåŠ› +20ï¼Œè¡€é‡ Ã—10ï¼Œé«”ç© Ã—1.5ï¼ŒaggroRange 400ï¼ˆv0.46.0 ç”± 150 èª¿æ•´ï¼‰
+- guardianRange 500ï¼ˆå®ˆè­·ç¯„åœï¼‰
+- æ¯ç§’å›žå¾© 1% maxHPï¼ˆ`giantRegenTimer` è¨ˆæ™‚ï¼‰
+- HP â‰¤ 30% æ™‚ï¼šä¸­æ–·è¿½æ“Šï¼Œé€ƒå¾€æœ€è¿‘æžœå­æ–¹å‘ï¼›æ¯åƒ1é¡†æžœå­å›žå¾© +10% maxHPï¼ˆ`_updateGiantFlee`ï¼‰
+- å·¨äººåŒ–å¾Œç‚ºã€Œç„¡éšŠä¼ç¨ç«‹å·¨äººã€ï¼Œä¸å¼·åˆ¶æˆç‚ºéšŠé•·ï¼ˆv0.1.10.0 é‡å¯«ï¼‰
+- _seekingFruit è¶…æ™‚ä¿è­·ï¼šé–‹å§‹è¨ˆæ™‚ 5 ç§’å¼·åˆ¶é€€å‡ºï¼›åƒæžœå­å¾Œ hp > maxHp * 0.5 ç«‹åˆ»é€€å‡ºï¼ˆv0.1.10.0ï¼‰
 
-### Alpha數值（巨人化基礎上再計算）
-- 攻擊力 ×2，血量 ×3，體積 ×1.5，aggroRange 600（v0.46.0 由 300 調整）
-- guardianRange 1500（v0.46.0）
-- 跟隨範圍 `packFollowRange: 1000`
-- HP 分享回血（v0.46.0）：自身 HP ≥ 80% 時每秒分享 1% maxHP 給 HP 最低的受傷組員；自身 HP < 80% 時每秒自回 2% maxHP（不分享）
+### çµ„éšŠï¼ˆåŒæ—åŒç”Ÿæ…‹ï¼ŒAlpha èª•ç”Ÿå¾Œæ‰æœ‰éšŠä¼ï¼‰
+- å…©éš»ç„¡éšŠä¼ç¨ç«‹å·¨äººï¼ˆåŒæ—åŒç”Ÿæ…‹ï¼‰è·é›¢ â‰¤ 300px â†’ HP è¼ƒé«˜è€…å‡æ ¼ Alphaï¼Œå¦ä¸€éš»æˆç‚º packMemberï¼ˆæ¯3ç§’æŽƒæï¼Œv0.1.10.0ï¼‰
+- å‡æ ¼ Alpha å¾Œæˆç‚ºéšŠé•·ï¼Œæ¯3ç§’å˜—è©¦æ‹›å‹Ÿ 800px å…§åŒæ—è‰é£Ÿæ€§ï¼Œ20% æˆåŠŸçŽ‡
+- éšŠä¼ä¸Šé™å‹•æ…‹è¨ˆç®—ï¼š`base 5 + éšŠä¼å…§å·²å·¨äººåŒ–æˆå“¡æ•¸`ï¼Œä¸Šé™ 8 éš»ï¼ˆå«éšŠé•·ï¼‰
+- è¶…å‡º 800px è‡ªå‹•æŽ‰éšŠï¼ŒéšŠå“¡è·é›¢ >600px æ™‚å·¨äººåŒ–æš«åœç§»å‹•ç­‰å¾…
+- ä¸åŒéšŠä¼å·¨äººè·é›¢éŽè¿‘æ™‚äº’ç›¸æŽ¨é–‹ï¼ˆè·é›¢ < radius + å°æ–¹radius + 20 â†’ æŽ¨é–‹ 2pxï¼Œv0.1.10.0ï¼‰
 
-### 誕生公告
-- `showAlphaAnnouncement(name)`：全屏顯示3秒，2.5秒後淡出
-- 文字：「⚠️ Alpha [物種名] 誕生了！」
+### è¡Œç‚º
+- å„ªå…ˆæ”»æ“Šï¼šguardianRange å…§å¨è„…çµ„å“¡çš„æ•µæ„ç”Ÿç‰©ï¼ˆæœ€å„ªå…ˆï¼‰â†’ aggroRange å…§çš„æ•µæ„ç”Ÿç‰© / çŽ©å®¶ï¼ˆè‰é£Ÿæ€§Lv4+é™¤å¤–ï¼‰
+- ç„¡ç›®æ¨™æ™‚ï¼šæ¯3~5ç§’é¸æœ€è¿‘æžœå­ä½œç‚ºç§»å‹•ç›®æ¨™ï¼Œå¸¶é ˜éšŠä¼å‰é€²
 
-### 擊殺獎勵
-- XP：200（+獵人本能加成）
-- `spawnLootCircle`：2個2倍屍體 + 3具白骨
-- 100% 掉落1個變異點；額外20%機率掉 1~6個
-
-### Alpha 四條死亡路徑（v0.51.0 確認）
-1. **玩家擊殺** → `handleGiantKill(c)` → `if (c.isAlpha && gameState.alphaCreature === c) gameState.alphaCreature = null`
-2. **毒傷/流血 tick 死亡** → `updateStatusEffects()` 正確路由至 `handleGiantKill(c)`
-3. **`updateNeutralCreatures()` 巨人被敵意生物打死** → `updateHostileCreatures` 中已有完整清理
-4. **`updateHostileCreatures()` 肉食者打死中立巨人** → `creature.targetType === 'neutral'` 分支已有 `alphaCreature = null`
+### æ“Šæ®ºçŽå‹µï¼ˆ`handleGiantKill`ï¼Œ`systems/damage.js`ï¼‰
+- XPï¼š100ï¼ˆ+çµäººæœ¬èƒ½åŠ æˆï¼‰
+- `spawnLootCircle`ï¼š1å€‹2å€å±é«” + 1å…·ç™½éª¨
+- 100% æŽ‰è½1å€‹è®Šç•°é»žï¼›é¡å¤–10%æ©ŸçŽ‡æŽ‰ 1~3å€‹
 
 ---
 
-## 上方血條UI（v0.37.0）
+## Alphaç³»çµ±ï¼ˆv0.37.0 / v0.1.10.0 é‡å¯«ï¼Œåƒ…æ™®é€šåœ°åœ–ï¼‰
 
-### Boss HP UI 維護規則
+### è§¸ç™¼
+- å…©éš»ç„¡éšŠä¼ç¨ç«‹å·¨äººï¼ˆåŒæ—åŒç”Ÿæ…‹ï¼‰è·é›¢ â‰¤ 300px ç›¸é‡ â†’ HP è¼ƒé«˜è€…å‡æ ¼ Alphaï¼ˆv0.1.10.0ï¼‰
+- `gameState.alphaCreature`ï¼šå…¨åœ–åªæœ‰1éš» Alpha çš„å¼•ç”¨
+- å·²æœ‰ Alpha æ™‚ä¸å†è§¸ç™¼æ–°çš„
+- å–®äººéšŠä¼ï¼ˆéšŠé•·ç„¡ packMembersï¼‰ä¸èƒ½å‡æ ¼ Alphaï¼ˆv0.1.10.0ï¼‰
 
-「Boss HP UI」是上方大型目標血條系統的統稱，包含 Boss、精英怪、巨人化、Alpha。之後修改位置、尺寸、字體時，四者必須走同一套 `drawTopBarUI()` 規則，不可只改 Boss 特例。
+### Alpha æ­»å¾Œç¹¼æ‰¿ï¼ˆv0.1.10.0ï¼‰
+- Alpha æ­»äº¡æ™‚ï¼š`gameState._pendingAlphaInherit = true`
+- ä¸‹ä¸€å¹€ `updateNeutralCreatures` æŽƒæå…¨åœ–ï¼Œæ‰¾å‡º `packMembers >= 1` çš„å·¨äººéšŠé•·ï¼ˆéšŠä¼ â‰¥ 2 éš»ï¼‰
+- å¾žä¸­é¸ HP æœ€é«˜è€…å‡æ ¼ç‚ºæ–° Alphaï¼›ç„¡ç¬¦åˆæ¢ä»¶è€…ä¸ç”¢ç”Ÿæ–° Alpha
 
-- 桌面版：一律固定畫面正上方中央，寬 400px，`topBarY = 10`。
-- 手機版：一律放在 `#top-left` UI 正下方，寬度使用 `#top-left.offsetWidth / scale`，血條高度 6px，名稱 11px，血量數字 10px。
+### Alphaæ•¸å€¼ï¼ˆå·¨äººåŒ–åŸºç¤Žä¸Šå†è¨ˆç®—ï¼‰
+- æ”»æ“ŠåŠ› Ã—2ï¼Œè¡€é‡ Ã—3ï¼Œé«”ç© Ã—1.5ï¼ŒaggroRange 600ï¼ˆv0.46.0 ç”± 300 èª¿æ•´ï¼‰
+- guardianRange 1500ï¼ˆv0.46.0ï¼‰
+- è·Ÿéš¨ç¯„åœ `packFollowRange: 1000`
+- HP åˆ†äº«å›žè¡€ï¼ˆv0.46.0ï¼‰ï¼šè‡ªèº« HP â‰¥ 80% æ™‚æ¯ç§’åˆ†äº« 1% maxHP çµ¦ HP æœ€ä½Žçš„å—å‚·çµ„å“¡ï¼›è‡ªèº« HP < 80% æ™‚æ¯ç§’è‡ªå›ž 2% maxHPï¼ˆä¸åˆ†äº«ï¼‰
 
-- **函式**：`drawTopBarUI()`，在 `drawGame()` 最末尾呼叫
-- **顯示條件**：玩家2000px內存在精英/Boss/巨人化/Alpha
-- **追蹤邏輯**：`gameState.topBarTarget` 在 `playerAttack()` 命中特殊目標時設定，毒傷tick不更新
-- **淡出**：目標死亡或超出2000px後0.5秒淡出，完成後清空 `topBarTarget`
-- **Y 座標**：動態偵測 `#top-left` DOM 元素高度並換算 Canvas 邏輯座標，避免手機版與玩家血條重疊
-- **強制清除**：`showVictory()` 呼叫時立即設定 `topBarTarget = null`、`topBarFadeTimer = 0`，確保勝利畫面不殘留血條
-- **血條顏色**：精英紫色 `#AA22CC`、Boss深紅 `#CC2200`、巨人化橙色 `#FF8800`、Alpha金色 `#FFD700`
-- **gameState 新增欄位**：`alphaCreature`、`topBarTarget`、`topBarFadeTimer`
+### èª•ç”Ÿå…¬å‘Š
+- `showAlphaAnnouncement(name)`ï¼šå…¨å±é¡¯ç¤º3ç§’ï¼Œ2.5ç§’å¾Œæ·¡å‡º
+- æ–‡å­—ï¼šã€Œâš ï¸ Alpha [ç‰©ç¨®å] èª•ç”Ÿäº†ï¼ã€
+
+### æ“Šæ®ºçŽå‹µ
+- XPï¼š200ï¼ˆ+çµäººæœ¬èƒ½åŠ æˆï¼‰
+- `spawnLootCircle`ï¼š2å€‹2å€å±é«” + 3å…·ç™½éª¨
+- 100% æŽ‰è½1å€‹è®Šç•°é»žï¼›é¡å¤–20%æ©ŸçŽ‡æŽ‰ 1~6å€‹
+
+### Alpha å››æ¢æ­»äº¡è·¯å¾‘ï¼ˆv0.51.0 ç¢ºèªï¼‰
+1. **çŽ©å®¶æ“Šæ®º** â†’ `handleGiantKill(c)` â†’ `if (c.isAlpha && gameState.alphaCreature === c) gameState.alphaCreature = null`
+2. **æ¯’å‚·/æµè¡€ tick æ­»äº¡** â†’ `updateStatusEffects()` æ­£ç¢ºè·¯ç”±è‡³ `handleGiantKill(c)`
+3. **`updateNeutralCreatures()` å·¨äººè¢«æ•µæ„ç”Ÿç‰©æ‰“æ­»** â†’ `updateHostileCreatures` ä¸­å·²æœ‰å®Œæ•´æ¸…ç†
+4. **`updateHostileCreatures()` è‚‰é£Ÿè€…æ‰“æ­»ä¸­ç«‹å·¨äºº** â†’ `creature.targetType === 'neutral'` åˆ†æ”¯å·²æœ‰ `alphaCreature = null`
 
 ---
 
-### 繪製順序規範（所有生物統一）
+## ä¸Šæ–¹è¡€æ¢UIï¼ˆv0.37.0ï¼‰
 
-由上到下：名字 → 血條 → 本體（含光暈）
-名字和血條間距 4px，血條和本體上緣間距 4px
+### Boss HP UI ç¶­è­·è¦å‰‡
+
+ã€ŒBoss HP UIã€æ˜¯ä¸Šæ–¹å¤§åž‹ç›®æ¨™è¡€æ¢ç³»çµ±çš„çµ±ç¨±ï¼ŒåŒ…å« Bossã€ç²¾è‹±æ€ªã€å·¨äººåŒ–ã€Alphaã€‚ä¹‹å¾Œä¿®æ”¹ä½ç½®ã€å°ºå¯¸ã€å­—é«”æ™‚ï¼Œå››è€…å¿…é ˆèµ°åŒä¸€å¥— `drawTopBarUI()` è¦å‰‡ï¼Œä¸å¯åªæ”¹ Boss ç‰¹ä¾‹ã€‚
+
+- æ¡Œé¢ç‰ˆï¼šä¸€å¾‹å›ºå®šç•«é¢æ­£ä¸Šæ–¹ä¸­å¤®ï¼Œå¯¬ 400pxï¼Œ`topBarY = 10`ã€‚
+- æ‰‹æ©Ÿç‰ˆï¼šä¸€å¾‹æ”¾åœ¨ `#top-left` UI æ­£ä¸‹æ–¹ï¼Œå¯¬åº¦ä½¿ç”¨ `#top-left.offsetWidth / scale`ï¼Œè¡€æ¢é«˜åº¦ 6pxï¼Œåç¨± 11pxï¼Œè¡€é‡æ•¸å­— 10pxã€‚
+
+- **å‡½å¼**ï¼š`drawTopBarUI()`ï¼Œåœ¨ `drawGame()` æœ€æœ«å°¾å‘¼å«
+- **é¡¯ç¤ºæ¢ä»¶**ï¼šçŽ©å®¶2000pxå…§å­˜åœ¨ç²¾è‹±/Boss/å·¨äººåŒ–/Alpha
+- **è¿½è¹¤é‚è¼¯**ï¼š`gameState.topBarTarget` åœ¨ `playerAttack()` å‘½ä¸­ç‰¹æ®Šç›®æ¨™æ™‚è¨­å®šï¼Œæ¯’å‚·tickä¸æ›´æ–°
+- **æ·¡å‡º**ï¼šç›®æ¨™æ­»äº¡æˆ–è¶…å‡º2000pxå¾Œ0.5ç§’æ·¡å‡ºï¼Œå®Œæˆå¾Œæ¸…ç©º `topBarTarget`
+- **Y åº§æ¨™**ï¼šå‹•æ…‹åµæ¸¬ `#top-left` DOM å…ƒç´ é«˜åº¦ä¸¦æ›ç®— Canvas é‚è¼¯åº§æ¨™ï¼Œé¿å…æ‰‹æ©Ÿç‰ˆèˆ‡çŽ©å®¶è¡€æ¢é‡ç–Š
+- **å¼·åˆ¶æ¸…é™¤**ï¼š`showVictory()` å‘¼å«æ™‚ç«‹å³è¨­å®š `topBarTarget = null`ã€`topBarFadeTimer = 0`ï¼Œç¢ºä¿å‹åˆ©ç•«é¢ä¸æ®˜ç•™è¡€æ¢
+- **è¡€æ¢é¡è‰²**ï¼šç²¾è‹±ç´«è‰² `#AA22CC`ã€Bossæ·±ç´… `#CC2200`ã€å·¨äººåŒ–æ©™è‰² `#FF8800`ã€Alphaé‡‘è‰² `#FFD700`
+- **gameState æ–°å¢žæ¬„ä½**ï¼š`alphaCreature`ã€`topBarTarget`ã€`topBarFadeTimer`
 
 ---
 
-## map/ 資料夾
+### ç¹ªè£½é †åºè¦ç¯„ï¼ˆæ‰€æœ‰ç”Ÿç‰©çµ±ä¸€ï¼‰
 
-難度地圖配置資料，各檔案定義並匯出一個 ESM 常數（如 `export const EASY_MAP`），由 `main.js` 透過 ESM `import` 引入。
+ç”±ä¸Šåˆ°ä¸‹ï¼šåå­— â†’ è¡€æ¢ â†’ æœ¬é«”ï¼ˆå«å…‰æšˆï¼‰
+åå­—å’Œè¡€æ¢é–“è· 4pxï¼Œè¡€æ¢å’Œæœ¬é«”ä¸Šç·£é–“è· 4px
 
-| 檔案 | 說明 |
+---
+
+## map/ è³‡æ–™å¤¾
+
+é›£åº¦åœ°åœ–é…ç½®è³‡æ–™ï¼Œå„æª”æ¡ˆå®šç¾©ä¸¦åŒ¯å‡ºä¸€å€‹ ESM å¸¸æ•¸ï¼ˆå¦‚ `export const EASY_MAP`ï¼‰ï¼Œç”± `main.js` é€éŽ ESM `import` å¼•å…¥ã€‚
+
+| æª”æ¡ˆ | èªªæ˜Ž |
 |------|------|
-| `map.md` | 地圖設計文件，記錄地形規格與新增難度步驟 |
-| `easymap.js` | 簡單難度（`EASY_MAP`）：地形參數、生物倍率、精英怪配置、Boss 預留結構；`dogElites: true` |
-| `normalmap.js` | 普通難度（`NORMAL_MAP`）：生物×1.5、aggroRange 400、巨人化/殺手化/Boss回血/`dogElites: true` |
-| `hardmap.js` | 困難難度（`HARD_MAP`）：生物×2.5、aggroRange 600、`hardElites: true`、`hunterBoss: true`（v0.1.0.0） |
+| `map.md` | åœ°åœ–è¨­è¨ˆæ–‡ä»¶ï¼Œè¨˜éŒ„åœ°å½¢è¦æ ¼èˆ‡æ–°å¢žé›£åº¦æ­¥é©Ÿ |
+| `easymap.js` | ç°¡å–®é›£åº¦ï¼ˆ`EASY_MAP`ï¼‰ï¼šåœ°å½¢åƒæ•¸ã€ç”Ÿç‰©å€çŽ‡ã€ç²¾è‹±æ€ªé…ç½®ã€Boss é ç•™çµæ§‹ï¼›`dogElites: true` |
+| `normalmap.js` | æ™®é€šé›£åº¦ï¼ˆ`NORMAL_MAP`ï¼‰ï¼šç”Ÿç‰©Ã—1.5ã€aggroRange 400ã€å·¨äººåŒ–/æ®ºæ‰‹åŒ–/Bosså›žè¡€/`dogElites: true` |
+| `hardmap.js` | å›°é›£é›£åº¦ï¼ˆ`HARD_MAP`ï¼‰ï¼šç”Ÿç‰©Ã—2.5ã€aggroRange 600ã€`hardElites: true`ã€`hunterBoss: true`ï¼ˆv0.1.0.0ï¼‰ |
 
-`generateTerrain()` 讀取 `gameState.currentMap.terrain` 參數（forestCenterRadius / forestThreshold / oceanThreshold / minBiomeTiles / requiredBiomes），`currentMap` 由 `showMapSelect()` 在開始遊戲時寫入。
+`generateTerrain()` è®€å– `gameState.currentMap.terrain` åƒæ•¸ï¼ˆforestCenterRadius / forestThreshold / oceanThreshold / minBiomeTiles / requiredBiomesï¼‰ï¼Œ`currentMap` ç”± `showMapSelect()` åœ¨é–‹å§‹éŠæˆ²æ™‚å¯«å…¥ã€‚
 
-地形生成流程：4D Tileable Noise → 保護區強制森林 → `mergeSmallRegions`（同化小於 `minBiomeTiles` 的孤島）→ `ensureRequiredBiomes`（最多 10 次重試，超過則 minBiomeTiles 減半）→ `buildTerrainCanvas`。
+åœ°å½¢ç”Ÿæˆæµç¨‹ï¼š4D Tileable Noise â†’ ä¿è­·å€å¼·åˆ¶æ£®æž— â†’ `mergeSmallRegions`ï¼ˆåŒåŒ–å°æ–¼ `minBiomeTiles` çš„å­¤å³¶ï¼‰â†’ `ensureRequiredBiomes`ï¼ˆæœ€å¤š 10 æ¬¡é‡è©¦ï¼Œè¶…éŽå‰‡ minBiomeTiles æ¸›åŠï¼‰â†’ `buildTerrainCanvas`ã€‚
 
-模組層級預設值 `MAP_RULES.MIN_BIOME_TILES = 250`（定義於 `map.js`）；各地圖可在 `terrain.minBiomeTiles` 覆蓋。
-
----
-
-## 手機觸控系統（v0.23.0）
-
-### 裝置偵測與縮放
-
-- `detectMobile()` — `ontouchstart in window` 或 `innerWidth <= 768` 視為手機
-- `getOrientation()` — `innerHeight > innerWidth` 為豎向，否則橫向
-- `applyDeviceMode()` — 同步 `gameState.forceMode/isMobile/orientation`，呼叫 `_applyMobileScale()` + `_updateJoystickCanvas()` + `_updateOrientationBar()`
-- `_applyMobileScale()` — 依裝置分支縮放（v0.1.14.1 修正）
-  - **手機版**：填滿螢幕，`scale = vw / logicW`；呼叫 `_setViewSize()` 依方向調整邏輯解析度（MOBILE_GAME_SCALE = 0.6）；container 定位 `left:0, top:0`
-  - **電腦版**：Letterbox，`scale = Math.min(vw/1600, vh/900)`；VIEW_W/VIEW_H 固定 1600×900，不呼叫 `_setViewSize()`；container 置中留黑框
-  - `_letterboxScale`（export let）兩個分支最後都更新，供 chat.js 等模組讀取當前縮放比例
-
-### 設定介面「裝置模式」區塊
-
-`showSettings()` 新增三顆切換按鈕：自動偵測 / 📱 手機模式 / 🖥️ 電腦模式。選擇即時套用並存入 `localStorage`（key：`gameSettings.deviceMode`）。
-
-### 方向提示條
-
-豎向手機時在 `#game-container` 頂部插入黃色半透明提示條，有 ✕ 關閉鈕。橫向旋轉後自動隱藏並重置 dismissed 狀態。
-
-### 虛擬搖桿
-
-- **搖桿畫布**：`#joystick-canvas`（`position:fixed`，全螢幕，`pointer-events:none`，純繪圖）
-- **事件掛載**：`touchstart/touchmove/touchend` 掛在 `document`，`_joyPaused()` 確保暫停狀態不啟動
-- **區域**：橫向 = 右半螢幕；豎向 = 右半 + 螢幕下 40%
-- **輸出**：`gameState.mobileInput = { dx, dy }`（範圍 −1~1，位移比例決定速度）
-- `updatePlayerMovement()` 讀取 `mobileInput` 並疊加在鍵盤輸入上，電腦版恆為 0
-
-### 攻擊區域
-
-- **橫向**：左半螢幕整區為攻擊區，顯示 ⚔️ 提示（opacity 0.2），tap → `playerAttack()`
-- **豎向**：左半下方 40% 中央一個半徑 40px 圓形按鈕，顯示 ⚔️，tap → `playerAttack()`
-- 攻擊冷卻沿用 `playerAttack()` 內建邏輯，不另外實作
-- 攻擊區與搖桿區不重疊，支援多指同時操作（一手搖桿 + 一手攻擊）
-
-### 關鍵 CSS 注意
-
-- `canvas { background-color }` 已改為 `#gameCanvas { background-color: #549954 }`，避免 `#joystick-canvas` 繼承綠色背景蓋住所有 overlay
+æ¨¡çµ„å±¤ç´šé è¨­å€¼ `MAP_RULES.MIN_BIOME_TILES = 250`ï¼ˆå®šç¾©æ–¼ `map.js`ï¼‰ï¼›å„åœ°åœ–å¯åœ¨ `terrain.minBiomeTiles` è¦†è“‹ã€‚
 
 ---
 
-## 閃現技能系統（v0.53.0）
+## æ‰‹æ©Ÿè§¸æŽ§ç³»çµ±ï¼ˆv0.23.0ï¼‰
 
-- **觸發**：桌機 `F` 鍵（`input.js handleKeyDown`）；手機版點擊 `_dashZone()` 矩形區域（攻擊區正上方）
-- **函式**：`playerDash()`、`_collectFruit(p, fruit)`（`systems/player.js`）
-- **效果**：朝 `lastMoveDir` 方向瞬移 `speed × 50`（最遠 500px），夾在地圖邊界內
-- **無敵**：`dashInvincible = true`，持續 500ms（`dashInvincibleEnd = Date.now() + 500`），`applyDamageToPlayer` 開頭返回跳過所有外部傷害
-- **冷卻**：`dashCooldown = 15000`（ms），每幀扣 `FIXED_DELTA`（≈16.67ms）
-- **方向優先序**：手機搖桿 `mobileInput` > `player.lastMoveDir`（移動時持續更新正規化方向，初始值 `{dx:0, dy:-1}` 朝上）
-- **特效**：觸發後在 `gameState.dashEffect` 記錄起終點，`drawGame` 步驟 9f 繪製 150ms 三段特效（金色煙霧/白色光球/流光線）
-- **直線果子吸收**：閃現路徑 A→B 直線寬度 = `radius + pickupRange`，路徑上果子全部吸收（複用 `_collectFruit`）
-- **按鍵可自訂**：`DEFAULT_SETTINGS.keys.dash = 'f'`；設定介面「特殊技能鍵」欄，`input.js` 讀 `settings.keys.dash`
+### è£ç½®åµæ¸¬èˆ‡ç¸®æ”¾
 
-### player 新增欄位
+- `detectMobile()` â€” `ontouchstart in window` æˆ– `innerWidth <= 768` è¦–ç‚ºæ‰‹æ©Ÿ
+- `getOrientation()` â€” `innerHeight > innerWidth` ç‚ºè±Žå‘ï¼Œå¦å‰‡æ©«å‘
+- `applyDeviceMode()` â€” åŒæ­¥ `gameState.forceMode/isMobile/orientation`ï¼Œå‘¼å« `_applyMobileScale()` + `_updateJoystickCanvas()` + `_updateOrientationBar()`
+- `_applyMobileScale()` â€” ä¾è£ç½®åˆ†æ”¯ç¸®æ”¾ï¼ˆv0.1.14.1 ä¿®æ­£ï¼‰
+  - **æ‰‹æ©Ÿç‰ˆ**ï¼šå¡«æ»¿èž¢å¹•ï¼Œ`scale = vw / logicW`ï¼›å‘¼å« `_setViewSize()` ä¾æ–¹å‘èª¿æ•´é‚è¼¯è§£æžåº¦ï¼ˆMOBILE_GAME_SCALE = 0.6ï¼‰ï¼›container å®šä½ `left:0, top:0`
+  - **é›»è…¦ç‰ˆ**ï¼šLetterboxï¼Œ`scale = Math.min(vw/1600, vh/900)`ï¼›VIEW_W/VIEW_H å›ºå®š 1600Ã—900ï¼Œä¸å‘¼å« `_setViewSize()`ï¼›container ç½®ä¸­ç•™é»‘æ¡†
+  - `_letterboxScale`ï¼ˆexport letï¼‰å…©å€‹åˆ†æ”¯æœ€å¾Œéƒ½æ›´æ–°ï¼Œä¾› chat.js ç­‰æ¨¡çµ„è®€å–ç•¶å‰ç¸®æ”¾æ¯”ä¾‹
 
-| 欄位 | 初值 | 說明 |
+### è¨­å®šä»‹é¢ã€Œè£ç½®æ¨¡å¼ã€å€å¡Š
+
+`showSettings()` æ–°å¢žä¸‰é¡†åˆ‡æ›æŒ‰éˆ•ï¼šè‡ªå‹•åµæ¸¬ / ðŸ“± æ‰‹æ©Ÿæ¨¡å¼ / ðŸ–¥ï¸ é›»è…¦æ¨¡å¼ã€‚é¸æ“‡å³æ™‚å¥—ç”¨ä¸¦å­˜å…¥ `localStorage`ï¼ˆkeyï¼š`gameSettings.deviceMode`ï¼‰ã€‚
+
+### æ–¹å‘æç¤ºæ¢
+
+è±Žå‘æ‰‹æ©Ÿæ™‚åœ¨ `#game-container` é ‚éƒ¨æ’å…¥é»ƒè‰²åŠé€æ˜Žæç¤ºæ¢ï¼Œæœ‰ âœ• é—œé–‰éˆ•ã€‚æ©«å‘æ—‹è½‰å¾Œè‡ªå‹•éš±è—ä¸¦é‡ç½® dismissed ç‹€æ…‹ã€‚
+
+### è™›æ“¬æ–æ¡¿
+
+- **æ–æ¡¿ç•«å¸ƒ**ï¼š`#joystick-canvas`ï¼ˆ`position:fixed`ï¼Œå…¨èž¢å¹•ï¼Œ`pointer-events:none`ï¼Œç´”ç¹ªåœ–ï¼‰
+- **äº‹ä»¶æŽ›è¼‰**ï¼š`touchstart/touchmove/touchend` æŽ›åœ¨ `document`ï¼Œ`_joyPaused()` ç¢ºä¿æš«åœç‹€æ…‹ä¸å•Ÿå‹•
+- **å€åŸŸ**ï¼šæ©«å‘ = å³åŠèž¢å¹•ï¼›è±Žå‘ = å³åŠ + èž¢å¹•ä¸‹ 40%
+- **è¼¸å‡º**ï¼š`gameState.mobileInput = { dx, dy }`ï¼ˆç¯„åœ âˆ’1~1ï¼Œä½ç§»æ¯”ä¾‹æ±ºå®šé€Ÿåº¦ï¼‰
+- `updatePlayerMovement()` è®€å– `mobileInput` ä¸¦ç–ŠåŠ åœ¨éµç›¤è¼¸å…¥ä¸Šï¼Œé›»è…¦ç‰ˆæ†ç‚º 0
+
+### æ”»æ“Šå€åŸŸ
+
+- **æ©«å‘**ï¼šå·¦åŠèž¢å¹•æ•´å€ç‚ºæ”»æ“Šå€ï¼Œé¡¯ç¤º âš”ï¸ æç¤ºï¼ˆopacity 0.2ï¼‰ï¼Œtap â†’ `playerAttack()`
+- **è±Žå‘**ï¼šå·¦åŠä¸‹æ–¹ 40% ä¸­å¤®ä¸€å€‹åŠå¾‘ 40px åœ“å½¢æŒ‰éˆ•ï¼Œé¡¯ç¤º âš”ï¸ï¼Œtap â†’ `playerAttack()`
+- æ”»æ“Šå†·å»æ²¿ç”¨ `playerAttack()` å…§å»ºé‚è¼¯ï¼Œä¸å¦å¤–å¯¦ä½œ
+- æ”»æ“Šå€èˆ‡æ–æ¡¿å€ä¸é‡ç–Šï¼Œæ”¯æ´å¤šæŒ‡åŒæ™‚æ“ä½œï¼ˆä¸€æ‰‹æ–æ¡¿ + ä¸€æ‰‹æ”»æ“Šï¼‰
+
+### é—œéµ CSS æ³¨æ„
+
+- `canvas { background-color }` å·²æ”¹ç‚º `#gameCanvas { background-color: #549954 }`ï¼Œé¿å… `#joystick-canvas` ç¹¼æ‰¿ç¶ è‰²èƒŒæ™¯è“‹ä½æ‰€æœ‰ overlay
+
+---
+
+## é–ƒç¾æŠ€èƒ½ç³»çµ±ï¼ˆv0.53.0ï¼‰
+
+- **è§¸ç™¼**ï¼šæ¡Œæ©Ÿ `F` éµï¼ˆ`input.js handleKeyDown`ï¼‰ï¼›æ‰‹æ©Ÿç‰ˆé»žæ“Š `_dashZone()` çŸ©å½¢å€åŸŸï¼ˆæ”»æ“Šå€æ­£ä¸Šæ–¹ï¼‰
+- **å‡½å¼**ï¼š`playerDash()`ã€`_collectFruit(p, fruit)`ï¼ˆ`systems/player.js`ï¼‰
+- **æ•ˆæžœ**ï¼šæœ `lastMoveDir` æ–¹å‘çž¬ç§» `speed Ã— 50`ï¼ˆæœ€é  500pxï¼‰ï¼Œå¤¾åœ¨åœ°åœ–é‚Šç•Œå…§
+- **ç„¡æ•µ**ï¼š`dashInvincible = true`ï¼ŒæŒçºŒ 500msï¼ˆ`dashInvincibleEnd = Date.now() + 500`ï¼‰ï¼Œ`applyDamageToPlayer` é–‹é ­è¿”å›žè·³éŽæ‰€æœ‰å¤–éƒ¨å‚·å®³
+- **å†·å»**ï¼š`dashCooldown = 15000`ï¼ˆmsï¼‰ï¼Œæ¯å¹€æ‰£ `FIXED_DELTA`ï¼ˆâ‰ˆ16.67msï¼‰
+- **æ–¹å‘å„ªå…ˆåº**ï¼šæ‰‹æ©Ÿæ–æ¡¿ `mobileInput` > `player.lastMoveDir`ï¼ˆç§»å‹•æ™‚æŒçºŒæ›´æ–°æ­£è¦åŒ–æ–¹å‘ï¼Œåˆå§‹å€¼ `{dx:0, dy:-1}` æœä¸Šï¼‰
+- **ç‰¹æ•ˆ**ï¼šè§¸ç™¼å¾Œåœ¨ `gameState.dashEffect` è¨˜éŒ„èµ·çµ‚é»žï¼Œ`drawGame` æ­¥é©Ÿ 9f ç¹ªè£½ 150ms ä¸‰æ®µç‰¹æ•ˆï¼ˆé‡‘è‰²ç…™éœ§/ç™½è‰²å…‰çƒ/æµå…‰ç·šï¼‰
+- **ç›´ç·šæžœå­å¸æ”¶**ï¼šé–ƒç¾è·¯å¾‘ Aâ†’B ç›´ç·šå¯¬åº¦ = `radius + pickupRange`ï¼Œè·¯å¾‘ä¸Šæžœå­å…¨éƒ¨å¸æ”¶ï¼ˆè¤‡ç”¨ `_collectFruit`ï¼‰
+- **æŒ‰éµå¯è‡ªè¨‚**ï¼š`DEFAULT_SETTINGS.keys.dash = 'f'`ï¼›è¨­å®šä»‹é¢ã€Œç‰¹æ®ŠæŠ€èƒ½éµã€æ¬„ï¼Œ`input.js` è®€ `settings.keys.dash`
+
+### player æ–°å¢žæ¬„ä½
+
+| æ¬„ä½ | åˆå€¼ | èªªæ˜Ž |
 |------|------|------|
-| `dashCooldown` | `0` | 閃現剩餘冷卻毫秒（每幀由 `updatePlayerMovement` 遞減） |
-| `dashInvincible` | `false` | 無敵旗標（`applyDamageToPlayer` 開頭判斷） |
-| `dashInvincibleEnd` | `0` | 無敵結束時間戳（ms，由 `updatePlayerMovement` 檢查清除） |
-| `lastMoveDir` | `{dx:0, dy:-1}` | 最後移動方向（正規化，每幀移動時更新；閃現方向依據） |
-| `dashEffect` | `null` | 閃現特效狀態（`{ ax,ay,bx,by,startTime,duration:150 }`，v0.54.0）|
+| `dashCooldown` | `0` | é–ƒç¾å‰©é¤˜å†·å»æ¯«ç§’ï¼ˆæ¯å¹€ç”± `updatePlayerMovement` éžæ¸›ï¼‰ |
+| `dashInvincible` | `false` | ç„¡æ•µæ——æ¨™ï¼ˆ`applyDamageToPlayer` é–‹é ­åˆ¤æ–·ï¼‰ |
+| `dashInvincibleEnd` | `0` | ç„¡æ•µçµæŸæ™‚é–“æˆ³ï¼ˆmsï¼Œç”± `updatePlayerMovement` æª¢æŸ¥æ¸…é™¤ï¼‰ |
+| `lastMoveDir` | `{dx:0, dy:-1}` | æœ€å¾Œç§»å‹•æ–¹å‘ï¼ˆæ­£è¦åŒ–ï¼Œæ¯å¹€ç§»å‹•æ™‚æ›´æ–°ï¼›é–ƒç¾æ–¹å‘ä¾æ“šï¼‰ |
+| `dashEffect` | `null` | é–ƒç¾ç‰¹æ•ˆç‹€æ…‹ï¼ˆ`{ ax,ay,bx,by,startTime,duration:150 }`ï¼Œv0.54.0ï¼‰|
 
-### 桌機版指示器（`hud.js drawGame` 步驟 12b）
+### æ¡Œæ©Ÿç‰ˆæŒ‡ç¤ºå™¨ï¼ˆ`hud.js drawGame` æ­¥é©Ÿ 12bï¼‰
 
-- 位置：VIEW_W 右側 50%、VIEW_H 50%~75%（與手機直向閃現區對應）
-- 正常：`💨 F`，globalAlpha 0.15，字體 28px
-- 冷卻：`💨 F` 暗（0.08）+ 灰色進度條 + 倒數秒數（20px，白色 0.7）
+- ä½ç½®ï¼šVIEW_W å³å´ 50%ã€VIEW_H 50%~75%ï¼ˆèˆ‡æ‰‹æ©Ÿç›´å‘é–ƒç¾å€å°æ‡‰ï¼‰
+- æ­£å¸¸ï¼š`ðŸ’¨ F`ï¼ŒglobalAlpha 0.15ï¼Œå­—é«” 28px
+- å†·å»ï¼š`ðŸ’¨ F` æš—ï¼ˆ0.08ï¼‰+ ç°è‰²é€²åº¦æ¢ + å€’æ•¸ç§’æ•¸ï¼ˆ20pxï¼Œç™½è‰² 0.7ï¼‰
 
-### 手機版按鈕（`mobile.js _renderMobileOverlay`）
+### æ‰‹æ©Ÿç‰ˆæŒ‰éˆ•ï¼ˆ`mobile.js _renderMobileOverlay`ï¼‰
 
-- **直向**：右側 50% 寬，底部 50%~75% 高（攻擊區正上方）
-- **橫向**：右側 25% 寬，整個上半部（底部 0%~50% 高）
-- 正常：`💨` globalAlpha 0.15；冷卻：暗圖示 + 進度條 + 倒數秒數
+- **ç›´å‘**ï¼šå³å´ 50% å¯¬ï¼Œåº•éƒ¨ 50%~75% é«˜ï¼ˆæ”»æ“Šå€æ­£ä¸Šæ–¹ï¼‰
+- **æ©«å‘**ï¼šå³å´ 25% å¯¬ï¼Œæ•´å€‹ä¸ŠåŠéƒ¨ï¼ˆåº•éƒ¨ 0%~50% é«˜ï¼‰
+- æ­£å¸¸ï¼š`ðŸ’¨` globalAlpha 0.15ï¼›å†·å»ï¼šæš—åœ–ç¤º + é€²åº¦æ¢ + å€’æ•¸ç§’æ•¸
 
 ---
 
-## 新增 gameState 欄位（v0.31.0）
+## æ–°å¢ž gameState æ¬„ä½ï¼ˆv0.31.0ï¼‰
 
-| 欄位 | 位置 | 類型 | 說明 |
+| æ¬„ä½ | ä½ç½® | é¡žåž‹ | èªªæ˜Ž |
 |------|------|------|------|
-| `player.boneMaterial` | `gameState.player` | `number` | 累積白骨素，達門檻自動升級毒囊 |
-| `player.perceptionRange` | `gameState.player` | `number` | 靈敏知覺偵測半徑（px） |
-| `player.naturalRegenHpMaxPercent` | `gameState.player` | `number` | 超自然回復每次額外回復的最大HP百分比 |
-| `gameState.bones` | `gameState` | `Array` | 白骨物件陣列，`{x, y, radius, spawnTime, eatTimer}` |
-| `gameState.brainShockwaves` | `gameState` | `Array` | 大腦衝擊波視覺效果陣列，`{x, y, range, startTime}` |
+| `player.boneMaterial` | `gameState.player` | `number` | ç´¯ç©ç™½éª¨ç´ ï¼Œé”é–€æª»è‡ªå‹•å‡ç´šæ¯’å›Š |
+| `player.perceptionRange` | `gameState.player` | `number` | éˆæ•çŸ¥è¦ºåµæ¸¬åŠå¾‘ï¼ˆpxï¼‰ |
+| `player.naturalRegenHpMaxPercent` | `gameState.player` | `number` | è¶…è‡ªç„¶å›žå¾©æ¯æ¬¡é¡å¤–å›žå¾©çš„æœ€å¤§HPç™¾åˆ†æ¯” |
+| `gameState.bones` | `gameState` | `Array` | ç™½éª¨ç‰©ä»¶é™£åˆ—ï¼Œ`{x, y, radius, spawnTime, eatTimer}` |
+| `gameState.brainShockwaves` | `gameState` | `Array` | å¤§è…¦è¡æ“Šæ³¢è¦–è¦ºæ•ˆæžœé™£åˆ—ï¼Œ`{x, y, range, startTime}` |
 
-### 毒囊（poisonSac）設計說明
+### æ¯’å›Šï¼ˆpoisonSacï¼‰è¨­è¨ˆèªªæ˜Ž
 
-- `noSelection: true` — 不出現在器官選擇池
-- `noInherit: true` — 死後不可繼承
-- `thresholds: [5, 10, 20, 40, 60, 100, 120, 140, 160, 200]` — 10 個等級對應的白骨素門檻
-- Lv0 為初始無效果狀態（`applyOrganEffects` 遇到 Lv0 直接 return）
-- 雜食性 Lv1 時由 `_grantPoisonSac()` 自動推入 player.organs
+- `noSelection: true` â€” ä¸å‡ºç¾åœ¨å™¨å®˜é¸æ“‡æ± 
+- `noInherit: true` â€” æ­»å¾Œä¸å¯ç¹¼æ‰¿
+- `thresholds: [5, 10, 20, 40, 60, 100, 120, 140, 160, 200]` â€” 10 å€‹ç­‰ç´šå°æ‡‰çš„ç™½éª¨ç´ é–€æª»
+- Lv0 ç‚ºåˆå§‹ç„¡æ•ˆæžœç‹€æ…‹ï¼ˆ`applyOrganEffects` é‡åˆ° Lv0 ç›´æŽ¥ returnï¼‰
+- é›œé£Ÿæ€§ Lv1 æ™‚ç”± `_grantPoisonSac()` è‡ªå‹•æŽ¨å…¥ player.organs
 
-### 白骨系統流程
+### ç™½éª¨ç³»çµ±æµç¨‹
 
-1. 屍體 60 秒後或被吃掉 → `_spawnBone(x, y, radius)` 推入 `gameState.bones[]`
-2. 白骨在地圖存在 180 秒後自動消失
-3. 雜食性玩家靠近白骨 → `updateBoneEating()` 計時（`boneEatTime` 毫秒，Lv3+ 即時）
-4. 吞噬完成 → `_addBoneMaterial(boneMaterialAdd)` 累加白骨素
-5. `_checkPoisonSacUpgrade(p)` 對照 `thresholds[]` 自動升級毒囊並套用 delta 效果
+1. å±é«” 60 ç§’å¾Œæˆ–è¢«åƒæŽ‰ â†’ `_spawnBone(x, y, radius)` æŽ¨å…¥ `gameState.bones[]`
+2. ç™½éª¨åœ¨åœ°åœ–å­˜åœ¨ 180 ç§’å¾Œè‡ªå‹•æ¶ˆå¤±
+3. é›œé£Ÿæ€§çŽ©å®¶é è¿‘ç™½éª¨ â†’ `updateBoneEating()` è¨ˆæ™‚ï¼ˆ`boneEatTime` æ¯«ç§’ï¼ŒLv3+ å³æ™‚ï¼‰
+4. åžå™¬å®Œæˆ â†’ `_addBoneMaterial(boneMaterialAdd)` ç´¯åŠ ç™½éª¨ç´ 
+5. `_checkPoisonSacUpgrade(p)` å°ç…§ `thresholds[]` è‡ªå‹•å‡ç´šæ¯’å›Šä¸¦å¥—ç”¨ delta æ•ˆæžœ
 
 ---
 
-## 技能點獲得方式（v0.32.0 / v0.34.0）
+## æŠ€èƒ½é»žç²å¾—æ–¹å¼ï¼ˆv0.32.0 / v0.34.0ï¼‰
 
-| 來源 | 時機 | 數量 | 位置 |
+| ä¾†æº | æ™‚æ©Ÿ | æ•¸é‡ | ä½ç½® |
 |------|------|------|------|
-| 精英怪擊殺 | 遊戲中（每夜） | 夜晚1=+1、夜晚2=+1、夜晚3=+2（v0.47.0） | `systems/organs.js` `handleEliteKill` |
-| Boss擊殺 | 勝利結算前 | +3（v0.47.0，原為+5） | `systems/boss.js` `showVictory` |
-| 時間獎勵 | 死亡/勝利結算 | `Math.floor((600 - timeRemaining) / 180)` | `showSkillTree` / `showVictory` |
-| 等級獎勵 | 死亡/勝利結算 | `Math.floor(player.level / 6)` | `showSkillTree` / `showVictory` |
+| ç²¾è‹±æ€ªæ“Šæ®º | éŠæˆ²ä¸­ï¼ˆæ¯å¤œï¼‰ | å¤œæ™š1=+1ã€å¤œæ™š2=+1ã€å¤œæ™š3=+2ï¼ˆv0.47.0ï¼‰ | `systems/organs.js` `handleEliteKill` |
+| Bossæ“Šæ®º | å‹åˆ©çµç®—å‰ | +3ï¼ˆv0.47.0ï¼ŒåŽŸç‚º+5ï¼‰ | `systems/boss.js` `showVictory` |
+| æ™‚é–“çŽå‹µ | æ­»äº¡/å‹åˆ©çµç®— | `Math.floor((600 - timeRemaining) / 180)` | `showSkillTree` / `showVictory` |
+| ç­‰ç´šçŽå‹µ | æ­»äº¡/å‹åˆ©çµç®— | `Math.floor(player.level / 6)` | `showSkillTree` / `showVictory` |
 
-### 技能點追蹤（v0.34.0）
-- `gameState.sessionSkillPoints = { elite: 0, boss: 0 }` 在每局開始時清零（`initializeGame()` 的狀態重設區塊）
-- `handleEliteKill` 累加 `sessionSkillPoints.elite += eliteSkillPts`（公式：`[1,1,2][nightIndex] || 1`，v0.47.0）
-- `showVictory` 設定 `sessionSkillPoints.boss = 3`（v0.47.0）
-- 結算畫面（`showDeathSettlement` / `doShowVictory`）讀取此值顯示詳細明細
+### æŠ€èƒ½é»žè¿½è¹¤ï¼ˆv0.34.0ï¼‰
+- `gameState.sessionSkillPoints = { elite: 0, boss: 0 }` åœ¨æ¯å±€é–‹å§‹æ™‚æ¸…é›¶ï¼ˆ`initializeGame()` çš„ç‹€æ…‹é‡è¨­å€å¡Šï¼‰
+- `handleEliteKill` ç´¯åŠ  `sessionSkillPoints.elite += eliteSkillPts`ï¼ˆå…¬å¼ï¼š`[1,1,2][nightIndex] || 1`ï¼Œv0.47.0ï¼‰
+- `showVictory` è¨­å®š `sessionSkillPoints.boss = 3`ï¼ˆv0.47.0ï¼‰
+- çµç®—ç•«é¢ï¼ˆ`showDeathSettlement` / `doShowVictory`ï¼‰è®€å–æ­¤å€¼é¡¯ç¤ºè©³ç´°æ˜Žç´°
 
-### 技能升級費用（`upgradeSkill`）
-升至第 N 級費 N 技能點：Lv1=1點、Lv2=2點、Lv3=3點、Lv4=4點、Lv5=5點。
+### æŠ€èƒ½å‡ç´šè²»ç”¨ï¼ˆ`upgradeSkill`ï¼‰
+å‡è‡³ç¬¬ N ç´šè²» N æŠ€èƒ½é»žï¼šLv1=1é»žã€Lv2=2é»žã€Lv3=3é»žã€Lv4=4é»žã€Lv5=5é»žã€‚
 
 ---
 
-## 組合效果（COMBOS）（v0.34.0 調整）
+## çµ„åˆæ•ˆæžœï¼ˆCOMBOSï¼‰ï¼ˆv0.34.0 èª¿æ•´ï¼‰
 
-| key | 觸發條件 | 效果 |
+| key | è§¸ç™¼æ¢ä»¶ | æ•ˆæžœ |
 |-----|----------|------|
-| `comboCrabPoison` | 毒刺Lv3 + 擁有毒囊（任意等級） | 毒傷翻倍 |
-| `comboCrabGloves` | 蟹鉗Lv3 + 搏擊拳套Lv3 | 流血傷害翻倍；命中施加 `healReduction=0.5` |
-| `comboShellArmor` | 龜殼Lv3 + 刺甲Lv3 | 反彈傷害翻倍 |
-| `comboBrainEye` | 大腦Lv3 + 真視之眼Lv3 | 念力波可觸發暴擊 |
-| `comboSkinRegen` | 厚皮Lv3 + 超自然回復Lv3 | 回復+1HP，間隔-1秒 |
-| `comboEyeFang` | 真視之眼Lv3 + 獠牙Lv3 | 暴擊附加暈眩 |
+| `comboCrabPoison` | æ¯’åˆºLv3 + æ“æœ‰æ¯’å›Šï¼ˆä»»æ„ç­‰ç´šï¼‰ | æ¯’å‚·ç¿»å€ |
+| `comboCrabGloves` | èŸ¹é‰—Lv3 + ææ“Šæ‹³å¥—Lv3 | æµè¡€å‚·å®³ç¿»å€ï¼›å‘½ä¸­æ–½åŠ  `healReduction=0.5` |
+| `comboShellArmor` | é¾œæ®¼Lv3 + åˆºç”²Lv3 | åå½ˆå‚·å®³ç¿»å€ |
+| `comboBrainEye` | å¤§è…¦Lv3 + çœŸè¦–ä¹‹çœ¼Lv3 | å¿µåŠ›æ³¢å¯è§¸ç™¼æš´æ“Š |
+| `comboSkinRegen` | åŽšçš®Lv3 + è¶…è‡ªç„¶å›žå¾©Lv3 | å›žå¾©+1HPï¼Œé–“éš”-1ç§’ |
+| `comboEyeFang` | çœŸè¦–ä¹‹çœ¼Lv3 + ç ç‰™Lv3 | æš´æ“Šé™„åŠ æšˆçœ© |
 
-`checkComboEffects()` 對 `comboCrabPoison` 採用特殊邏輯（`hasLv3('poisonStinger') && hasOrgan('poisonSac')`），其餘組合統一用 `combo.ids.every(id => hasLv3(id))`。
+`checkComboEffects()` å° `comboCrabPoison` æŽ¡ç”¨ç‰¹æ®Šé‚è¼¯ï¼ˆ`hasLv3('poisonStinger') && hasOrgan('poisonSac')`ï¼‰ï¼Œå…¶é¤˜çµ„åˆçµ±ä¸€ç”¨ `combo.ids.every(id => hasLv3(id))`ã€‚
 
-`healReduction`：`combat.js` `playerAttack()` 在 `comboCrabGloves` 觸發時對命中目標設定 `c.healReduction = 0.5`，作為未來回復機制的前置 debuff。
+`healReduction`ï¼š`combat.js` `playerAttack()` åœ¨ `comboCrabGloves` è§¸ç™¼æ™‚å°å‘½ä¸­ç›®æ¨™è¨­å®š `c.healReduction = 0.5`ï¼Œä½œç‚ºæœªä¾†å›žå¾©æ©Ÿåˆ¶çš„å‰ç½® debuffã€‚
 
 ---
 
-## 變異器官系統（v0.39.0）
+## è®Šç•°å™¨å®˜ç³»çµ±ï¼ˆv0.39.0ï¼‰
 
-### 儲存
-- localStorage key：`mutationData`（獨立，不受 SAVE_VERSION 清除）
-- 結構：`{ levels:{fang/tail/wing/eye}, points, totalPointsEarned, compensationVersion, skillPointsCompensated, hasNewPoints }`
+### å„²å­˜
+- localStorage keyï¼š`mutationData`ï¼ˆç¨ç«‹ï¼Œä¸å— SAVE_VERSION æ¸…é™¤ï¼‰
+- çµæ§‹ï¼š`{ levels:{fang/tail/wing/eye}, points, totalPointsEarned, compensationVersion, skillPointsCompensated, hasNewPoints }`
 
-### 四種變異器官
-| organId | 圖標 | 名稱           | 效果（Final值）    |
+### å››ç¨®è®Šç•°å™¨å®˜
+| organId | åœ–æ¨™ | åç¨±           | æ•ˆæžœï¼ˆFinalå€¼ï¼‰    |
 |---------|------|---------------|------------------|
-| fang    | 🦷   | 變異-憤怒的獠牙 | 每級+1%攻擊力     |
-| tail    | 🐾   | 變異-懦弱的尾巴 | 每級+1%最大HP     |
-| wing    | 🪶   | 變異-勇敢的翅膀 | 每級+1%速度       |
-| eye     | 👁️   | 變異-好奇的眼睛 | 每級+1%XP倍數     |
+| fang    | ðŸ¦·   | è®Šç•°-æ†¤æ€’çš„ç ç‰™ | æ¯ç´š+1%æ”»æ“ŠåŠ›     |
+| tail    | ðŸ¾   | è®Šç•°-æ‡¦å¼±çš„å°¾å·´ | æ¯ç´š+1%æœ€å¤§HP     |
+| wing    | ðŸª¶   | è®Šç•°-å‹‡æ•¢çš„ç¿…è†€ | æ¯ç´š+1%é€Ÿåº¦       |
+| eye     | ðŸ‘ï¸   | è®Šç•°-å¥½å¥‡çš„çœ¼ç› | æ¯ç´š+1%XPå€æ•¸     |
 
-### 升級費用
-每5級+1費，起始1費：Lv0→1=1點，Lv5→6=2點，Lv10→11=3點
+### å‡ç´šè²»ç”¨
+æ¯5ç´š+1è²»ï¼Œèµ·å§‹1è²»ï¼šLv0â†’1=1é»žï¼ŒLv5â†’6=2é»žï¼ŒLv10â†’11=3é»ž
 `getMutationUpgradeCost(currentLevel) = Math.floor(currentLevel/5)+1`
 
-### 效果套用
-- `applyAllMutationBonuses()`：遊戲初始化一次性套用（在 `applyEvolutionEffects()` 之後）
-- `upgradeMutation(organId)`：mid-game 升級使用 delta 比值（新/舊），避免複利誤算
-- XP 加成在 `addXP()` 裡動態套用 `mutationXpBonus`
+### æ•ˆæžœå¥—ç”¨
+- `applyAllMutationBonuses()`ï¼šéŠæˆ²åˆå§‹åŒ–ä¸€æ¬¡æ€§å¥—ç”¨ï¼ˆåœ¨ `applyEvolutionEffects()` ä¹‹å¾Œï¼‰
+- `upgradeMutation(organId)`ï¼šmid-game å‡ç´šä½¿ç”¨ delta æ¯”å€¼ï¼ˆæ–°/èˆŠï¼‰ï¼Œé¿å…è¤‡åˆ©èª¤ç®—
+- XP åŠ æˆåœ¨ `addXP()` è£¡å‹•æ…‹å¥—ç”¨ `mutationXpBonus`
 
-### 獲得方式
-- 擊殺巨人化：100%+1，10%額外1~3
-- 擊殺Alpha：100%+1，20%額外1~6
-- 擊殺殺手化：100%+1，`killerCorpseEaten=N` → N%機率額外1~N（死亡時結算）
+### ç²å¾—æ–¹å¼
+- æ“Šæ®ºå·¨äººåŒ–ï¼š100%+1ï¼Œ10%é¡å¤–1~3
+- æ“Šæ®ºAlphaï¼š100%+1ï¼Œ20%é¡å¤–1~6
+- æ“Šæ®ºæ®ºæ‰‹åŒ–ï¼š100%+1ï¼Œ`killerCorpseEaten=N` â†’ N%æ©ŸçŽ‡é¡å¤–1~Nï¼ˆæ­»äº¡æ™‚çµç®—ï¼‰
 
-### 補償機制
-- `MUTATION_COMPENSATION_VERSION` 控制版本（改為 '1' 觸發第一次補償）
-- `MUTATION_COMPENSATION_CONFIG` 設定各版本補償比例（mutationPointsRate / skillPointsRate）
-- 執行一次後記錄 `compensationVersion` 避免重複
-- 呼叫時機：`initMutationData()` 末尾
+### è£œå„Ÿæ©Ÿåˆ¶
+- `MUTATION_COMPENSATION_VERSION` æŽ§åˆ¶ç‰ˆæœ¬ï¼ˆæ”¹ç‚º '1' è§¸ç™¼ç¬¬ä¸€æ¬¡è£œå„Ÿï¼‰
+- `MUTATION_COMPENSATION_CONFIG` è¨­å®šå„ç‰ˆæœ¬è£œå„Ÿæ¯”ä¾‹ï¼ˆmutationPointsRate / skillPointsRateï¼‰
+- åŸ·è¡Œä¸€æ¬¡å¾Œè¨˜éŒ„ `compensationVersion` é¿å…é‡è¤‡
+- å‘¼å«æ™‚æ©Ÿï¼š`initMutationData()` æœ«å°¾
 
 ### UI
-- `_initTopLeftUI()` 第三行：⚗️ Lv.X 圖標 + 紅點（`#mutation-icon-row`），`pointer-events:all`，click → `showMutationPanel()`
-- `updateUI()` 每幀更新：`#mutation-level-text` 顯示四個器官等級總和，`#mutation-red-dot` 顯示/隱藏
-- `showMutationPanel()`：彈出 z-index 120 面板，遊戲暫停（`mutationPanelOpen=true`）；面板骨架只建立一次，升級/兌換按鈕呼叫內部 `refresh()` 就地更新數值與按鈕狀態，不會整個摧毀重建（v0.1.25.7 修復捲動歸零問題）
-- `isGamePaused()` 和 `_joyPaused()` 均加入 `mutationPanelOpen` 判斷
+- `_initTopLeftUI()` ç¬¬ä¸‰è¡Œï¼šâš—ï¸ Lv.X åœ–æ¨™ + ç´…é»žï¼ˆ`#mutation-icon-row`ï¼‰ï¼Œ`pointer-events:all`ï¼Œclick â†’ `showMutationPanel()`
+- `updateUI()` æ¯å¹€æ›´æ–°ï¼š`#mutation-level-text` é¡¯ç¤ºå››å€‹å™¨å®˜ç­‰ç´šç¸½å’Œï¼Œ`#mutation-red-dot` é¡¯ç¤º/éš±è—
+- `showMutationPanel()`ï¼šå½ˆå‡º z-index 120 é¢æ¿ï¼ŒéŠæˆ²æš«åœï¼ˆ`mutationPanelOpen=true`ï¼‰ï¼›é¢æ¿éª¨æž¶åªå»ºç«‹ä¸€æ¬¡ï¼Œå‡ç´š/å…Œæ›æŒ‰éˆ•å‘¼å«å…§éƒ¨ `refresh()` å°±åœ°æ›´æ–°æ•¸å€¼èˆ‡æŒ‰éˆ•ç‹€æ…‹ï¼Œä¸æœƒæ•´å€‹æ‘§æ¯€é‡å»ºï¼ˆv0.1.25.7 ä¿®å¾©æ²å‹•æ­¸é›¶å•é¡Œï¼‰
+- `isGamePaused()` å’Œ `_joyPaused()` å‡åŠ å…¥ `mutationPanelOpen` åˆ¤æ–·
 
-### 初始化流程
-`window.onload` → `initMutationData()` → `applyMutationEffects()` 設定倍率
-`initializeGame()` → `applySkillBonuses()` → `applyEvolutionEffects()` → `applyAllMutationBonuses()` 一次性套用
+### åˆå§‹åŒ–æµç¨‹
+`window.onload` â†’ `initMutationData()` â†’ `applyMutationEffects()` è¨­å®šå€çŽ‡
+`initializeGame()` â†’ `applySkillBonuses()` â†’ `applyEvolutionEffects()` â†’ `applyAllMutationBonuses()` ä¸€æ¬¡æ€§å¥—ç”¨
 
 ---
 
-## 新手教學系統（v0.43.0 / v0.44.0 / v0.45.0）
+## æ–°æ‰‹æ•™å­¸ç³»çµ±ï¼ˆv0.43.0 / v0.44.0 / v0.45.0ï¼‰
 
-- **檔案**：`systems/tutorial.js`（IIFE 模組，掛至 `window`）
-- **載入時機**：index.html 中位於 `combat.js` / `organs.js` 之前（v0.45.0 調整，確保兩者可呼叫教學函式）
+- **æª”æ¡ˆ**ï¼š`systems/tutorial.js`ï¼ˆIIFE æ¨¡çµ„ï¼ŒæŽ›è‡³ `window`ï¼‰
+- **è¼‰å…¥æ™‚æ©Ÿ**ï¼šindex.html ä¸­ä½æ–¼ `combat.js` / `organs.js` ä¹‹å‰ï¼ˆv0.45.0 èª¿æ•´ï¼Œç¢ºä¿å…©è€…å¯å‘¼å«æ•™å­¸å‡½å¼ï¼‰
 
-### 第一階段：移動教學（v0.43.0）
+### ç¬¬ä¸€éšŽæ®µï¼šç§»å‹•æ•™å­¸ï¼ˆv0.43.0ï¼‰
 
-觸發條件：`initializeGame()` 結束後，若 localStorage 無 `tutorialCompleted`，呼叫 `showTutorial()`。
+è§¸ç™¼æ¢ä»¶ï¼š`initializeGame()` çµæŸå¾Œï¼Œè‹¥ localStorage ç„¡ `tutorialCompleted`ï¼Œå‘¼å« `showTutorial()`ã€‚
 
-三步驟流程：
+ä¸‰æ­¥é©Ÿæµç¨‹ï¼š
 
-| 步驟 | 狀態 | 內容 |
+| æ­¥é©Ÿ | ç‹€æ…‹ | å…§å®¹ |
 |------|------|------|
-| 1 | 凍結（`tutorialOpen = true`） | 全螢幕暗色遮罩 + 玩家白色光圈脈衝 + 歡迎提示框 |
-| 2 | 解凍 | 金色光暈 + 閃爍 ↓ 箭頭標記最近果子；紅色虛線引導線（全程顯示）；XP 增加即進入步驟三 |
-| 3 | 凍結 | 遮罩重現；日夜指示器金色邊框閃爍；日夜機制與勝利條件說明；按鈕結束並寫入 `localStorage.tutorialCompleted` |
+| 1 | å‡çµï¼ˆ`tutorialOpen = true`ï¼‰ | å…¨èž¢å¹•æš—è‰²é®ç½© + çŽ©å®¶ç™½è‰²å…‰åœˆè„ˆè¡ + æ­¡è¿Žæç¤ºæ¡† |
+| 2 | è§£å‡ | é‡‘è‰²å…‰æšˆ + é–ƒçˆ â†“ ç®­é ­æ¨™è¨˜æœ€è¿‘æžœå­ï¼›ç´…è‰²è™›ç·šå¼•å°Žç·šï¼ˆå…¨ç¨‹é¡¯ç¤ºï¼‰ï¼›XP å¢žåŠ å³é€²å…¥æ­¥é©Ÿä¸‰ |
+| 3 | å‡çµ | é®ç½©é‡ç¾ï¼›æ—¥å¤œæŒ‡ç¤ºå™¨é‡‘è‰²é‚Šæ¡†é–ƒçˆï¼›æ—¥å¤œæ©Ÿåˆ¶èˆ‡å‹åˆ©æ¢ä»¶èªªæ˜Žï¼›æŒ‰éˆ•çµæŸä¸¦å¯«å…¥ `localStorage.tutorialCompleted` |
 
-- `gameState.tutorialOpen`：整合至 `isGamePaused()`，教學期間暫停遊戲邏輯
+- `gameState.tutorialOpen`ï¼šæ•´åˆè‡³ `isGamePaused()`ï¼Œæ•™å­¸æœŸé–“æš«åœéŠæˆ²é‚è¼¯
 
-### 教學設定開關（v0.44.0）
+### æ•™å­¸è¨­å®šé–‹é—œï¼ˆv0.44.0ï¼‰
 
-`showSettings()` 輔助功能區塊新增「新手教學」開關：
-- 開啟（綠色）= 移除 `tutorialCompleted`，下一場觸發教學
-- 關閉（灰色）= 寫入 `tutorialCompleted`，教學不再觸發
-- 開關狀態即時反映 localStorage 現況
+`showSettings()` è¼”åŠ©åŠŸèƒ½å€å¡Šæ–°å¢žã€Œæ–°æ‰‹æ•™å­¸ã€é–‹é—œï¼š
+- é–‹å•Ÿï¼ˆç¶ è‰²ï¼‰= ç§»é™¤ `tutorialCompleted`ï¼Œä¸‹ä¸€å ´è§¸ç™¼æ•™å­¸
+- é—œé–‰ï¼ˆç°è‰²ï¼‰= å¯«å…¥ `tutorialCompleted`ï¼Œæ•™å­¸ä¸å†è§¸ç™¼
+- é–‹é—œç‹€æ…‹å³æ™‚åæ˜  localStorage ç¾æ³
 
-### 第二階段：戰鬥教學（v0.45.0）
+### ç¬¬äºŒéšŽæ®µï¼šæˆ°é¬¥æ•™å­¸ï¼ˆv0.45.0ï¼‰
 
-觸發條件：玩家第一次升級時（`showOrganSelection()` 偵測到 `tutorialCompleted` 存在且 `tutorialCombatDone` 不存在）
+è§¸ç™¼æ¢ä»¶ï¼šçŽ©å®¶ç¬¬ä¸€æ¬¡å‡ç´šæ™‚ï¼ˆ`showOrganSelection()` åµæ¸¬åˆ° `tutorialCompleted` å­˜åœ¨ä¸” `tutorialCombatDone` ä¸å­˜åœ¨ï¼‰
 
-流程：
-1. 器官選擇鎖定第一張攻擊器官（`tutorialOrganPhase = true`），其他卡片灰暗禁用
-2. 選完後：`spawnTutorialStump()` 在玩家正前方 150px 生成棕色木樁（HP 30）+ 顯示戰鬥提示框
-3. 木樁繪製於 `drawGame()` 7c 步驟；`playerAttack()` 將木樁加入攻擊目標
-4. 擊殺木樁 → `handleTutorialStumpKill()`：凍結 0.5 秒 → 顯示「⚔️ 攻擊學會了！」（2 秒消失）→ 寫入 `localStorage.tutorialCombatDone`
+æµç¨‹ï¼š
+1. å™¨å®˜é¸æ“‡éŽ–å®šç¬¬ä¸€å¼µæ”»æ“Šå™¨å®˜ï¼ˆ`tutorialOrganPhase = true`ï¼‰ï¼Œå…¶ä»–å¡ç‰‡ç°æš—ç¦ç”¨
+2. é¸å®Œå¾Œï¼š`spawnTutorialStump()` åœ¨çŽ©å®¶æ­£å‰æ–¹ 150px ç”Ÿæˆæ£•è‰²æœ¨æ¨ï¼ˆHP 30ï¼‰+ é¡¯ç¤ºæˆ°é¬¥æç¤ºæ¡†
+3. æœ¨æ¨ç¹ªè£½æ–¼ `drawGame()` 7c æ­¥é©Ÿï¼›`playerAttack()` å°‡æœ¨æ¨åŠ å…¥æ”»æ“Šç›®æ¨™
+4. æ“Šæ®ºæœ¨æ¨ â†’ `handleTutorialStumpKill()`ï¼šå‡çµ 0.5 ç§’ â†’ é¡¯ç¤ºã€Œâš”ï¸ æ”»æ“Šå­¸æœƒäº†ï¼ã€ï¼ˆ2 ç§’æ¶ˆå¤±ï¼‰â†’ å¯«å…¥ `localStorage.tutorialCombatDone`
 
-**新增 gameState 旗標**（均在 `initializeGame()` 重置）：
+**æ–°å¢ž gameState æ——æ¨™**ï¼ˆå‡åœ¨ `initializeGame()` é‡ç½®ï¼‰ï¼š
 
-| 旗標 | 說明 |
+| æ——æ¨™ | èªªæ˜Ž |
 |------|------|
-| `tutorialOpen` | 教學凍結中（整合至 `isGamePaused()`） |
-| `tutorialOrganPhase` | 器官選擇鎖定模式 |
-| `tutorialCombatActive` | 戰鬥教學進行中 |
-| `tutorialStump` | 教學木樁物件（null 表示不存在） |
+| `tutorialOpen` | æ•™å­¸å‡çµä¸­ï¼ˆæ•´åˆè‡³ `isGamePaused()`ï¼‰ |
+| `tutorialOrganPhase` | å™¨å®˜é¸æ“‡éŽ–å®šæ¨¡å¼ |
+| `tutorialCombatActive` | æˆ°é¬¥æ•™å­¸é€²è¡Œä¸­ |
+| `tutorialStump` | æ•™å­¸æœ¨æ¨ç‰©ä»¶ï¼ˆnull è¡¨ç¤ºä¸å­˜åœ¨ï¼‰ |
 
-**公開函式（掛至 window）**：
-- `showTutorial()` — 第一階段入口
-- `spawnTutorialStump()` — 生成教學木樁 + 顯示戰鬥提示框
-- `handleTutorialStumpKill()` — 木樁死亡處理（清除 → 凍結 → 完成訊息 → 解凍）
+**å…¬é–‹å‡½å¼ï¼ˆæŽ›è‡³ windowï¼‰**ï¼š
+- `showTutorial()` â€” ç¬¬ä¸€éšŽæ®µå…¥å£
+- `spawnTutorialStump()` â€” ç”Ÿæˆæ•™å­¸æœ¨æ¨ + é¡¯ç¤ºæˆ°é¬¥æç¤ºæ¡†
+- `handleTutorialStumpKill()` â€” æœ¨æ¨æ­»äº¡è™•ç†ï¼ˆæ¸…é™¤ â†’ å‡çµ â†’ å®Œæˆè¨Šæ¯ â†’ è§£å‡ï¼‰
 
 ---
 
-## 圖鑑系統（v0.31.0 / v0.47.1 擴充）
+## åœ–é‘‘ç³»çµ±ï¼ˆv0.31.0 / v0.47.1 æ“´å……ï¼‰
 
-- **入口**：首頁「📖 圖鑑」按鈕呼叫 `showCompendium('guide')`；遊戲內右上角 `_drawCompendiumBtn()` 呼叫 `showCompendium('organs')`
-- **三分頁**：遊戲說明（guide） / 器官圖鑑（organs） / 進化系統（evo）
-- **開啟時暫停**：`organSelectionActive = true`，關閉時恢復
-- **桌機面板尺寸**：`width:82%; max-width:1040px; height:86%; max-height:86vh`，isMobile 感知，不沿用手機版尺寸（v0.1.25.7）
-- **桌機左側目錄捲動保留**：`_renderGuide` / `_renderOrgans` / `_renderEvo` 桌機分支重繪前後呼叫 `_captureSidebarScroll(container)` / `_restoreSidebarScroll(sidebar, savedTop)`（標記屬性 `data-comp-sidebar="1"`），避免點擊目錄條目時因 `container.innerHTML=''` 整個重建導致 `scrollTop` 歸零、畫面回彈（v0.1.25.7）
+- **å…¥å£**ï¼šé¦–é ã€ŒðŸ“– åœ–é‘‘ã€æŒ‰éˆ•å‘¼å« `showCompendium('guide')`ï¼›éŠæˆ²å…§å³ä¸Šè§’ `_drawCompendiumBtn()` å‘¼å« `showCompendium('organs')`
+- **ä¸‰åˆ†é **ï¼šéŠæˆ²èªªæ˜Žï¼ˆguideï¼‰ / å™¨å®˜åœ–é‘‘ï¼ˆorgansï¼‰ / é€²åŒ–ç³»çµ±ï¼ˆevoï¼‰
+- **é–‹å•Ÿæ™‚æš«åœ**ï¼š`organSelectionActive = true`ï¼Œé—œé–‰æ™‚æ¢å¾©
+- **æ¡Œæ©Ÿé¢æ¿å°ºå¯¸**ï¼š`width:82%; max-width:1040px; height:86%; max-height:86vh`ï¼ŒisMobile æ„ŸçŸ¥ï¼Œä¸æ²¿ç”¨æ‰‹æ©Ÿç‰ˆå°ºå¯¸ï¼ˆv0.1.25.7ï¼‰
+- **æ¡Œæ©Ÿå·¦å´ç›®éŒ„æ²å‹•ä¿ç•™**ï¼š`_renderGuide` / `_renderOrgans` / `_renderEvo` æ¡Œæ©Ÿåˆ†æ”¯é‡ç¹ªå‰å¾Œå‘¼å« `_captureSidebarScroll(container)` / `_restoreSidebarScroll(sidebar, savedTop)`ï¼ˆæ¨™è¨˜å±¬æ€§ `data-comp-sidebar="1"`ï¼‰ï¼Œé¿å…é»žæ“Šç›®éŒ„æ¢ç›®æ™‚å›  `container.innerHTML=''` æ•´å€‹é‡å»ºå°Žè‡´ `scrollTop` æ­¸é›¶ã€ç•«é¢å›žå½ˆï¼ˆv0.1.25.7ï¼‰
 
-### 遊戲說明分頁（v0.47.1 擴充至 5 頁）
+### éŠæˆ²èªªæ˜Žåˆ†é ï¼ˆv0.47.1 æ“´å……è‡³ 5 é ï¼‰
 
-| 頁碼 | 內容 |
+| é ç¢¼ | å…§å®¹ |
 |------|------|
-| 1 | 基本操作（移動/攻擊/設定/果子/目標/自動攻擊） |
-| 2 | 器官系統說明 |
-| 3 | 進化系統說明 |
-| 4 | **Boss 圖鑑**（`_buildBossPage()`）：動態引用 EASY_MAP/NORMAL_MAP bosses，顯示簡單/普通兩套數值、普通技能說明、通用回血、弱點提示 |
-| 5 | **難度介紹**（`_buildDifficultyPage()`）：動態引用地圖 config，顯示生物強度倍率、精英/Boss 獎勵、特殊機制開關 |
+| 1 | åŸºæœ¬æ“ä½œï¼ˆç§»å‹•/æ”»æ“Š/è¨­å®š/æžœå­/ç›®æ¨™/è‡ªå‹•æ”»æ“Šï¼‰ |
+| 2 | å™¨å®˜ç³»çµ±èªªæ˜Ž |
+| 3 | é€²åŒ–ç³»çµ±èªªæ˜Ž |
+| 4 | **Boss åœ–é‘‘**ï¼ˆ`_buildBossPage()`ï¼‰ï¼šå‹•æ…‹å¼•ç”¨ EASY_MAP/NORMAL_MAP bossesï¼Œé¡¯ç¤ºç°¡å–®/æ™®é€šå…©å¥—æ•¸å€¼ã€æ™®é€šæŠ€èƒ½èªªæ˜Žã€é€šç”¨å›žè¡€ã€å¼±é»žæç¤º |
+| 5 | **é›£åº¦ä»‹ç´¹**ï¼ˆ`_buildDifficultyPage()`ï¼‰ï¼šå‹•æ…‹å¼•ç”¨åœ°åœ– configï¼Œé¡¯ç¤ºç”Ÿç‰©å¼·åº¦å€çŽ‡ã€ç²¾è‹±/Boss çŽå‹µã€ç‰¹æ®Šæ©Ÿåˆ¶é–‹é—œ |
 
-### buildEvoLevelDesc(pathId, upToLevel)（v0.47.1）
+### buildEvoLevelDesc(pathId, upToLevel)ï¼ˆv0.47.1ï¼‰
 
-- **位置**：`systems/ui.js`，由 ui.js 匯出的函式，定義於 `showCompendium()` 之前
-- 從 `EVOLUTION_PATHS[pathId].levels` 動態計算，`config/evolution.js` 改數值後自動同步
-- **草食性**：HP / 果子XP 累計，體型取最新值，行為說明依等級固定文字（撞到不逃跑/被攻擊不逃跑）
-- **肉食性**：攻擊/屍體XP/吞噬時間/攻速 取當級固定值（非累計）
-- **雜食性**：速度累計，白骨吞噬時間/白骨素 取當級固定值
+- **ä½ç½®**ï¼š`systems/ui.js`ï¼Œç”± ui.js åŒ¯å‡ºçš„å‡½å¼ï¼Œå®šç¾©æ–¼ `showCompendium()` ä¹‹å‰
+- å¾ž `EVOLUTION_PATHS[pathId].levels` å‹•æ…‹è¨ˆç®—ï¼Œ`config/evolution.js` æ”¹æ•¸å€¼å¾Œè‡ªå‹•åŒæ­¥
+- **è‰é£Ÿæ€§**ï¼šHP / æžœå­XP ç´¯è¨ˆï¼Œé«”åž‹å–æœ€æ–°å€¼ï¼Œè¡Œç‚ºèªªæ˜Žä¾ç­‰ç´šå›ºå®šæ–‡å­—ï¼ˆæ’žåˆ°ä¸é€ƒè·‘/è¢«æ”»æ“Šä¸é€ƒè·‘ï¼‰
+- **è‚‰é£Ÿæ€§**ï¼šæ”»æ“Š/å±é«”XP/åžå™¬æ™‚é–“/æ”»é€Ÿ å–ç•¶ç´šå›ºå®šå€¼ï¼ˆéžç´¯è¨ˆï¼‰
+- **é›œé£Ÿæ€§**ï¼šé€Ÿåº¦ç´¯è¨ˆï¼Œç™½éª¨åžå™¬æ™‚é–“/ç™½éª¨ç´  å–ç•¶ç´šå›ºå®šå€¼
 
 ---
 
-## 版本更新公告系統（v0.42.0）
+## ç‰ˆæœ¬æ›´æ–°å…¬å‘Šç³»çµ±ï¼ˆv0.42.0ï¼‰
 
-- **資料檔**：`config/patchnotes.js`，定義並匯出 ESM 常數 `PATCH_NOTES`（陣列），最新版本置頂（index 0）
-- **欄位格式**：`{ version, date, added[], fixed[], changed[] }`，沒有內容的欄位可省略
-- **`showPatchNotes()`**（`systems/ui.js`）：彈出公告面板（z-index 210），左側垂直 Tab 切換版本，右側顯示分類內容；未讀狀態寫入 `readPatchNotes`，點開單一版本即清除該版本紅點（v0.1.25.2）
-- **`checkPatchNotesPopup()`**（`systems/ui.js`）：在 `showStartScreen()` 末尾呼叫；新玩家（無 `hasPlayedBefore`）跳過；`readPatchNotes` 仍有未讀版本時自動 setTimeout 400ms 彈出
-- **未讀標記**：未讀版本在 Tab 列顯示紅點（`#FF4444`，class `pn-tab-dot`）；首頁按鈕紅點 id `patch-red-dot`；相容舊 `lastSeenPatchVersion`
-- **首頁按鈕**：`#patch-notes-btn`，位置 `top:96px left:20px`（故事書按鈕正下方），點擊呼叫 `showPatchNotes()`
-- **成就紅點**：已解鎖但尚未點開的成就寫入 `readAchievements` 判斷；首頁成就按鈕紅點 id `achievement-red-dot`，成就格子逐格點開後清除（v0.1.25.2）
-- **成就詳情獎勵**：右側詳情會顯示每個成就的 `bonus` 數值；未解鎖與 hidden 顯示 `???` 的成就也顯示可取得獎勵（v0.1.25.2）
-
----
-
-## 排行榜系統（systems/leaderboard.js）
-
-### showScoreSubmitPopup — 趣味榜分類維護規則（v0.47.0 起）
-
-`showScoreSubmitPopup()` 內部的 `funCategories` 陣列定義了所有趣味榜分類的查詢邏輯。
-**每次新增趣味榜分類，必須同步在 `funCategories` 陣列新增對應項目**，包含：
-
-| 欄位 | 說明 |
-|------|------|
-| `label` | 顯示名稱（含 emoji） |
-| `fetchFn` | 對應的 fetch 函式（接受 `difficulty` 閉包變數） |
-| `colName` | Supabase 欄位名稱 |
-| `myValue` | 本局對應的數值（不適用時填 `null`） |
-| `ascending` | `true` = 越小越好（時間類）；`false` = 越大越好（數量類） |
-
-### 趣味榜 Supabase fetch 函式一覽（config/supabase.js）
-
-| 函式 | 說明 |
-|------|------|
-| `fetchFunSpeedVictory(difficulty)` | 最速通關 |
-| `fetchFunSpeedDeath(difficulty)` | 最速死亡 |
-| `fetchFunGiantKills(difficulty)` | 巨人獵人（giant_kills 最多） |
-| `fetchFunKillerKills(difficulty)` | 殺手獵人（killer_kills 最多） |
-| `fetchFunKillerMaxLevel(difficulty)` | 殺手克星（killer_max_level 最高） |
-| `fetchFunBossKillSpeed(difficulty)` | 最快擊殺 Boss |
-| `fetchFunMaxLevel(difficulty)` | 最高等級 TOP10 |
-| `fetchFunHunterKill(difficulty)` | 最快擊殺黑色獵人（困難地圖） |
-| `fetchFunFruitsEaten(difficulty)` | 最佳果王（fruits_eaten 最多，v0.1.3.0） |
-| `fetchFunNormalKills(difficulty)` | 最強獵戶（normal_kills 最多，v0.1.3.0） |
-| `fetchFunBoneCount(difficulty)` | 白骨精（bone_count 最多） |
-
-### sessionStats 欄位（gameState.sessionStats）
-
-| 欄位 | 說明 |
-|------|------|
-| `giantKills` | 單局巨人化擊殺數 |
-| `killerKills` | 單局殺手化擊殺數 |
-| `killerMaxLevel` | 單局擊殺最高殺手等級 |
-| `fruitsEaten` | 單局吃果子總數（v0.1.3.0） |
-| `normalKills` | 單局普通生物擊殺數（草食+肉食，不含精英/Boss/巨人/殺手，v0.1.3.0） |
-
-### Submit 前名次預覽（v0.54.1）
-
-面板開啟時立即並行查詢（`Promise.all`）：
-- **一般榜**（`_fetchGeneralRank()`）：與現有記錄逐筆比對 `play_time`，回傳預計名次；`null` 代表斷線
-- **趣味榜**（`_fetchFunRanks()`）：遍歷 `funCategories`，僅顯示排進 TOP3 的分類；查詢失敗靜默跳過
-- 結果顯示在輸入框**上方** `rankPreview` 區塊；斷線時顯示紅色連線異常提示
+- **è³‡æ–™æª”**ï¼š`config/patchnotes.js`ï¼Œå®šç¾©ä¸¦åŒ¯å‡º ESM å¸¸æ•¸ `PATCH_NOTES`ï¼ˆé™£åˆ—ï¼‰ï¼Œæœ€æ–°ç‰ˆæœ¬ç½®é ‚ï¼ˆindex 0ï¼‰
+- **æ¬„ä½æ ¼å¼**ï¼š`{ version, date, added[], fixed[], changed[] }`ï¼Œæ²’æœ‰å…§å®¹çš„æ¬„ä½å¯çœç•¥
+- **`showPatchNotes()`**ï¼ˆ`systems/ui.js`ï¼‰ï¼šå½ˆå‡ºå…¬å‘Šé¢æ¿ï¼ˆz-index 210ï¼‰ï¼Œå·¦å´åž‚ç›´ Tab åˆ‡æ›ç‰ˆæœ¬ï¼Œå³å´é¡¯ç¤ºåˆ†é¡žå…§å®¹ï¼›æœªè®€ç‹€æ…‹å¯«å…¥ `readPatchNotes`ï¼Œé»žé–‹å–®ä¸€ç‰ˆæœ¬å³æ¸…é™¤è©²ç‰ˆæœ¬ç´…é»žï¼ˆv0.1.25.2ï¼‰
+- **`checkPatchNotesPopup()`**ï¼ˆ`systems/ui.js`ï¼‰ï¼šåœ¨ `showStartScreen()` æœ«å°¾å‘¼å«ï¼›æ–°çŽ©å®¶ï¼ˆç„¡ `hasPlayedBefore`ï¼‰è·³éŽï¼›`readPatchNotes` ä»æœ‰æœªè®€ç‰ˆæœ¬æ™‚è‡ªå‹• setTimeout 400ms å½ˆå‡º
+- **æœªè®€æ¨™è¨˜**ï¼šæœªè®€ç‰ˆæœ¬åœ¨ Tab åˆ—é¡¯ç¤ºç´…é»žï¼ˆ`#FF4444`ï¼Œclass `pn-tab-dot`ï¼‰ï¼›é¦–é æŒ‰éˆ•ç´…é»ž id `patch-red-dot`ï¼›ç›¸å®¹èˆŠ `lastSeenPatchVersion`
+- **é¦–é æŒ‰éˆ•**ï¼š`#patch-notes-btn`ï¼Œä½ç½® `top:96px left:20px`ï¼ˆæ•…äº‹æ›¸æŒ‰éˆ•æ­£ä¸‹æ–¹ï¼‰ï¼Œé»žæ“Šå‘¼å« `showPatchNotes()`
+- **æˆå°±ç´…é»ž**ï¼šå·²è§£éŽ–ä½†å°šæœªé»žé–‹çš„æˆå°±å¯«å…¥ `readAchievements` åˆ¤æ–·ï¼›é¦–é æˆå°±æŒ‰éˆ•ç´…é»ž id `achievement-red-dot`ï¼Œæˆå°±æ ¼å­é€æ ¼é»žé–‹å¾Œæ¸…é™¤ï¼ˆv0.1.25.2ï¼‰
+- **æˆå°±è©³æƒ…çŽå‹µ**ï¼šå³å´è©³æƒ…æœƒé¡¯ç¤ºæ¯å€‹æˆå°±çš„ `bonus` æ•¸å€¼ï¼›æœªè§£éŽ–èˆ‡ hidden é¡¯ç¤º `???` çš„æˆå°±ä¹Ÿé¡¯ç¤ºå¯å–å¾—çŽå‹µï¼ˆv0.1.25.2ï¼‰
 
 ---
 
-## 角色系統（v0.56.0）
+## æŽ’è¡Œæ¦œç³»çµ±ï¼ˆsystems/leaderboard.jsï¼‰
 
-### 角色定義
-- 位置：`config/characters.js`，`CHARACTERS` 常數
-- 欄位：`id, name, nameEn, icon, color, unlocked, stats, startOrgans, startEvolution, specialSkill, isRanged`
-- `gameState.selectedCharacter`：當前選擇的角色 id（預設 `'koel'`）；由 `showMapSelect` 寫入，`initializeGame` 套用
+### showScoreSubmitPopup â€” è¶£å‘³æ¦œåˆ†é¡žç¶­è­·è¦å‰‡ï¼ˆv0.47.0 èµ·ï¼‰
 
-### 現有角色
-| id | 名稱 | 外觀 | 特色 |
+`showScoreSubmitPopup()` å…§éƒ¨çš„ `funCategories` é™£åˆ—å®šç¾©äº†æ‰€æœ‰è¶£å‘³æ¦œåˆ†é¡žçš„æŸ¥è©¢é‚è¼¯ã€‚
+**æ¯æ¬¡æ–°å¢žè¶£å‘³æ¦œåˆ†é¡žï¼Œå¿…é ˆåŒæ­¥åœ¨ `funCategories` é™£åˆ—æ–°å¢žå°æ‡‰é …ç›®**ï¼ŒåŒ…å«ï¼š
+
+| æ¬„ä½ | èªªæ˜Ž |
+|------|------|
+| `label` | é¡¯ç¤ºåç¨±ï¼ˆå« emojiï¼‰ |
+| `fetchFn` | å°æ‡‰çš„ fetch å‡½å¼ï¼ˆæŽ¥å— `difficulty` é–‰åŒ…è®Šæ•¸ï¼‰ |
+| `colName` | Supabase æ¬„ä½åç¨± |
+| `myValue` | æœ¬å±€å°æ‡‰çš„æ•¸å€¼ï¼ˆä¸é©ç”¨æ™‚å¡« `null`ï¼‰ |
+| `ascending` | `true` = è¶Šå°è¶Šå¥½ï¼ˆæ™‚é–“é¡žï¼‰ï¼›`false` = è¶Šå¤§è¶Šå¥½ï¼ˆæ•¸é‡é¡žï¼‰ |
+
+### è¶£å‘³æ¦œ Supabase fetch å‡½å¼ä¸€è¦½ï¼ˆconfig/supabase.jsï¼‰
+
+| å‡½å¼ | èªªæ˜Ž |
+|------|------|
+| `fetchFunSpeedVictory(difficulty)` | æœ€é€Ÿé€šé—œ |
+| `fetchFunSpeedDeath(difficulty)` | æœ€é€Ÿæ­»äº¡ |
+| `fetchFunGiantKills(difficulty)` | å·¨äººçµäººï¼ˆgiant_kills æœ€å¤šï¼‰ |
+| `fetchFunKillerKills(difficulty)` | æ®ºæ‰‹çµäººï¼ˆkiller_kills æœ€å¤šï¼‰ |
+| `fetchFunKillerMaxLevel(difficulty)` | æ®ºæ‰‹å…‹æ˜Ÿï¼ˆkiller_max_level æœ€é«˜ï¼‰ |
+| `fetchFunBossKillSpeed(difficulty)` | æœ€å¿«æ“Šæ®º Boss |
+| `fetchFunMaxLevel(difficulty)` | æœ€é«˜ç­‰ç´š TOP10 |
+| `fetchFunHunterKill(difficulty)` | æœ€å¿«æ“Šæ®ºé»‘è‰²çµäººï¼ˆå›°é›£åœ°åœ–ï¼‰ |
+| `fetchFunFruitsEaten(difficulty)` | æœ€ä½³æžœçŽ‹ï¼ˆfruits_eaten æœ€å¤šï¼Œv0.1.3.0ï¼‰ |
+| `fetchFunNormalKills(difficulty)` | æœ€å¼·çµæˆ¶ï¼ˆnormal_kills æœ€å¤šï¼Œv0.1.3.0ï¼‰ |
+| `fetchFunBoneCount(difficulty)` | ç™½éª¨ç²¾ï¼ˆbone_count æœ€å¤šï¼‰ |
+
+### sessionStats æ¬„ä½ï¼ˆgameState.sessionStatsï¼‰
+
+| æ¬„ä½ | èªªæ˜Ž |
+|------|------|
+| `giantKills` | å–®å±€å·¨äººåŒ–æ“Šæ®ºæ•¸ |
+| `killerKills` | å–®å±€æ®ºæ‰‹åŒ–æ“Šæ®ºæ•¸ |
+| `killerMaxLevel` | å–®å±€æ“Šæ®ºæœ€é«˜æ®ºæ‰‹ç­‰ç´š |
+| `fruitsEaten` | å–®å±€åƒæžœå­ç¸½æ•¸ï¼ˆv0.1.3.0ï¼‰ |
+| `normalKills` | å–®å±€æ™®é€šç”Ÿç‰©æ“Šæ®ºæ•¸ï¼ˆè‰é£Ÿ+è‚‰é£Ÿï¼Œä¸å«ç²¾è‹±/Boss/å·¨äºº/æ®ºæ‰‹ï¼Œv0.1.3.0ï¼‰ |
+
+### Submit å‰åæ¬¡é è¦½ï¼ˆv0.54.1ï¼‰
+
+é¢æ¿é–‹å•Ÿæ™‚ç«‹å³ä¸¦è¡ŒæŸ¥è©¢ï¼ˆ`Promise.all`ï¼‰ï¼š
+- **ä¸€èˆ¬æ¦œ**ï¼ˆ`_fetchGeneralRank()`ï¼‰ï¼šèˆ‡ç¾æœ‰è¨˜éŒ„é€ç­†æ¯”å° `play_time`ï¼Œå›žå‚³é è¨ˆåæ¬¡ï¼›`null` ä»£è¡¨æ–·ç·š
+- **è¶£å‘³æ¦œ**ï¼ˆ`_fetchFunRanks()`ï¼‰ï¼šéæ­· `funCategories`ï¼Œåƒ…é¡¯ç¤ºæŽ’é€² TOP3 çš„åˆ†é¡žï¼›æŸ¥è©¢å¤±æ•—éœé»˜è·³éŽ
+- çµæžœé¡¯ç¤ºåœ¨è¼¸å…¥æ¡†**ä¸Šæ–¹** `rankPreview` å€å¡Šï¼›æ–·ç·šæ™‚é¡¯ç¤ºç´…è‰²é€£ç·šç•°å¸¸æç¤º
+
+---
+
+## è§’è‰²ç³»çµ±ï¼ˆv0.56.0ï¼‰
+
+### è§’è‰²å®šç¾©
+- ä½ç½®ï¼š`config/characters.js`ï¼Œ`CHARACTERS` å¸¸æ•¸
+- æ¬„ä½ï¼š`id, name, nameEn, icon, color, unlocked, stats, startOrgans, startEvolution, specialSkill, isRanged`
+- `gameState.selectedCharacter`ï¼šç•¶å‰é¸æ“‡çš„è§’è‰² idï¼ˆé è¨­ `'koel'`ï¼‰ï¼›ç”± `showMapSelect` å¯«å…¥ï¼Œ`initializeGame` å¥—ç”¨
+
+### ç¾æœ‰è§’è‰²
+| id | åç¨± | å¤–è§€ | ç‰¹è‰² |
 |---|---|---|---|
-| koel | 噪鵑 | 紅色圓形 | 現有玩家，F 技閃現 |
-| archerfish | 阿奇爾 | 藍色三角形（左右翻轉） | 遠程攻擊，F 技衝刺，水中+50% 速度 |
+| koel | å™ªéµ‘ | ç´…è‰²åœ“å½¢ | ç¾æœ‰çŽ©å®¶ï¼ŒF æŠ€é–ƒç¾ |
+| archerfish | é˜¿å¥‡çˆ¾ | è—è‰²ä¸‰è§’å½¢ï¼ˆå·¦å³ç¿»è½‰ï¼‰ | é ç¨‹æ”»æ“Šï¼ŒF æŠ€è¡åˆºï¼Œæ°´ä¸­+50% é€Ÿåº¦ |
 
-### 角色選擇 UI
-- 時機：難度選擇後、`initializeGame()` 前
-- 格子：噪鵑/阿奇爾可選，「？即將推出🔒」不可選
-- 樣式：選中黃色邊框，鎖定灰色
-- 實作：`systems/ui.js` `showMapSelect()`
+### è§’è‰²é¸æ“‡ UI
+- æ™‚æ©Ÿï¼šé›£åº¦é¸æ“‡å¾Œã€`initializeGame()` å‰
+- æ ¼å­ï¼šå™ªéµ‘/é˜¿å¥‡çˆ¾å¯é¸ï¼Œã€Œï¼Ÿå³å°‡æŽ¨å‡ºðŸ”’ã€ä¸å¯é¸
+- æ¨£å¼ï¼šé¸ä¸­é»ƒè‰²é‚Šæ¡†ï¼ŒéŽ–å®šç°è‰²
+- å¯¦ä½œï¼š`systems/ui.js` `showMapSelect()`
 
 ---
 
-## 阿奇爾攻擊系統（v0.56.0）
+## é˜¿å¥‡çˆ¾æ”»æ“Šç³»çµ±ï¼ˆv0.56.0ï¼‰
 
-### Reload 充能
-- 不攻擊時每 1.0 秒（受攻速影響）+1 格，上限 3 格
-- 任何攻擊發出後：計時器重置，消耗 1 格
-- `player.reloadCharges`（0~3）、`player.reloadTimer`（ms）
+### Reload å……èƒ½
+- ä¸æ”»æ“Šæ™‚æ¯ 1.0 ç§’ï¼ˆå—æ”»é€Ÿå½±éŸ¿ï¼‰+1 æ ¼ï¼Œä¸Šé™ 3 æ ¼
+- ä»»ä½•æ”»æ“Šç™¼å‡ºå¾Œï¼šè¨ˆæ™‚å™¨é‡ç½®ï¼Œæ¶ˆè€— 1 æ ¼
+- `player.reloadCharges`ï¼ˆ0~3ï¼‰ã€`player.reloadTimer`ï¼ˆmsï¼‰
 
-### 子彈系統
-- `gameState.projectiles[]`：`{ x, y, vx, vy, damage, maxRange, distTraveled, radius:5, ownerId:'player', hasCrit }`
-- 速度 9px/幀，超出 `attackRange × 1.2` 消失
-- `updateProjectiles()` 每幀呼叫
-- 命中判定：`_checkProjectileHit()`，命中後子彈消失
-- 含嘴器減速、鯊魚嗅葉傷害加成、Debuff StartTime 記錄
+### å­å½ˆç³»çµ±
+- `gameState.projectiles[]`ï¼š`{ x, y, vx, vy, damage, maxRange, distTraveled, radius:5, ownerId:'player', hasCrit }`
+- é€Ÿåº¦ 9px/å¹€ï¼Œè¶…å‡º `attackRange Ã— 1.2` æ¶ˆå¤±
+- `updateProjectiles()` æ¯å¹€å‘¼å«
+- å‘½ä¸­åˆ¤å®šï¼š`_checkProjectileHit()`ï¼Œå‘½ä¸­å¾Œå­å½ˆæ¶ˆå¤±
+- å«å˜´å™¨æ¸›é€Ÿã€é¯Šé­šå—…è‘‰å‚·å®³åŠ æˆã€Debuff StartTime è¨˜éŒ„
 
-### 攻擊目標選擇（`_findArcherAutoTarget`）
-- P1：移動方向 ±45° 扇形 + 攻擊範圍內 → 最近目標（迎面優先）
-- P2：無 P1 目標 → 全場最近目標
-- 同時用於視覺鎖定指示（`_drawArcherLockOn`）和實際攻擊，確保一致
+### æ”»æ“Šç›®æ¨™é¸æ“‡ï¼ˆ`_findArcherAutoTarget`ï¼‰
+- P1ï¼šç§»å‹•æ–¹å‘ Â±45Â° æ‰‡å½¢ + æ”»æ“Šç¯„åœå…§ â†’ æœ€è¿‘ç›®æ¨™ï¼ˆè¿Žé¢å„ªå…ˆï¼‰
+- P2ï¼šç„¡ P1 ç›®æ¨™ â†’ å…¨å ´æœ€è¿‘ç›®æ¨™
+- åŒæ™‚ç”¨æ–¼è¦–è¦ºéŽ–å®šæŒ‡ç¤ºï¼ˆ`_drawArcherLockOn`ï¼‰å’Œå¯¦éš›æ”»æ“Šï¼Œç¢ºä¿ä¸€è‡´
 
-### 攻擊模式
-- **自動**：P1 → P2 → 空子彈（無目標）
-- **手動電腦**：滑鼠方向 + 按住蓄力（最多 3 格），放開發射
-- **手動手機**：攻擊區改為方向鈕，拖動決定方向，放手發射
+### æ”»æ“Šæ¨¡å¼
+- **è‡ªå‹•**ï¼šP1 â†’ P2 â†’ ç©ºå­å½ˆï¼ˆç„¡ç›®æ¨™ï¼‰
+- **æ‰‹å‹•é›»è…¦**ï¼šæ»‘é¼ æ–¹å‘ + æŒ‰ä½è“„åŠ›ï¼ˆæœ€å¤š 3 æ ¼ï¼‰ï¼Œæ”¾é–‹ç™¼å°„
+- **æ‰‹å‹•æ‰‹æ©Ÿ**ï¼šæ”»æ“Šå€æ”¹ç‚ºæ–¹å‘éˆ•ï¼Œæ‹–å‹•æ±ºå®šæ–¹å‘ï¼Œæ”¾æ‰‹ç™¼å°„
 
-### F 技衝刺（archerfishDash）
-- 陸地 +3 速，水中 +5 速，持續 3 秒，冷卻 15 秒
-- 衝刺期間撞怪：暈眩 0.5 秒 + 附加攻擊傷害（不重複暈眩）
+### F æŠ€è¡åˆºï¼ˆarcherfishDashï¼‰
+- é™¸åœ° +3 é€Ÿï¼Œæ°´ä¸­ +5 é€Ÿï¼ŒæŒçºŒ 3 ç§’ï¼Œå†·å» 15 ç§’
+- è¡åˆºæœŸé–“æ’žæ€ªï¼šæšˆçœ© 0.5 ç§’ + é™„åŠ æ”»æ“Šå‚·å®³ï¼ˆä¸é‡è¤‡æšˆçœ©ï¼‰
 - `player.archerDashActive` / `archerDashEnd` / `archerDashSpeed`
 
 ---
 
-## 韌性屬性（v0.56.0）
-- `player.tenacity`（0~1），由魚鱗器官累計提供（Lv1=5%/Lv2=15%/Lv3=30%）
-- `applyTenacity(durationMs, target)`：回傳 `durationMs × (1 - target.tenacity)`
-- 適用所有控制效果持續時間（暈眩/硬控/減速），**不影響減速幅度**
-- 位置：`systems/utils.js`
+## éŸŒæ€§å±¬æ€§ï¼ˆv0.56.0ï¼‰
+- `player.tenacity`ï¼ˆ0~1ï¼‰ï¼Œç”±é­šé±—å™¨å®˜ç´¯è¨ˆæä¾›ï¼ˆLv1=5%/Lv2=15%/Lv3=30%ï¼‰
+- `applyTenacity(durationMs, target)`ï¼šå›žå‚³ `durationMs Ã— (1 - target.tenacity)`
+- é©ç”¨æ‰€æœ‰æŽ§åˆ¶æ•ˆæžœæŒçºŒæ™‚é–“ï¼ˆæšˆçœ©/ç¡¬æŽ§/æ¸›é€Ÿï¼‰ï¼Œ**ä¸å½±éŸ¿æ¸›é€Ÿå¹…åº¦**
+- ä½ç½®ï¼š`systems/utils.js`
 
 ---
 
-## 視野縮放（v0.58.0，重構自 v0.56.0 手機視野縮放）
-- `gameState.cameraZoom`（預設 1.0，桌機與手機均生效）
-- `gameState.settings.cameraZoomLevel`（1~10，決定 baseZoom；公式：`baseZoom = level/10 * 0.4 + 0.6`）
-- `gameState.settings.cameraMode`（`'smart'` 體型自動縮放 / `'manual'` 固定 baseZoom）
-- 智能模式公式：`cameraZoom = max(0.3, baseZoom - increaseRatio * 0.25)`
-- `worldToScreen()` / `drawTerrain()`：zoom 條件移除 `isMobile` 限制，統一使用 `cameraZoom`
-- `_updateCameraZoom()` 每幀呼叫（`updateGameLogic` 內）
+## è¦–é‡Žç¸®æ”¾ï¼ˆv0.58.0ï¼Œé‡æ§‹è‡ª v0.56.0 æ‰‹æ©Ÿè¦–é‡Žç¸®æ”¾ï¼‰
+- `gameState.cameraZoom`ï¼ˆé è¨­ 1.0ï¼Œæ¡Œæ©Ÿèˆ‡æ‰‹æ©Ÿå‡ç”Ÿæ•ˆï¼‰
+- `gameState.settings.cameraZoomLevel`ï¼ˆ1~10ï¼Œæ±ºå®š baseZoomï¼›å…¬å¼ï¼š`baseZoom = level/10 * 0.4 + 0.6`ï¼‰
+- `gameState.settings.cameraMode`ï¼ˆ`'smart'` é«”åž‹è‡ªå‹•ç¸®æ”¾ / `'manual'` å›ºå®š baseZoomï¼‰
+- æ™ºèƒ½æ¨¡å¼å…¬å¼ï¼š`cameraZoom = max(0.3, baseZoom - increaseRatio * 0.25)`
+- `worldToScreen()` / `drawTerrain()`ï¼šzoom æ¢ä»¶ç§»é™¤ `isMobile` é™åˆ¶ï¼Œçµ±ä¸€ä½¿ç”¨ `cameraZoom`
+- `_updateCameraZoom()` æ¯å¹€å‘¼å«ï¼ˆ`updateGameLogic` å…§ï¼‰
 
 ---
 
-## Boss 血條 Debuff 圖示（v0.56.0）
-- `_drawBossDebuffIcons(boss, barX, barY, barW)` — 在 `drawBoss()` 血條後呼叫
-- 顏色：毒傷 `#33FF66` / 流血 `#FF4444` / 減速 `#4488FF` / 暈眩 `#FFE533`
-- 每個圖示：深色背景方塊 + 彩色邊框 + 縮寫標籤 + 逆時針剩餘時間弧
-- 需記錄 Debuff 施加時間：`boss._poisonStartTime` / `_bleedStartTime` / `_slowStartTime` / `_stunStartTime`
-- **施加 Debuff 時務必同步記錄 StartTime**（combat.js / player.js 所有施加點）
+## Boss è¡€æ¢ Debuff åœ–ç¤ºï¼ˆv0.56.0ï¼‰
+- `_drawBossDebuffIcons(boss, barX, barY, barW)` â€” åœ¨ `drawBoss()` è¡€æ¢å¾Œå‘¼å«
+- é¡è‰²ï¼šæ¯’å‚· `#33FF66` / æµè¡€ `#FF4444` / æ¸›é€Ÿ `#4488FF` / æšˆçœ© `#FFE533`
+- æ¯å€‹åœ–ç¤ºï¼šæ·±è‰²èƒŒæ™¯æ–¹å¡Š + å½©è‰²é‚Šæ¡† + ç¸®å¯«æ¨™ç±¤ + é€†æ™‚é‡å‰©é¤˜æ™‚é–“å¼§
+- éœ€è¨˜éŒ„ Debuff æ–½åŠ æ™‚é–“ï¼š`boss._poisonStartTime` / `_bleedStartTime` / `_slowStartTime` / `_stunStartTime`
+- **æ–½åŠ  Debuff æ™‚å‹™å¿…åŒæ­¥è¨˜éŒ„ StartTime**ï¼ˆcombat.js / player.js æ‰€æœ‰æ–½åŠ é»žï¼‰
 
 ---
 
-## CC 效果開發規範（v0.56.0）
+## CC æ•ˆæžœé–‹ç™¼è¦ç¯„ï¼ˆv0.56.0ï¼‰
 
-> **每次在程式中新增控制效果（暈眩/減速/硬控），必須確認以下所有位置都有套用：**
+> **æ¯æ¬¡åœ¨ç¨‹å¼ä¸­æ–°å¢žæŽ§åˆ¶æ•ˆæžœï¼ˆæšˆçœ©/æ¸›é€Ÿ/ç¡¬æŽ§ï¼‰ï¼Œå¿…é ˆç¢ºèªä»¥ä¸‹æ‰€æœ‰ä½ç½®éƒ½æœ‰å¥—ç”¨ï¼š**
 
-| 位置 | 說明 |
+| ä½ç½® | èªªæ˜Ž |
 |------|------|
-| `updateNeutralCreatures` | 中立生物移動路徑 |
-| `updateHostileCreatures` | 敵意生物移動路徑 |
-| `updateEliteCreature` (`elite.js`) | 精英怪移動路徑 |
-| `updateBoss` (`boss.js`) | Boss 移動路徑 |
+| `updateNeutralCreatures` | ä¸­ç«‹ç”Ÿç‰©ç§»å‹•è·¯å¾‘ |
+| `updateHostileCreatures` | æ•µæ„ç”Ÿç‰©ç§»å‹•è·¯å¾‘ |
+| `updateEliteCreature` (`elite.js`) | ç²¾è‹±æ€ªç§»å‹•è·¯å¾‘ |
+| `updateBoss` (`boss.js`) | Boss ç§»å‹•è·¯å¾‘ |
 
-- 暈眩：各更新函式開頭的 `stunnedUntil` 檢查（4 個位置）
-- 減速：各移動呼叫改用 `_effSpeed(c)` 或在 `chaseSpeed`/`wanderSpeed` 後乘以 `_slowMult`
-- 新 CC 類型：依上述規範在 4 個位置同步實作
+- æšˆçœ©ï¼šå„æ›´æ–°å‡½å¼é–‹é ­çš„ `stunnedUntil` æª¢æŸ¥ï¼ˆ4 å€‹ä½ç½®ï¼‰
+- æ¸›é€Ÿï¼šå„ç§»å‹•å‘¼å«æ”¹ç”¨ `_effSpeed(c)` æˆ–åœ¨ `chaseSpeed`/`wanderSpeed` å¾Œä¹˜ä»¥ `_slowMult`
+- æ–° CC é¡žåž‹ï¼šä¾ä¸Šè¿°è¦ç¯„åœ¨ 4 å€‹ä½ç½®åŒæ­¥å¯¦ä½œ
 
 ---
 
-## 重要設計注意事項
+## é‡è¦è¨­è¨ˆæ³¨æ„äº‹é …
 
-### handleEliteKill 執行順序（v0.15.2 修復）
-`showHiddenOrganSelection()` **必須在** `addXP()` 之前呼叫，否則器官選擇與升級界面會疊層。
+### handleEliteKill åŸ·è¡Œé †åºï¼ˆv0.15.2 ä¿®å¾©ï¼‰
+`showHiddenOrganSelection()` **å¿…é ˆåœ¨** `addXP()` ä¹‹å‰å‘¼å«ï¼Œå¦å‰‡å™¨å®˜é¸æ“‡èˆ‡å‡ç´šç•Œé¢æœƒç–Šå±¤ã€‚
 
-### showHiddenOrganSelection closeOverlay 順序（v0.15.3 修復）
-`gameState.organSelectionActive = false` **必須在** `showOrganSelection()` 之前設定，
-否則選擇隱藏器官後關閉 overlay 時遊戲會短暫恢復。
+### showHiddenOrganSelection closeOverlay é †åºï¼ˆv0.15.3 ä¿®å¾©ï¼‰
+`gameState.organSelectionActive = false` **å¿…é ˆåœ¨** `showOrganSelection()` ä¹‹å‰è¨­å®šï¼Œ
+å¦å‰‡é¸æ“‡éš±è—å™¨å®˜å¾Œé—œé–‰ overlay æ™‚éŠæˆ²æœƒçŸ­æš«æ¢å¾©ã€‚
 
-### 模組載入方式
-專案使用 **ES Modules**，所有檔案透過 `import`/`export` 互相依賴，`main.js` 為主要入口。
-跨檔案呼叫必須透過 `import` 明確引入，不存在全域作用域自動共享。
+### æ¨¡çµ„è¼‰å…¥æ–¹å¼
+å°ˆæ¡ˆä½¿ç”¨ **ES Modules**ï¼Œæ‰€æœ‰æª”æ¡ˆé€éŽ `import`/`export` äº’ç›¸ä¾è³´ï¼Œ`main.js` ç‚ºä¸»è¦å…¥å£ã€‚
+è·¨æª”æ¡ˆå‘¼å«å¿…é ˆé€éŽ `import` æ˜Žç¢ºå¼•å…¥ï¼Œä¸å­˜åœ¨å…¨åŸŸä½œç”¨åŸŸè‡ªå‹•å…±äº«ã€‚
 
-### script 標籤位置
-`main.js` 以 `<script type="module" src="./main.js">` 單一標籤載入（位於 `index.html` body 末端）。
-其餘所有檔案透過 ESM `import` 引入，不使用獨立 `<script src>` 標籤。
+### script æ¨™ç±¤ä½ç½®
+`main.js` ä»¥ `<script type="module" src="./main.js">` å–®ä¸€æ¨™ç±¤è¼‰å…¥ï¼ˆä½æ–¼ `index.html` body æœ«ç«¯ï¼‰ã€‚
+å…¶é¤˜æ‰€æœ‰æª”æ¡ˆé€éŽ ESM `import` å¼•å…¥ï¼Œä¸ä½¿ç”¨ç¨ç«‹ `<script src>` æ¨™ç±¤ã€‚
+

@@ -19,7 +19,7 @@ import { handleKeyDown, handleKeyUp, _updateMouseWorld } from './systems/input.j
 import { initAudio, stopIntroTheme, AudioManager } from './systems/audio.js';
 import { _joyPaused } from './systems/mobile.js';
 import { spawnBiomeCreatures, spawnFruitFromTree, updateCreatureSpawning } from './systems/spawning.js';
-import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, updatePassiveOrgans, updateProjectiles, _getArcherShootDir, _archerAttack } from './systems/player.js';
+import { updatePlayerMovement, checkFruitCollision, updateTreeFruitProduction, updatePassiveOrgans, updateProjectiles, _fireArcherProjectile, _getArcherShootDir, _archerAttack } from './systems/player.js';
 import { updateStatusEffects, updateCorpseEating, updateBoneEating, playerAttack, setRangedAttackCallback } from './systems/combat.js';
 import { applyOrganEffects, getComboHint, _organHitRegions, _compendiumBtnRegion, showOrganSelection, handleEliteKill } from './systems/organs.js';
 import { applyEvolutionEffects, applySkillBonuses, loadSavedOrgans, showSkillTree } from './systems/evolution.js';
@@ -543,25 +543,7 @@ export function initializeGame() {
         if (p.chargeConsumed > 0) {
             const dir = _getArcherShootDir();
             if (dir) {
-                const dmg = Math.max(1, Math.round(p.attack * p.chargeConsumed));
-                gameState.projectiles.push({
-                    x: p.x, y: p.y,
-                    vx: dir.dx * 9, vy: dir.dy * 9,
-                    damage:       dmg,
-                    maxRange:     p.attackRange * 1.2,
-                    distTraveled: 0,
-                    radius:       5,
-                    ownerId:      'player',
-                    hasCrit:      false,
-                });
-                p.attackVisual = Date.now();
-                if (gameState.selectedCharacter === 'archerfish') {
-                    const chargeLevel = p.chargeConsumed || 0;
-                    const archerKey = chargeLevel >= 3 ? 'archerAttackCrit' : 'archerAttackNormal';
-                    AudioManager.play(archerKey);
-                } else {
-                    AudioManager.play('attackNormal');
-                }
+                _fireArcherProjectile(dir, p.chargeConsumed);
             }
         }
         p.chargeConsumed = 0;

@@ -4,9 +4,8 @@
 // =============================================================
 import { gameState } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT } from './map.js';
-import { AudioManager } from './audio.js';
 import { playerAttack } from './combat.js';
-import { playerDash, _getArcherShootDir } from './player.js';
+import { playerDash, _fireArcherProjectile, _getArcherShootDir } from './player.js';
 import { saveSettings, toggleDevMode, showSettings, hideSettings } from './ui.js';
 import { _chatExpanded, _collapseChat } from './chat.js';
 
@@ -90,19 +89,7 @@ export function handleKeyUp(e) {
             if (p.chargeConsumed > 0) {
                 const dir = _getArcherShootDir();
                 if (dir) {
-                    const dmg = Math.max(1, Math.round(p.attack * p.chargeConsumed));
-                    gameState.projectiles.push({
-                        x: p.x, y: p.y,
-                        vx: dir.dx * 9, vy: dir.dy * 9,
-                        damage: dmg,
-                        maxRange: p.attackRange * 1.2,
-                        distTraveled: 0,
-                        radius: 5,
-                        ownerId: 'player',
-                        hasCrit: false,
-                    });
-                    p.attackVisual = Date.now();
-                    AudioManager.play('attackNormal');
+                    _fireArcherProjectile(dir, p.chargeConsumed);
                 }
             }
             p.chargeConsumed = 0;

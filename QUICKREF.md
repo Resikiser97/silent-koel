@@ -1,199 +1,200 @@
-## v0.1.25.9
+﻿## v0.1.26.0
 
-# QUICKREF — Claude Code 快速參考索引
+# QUICKREF â€” Claude Code å¿«é€Ÿåƒè€ƒç´¢å¼•
 
-> 此檔案是 Claude Code 每次啟動的快查手冊。
-> 需要函式細節請查 MAIN.md；需要設計決策請查 project_summary.md。
-
----
-
-## 當前狀態
-- 版本：**v0.1.25.9**
-- SAVE_VERSION：`"1.1"`
+> æ­¤æª”æ¡ˆæ˜¯ Claude Code æ¯æ¬¡å•Ÿå‹•çš„å¿«æŸ¥æ‰‹å†Šã€‚
+> éœ€è¦å‡½å¼ç´°ç¯€è«‹æŸ¥ MAIN.mdï¼›éœ€è¦è¨­è¨ˆæ±ºç­–è«‹æŸ¥ project_summary.mdã€‚
 
 ---
 
-## 技術架構
+## ç•¶å‰ç‹€æ…‹
+- 版本：**v0.1.26.0**
+- SAVE_VERSIONï¼š`"1.1"`
+
+---
+
+## æŠ€è¡“æž¶æ§‹
 ```
-語言：純 HTML + JavaScript + CSS，無框架
-渲染：HTML5 Canvas 2D（遊戲世界）+ HTML div overlay（UI）
-FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
+èªžè¨€ï¼šç´” HTML + JavaScript + CSSï¼Œç„¡æ¡†æž¶
+æ¸²æŸ“ï¼šHTML5 Canvas 2Dï¼ˆéŠæˆ²ä¸–ç•Œï¼‰+ HTML div overlayï¼ˆUIï¼‰
+FPSï¼šFixed Timestep 60FPSï¼ˆFIXED_DELTA = 1000/60ï¼‰
 
-邏輯解析度：永遠 1600×900（VIEW_W/VIEW_H 不可改動）
+é‚è¼¯è§£æžåº¦ï¼šæ°¸é  1600Ã—900ï¼ˆVIEW_W/VIEW_H ä¸å¯æ”¹å‹•ï¼‰
 
-縮放：CSS transform: scale()，依裝置分支
-  電腦版：Letterbox — scale = Math.min(vw/1600, vh/900)，VIEW_W/VIEW_H 固定 1600×900
-  手機版：填滿螢幕 — scale = vw/logicW，_setViewSize() 依方向調整（MOBILE_GAME_SCALE = 0.6）
-  _letterboxScale（mobile.js export）兩個分支都更新，供其他模組讀取
+ç¸®æ”¾ï¼šCSS transform: scale()ï¼Œä¾è£ç½®åˆ†æ”¯
+  é›»è…¦ç‰ˆï¼šLetterbox â€” scale = Math.min(vw/1600, vh/900)ï¼ŒVIEW_W/VIEW_H å›ºå®š 1600Ã—900
+  æ‰‹æ©Ÿç‰ˆï¼šå¡«æ»¿èž¢å¹• â€” scale = vw/logicWï¼Œ_setViewSize() ä¾æ–¹å‘èª¿æ•´ï¼ˆMOBILE_GAME_SCALE = 0.6ï¼‰
+  _letterboxScaleï¼ˆmobile.js exportï¼‰å…©å€‹åˆ†æ”¯éƒ½æ›´æ–°ï¼Œä¾›å…¶ä»–æ¨¡çµ„è®€å–
 
-模組載入：ES Modules，main.js 為 <script type="module"> 唯一入口
-手機判斷：gameState.isMobile / gameState.orientation
+æ¨¡çµ„è¼‰å…¥ï¼šES Modulesï¼Œmain.js ç‚º <script type="module"> å”¯ä¸€å…¥å£
+æ‰‹æ©Ÿåˆ¤æ–·ï¼šgameState.isMobile / gameState.orientation
 ```
 
 ---
 
-## 部署資訊
-| 環境 | 網址 / 指令 |
+## éƒ¨ç½²è³‡è¨Š
+| ç’°å¢ƒ | ç¶²å€ / æŒ‡ä»¤ |
 |------|-------------|
 | GitHub | https://github.com/Resikiser97/silent-koel |
-| Vercel Master（測試） | silent-koel.vercel.app（`vercel.json` 使用 `npm run build`，輸出 `dist/`） |
-| Vercel Stable（穩定） | silent-koel-git-stable-goblinnest-s-projects.vercel.app |
-| CC 推送指令（Windows） | `"C:\AI\Git\bin\git.exe" -C "c:\AI\VS CODE" push origin master` |
-| itch.io 打包 | `npm run build:itch` → 產出 `silent-koel-itch.zip` 上傳 |
+| Vercel Masterï¼ˆæ¸¬è©¦ï¼‰ | silent-koel.vercel.appï¼ˆ`vercel.json` ä½¿ç”¨ `npm run build`ï¼Œè¼¸å‡º `dist/`ï¼‰ |
+| Vercel Stableï¼ˆç©©å®šï¼‰ | silent-koel-git-stable-goblinnest-s-projects.vercel.app |
+| CC æŽ¨é€æŒ‡ä»¤ï¼ˆWindowsï¼‰ | `"C:\AI\Git\bin\git.exe" -C "c:\AI\VS CODE" push origin master` |
+| itch.io æ‰“åŒ… | `npm run build:itch` â†’ ç”¢å‡º `silent-koel-itch.zip` ä¸Šå‚³ |
 
-### itch.io 注意事項（詳見 `itch.md`）
-- ESM 子目錄 import 在 itch.io CDN 全部 403 → 必須用 Vite 打包成單一 `index.js`
-- 路徑不能有空格：音效目錄已改為 `sounds/`（非 `Sound MP3/`），子目錄 `sounds/new/`
-- itch.io 上傳設定：勾選「This file will be played in the browser」，Frame size 1600×900
+### itch.io æ³¨æ„äº‹é …ï¼ˆè©³è¦‹ `itch.md`ï¼‰
+- ESM å­ç›®éŒ„ import åœ¨ itch.io CDN å…¨éƒ¨ 403 â†’ å¿…é ˆç”¨ Vite æ‰“åŒ…æˆå–®ä¸€ `index.js`
+- è·¯å¾‘ä¸èƒ½æœ‰ç©ºæ ¼ï¼šéŸ³æ•ˆç›®éŒ„å·²æ”¹ç‚º `sounds/`ï¼ˆéž `Sound MP3/`ï¼‰ï¼Œå­ç›®éŒ„ `sounds/new/`
+- itch.io ä¸Šå‚³è¨­å®šï¼šå‹¾é¸ã€ŒThis file will be played in the browserã€ï¼ŒFrame size 1600Ã—900
 
 ---
 
-## 檔案地圖
+## æª”æ¡ˆåœ°åœ–
 
-### 根目錄
-| 檔案 | 職責 |
+### æ ¹ç›®éŒ„
+| æª”æ¡ˆ | è·è²¬ |
 |------|------|
-| `index.html` | HTML 結構 + CSS + 唯一 `<script type="module" src="./main.js">` 入口 |
-| `main.js` | ESM 入口 / isGamePaused / gameLoop / initializeGame / startGameWithLoading / startGame event listener / window.onload |
-| `lang.js` | LANG_LIST、LANG 字典、applyLanguage()、t(key, params?) |
-| `vite.config.js` | Vite 打包設定（itch.io 用，`base: './'`，輸出 `index.js` 到根目錄）|
-| `vercel.json` | Vercel 部署設定：`buildCommand` = `npm run build`，`outputDirectory` = `dist` |
-| `itch.md` | itch.io 部署 SOP 與踩坑紀錄（給 Claude Chat 參考） |
-| `MAIN.md` | 完整模組架構、函式列表、跨模組依賴 |
-| `CHANGELOG.md` | 所有版本紀錄（最新在最上方） |
-| `VERSION_RULES.md` | 版本號更新規則 |
-| `.claude/instructions.md` | Claude Code 行為規則與 SOP |
+| `index.html` | HTML çµæ§‹ + CSS + å”¯ä¸€ `<script type="module" src="./main.js">` å…¥å£ |
+| `main.js` | ESM å…¥å£ / isGamePaused / gameLoop / initializeGame / startGameWithLoading / startGame event listener / window.onload |
+| `lang.js` | LANG_LISTã€LANG å­—å…¸ã€applyLanguage()ã€t(key, params?) |
+| `vite.config.js` | Vite æ‰“åŒ…è¨­å®šï¼ˆitch.io ç”¨ï¼Œ`base: './'`ï¼Œè¼¸å‡º `index.js` åˆ°æ ¹ç›®éŒ„ï¼‰|
+| `vercel.json` | Vercel éƒ¨ç½²è¨­å®šï¼š`buildCommand` = `npm run build`ï¼Œ`outputDirectory` = `dist` |
+| `itch.md` | itch.io éƒ¨ç½² SOP èˆ‡è¸©å‘ç´€éŒ„ï¼ˆçµ¦ Claude Chat åƒè€ƒï¼‰ |
+| `MAIN.md` | å®Œæ•´æ¨¡çµ„æž¶æ§‹ã€å‡½å¼åˆ—è¡¨ã€è·¨æ¨¡çµ„ä¾è³´ |
+| `CHANGELOG.md` | æ‰€æœ‰ç‰ˆæœ¬ç´€éŒ„ï¼ˆæœ€æ–°åœ¨æœ€ä¸Šæ–¹ï¼‰ |
+| `VERSION_RULES.md` | ç‰ˆæœ¬è™Ÿæ›´æ–°è¦å‰‡ |
+| `.claude/instructions.md` | Claude Code è¡Œç‚ºè¦å‰‡èˆ‡ SOP |
 
 ### scripts/
-| 檔案 | 職責 |
+| æª”æ¡ˆ | è·è²¬ |
 |------|------|
-| `scripts/copy-sounds.js` | `npm run build` 後複製 `sounds/` → `dist/sounds/`，供 Vercel / itch.io 共用 |
-| `scripts/pack-itch.js` | 將 `dist/` 用 archiver 打包成 `silent-koel-itch.zip` |
+| `scripts/copy-sounds.js` | `npm run build` å¾Œè¤‡è£½ `sounds/` â†’ `dist/sounds/`ï¼Œä¾› Vercel / itch.io å…±ç”¨ |
+| `scripts/pack-itch.js` | å°‡ `dist/` ç”¨ archiver æ‰“åŒ…æˆ `silent-koel-itch.zip` |
 
 ### sounds/
-| 路徑 | 說明 |
+| è·¯å¾‘ | èªªæ˜Ž |
 |------|------|
-| `sounds/*.mp3` | 主要音效（無空格名稱，對應 `AUDIO_FILES` 路徑）|
-| `sounds/new/*.mp3` | 新增音效（精英怪、Boss、阿奇爾等）|
+| `sounds/*.mp3` | ä¸»è¦éŸ³æ•ˆï¼ˆç„¡ç©ºæ ¼åç¨±ï¼Œå°æ‡‰ `AUDIO_FILES` è·¯å¾‘ï¼‰|
+| `sounds/new/*.mp3` | æ–°å¢žéŸ³æ•ˆï¼ˆç²¾è‹±æ€ªã€Bossã€é˜¿å¥‡çˆ¾ç­‰ï¼‰|
 
 ### config/
-| 檔案 | 職責 |
+| æª”æ¡ˆ | è·è²¬ |
 |------|------|
-| `gameConfig.js` | GAME_INFO（版本號、SAVE_VERSION）、GAME_TIMING、AUDIO_FILES、FIXED_DELTA |
-| `characters.js` | CHARACTERS（角色定義常數） |
-| `organs.js` | ORGANS（15種普通）+ HIDDEN_ORGANS（4種）+ poisonSac |
-| `creatures.js` | CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG |
-| `evolution.js` | EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種） |
-| `patchnotes.js` | PATCH_NOTES（版本更新公告，最新置頂；v0.1.25.3 起保留 v0.1.22.1 以上） |
-| `supabase.js` | Supabase API（排行榜、雲端存檔） |
-| `achievements.js` | ACHIEVEMENTS（36 個成就定義，七類） |
-| `attributes.js` | ATTRIBUTES（5 個屬性純資料，Attribute Design v1） |
-| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)` → 12 屬性快照（含 attackSpeed 的 final/baseIntervalMs/intervalMs 與 corpseXP 完整 final/base/evoLevel/mutMultiplier/achPercent）；第 6 參數傳入已解鎖成就 map，讓面板數值與 runtime 同步（v0.1.25.2）；詳見 `docs/PLAYER_STATS_FORMULA.md` |
-| `xpConfig.js` | `XP_CONFIG`：採集 XP（fruit.base / foragerPerLevel / noHerbivoreBase）、擊殺 XP（kill.minCreatureBaseXP / hunterPerLevel）、hostile XP 公式（kill.hostile.base / hpDivisor / hpScale / cap / defaultHp）所有常數集中定義 |
-| `combatConfig.js` | `COMBAT_CONFIG`（攻擊間隔公式基底，v0.1.24.4） |
-| `mutationConfig.js` | `MUTATION_CONFIG`（技能點換變異點常數：skillPointCost/discountedSkillPointCost/mutationPointGain，v0.1.25.0） |
+| `gameConfig.js` | GAME_INFOï¼ˆç‰ˆæœ¬è™Ÿã€SAVE_VERSIONï¼‰ã€GAME_TIMINGã€AUDIO_FILESã€FIXED_DELTA |
+| `characters.js` | CHARACTERSï¼ˆè§’è‰²å®šç¾©å¸¸æ•¸ï¼‰ |
+| `organs.js` | ORGANSï¼ˆ15ç¨®æ™®é€šï¼‰+ HIDDEN_ORGANSï¼ˆ4ç¨®ï¼‰+ poisonSac |
+| `creatures.js` | CREATURE_CONFIGã€CREATURE_AI_CONFIGï¼ˆç”Ÿç‰©åˆ†é›¢ã€è¿‘æˆ°å‰å¾Œæ–ã€é¬£ç‹— pack æ•¸å€¼ï¼‰ã€ELITE_CONFIGã€BOSS_CONFIG |
+| `evolution.js` | EVOLUTION_PATHSï¼ˆå„è·¯ç·š Lv1~5ï¼‰ã€SKILLSï¼ˆ9ç¨®ï¼‰ã€COMBOSï¼ˆ5ç¨®ï¼‰ |
+| `patchnotes.js` | PATCH_NOTESï¼ˆç‰ˆæœ¬æ›´æ–°å…¬å‘Šï¼Œæœ€æ–°ç½®é ‚ï¼›v0.1.25.3 èµ·ä¿ç•™ v0.1.22.1 ä»¥ä¸Šï¼‰ |
+| `supabase.js` | Supabase APIï¼ˆæŽ’è¡Œæ¦œã€é›²ç«¯å­˜æª”ï¼‰ |
+| `achievements.js` | ACHIEVEMENTSï¼ˆ36 å€‹æˆå°±å®šç¾©ï¼Œä¸ƒé¡žï¼‰ |
+| `attributes.js` | ATTRIBUTESï¼ˆ5 å€‹å±¬æ€§ç´”è³‡æ–™ï¼ŒAttribute Design v1ï¼‰ |
+| `playerStatsFormula.js` | `calcPlayerStats(charId, skills, organs, hiddenOrgans, mutationLevels, unlockedAchievements)` â†’ 12 å±¬æ€§å¿«ç…§ï¼ˆå« attackSpeed çš„ final/baseIntervalMs/intervalMs èˆ‡ corpseXP å®Œæ•´ final/base/evoLevel/mutMultiplier/achPercentï¼‰ï¼›ç¬¬ 6 åƒæ•¸å‚³å…¥å·²è§£éŽ–æˆå°± mapï¼Œè®“é¢æ¿æ•¸å€¼èˆ‡ runtime åŒæ­¥ï¼ˆv0.1.25.2ï¼‰ï¼›è©³è¦‹ `docs/PLAYER_STATS_FORMULA.md` |
+| `xpConfig.js` | `XP_CONFIG`ï¼šæŽ¡é›† XPï¼ˆfruit.base / foragerPerLevel / noHerbivoreBaseï¼‰ã€æ“Šæ®º XPï¼ˆkill.minCreatureBaseXP / hunterPerLevelï¼‰ã€hostile XP å…¬å¼ï¼ˆkill.hostile.base / hpDivisor / hpScale / cap / defaultHpï¼‰æ‰€æœ‰å¸¸æ•¸é›†ä¸­å®šç¾© |
+| `combatConfig.js` | `COMBAT_CONFIG`ï¼ˆæ”»æ“Šé–“éš”å…¬å¼åŸºåº•ï¼Œv0.1.24.4ï¼‰ |
+| `mutationConfig.js` | `MUTATION_CONFIG`ï¼ˆæŠ€èƒ½é»žæ›è®Šç•°é»žå¸¸æ•¸ï¼šskillPointCost/discountedSkillPointCost/mutationPointGainï¼Œv0.1.25.0ï¼‰ |
 
 ### lang/
-| 檔案 | 職責 |
+| æª”æ¡ˆ | è·è²¬ |
 |------|------|
-| `zh-TW.js` | 繁體中文語言包 |
-| `en.js` | 英文語言包（fallback） |
+| `zh-TW.js` | ç¹é«”ä¸­æ–‡èªžè¨€åŒ… |
+| `en.js` | è‹±æ–‡èªžè¨€åŒ…ï¼ˆfallbackï¼‰ |
 
 ### systems/
-| 檔案 | 職責 |
+| æª”æ¡ˆ | è·è²¬ |
 |------|------|
-| `gameState.js` | DEFAULT_SETTINGS、gameState 物件、canvas/ctx |
-| `gameFlow.js` | pausePlayTimer / resumePlayTimer（Stage F 批次 1：解除 main.js 反向依賴） |
+| `gameState.js` | DEFAULT_SETTINGSã€gameState ç‰©ä»¶ã€canvas/ctx |
+| `gameFlow.js` | pausePlayTimer / resumePlayTimerï¼ˆStage F æ‰¹æ¬¡ 1ï¼šè§£é™¤ main.js åå‘ä¾è³´ï¼‰ |
 | `utils.js` | drawArrow / drawHealthBar / drawNameTag / drawGlowEffect / applyTenacity |
-| `audio.js` | AudioManager（play / playMusic / refreshMusicVolume）/ preloadAllSfxBuffers |
+| `audio.js` | AudioManagerï¼ˆplay / playMusic / refreshMusicVolumeï¼‰/ preloadAllSfxBuffers |
 | `camera.js` | updateCamera / worldToScreen / wrappedDistance / wrappedDelta / _updateCameraZoom |
-| `input.js` | handleKeyDown / handleKeyUp（含 Z 鍵自動攻擊 toggle） |
+| `input.js` | handleKeyDown / handleKeyUpï¼ˆå« Z éµè‡ªå‹•æ”»æ“Š toggleï¼‰ |
 | `map.js` | MAP_WIDTH / MAP_HEIGHT / generateTerrain / buildTerrainCanvas / drawTerrain |
-| `spawning.js` | 生物／果子／樹木生成 |
-| `feedback.js` | showFloatingText / showXPPopup，從 combat.js / player.js 抽出（v0.1.20.0） |
-| `reward.js` | addXP / checkLevelUp，從 player.js 抽出（v0.1.20.1） |
-| `loot.js` | _spawnBone，從 combat.js 抽出（v0.1.20.1） |
-| `player.js` | updatePlayerMovement / checkFruitCollision / 靈敏知覺算法 |
+| `spawning.js` | ç”Ÿç‰©ï¼æžœå­ï¼æ¨¹æœ¨ç”Ÿæˆ |
+| `feedback.js` | showFloatingText / showXPPopupï¼Œå¾ž combat.js / player.js æŠ½å‡ºï¼ˆv0.1.20.0ï¼‰ |
+| `reward.js` | addXP / checkLevelUpï¼Œå¾ž player.js æŠ½å‡ºï¼ˆv0.1.20.1ï¼‰ |
+| `loot.js` | _spawnBoneï¼Œå¾ž combat.js æŠ½å‡ºï¼ˆv0.1.20.1ï¼‰ |
+| `player.js` | updatePlayerMovement / checkFruitCollision / éˆæ•çŸ¥è¦ºç®—æ³• |
 | `tutorial.js` | showTutorial / spawnTutorialStump / handleTutorialStumpKill |
-| `damage.js` | applyDamageToPlayer / handleKill（移除已擊殺生物、dispatch eliteKilled）/ handleGiantKill，從 combat.js 抽出（v0.1.21.0） |
-| `combat.js` | playerAttack / setRangedAttackCallback / updateStatusEffects / 白骨系統 |
+| `damage.js` | applyDamageToPlayer / handleKillï¼ˆç§»é™¤å·²æ“Šæ®ºç”Ÿç‰©ã€dispatch eliteKilledï¼‰/ handleGiantKillï¼Œå¾ž combat.js æŠ½å‡ºï¼ˆv0.1.21.0ï¼‰ |
+| `combat.js` | playerAttack / setRangedAttackCallback / updateStatusEffects / ç™½éª¨ç³»çµ± |
 | `organs.js` | showOrganSelection / handleEliteKill / applyOrganEffects |
 | `evolution.js` | buildSkillTreeOverlay / upgradeSkill / applyEvolutionEffects |
-| `creatures.js` | updateNeutralCreatures / updateHostileCreatures |
+| `creatures.js` | updateNeutralCreatures / updateHostileCreatures / _tryMeleeAttack / _applyCreatureSeparation |
 | `elite.js` | spawnEliteCreature / updateEliteCreature |
 | `boss.js` | spawnBoss / updateBoss / showVictory |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
 | `daynight.js` | getDayNightPhaseIndex(timeRemaining) / updateDayNightCycle |
-| `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 置頂訊息 / username 小寫正規化+GOBLINNEST 過濾） |
+| `chat.js` | èŠå¤©å®¤ç³»çµ±ï¼ˆå¸³è™Ÿç™»å…¥ / Realtime / GMæŒ‡ä»¤ / å½©è‰²å­— / ç½®é ‚è¨Šæ¯ / username å°å¯«æ­£è¦åŒ–+GOBLINNEST éŽæ¿¾ï¼‰ |
 | `achievements.js` | unlockAchievement(id) / isUnlocked(id) / getUnlockedAchievements() / getActiveTitle() / setActiveTitle(title) / showAchievements(opts) |
-| `achievementTriggers.js` | initAchievementTriggers()（Phase D：監聽 CustomEvent 觸發成就，不 import SCC 模組） |
-| `achievementBonus.js` | getAchievementBonusTotals(unlockedIds) / applyAchievementStatBonuses()（成就永久加成套用，v0.1.25.0） |
-| `leaderboard.js` | 排行榜面板 / 分數提交 / 難度狀態管理 |
-| `mobile.js` | 裝置偵測 / 手機縮放 / 搖桿 / 攻擊區 / 觸控疊加層 |
-| `hud.js` | drawGame 主渲染 / HUD 更新 / 小地圖 / 上方血條 |
-| `ui.js` | 面板系統（首頁/設定/地圖選擇/圖鑑/故事書/版本公告）/ Tooltip / 語言切換 / 結算畫面共用 builder |
+| `achievementTriggers.js` | initAchievementTriggers()ï¼ˆPhase Dï¼šç›£è½ CustomEvent è§¸ç™¼æˆå°±ï¼Œä¸ import SCC æ¨¡çµ„ï¼‰ |
+| `achievementBonus.js` | getAchievementBonusTotals(unlockedIds) / applyAchievementStatBonuses()ï¼ˆæˆå°±æ°¸ä¹…åŠ æˆå¥—ç”¨ï¼Œv0.1.25.0ï¼‰ |
+| `leaderboard.js` | æŽ’è¡Œæ¦œé¢æ¿ / åˆ†æ•¸æäº¤ / é›£åº¦ç‹€æ…‹ç®¡ç† |
+| `mobile.js` | è£ç½®åµæ¸¬ / æ‰‹æ©Ÿç¸®æ”¾ / æ–æ¡¿ / æ”»æ“Šå€ / è§¸æŽ§ç–ŠåŠ å±¤ |
+| `hud.js` | drawGame ä¸»æ¸²æŸ“ / HUD æ›´æ–° / å°åœ°åœ– / ä¸Šæ–¹è¡€æ¢ |
+| `ui.js` | é¢æ¿ç³»çµ±ï¼ˆé¦–é /è¨­å®š/åœ°åœ–é¸æ“‡/åœ–é‘‘/æ•…äº‹æ›¸/ç‰ˆæœ¬å…¬å‘Šï¼‰/ Tooltip / èªžè¨€åˆ‡æ› / çµç®—ç•«é¢å…±ç”¨ builder |
 
 ### map/
-| 檔案 | 職責 |
+| æª”æ¡ˆ | è·è²¬ |
 |------|------|
-| `map.md` | 地形設計文件 |
-| `easymap.js` | EASY_MAP（簡單難度；dogElites 三犬精英怪開啟） |
-| `normalmap.js` | NORMAL_MAP（普通難度：生物×1.5、aggroRange 400、巨人化/殺手化/Boss回血/dogElites 開啟） |
-| `hardmap.js` | HARD_MAP（困難難度：生物×2.5、aggroRange 600、三隼精英怪/黑色獵人 Boss 開啟） |
+| `map.md` | åœ°å½¢è¨­è¨ˆæ–‡ä»¶ |
+| `easymap.js` | EASY_MAPï¼ˆç°¡å–®é›£åº¦ï¼›dogElites ä¸‰çŠ¬ç²¾è‹±æ€ªé–‹å•Ÿï¼‰ |
+| `normalmap.js` | NORMAL_MAPï¼ˆæ™®é€šé›£åº¦ï¼šç”Ÿç‰©Ã—1.5ã€aggroRange 400ã€å·¨äººåŒ–/æ®ºæ‰‹åŒ–/Bosså›žè¡€/dogElites é–‹å•Ÿï¼‰ |
+| `hardmap.js` | HARD_MAPï¼ˆå›°é›£é›£åº¦ï¼šç”Ÿç‰©Ã—2.5ã€aggroRange 600ã€ä¸‰éš¼ç²¾è‹±æ€ª/é»‘è‰²çµäºº Boss é–‹å•Ÿï¼‰ |
 
 ---
 
-## localStorage Key 一覽
-| Key | 說明 |
+## localStorage Key ä¸€è¦½
+| Key | èªªæ˜Ž |
 |-----|------|
-| `playerSkills` | 技能樹等級（各技能 0~5） |
-| `skillPoints` | 可用技能點 |
-| `savedOrgans` | 死後保留的普通器官 |
-| `savedHiddenOrgans` | 死後保留的隱藏器官 |
-| `lastRunOrgans` | 上局所有器官記錄（首頁補選用） |
+| `playerSkills` | æŠ€èƒ½æ¨¹ç­‰ç´šï¼ˆå„æŠ€èƒ½ 0~5ï¼‰ |
+| `skillPoints` | å¯ç”¨æŠ€èƒ½é»ž |
+| `savedOrgans` | æ­»å¾Œä¿ç•™çš„æ™®é€šå™¨å®˜ |
+| `savedHiddenOrgans` | æ­»å¾Œä¿ç•™çš„éš±è—å™¨å®˜ |
+| `lastRunOrgans` | ä¸Šå±€æ‰€æœ‰å™¨å®˜è¨˜éŒ„ï¼ˆé¦–é è£œé¸ç”¨ï¼‰ |
 | `gameSettings` | `{ language, volume, keys, deviceMode, autoAttack, showOrganTooltip, alwaysCenter, minimapFade, minimapSize, fontBoldLarge, cameraMode, cameraZoomLevel }` |
-| `saveVersion` | 目前 `"1.1"`（不一致時清除技能/器官存檔） |
-| `lastCharacter` | 上一局選擇角色 ID |
-| `mutationData` | 突變器官等級和點數（永久保留，不受 `saveVersion` 清除） |
-| `lastDifficulty` | 上一局難度（`'easy'`/`'normal'`） |
-| `tutorialCompleted` | 移動教學是否完成 |
-| `tutorialCombatDone` | 戰鬥教學是否完成 |
-| `hasPlayedBefore` | 是否曾遊玩過（控制初次進入流程） |
-| `mutationSkills` | 變異技能樹等級與技能點（跨局永久，v0.0.69.0） |
-| `chapter2Unlocked` | 故事書第二章是否解鎖（普通難度通關後 = `'true'`） |
-| `clearCount_easy` / `clearCount_normal` / `clearCount_hard` | 各難度通關次數 |
-| `clearCount_char_*` | 各角色通關次數（v0.0.69.0） |
-| `killCount_bear` / `killCount_shark` / `killCount_scorpion` / `killCount_hunter` | Boss 擊殺次數 |
-| `hunterSlayerUnlocked` | 是否曾擊殺黑色獵人（`'true'`，v0.1.0.0） |
-| `zoomResetVersion` | 鏡頭縮放預設值重置版本 |
-| `lastSeenPatchVersion` | 已讀取的最新版本公告 |
-| `readPatchNotes` | 已逐版本點開的公告 `{ [version]: true }`，用於逐版本紅點清除（v0.1.25.2） |
-| `chatPosition` / `chatSettings` | 聊天室位置與設定 |
-| `achievements` | 已解鎖成就 `{ [id]: { unlockedAt: ISO string } }` |
-| `readAchievements` | 已點開確認的成就 `{ [id]: true }`，首頁/成就格紅點使用（v0.1.25.2） |
-| `firstPlayDate` | 首次遊玩日期（ISO string，initializeGame 時寫入一次） |
-| `activeTitle` | 目前啟用的稱號字串（由 achievements.js 讀寫） |
-| `winStreak` | 連勝局數（死亡時歸零，勝利時+1，由 achievementTriggers 維護） |
-| `killTotal` | 累積擊殺普通怪數（由 damage.js 遞增） |
-| `killKillerTotal` | 累積擊殺殺手化怪數（由 damage.js 遞增） |
-| `killGiantTotal` | 累積擊殺巨人數（由 damage.js 遞增） |
+| `saveVersion` | ç›®å‰ `"1.1"`ï¼ˆä¸ä¸€è‡´æ™‚æ¸…é™¤æŠ€èƒ½/å™¨å®˜å­˜æª”ï¼‰ |
+| `lastCharacter` | ä¸Šä¸€å±€é¸æ“‡è§’è‰² ID |
+| `mutationData` | çªè®Šå™¨å®˜ç­‰ç´šå’Œé»žæ•¸ï¼ˆæ°¸ä¹…ä¿ç•™ï¼Œä¸å— `saveVersion` æ¸…é™¤ï¼‰ |
+| `lastDifficulty` | ä¸Šä¸€å±€é›£åº¦ï¼ˆ`'easy'`/`'normal'`ï¼‰ |
+| `tutorialCompleted` | ç§»å‹•æ•™å­¸æ˜¯å¦å®Œæˆ |
+| `tutorialCombatDone` | æˆ°é¬¥æ•™å­¸æ˜¯å¦å®Œæˆ |
+| `hasPlayedBefore` | æ˜¯å¦æ›¾éŠçŽ©éŽï¼ˆæŽ§åˆ¶åˆæ¬¡é€²å…¥æµç¨‹ï¼‰ |
+| `mutationSkills` | è®Šç•°æŠ€èƒ½æ¨¹ç­‰ç´šèˆ‡æŠ€èƒ½é»žï¼ˆè·¨å±€æ°¸ä¹…ï¼Œv0.0.69.0ï¼‰ |
+| `chapter2Unlocked` | æ•…äº‹æ›¸ç¬¬äºŒç« æ˜¯å¦è§£éŽ–ï¼ˆæ™®é€šé›£åº¦é€šé—œå¾Œ = `'true'`ï¼‰ |
+| `clearCount_easy` / `clearCount_normal` / `clearCount_hard` | å„é›£åº¦é€šé—œæ¬¡æ•¸ |
+| `clearCount_char_*` | å„è§’è‰²é€šé—œæ¬¡æ•¸ï¼ˆv0.0.69.0ï¼‰ |
+| `killCount_bear` / `killCount_shark` / `killCount_scorpion` / `killCount_hunter` | Boss æ“Šæ®ºæ¬¡æ•¸ |
+| `hunterSlayerUnlocked` | æ˜¯å¦æ›¾æ“Šæ®ºé»‘è‰²çµäººï¼ˆ`'true'`ï¼Œv0.1.0.0ï¼‰ |
+| `zoomResetVersion` | é¡é ­ç¸®æ”¾é è¨­å€¼é‡ç½®ç‰ˆæœ¬ |
+| `lastSeenPatchVersion` | å·²è®€å–çš„æœ€æ–°ç‰ˆæœ¬å…¬å‘Š |
+| `readPatchNotes` | å·²é€ç‰ˆæœ¬é»žé–‹çš„å…¬å‘Š `{ [version]: true }`ï¼Œç”¨æ–¼é€ç‰ˆæœ¬ç´…é»žæ¸…é™¤ï¼ˆv0.1.25.2ï¼‰ |
+| `chatPosition` / `chatSettings` | èŠå¤©å®¤ä½ç½®èˆ‡è¨­å®š |
+| `achievements` | å·²è§£éŽ–æˆå°± `{ [id]: { unlockedAt: ISO string } }` |
+| `readAchievements` | å·²é»žé–‹ç¢ºèªçš„æˆå°± `{ [id]: true }`ï¼Œé¦–é /æˆå°±æ ¼ç´…é»žä½¿ç”¨ï¼ˆv0.1.25.2ï¼‰ |
+| `firstPlayDate` | é¦–æ¬¡éŠçŽ©æ—¥æœŸï¼ˆISO stringï¼ŒinitializeGame æ™‚å¯«å…¥ä¸€æ¬¡ï¼‰ |
+| `activeTitle` | ç›®å‰å•Ÿç”¨çš„ç¨±è™Ÿå­—ä¸²ï¼ˆç”± achievements.js è®€å¯«ï¼‰ |
+| `winStreak` | é€£å‹å±€æ•¸ï¼ˆæ­»äº¡æ™‚æ­¸é›¶ï¼Œå‹åˆ©æ™‚+1ï¼Œç”± achievementTriggers ç¶­è­·ï¼‰ |
+| `killTotal` | ç´¯ç©æ“Šæ®ºæ™®é€šæ€ªæ•¸ï¼ˆç”± damage.js éžå¢žï¼‰ |
+| `killKillerTotal` | ç´¯ç©æ“Šæ®ºæ®ºæ‰‹åŒ–æ€ªæ•¸ï¼ˆç”± damage.js éžå¢žï¼‰ |
+| `killGiantTotal` | ç´¯ç©æ“Šæ®ºå·¨äººæ•¸ï¼ˆç”± damage.js éžå¢žï¼‰ |
 
 ---
 
-## 關鍵技術陷阱
-| 陷阱 | 規則 |
+## é—œéµæŠ€è¡“é™·é˜±
+| é™·é˜± | è¦å‰‡ |
 |------|------|
-| `MOBILE_GAME_SCALE` | deprecated（Letterbox 取代），保留以防外部引用，值仍為 0.6 |
-| `realPlayTime` | 單位是毫秒，上傳排行榜用 `Math.floor(realPlayTime / 1000)` 轉秒 |
-| `resumePlayTimer()` | 無條件啟動 |
-| `pausePlayTimer()` | 有檢查 `_playTimerStart !== null` 才暫停 |
-| `autoAttack` | 任何版本更新都不重置，不受 `saveVersion` 控制 |
-| 毒傷 tick | 用 `c.lastPoisonTick += 1000`，不是 `= now`，避免累積誤差 |
-| 器官選擇順序 | `showHiddenOrganSelection()` 必須在 `addXP()` 之前呼叫，否則界面疊層 |
-| organSelectionActive | `gameState.organSelectionActive = false` 必須在 `showOrganSelection()` 之前設定 |
-| 開發者模式 | 暗號 `77777778`，使用後 `gameState.devModeUsed = true`，禁止上傳排行榜 |
-| CC 效果新增 | 必須同步更新 4 個位置：`updateNeutralCreatures`、`updateHostileCreatures`、`updateEliteCreature`（elite.js）、`updateBoss`（boss.js） |
-| 數值修改 | 只能在 `config/` 資料夾修改，不要在 systems/ 寫死數值 |
-| gameLoop | 絕對不能出現字面上的 `\n` 字符 |
-| 版本號格式 | 四段 `v0.x.y.z`；排行榜 `version_order` 取第二段 x，同一個 x 的記錄互相競爭（x 升版時排行榜重置） |
-| 容器 `innerHTML = ''` 重建會讓捲動歸零 | 任何左側目錄/列表類 UI 若每次互動都整個清空重建容器，`scrollTop` 會被歸零造成畫面回彈；正確做法是重繪前用 `_captureSidebarScroll()` 存 `scrollTop`，重繪後用 `_restoreSidebarScroll()` 還原（見 `systems/ui.js` 圖鑑三分頁，v0.1.25.7）；同類面板更好的作法是面板骨架只建立一次，互動時呼叫內部 `refresh()` 就地更新（見 `systems/mutation.js` `showMutationPanel()`） |
+| `MOBILE_GAME_SCALE` | deprecatedï¼ˆLetterbox å–ä»£ï¼‰ï¼Œä¿ç•™ä»¥é˜²å¤–éƒ¨å¼•ç”¨ï¼Œå€¼ä»ç‚º 0.6 |
+| `realPlayTime` | å–®ä½æ˜¯æ¯«ç§’ï¼Œä¸Šå‚³æŽ’è¡Œæ¦œç”¨ `Math.floor(realPlayTime / 1000)` è½‰ç§’ |
+| `resumePlayTimer()` | ç„¡æ¢ä»¶å•Ÿå‹• |
+| `pausePlayTimer()` | æœ‰æª¢æŸ¥ `_playTimerStart !== null` æ‰æš«åœ |
+| `autoAttack` | ä»»ä½•ç‰ˆæœ¬æ›´æ–°éƒ½ä¸é‡ç½®ï¼Œä¸å— `saveVersion` æŽ§åˆ¶ |
+| æ¯’å‚· tick | ç”¨ `c.lastPoisonTick += 1000`ï¼Œä¸æ˜¯ `= now`ï¼Œé¿å…ç´¯ç©èª¤å·® |
+| å™¨å®˜é¸æ“‡é †åº | `showHiddenOrganSelection()` å¿…é ˆåœ¨ `addXP()` ä¹‹å‰å‘¼å«ï¼Œå¦å‰‡ç•Œé¢ç–Šå±¤ |
+| organSelectionActive | `gameState.organSelectionActive = false` å¿…é ˆåœ¨ `showOrganSelection()` ä¹‹å‰è¨­å®š |
+| é–‹ç™¼è€…æ¨¡å¼ | æš—è™Ÿ `77777778`ï¼Œä½¿ç”¨å¾Œ `gameState.devModeUsed = true`ï¼Œç¦æ­¢ä¸Šå‚³æŽ’è¡Œæ¦œ |
+| CC æ•ˆæžœæ–°å¢ž | å¿…é ˆåŒæ­¥æ›´æ–° 4 å€‹ä½ç½®ï¼š`updateNeutralCreatures`ã€`updateHostileCreatures`ã€`updateEliteCreature`ï¼ˆelite.jsï¼‰ã€`updateBoss`ï¼ˆboss.jsï¼‰ |
+| æ•¸å€¼ä¿®æ”¹ | åªèƒ½åœ¨ `config/` è³‡æ–™å¤¾ä¿®æ”¹ï¼Œä¸è¦åœ¨ systems/ å¯«æ­»æ•¸å€¼ |
+| gameLoop | çµ•å°ä¸èƒ½å‡ºç¾å­—é¢ä¸Šçš„ `\n` å­—ç¬¦ |
+| ç‰ˆæœ¬è™Ÿæ ¼å¼ | å››æ®µ `v0.x.y.z`ï¼›æŽ’è¡Œæ¦œ `version_order` å–ç¬¬äºŒæ®µ xï¼ŒåŒä¸€å€‹ x çš„è¨˜éŒ„äº’ç›¸ç«¶çˆ­ï¼ˆx å‡ç‰ˆæ™‚æŽ’è¡Œæ¦œé‡ç½®ï¼‰ |
+| å®¹å™¨ `innerHTML = ''` é‡å»ºæœƒè®“æ²å‹•æ­¸é›¶ | ä»»ä½•å·¦å´ç›®éŒ„/åˆ—è¡¨é¡ž UI è‹¥æ¯æ¬¡äº’å‹•éƒ½æ•´å€‹æ¸…ç©ºé‡å»ºå®¹å™¨ï¼Œ`scrollTop` æœƒè¢«æ­¸é›¶é€ æˆç•«é¢å›žå½ˆï¼›æ­£ç¢ºåšæ³•æ˜¯é‡ç¹ªå‰ç”¨ `_captureSidebarScroll()` å­˜ `scrollTop`ï¼Œé‡ç¹ªå¾Œç”¨ `_restoreSidebarScroll()` é‚„åŽŸï¼ˆè¦‹ `systems/ui.js` åœ–é‘‘ä¸‰åˆ†é ï¼Œv0.1.25.7ï¼‰ï¼›åŒé¡žé¢æ¿æ›´å¥½çš„ä½œæ³•æ˜¯é¢æ¿éª¨æž¶åªå»ºç«‹ä¸€æ¬¡ï¼Œäº’å‹•æ™‚å‘¼å«å…§éƒ¨ `refresh()` å°±åœ°æ›´æ–°ï¼ˆè¦‹ `systems/mutation.js` `showMutationPanel()`ï¼‰ |
+

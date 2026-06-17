@@ -1,14 +1,14 @@
-// =============================================================
-// 精英怪系統 - initEliteOrder / spawnEliteCreature / updateEliteCreature
+﻿// =============================================================
+// ç²¾è‹±æ€ªç³»çµ± - initEliteOrder / spawnEliteCreature / updateEliteCreature
 //              drawEliteCreature / drawEliteArrow
-// 支援：標準精英怪 / 三犬（dogElites）/ 三隼（hardElites）
+// æ”¯æ´ï¼šæ¨™æº–ç²¾è‹±æ€ª / ä¸‰çŠ¬ï¼ˆdogElitesï¼‰/ ä¸‰éš¼ï¼ˆhardElitesï¼‰
 // =============================================================
 
-// 靜音獵隊精英怪顯示資料（名稱/顏色/光環樣式）
+// éœéŸ³çµéšŠç²¾è‹±æ€ªé¡¯ç¤ºè³‡æ–™ï¼ˆåç¨±/é¡è‰²/å…‰ç’°æ¨£å¼ï¼‰
 import { gameState, ctx } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H } from './map.js';
 import { worldToScreen, wrappedDelta } from './camera.js';
-import { ELITE_CONFIG, HUNTER_ELITE_REWARDS, HUNTER_ELITE_POISON_RESIST } from '../config/creatures.js';
+import { CREATURE_AI_CONFIG, ELITE_CONFIG, HUNTER_ELITE_REWARDS, HUNTER_ELITE_POISON_RESIST } from '../config/creatures.js';
 import { HARD_ELITE_CONFIG } from '../config/gameConfig.js';
 import { AudioManager } from './audio.js';
 import { moveCreature } from './spawning.js';
@@ -23,16 +23,137 @@ import {
 } from '../storage/index.js';
 
 const _HUNTER_ELITE_META = {
-    specterDog:   { label: '幽靈犬',   color: '#3949AB', glowColor: '#5C6BC0', ring: 'pulse'  },
-    shadowDog:    { label: '暗影犬',   color: '#212121', glowColor: '#FF7043', ring: 'rotate' },
-    venomDog:     { label: '毒霧犬',   color: '#2E7D32', glowColor: '#66BB6A', ring: 'fog'    },
-    specterFalcon:{ label: '幽靈隼',   color: '#1A237E', glowColor: '#5C6BC0', ring: 'pulse'  },
-    shadowFalcon: { label: '暗影隼',   color: '#212121', glowColor: '#FF7043', ring: 'rotate' },
-    venomFalcon:  { label: '毒霧隼',   color: '#1B5E20', glowColor: '#66BB6A', ring: 'fog'    },
+    specterDog:   { label: 'å¹½éˆçŠ¬',   color: '#3949AB', glowColor: '#5C6BC0', ring: 'pulse'  },
+    shadowDog:    { label: 'æš—å½±çŠ¬',   color: '#212121', glowColor: '#FF7043', ring: 'rotate' },
+    venomDog:     { label: 'æ¯’éœ§çŠ¬',   color: '#2E7D32', glowColor: '#66BB6A', ring: 'fog'    },
+    specterFalcon:{ label: 'å¹½éˆéš¼',   color: '#1A237E', glowColor: '#5C6BC0', ring: 'pulse'  },
+    shadowFalcon: { label: 'æš—å½±éš¼',   color: '#212121', glowColor: '#FF7043', ring: 'rotate' },
+    venomFalcon:  { label: 'æ¯’éœ§éš¼',   color: '#1B5E20', glowColor: '#66BB6A', ring: 'fog'    },
 };
 
-const _HUNTER_ELITE_STARS = ['★', '★★', '★★★'];
+const _HUNTER_ELITE_STARS = ['â˜…', 'â˜…â˜…', 'â˜…â˜…â˜…'];
 
+
+function _eliteDogMeleeProfile(elite) {
+    const dogProfiles = CREATURE_AI_CONFIG.meleeAttack.eliteDog || {};
+    return dogProfiles[elite.eliteType] || CREATURE_AI_CONFIG.meleeAttack.default;
+}
+
+function _resetEliteMeleeAttack(elite) {
+    elite._meleeState = null;
+    elite._meleeTarget = null;
+    elite._meleeWindupEnd = 0;
+    elite._meleeActiveEnd = 0;
+    elite._meleeRecoveryEnd = 0;
+    elite._meleeHasHit = false;
+    elite._meleeFlashUntil = 0;
+}
+
+function _eliteDogMeleeRange(elite, target) {
+    const bodyRange = (elite.radius || 8) + (target?.radius || 8) + CREATURE_AI_CONFIG.meleeAttack.rangeBuffer;
+    return Math.max(elite.attackRange || 0, bodyRange);
+}
+
+function _trackEliteMeleeTargetDuringWindup(elite, target, now) {
+    if (elite._meleeState !== 'preparing' || !target) return;
+    const { dx, dy } = wrappedDelta(elite.x, elite.y, target.x, target.y);
+    const angle = Math.atan2(dy, dx);
+    let speed = _effSpeed(elite) * CREATURE_AI_CONFIG.meleeAttack.windupMoveMult;
+    if (elite._slowUntil && now < elite._slowUntil) speed *= (elite._slowMult || 1.0);
+    moveCreature(elite, elite.x + Math.cos(angle) * speed, elite.y + Math.sin(angle) * speed);
+}
+
+function _tryEliteDogMeleeAttack(elite, target, distance, attackRange, now, onHit) {
+    const profile = _eliteDogMeleeProfile(elite);
+    const hitGraceRange = attackRange + CREATURE_AI_CONFIG.meleeAttack.hitGraceBuffer;
+
+    if (distance > hitGraceRange) {
+        if (elite._meleeState === 'preparing' || elite._meleeState === 'striking') {
+            _resetEliteMeleeAttack(elite);
+        }
+        return false;
+    }
+
+    if (!elite._meleeState) {
+        if (distance > attackRange) return false;
+        if (now - (elite.attackCooldown || 0) < (elite.attackCooldownMs || 0)) return true;
+        elite._meleeState = 'preparing';
+        elite._meleeTarget = target;
+        elite._meleeWindupEnd = now + profile.windupMs;
+        elite._meleeActiveEnd = elite._meleeWindupEnd + profile.activeMs;
+        elite._meleeRecoveryEnd = elite._meleeActiveEnd + profile.recoveryMs;
+        elite._meleeHasHit = false;
+        elite.attackCooldown = now;
+        return true;
+    }
+
+    if (elite._meleeState === 'preparing' && now >= elite._meleeWindupEnd) {
+        elite._meleeState = 'striking';
+    }
+
+    if (elite._meleeState === 'striking') {
+        if (now >= elite._meleeActiveEnd) {
+            if (!elite._meleeHasHit && target && distance <= hitGraceRange) {
+                elite._meleeHasHit = true;
+                onHit();
+            }
+            elite._meleeFlashUntil = now + CREATURE_AI_CONFIG.meleeAttack.strikeFlashMs;
+            elite._meleeState = 'recovering';
+        }
+        return true;
+    }
+
+    if (elite._meleeState === 'recovering') {
+        if (now >= elite._meleeRecoveryEnd) {
+            _resetEliteMeleeAttack(elite);
+        }
+        return true;
+    }
+
+    return true;
+}
+
+function _drawEliteMeleeTelegraph(elite, sx, sy) {
+    const now = Date.now();
+    if (elite._meleeState === 'recovering' && now >= (elite._meleeRecoveryEnd || 0)) {
+        _resetEliteMeleeAttack(elite);
+    }
+    if (!elite._meleeState && !(elite._meleeFlashUntil && now < elite._meleeFlashUntil)) return;
+    const zoom = gameState.cameraZoom || 1;
+    const r = (elite.radius + 10) * zoom;
+    let color = 'rgba(255,80,60,0.75)';
+    let lineWidth = 3;
+    let scale = 1;
+
+    if (elite._meleeFlashUntil && now < elite._meleeFlashUntil) {
+        color = 'rgba(255,255,255,0.95)';
+        lineWidth = 5;
+        scale = 1.28;
+    } else if (elite._meleeState === 'preparing') {
+        const total = Math.max(1, elite._meleeWindupEnd - (elite.attackCooldown || 0));
+        const left = Math.max(0, elite._meleeWindupEnd - now);
+        scale = 0.8 + (1 - left / total) * 0.35;
+    } else if (elite._meleeState === 'striking') {
+        const total = Math.max(1, elite._meleeActiveEnd - elite._meleeWindupEnd);
+        const elapsed = Math.max(0, total - Math.max(0, elite._meleeActiveEnd - now));
+        const progress = Math.min(1, elapsed / total);
+        color = 'rgba(255,255,255,0.82)';
+        lineWidth = 3 + progress * 2;
+        scale = 0.9 + progress * 0.3;
+    } else if (elite._meleeState === 'recovering') {
+        color = 'rgba(180,180,180,0.45)';
+        lineWidth = 2;
+        scale = 1.0;
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(sx, sy, r * scale, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+    ctx.restore();
+}
 
 export function initEliteOrder() {
     const seed = gameState.mapSeed || Math.random() * 65536;
@@ -82,12 +203,12 @@ function _spawnHunterElite(nightNum, eliteType) {
     const meta = _HUNTER_ELITE_META[eliteType];
     const star = _HUNTER_ELITE_STARS[nightNum - 1] || _HUNTER_ELITE_STARS[0];
 
-    // 地圖難度倍率（三難度統一套用，不分困難/非困難）
+    // åœ°åœ–é›£åº¦å€çŽ‡ï¼ˆä¸‰é›£åº¦çµ±ä¸€å¥—ç”¨ï¼Œä¸åˆ†å›°é›£/éžå›°é›£ï¼‰
     const strength  = (map && map.creatureStrength && map.creatureStrength.hostile) || {};
     const hpMult     = strength.hpMultiplier    || 1;
     const speedMult  = strength.speedMultiplier || 1;
 
-    // 隼族（Falcon）強度差異化：HP ×0.7、傷害 ×1.3；犬族維持 ×1（不影響速度）
+    // éš¼æ—ï¼ˆFalconï¼‰å¼·åº¦å·®ç•°åŒ–ï¼šHP Ã—0.7ã€å‚·å®³ Ã—1.3ï¼›çŠ¬æ—ç¶­æŒ Ã—1ï¼ˆä¸å½±éŸ¿é€Ÿåº¦ï¼‰
     const speciesHpMult  = eliteType.includes('Falcon') ? 0.7 : 1;
     const speciesDmgMult = eliteType.includes('Falcon') ? 1.3 : 1;
 
@@ -113,6 +234,7 @@ function _spawnHunterElite(nightNum, eliteType) {
                     eliteType === 'venomFalcon'   ? 1050 : 1000,
         attackRange: cfg.type === 'ranged' ? (cfg.range || 900) : 28,
         attackCooldown: 0,
+        attackCooldownMs: cfg.attackCooldown || 1200,
         state: 'patrolling',
         poisonResist: HUNTER_ELITE_POISON_RESIST,
         wanderTarget: null, lastWanderTime: Date.now(),
@@ -137,13 +259,13 @@ function _spawnHunterElite(nightNum, eliteType) {
     };
     gameState.eliteJustKilled = false;
 
-    // 出場廣播（含物種顏色）
+    // å‡ºå ´å»£æ’­ï¼ˆå«ç‰©ç¨®é¡è‰²ï¼‰
     const _sColor = eliteType.includes('specter') ? '#6677FF' :
                     eliteType.includes('shadow')  ? '#FF8844' :
                     eliteType.includes('venom')   ? '#44CC77' : 'white';
-    gameState.dayNightMessage.text        = '⚠️ 靜音獵隊成員出現：' + meta.label;
-    gameState.dayNightMessage.prefixText  = '靜音獵隊成員出現：';
-    gameState.dayNightMessage.speciesText = '⚠️ ' + meta.label;
+    gameState.dayNightMessage.text        = 'âš ï¸ éœéŸ³çµéšŠæˆå“¡å‡ºç¾ï¼š' + meta.label;
+    gameState.dayNightMessage.prefixText  = 'éœéŸ³çµéšŠæˆå“¡å‡ºç¾ï¼š';
+    gameState.dayNightMessage.speciesText = 'âš ï¸ ' + meta.label;
     gameState.dayNightMessage.speciesColor = _sColor;
     gameState.dayNightMessage.timer = Date.now();
     const appearKey = eliteType + 'Appear';
@@ -154,18 +276,18 @@ function _spawnHunterElite(nightNum, eliteType) {
 export function spawnEliteCreature(nightNum) {
     const features = gameState.currentMap && gameState.currentMap.features;
 
-    // 困難地圖：靜音獵隊（隼+犬）
+    // å›°é›£åœ°åœ–ï¼šéœéŸ³çµéšŠï¼ˆéš¼+çŠ¬ï¼‰
     if (features && features.hardElites) {
         _spawnHunterElite(nightNum, _getHunterEliteType(nightNum));
         return;
     }
-    // 普通/簡單地圖：三犬
+    // æ™®é€š/ç°¡å–®åœ°åœ–ï¼šä¸‰çŠ¬
     if (features && features.dogElites) {
         _spawnHunterElite(nightNum, _getHunterEliteType(nightNum));
         return;
     }
 
-    // 標準精英怪
+    // æ¨™æº–ç²¾è‹±æ€ª
     const tierIndex = nightNum - 1;
     const tier = ELITE_CONFIG.nights[tierIndex];
     const hp = Math.round(ELITE_CONFIG.base.hp * tier.hpMult);
@@ -195,7 +317,7 @@ export function spawnEliteCreature(nightNum) {
     gameState.dayNightMessage.timer = Date.now();
 }
 
-// ── Hunter 精英怪死亡獎勵（不含 addXP，xp 由呼叫端決定時機）
+// â”€â”€ Hunter ç²¾è‹±æ€ªæ­»äº¡çŽå‹µï¼ˆä¸å« addXPï¼Œxp ç”±å‘¼å«ç«¯æ±ºå®šæ™‚æ©Ÿï¼‰
 export function _handleHunterEliteKill(elite) {
     const difficulty = (gameState.currentMap && gameState.currentMap.difficulty) || 'easy';
     const table   = HUNTER_ELITE_REWARDS[difficulty] || HUNTER_ELITE_REWARDS.easy;
@@ -209,14 +331,14 @@ export function _handleHunterEliteKill(elite) {
     }
     const meta = _HUNTER_ELITE_META[elite.eliteType] || {};
     showFloatingText(elite.x, elite.y - 30,
-        '💀 ' + (elite.label || '') + ' 已倒！', meta.glowColor || '#FFD700', 16);
+        'ðŸ’€ ' + (elite.label || '') + ' å·²å€’ï¼', meta.glowColor || '#FFD700', 16);
     AudioManager.play(elite.eliteType.includes('Dog') ? 'dogDeath' :
         elite.eliteType === 'specterFalcon' ? 'specterFalconDeath' :
         elite.eliteType === 'shadowFalcon'  ? 'shadowFalconDeath'  : 'venomFalconDeath');
     return rewards.xp;
 }
 
-// ── 射程精英怪發射子彈（幽靈隼 / 暗影隼）
+// â”€â”€ å°„ç¨‹ç²¾è‹±æ€ªç™¼å°„å­å½ˆï¼ˆå¹½éˆéš¼ / æš—å½±éš¼ï¼‰
 function _fireEliteFalconProjectile(elite, target, pellets, maxRange, speed) {
     const { dx, dy } = wrappedDelta(elite.x, elite.y, target.x, target.y);
     const baseAngle = Math.atan2(dy, dx);
@@ -236,7 +358,7 @@ function _fireEliteFalconProjectile(elite, target, pellets, maxRange, speed) {
     elite._postShotTimer  = Date.now() + 300;
 }
 
-// ── 毒霧隼發射毒牆三連炮
+// â”€â”€ æ¯’éœ§éš¼ç™¼å°„æ¯’ç‰†ä¸‰é€£ç‚®
 function _fireVenomFalconShot(elite, p) {
     const cfg = HARD_ELITE_CONFIG.venomFalcon;
     if (elite._venomPuddleCount >= (cfg.maxPuddles || 6)) {
@@ -251,7 +373,7 @@ function _fireVenomFalconShot(elite, p) {
     const sideR     = cfg.puddleSideRadius   || 200;
     const perpAngle = baseAngle + Math.PI / 2;
 
-    // 三炮落點：以玩家為中心，垂直於隼→玩家方向的封路牆
+    // ä¸‰ç‚®è½é»žï¼šä»¥çŽ©å®¶ç‚ºä¸­å¿ƒï¼Œåž‚ç›´æ–¼éš¼â†’çŽ©å®¶æ–¹å‘çš„å°è·¯ç‰†
     const midX  = p.x + Math.cos(baseAngle) * offset;
     const midY  = p.y + Math.sin(baseAngle) * offset;
     const leftX = p.x + Math.cos(perpAngle) * sideR;
@@ -268,14 +390,14 @@ function _fireVenomFalconShot(elite, p) {
         { fireAt: now, firePos, landAt, landPos: { x: rightX,y: rightY} }
     );
 
-    // 自身 CD + 500ms 自懲罰；另一技能 +200ms 共用懲罰
+    // è‡ªèº« CD + 500ms è‡ªæ‡²ç½°ï¼›å¦ä¸€æŠ€èƒ½ +200ms å…±ç”¨æ‡²ç½°
     elite._wallCooldown  = now + (cfg.selfCdBonus || 500);
     elite._fangCooldown  = Math.max(elite._fangCooldown || 0, now + (cfg.sharedCdBonus || 200));
     elite._postShotTimer = now + 500;
     AudioManager.play('venomFalconLaunch');
 }
 
-// ── 毒霧隼發射毒牙（三根回旋鏢）
+// â”€â”€ æ¯’éœ§éš¼ç™¼å°„æ¯’ç‰™ï¼ˆä¸‰æ ¹å›žæ—‹é¢ï¼‰
 function _fireVenomFangShot(elite, p) {
     const cfg = HARD_ELITE_CONFIG.venomFalcon;
     const { dx, dy } = wrappedDelta(elite.x, elite.y, p.x, p.y);
@@ -300,7 +422,7 @@ function _fireVenomFangShot(elite, p) {
         });
     }
     const now = Date.now();
-    // 自身 CD + 500ms 自懲罰；另一技能 +200ms 共用懲罰
+    // è‡ªèº« CD + 500ms è‡ªæ‡²ç½°ï¼›å¦ä¸€æŠ€èƒ½ +200ms å…±ç”¨æ‡²ç½°
     elite._fangCooldown  = now + (cfg.selfCdBonus || 500);
     elite._wallCooldown  = Math.max(elite._wallCooldown || 0, now + (cfg.sharedCdBonus || 200));
     elite._postShotTimer = now + 300;
@@ -341,10 +463,10 @@ export function updateEliteCreature() {
     const p   = gameState.player;
     if (elite.stunnedUntil && now < elite.stunnedUntil) return;
 
-    // 死亡判斷（HP 被外部傷害清零後由 handleEliteKill 處理，此處僅保險）
+    // æ­»äº¡åˆ¤æ–·ï¼ˆHP è¢«å¤–éƒ¨å‚·å®³æ¸…é›¶å¾Œç”± handleEliteKill è™•ç†ï¼Œæ­¤è™•åƒ…ä¿éšªï¼‰
     if (elite.isHunterElite) {
         _updateEliteVenomPuddle(elite);
-        // venomFalcon puddle 傷害 tick + 過期清理（獨立路徑，不依賴 boss.js desert 區塊）
+        // venomFalcon puddle å‚·å®³ tick + éŽæœŸæ¸…ç†ï¼ˆç¨ç«‹è·¯å¾‘ï¼Œä¸ä¾è³´ boss.js desert å€å¡Šï¼‰
         if (gameState.venomPuddles) {
             for (let i = gameState.venomPuddles.length - 1; i >= 0; i--) {
                 const puddle = gameState.venomPuddles[i];
@@ -378,7 +500,7 @@ export function updateEliteCreature() {
         elite.state = 'patrolling';
     }
 
-    // 精英怪回血（普通/簡單地圖 eliteRegen 開啟）
+    // ç²¾è‹±æ€ªå›žè¡€ï¼ˆæ™®é€š/ç°¡å–®åœ°åœ– eliteRegen é–‹å•Ÿï¼‰
     if (gameState.currentMap && gameState.currentMap.features && gameState.currentMap.features.eliteRegen) {
         const tierIdx = elite.tierIndex || 0;
         const regenRate = [0.01, 0.02, 0.03][tierIdx] || 0.01;
@@ -388,9 +510,9 @@ export function updateEliteCreature() {
         }
     }
 
-    // 開槍後停頓（射程精英怪）
+    // é–‹æ§å¾Œåœé “ï¼ˆå°„ç¨‹ç²¾è‹±æ€ªï¼‰
     if (elite.isHunterElite && elite._postShotTimer && now < elite._postShotTimer) {
-        // 漫遊
+        // æ¼«éŠ
         if (!elite.wanderTarget || now - elite.lastWanderTime >= 2000) {
             elite.wanderTarget    = { x: Math.random() * MAP_WIDTH, y: Math.random() * MAP_HEIGHT };
             elite.lastWanderTime  = now;
@@ -433,30 +555,33 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
     const cfg = HARD_ELITE_CONFIG[elite.eliteType];
     if (!cfg) return;
 
-    // ── 犬族（近戰）
+    // â”€â”€ çŠ¬æ—ï¼ˆè¿‘æˆ°ï¼‰
     if (cfg.type === 'melee') {
-        if (dist <= elite.attackRange) {
-            if (now - elite.attackCooldown >= cfg.attackCooldown) {
+        const meleeRange = _eliteDogMeleeRange(elite, p);
+        if (dist <= meleeRange) {
+            _tryEliteDogMeleeAttack(elite, p, dist, meleeRange, now, () => {
                 applyDamageToPlayer(elite.damage, elite);
-                elite.attackCooldown = now;
                 AudioManager.play('dogAttack');
-                // 毒霧犬附帶毒效果（poisonStacks 疊加）
                 if (elite.eliteType === 'venomDog') {
                     AudioManager.play('venomDogBite');
                     const player = gameState.player;
                     if (!player.poisonStacks) player.poisonStacks = [];
                     player.poisonStacks.push({ dmg: cfg.poisonDps || 8, endTime: now + (cfg.poisonDuration || 3000) });
                 }
-            }
+            });
+            _trackEliteMeleeTargetDuringWindup(elite, p, now);
         } else {
+            if (_tryEliteDogMeleeAttack(elite, p, dist, meleeRange, now, () => {})) {
+                return;
+            }
             const angle = Math.atan2(dy, dx);
             moveCreature(elite, elite.x + Math.cos(angle) * _effSpeed(elite), elite.y + Math.sin(angle) * _effSpeed(elite));
         }
         return;
     }
 
-    // ── 隼族（遠程）
-    // 已在蓄力中（_aimTarget 存在）時允許跨越 attackRange 完成射擊，避免 falcon 凍結
+    // â”€â”€ éš¼æ—ï¼ˆé ç¨‹ï¼‰
+    // å·²åœ¨è“„åŠ›ä¸­ï¼ˆ_aimTarget å­˜åœ¨ï¼‰æ™‚å…è¨±è·¨è¶Š attackRange å®Œæˆå°„æ“Šï¼Œé¿å… falcon å‡çµ
     if (dist < elite.attackRange || elite._aimTarget) {
         if (elite.eliteType === 'specterFalcon') {
             if (now - elite.attackCooldown >= cfg.attackCooldown) {
@@ -466,7 +591,7 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
                     AudioManager.play('specterFalconAim');
                 }
             }
-            // 蓄力期間每幀追蹤玩家即時位置
+            // è“„åŠ›æœŸé–“æ¯å¹€è¿½è¹¤çŽ©å®¶å³æ™‚ä½ç½®
             if (elite._aimTarget && now < elite._aimUntil) {
                 elite._aimTarget.x = p.x;
                 elite._aimTarget.y = p.y;
@@ -483,7 +608,7 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
                 AudioManager.play('shadowFalconFire');
             }
         } else if (elite.eliteType === 'venomFalcon') {
-            // 雙 CD 系統：毒牆 3000+500ms / 毒牙 2500+500ms；同時 ready 毒牆優先
+            // é›™ CD ç³»çµ±ï¼šæ¯’ç‰† 3000+500ms / æ¯’ç‰™ 2500+500msï¼›åŒæ™‚ ready æ¯’ç‰†å„ªå…ˆ
             const wallReady = now - (elite._wallCooldown || 0) >= cfg.attackCooldown;
             const fangReady = now - (elite._fangCooldown || 0) >= (cfg.fangCooldown || 2500);
             if (!elite._wallUsed) {
@@ -492,16 +617,16 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
                     elite._wallUsed = true;
                 }
             } else if (wallReady) {
-                // 毒牆優先（含兩技同時 ready 的情況）
+                // æ¯’ç‰†å„ªå…ˆï¼ˆå«å…©æŠ€åŒæ™‚ ready çš„æƒ…æ³ï¼‰
                 _fireVenomFalconShot(elite, p);
             } else if (fangReady) {
                 _fireVenomFangShot(elite, p);
             }
         }
     }
-    // 幽靈隼蓄力中靜止不動（設計：0.3 秒站立蓄力，不打斷瞄準）
+    // å¹½éˆéš¼è“„åŠ›ä¸­éœæ­¢ä¸å‹•ï¼ˆè¨­è¨ˆï¼š0.3 ç§’ç«™ç«‹è“„åŠ›ï¼Œä¸æ‰“æ–·çž„æº–ï¼‰
     if (elite.eliteType === 'specterFalcon' && elite._aimTarget) return;
-    // 保持射程內，後退保持距離
+    // ä¿æŒå°„ç¨‹å…§ï¼Œå¾Œé€€ä¿æŒè·é›¢
     const angle = Math.atan2(dy, dx);
     if (dist < elite.attackRange * 0.6) {
         moveCreature(elite, elite.x - Math.cos(angle) * _effSpeed(elite) * 0.5, elite.y - Math.sin(angle) * _effSpeed(elite) * 0.5);
@@ -522,8 +647,11 @@ export function drawEliteCreature() {
 
     if (elite.isHunterElite) {
         _drawHunterElite(selx, sely, r, t2, elite);
+        if (elite.eliteType && elite.eliteType.includes('Dog')) {
+            _drawEliteMeleeTelegraph(elite, selx, sely);
+        }
     } else {
-        // 標準精英怪
+        // æ¨™æº–ç²¾è‹±æ€ª
         drawGlowEffect(selx, sely, r, elite.color, '#FFD700', 14);
     }
 
@@ -570,7 +698,7 @@ function _drawHunterElite(sx, sy, r, t2, elite) {
     ctx.fill();
     ctx.restore();
 
-    // 光環
+    // å…‰ç’°
     ctx.save();
     if (ring === 'pulse') {
         const alpha = 0.3 + Math.sin(t2 / 400) * 0.25;
@@ -603,7 +731,7 @@ function _drawHunterElite(sx, sy, r, t2, elite) {
     }
     ctx.restore();
 
-    // 幽靈隼：瞄準線 + 目標準心（與 Boss 雷射同等視覺強度）
+    // å¹½éˆéš¼ï¼šçž„æº–ç·š + ç›®æ¨™æº–å¿ƒï¼ˆèˆ‡ Boss é›·å°„åŒç­‰è¦–è¦ºå¼·åº¦ï¼‰
     if (elite.eliteType === 'specterFalcon' && elite._aimTarget) {
         const ts  = worldToScreen(elite._aimTarget.x, elite._aimTarget.y);
         const tsx = ts.x;
@@ -620,7 +748,7 @@ function _drawHunterElite(sx, sy, r, t2, elite) {
         ctx.lineTo(tsx, tsy);
         ctx.stroke();
         ctx.setLineDash([]);
-        // 目標準心圓 + 十字
+        // ç›®æ¨™æº–å¿ƒåœ“ + åå­—
         ctx.strokeStyle = `rgba(255, 60, 60, ${(pulse * 0.55 + 0.35).toFixed(2)})`;
         ctx.lineWidth   = 2;
         ctx.beginPath();
@@ -638,9 +766,9 @@ export function drawEliteArrow() {
     const elite = gameState.eliteCreature;
     if (!elite || elite.hp <= 0) return;
     const es = worldToScreen(elite.x, elite.y);
-    // 精英怪在螢幕內：不需箭頭
+    // ç²¾è‹±æ€ªåœ¨èž¢å¹•å…§ï¼šä¸éœ€ç®­é ­
     if (es.x >= -20 && es.x <= VIEW_W + 20 && es.y >= -20 && es.y <= VIEW_H + 20) return;
-    // 精英怪螢幕外：無條件顯示箭頭（移除 Boss off-screen 抑制，玩家需要同時找到兩者）
+    // ç²¾è‹±æ€ªèž¢å¹•å¤–ï¼šç„¡æ¢ä»¶é¡¯ç¤ºç®­é ­ï¼ˆç§»é™¤ Boss off-screen æŠ‘åˆ¶ï¼ŒçŽ©å®¶éœ€è¦åŒæ™‚æ‰¾åˆ°å…©è€…ï¼‰
     const p  = gameState.player;
     const ps = worldToScreen(p.x, p.y);
     const arrowColor = elite.isHunterElite ? (elite.glowColor || '#FFD700') :

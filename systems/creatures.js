@@ -15,6 +15,7 @@ import { showFloatingText } from './feedback.js';
 import { applyTenacity, getGameFont } from './utils.js';
 import { showAlphaAnnouncement } from './ui.js';
 import { t } from '../lang.js';
+import { CREATURE_AI_CONFIG } from '../config/creatures.js';
 
 const _PACK_NAMES = [
     'SK-Tea','T-One','Fanatic','CloudNein','NaBee','Phase','Gee2','100Teas','TXM','Senn',
@@ -39,11 +40,11 @@ export function resetHyenaPackNames() {
     _hyenaPackNameMap = {};
 }
 
-const HYENA_PACK_MERGE_RANGE = 300;
-const HYENA_PACK_KEEP_RANGE = 800;
-const HYENA_PACK_LEAVE_GRACE = 3000;
-const HYENA_PACK_LIMIT = 20;
-const HYENA_ATTACK_TURN_CD = 600;
+const HYENA_PACK_MERGE_RANGE = CREATURE_AI_CONFIG.hyena.packMergeRange;
+const HYENA_PACK_KEEP_RANGE = CREATURE_AI_CONFIG.hyena.packKeepRange;
+const HYENA_PACK_LEAVE_GRACE = CREATURE_AI_CONFIG.hyena.packLeaveGraceMs;
+const HYENA_PACK_LIMIT = CREATURE_AI_CONFIG.hyena.packLimit;
+const HYENA_ATTACK_TURN_CD = CREATURE_AI_CONFIG.hyena.attackTurnCooldownMs;
 const CREATURE_NAME_FONT_SIZE = 12;
 const CREATURE_TEAM_FONT_SIZE = 6;
 
@@ -85,6 +86,167 @@ function _drawCenteredCreatureText(text, x, y, font, fillStyle, lineWidth) {
 // ── 嘴器減速：取生物有效速度（被減速中則乘以 _slowMult）────────
 export function _effSpeed(c, now = Date.now()) {
     return (c._slowUntil && now < c._slowUntil) ? c.speed * (c._slowMult || 1.0) : c.speed;
+}
+
+function _meleeProfile(creature) {
+    const cfg = CREATURE_AI_CONFIG.meleeAttack;
+    if (creature.isAlpha) return cfg.alpha;
+    if (creature.isGiantized) return cfg.giant;
+    if (creature.speciesId === 'hyena') return cfg.hyena;
+    if (creature.diet === 'herbivore') return cfg.herbivore;
+    if (creature.diet === 'aggressive') return cfg.aggressive;
+    return cfg.default;
+}
+
+function _resetMeleeAttack(creature) {
+    creature._meleeState = null;
+    creature._meleeTarget = null;
+    creature._meleeTargetType = null;
+    creature._meleeWindupEnd = 0;
+    creature._meleeActiveEnd = 0;
+    creature._meleeRecoveryEnd = 0;
+    creature._meleeHasHit = false;
+    creature._meleeFlashUntil = 0;
+}
+
+function _tryMeleeAttack(creature, target, targetType, distance, attackRange, now, onHit) {
+    const profile = _meleeProfile(creature);
+    const cooldown = creature.hyenaAttackInterval || CREATURE_AI_CONFIG.meleeAttack.cooldownMs;
+    const hitGraceRange = attackRange + CREATURE_AI_CONFIG.meleeAttack.hitGraceBuffer;
+
+    if (distance > hitGraceRange) {
+        if (creature._meleeState === 'preparing' || creature._meleeState === 'striking') {
+            _resetMeleeAttack(creature);
+        }
+        return false;
+    }
+
+    if (!creature._meleeState) {
+        if (distance > attackRange) return false;
+        if (now - (creature.attackCooldown || 0) < cooldown) return true;
+        creature._meleeState = 'preparing';
+        creature._meleeTarget = target;
+        creature._meleeTargetType = targetType;
+        creature._meleeWindupEnd = now + profile.windupMs;
+        creature._meleeActiveEnd = creature._meleeWindupEnd + profile.activeMs;
+        creature._meleeRecoveryEnd = creature._meleeActiveEnd + profile.recoveryMs;
+        creature._meleeHasHit = false;
+        creature.attackCooldown = now;
+        return true;
+    }
+
+    if (creature._meleeState === 'preparing' && now >= creature._meleeWindupEnd) {
+        creature._meleeState = 'striking';
+    }
+
+    if (creature._meleeState === 'striking') {
+        if (now >= creature._meleeActiveEnd) {
+            if (!creature._meleeHasHit && target && target.hp !== 0 && distance <= hitGraceRange) {
+                creature._meleeHasHit = true;
+                onHit();
+            }
+            creature._meleeFlashUntil = now + CREATURE_AI_CONFIG.meleeAttack.strikeFlashMs;
+            creature._meleeState = 'recovering';
+        }
+        return true;
+    }
+
+    if (creature._meleeState === 'recovering') {
+        if (now >= creature._meleeRecoveryEnd) {
+            _resetMeleeAttack(creature);
+        }
+        return true;
+    }
+
+    return true;
+}
+
+function _bodyMeleeRange(attacker, target, fallbackRange) {
+    const bodyRange = (attacker.radius || 8) + (target?.radius || 8) + CREATURE_AI_CONFIG.meleeAttack.rangeBuffer;
+    return Math.max(fallbackRange || 0, bodyRange);
+}
+
+function _moveTowardTarget(creature, target, speed) {
+    const { dx, dy } = wrappedDelta(creature.x, creature.y, target.x, target.y);
+    const angle = Math.atan2(dy, dx);
+    creature._moveAngle = angle;
+    moveCreature(creature, creature.x + Math.cos(angle) * speed, creature.y + Math.sin(angle) * speed);
+}
+
+function _trackMeleeTargetDuringWindup(creature, target, now, baseSpeed) {
+    if (creature._meleeState !== 'preparing' || !target) return;
+    const speed = baseSpeed * CREATURE_AI_CONFIG.meleeAttack.windupMoveMult;
+    if (creature._slowUntil && now < creature._slowUntil) {
+        _moveTowardTarget(creature, target, speed * (creature._slowMult || 1.0));
+    } else {
+        _moveTowardTarget(creature, target, speed);
+    }
+}
+
+function _neutralKilledByCreature(deadNeutral, now) {
+    if (!deadNeutral) return;
+    const idx = gameState.neutralCreatures.indexOf(deadNeutral);
+    if (idx !== -1) gameState.neutralCreatures.splice(idx, 1);
+    if (deadNeutral.isGiantized) {
+        if (deadNeutral.isAlpha && gameState.alphaCreature === deadNeutral) {
+            gameState.alphaCreature = null;
+        }
+        if (deadNeutral.packMembers) {
+            for (const pm of deadNeutral.packMembers) pm.packLeaderRef = null;
+        }
+        if (gameState.topBarTarget === deadNeutral) {
+            gameState.topBarTarget = null;
+            gameState.topBarFadeTimer = 0;
+        }
+    }
+    gameState.corpses.push({
+        x: deadNeutral.x,
+        y: deadNeutral.y,
+        radius: deadNeutral.radius,
+        spawnTime: now,
+    });
+}
+
+function _drawAttackTelegraph(ctx, creature, sx, sy) {
+    const now = Date.now();
+    if (creature._meleeState === 'recovering' && now >= (creature._meleeRecoveryEnd || 0)) {
+        _resetMeleeAttack(creature);
+    }
+    if (!creature._meleeState && !(creature._meleeFlashUntil && now < creature._meleeFlashUntil)) return;
+    const zoom = gameState.cameraZoom || 1;
+    const r = (creature.radius + 10) * zoom;
+    let color = 'rgba(255,80,60,0.75)';
+    let lineWidth = 3;
+    let scale = 1;
+
+    if (creature._meleeFlashUntil && now < creature._meleeFlashUntil) {
+        color = 'rgba(255,255,255,0.95)';
+        lineWidth = 5;
+        scale = 1.28;
+    } else if (creature._meleeState === 'preparing') {
+        const total = Math.max(1, creature._meleeWindupEnd - (creature.attackCooldown || 0));
+        const left = Math.max(0, creature._meleeWindupEnd - now);
+        scale = 0.8 + (1 - left / total) * 0.35;
+    } else if (creature._meleeState === 'striking') {
+        const total = Math.max(1, creature._meleeActiveEnd - creature._meleeWindupEnd);
+        const elapsed = Math.max(0, total - Math.max(0, creature._meleeActiveEnd - now));
+        const progress = Math.min(1, elapsed / total);
+        color = 'rgba(255,255,255,0.82)';
+        lineWidth = 3 + progress * 2;
+        scale = 0.9 + progress * 0.3;
+    } else if (creature._meleeState === 'recovering') {
+        color = 'rgba(180,180,180,0.45)';
+        lineWidth = 2;
+        scale = 1.0;
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(sx, sy, r * scale, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+    ctx.restore();
 }
 
 // ── 特殊狀態光暈（不跟著旋轉，以世界座標繪製）───────────────
@@ -400,6 +562,7 @@ export function drawCreatureShape(ctx, creature, sx, sy) {
 
     // 特殊狀態光暈（不跟旋轉，固定在世界座標）
     _drawCreatureGlow(ctx, creature, sx, sy);
+    _drawAttackTelegraph(ctx, creature, sx, sy);
 }
 
 // ── 草食性連吃：附近500px是否有同族巨人化 ──
@@ -927,14 +1090,37 @@ function _syncHyenaAttackTurn(hyena, pack, now) {
         hyena._attackState = 'attacking';
         return hyena;
     }
+    const isSurroundPack = pack.length >= CREATURE_AI_CONFIG.hyena.surroundMinSize;
+    const viablePack = isSurroundPack
+        ? pack.filter(m =>
+            m.hp > 0 &&
+            (m.hp / Math.max(m.maxHp || m.hp || 1, 1)) > CREATURE_AI_CONFIG.hyena.lowHpRatio &&
+            !(m._attackState === 'retreating' && now < (m._attackTurnUntil || 0))
+        )
+        : pack;
+    const turnPack = viablePack.length > 0 ? viablePack : pack;
     let attacker = pack.find(m => m._attackTurn);
+
+    if (isSurroundPack && hyena.target === gameState.player) {
+        const chosen = _bestHyenaSurroundAttacker(turnPack, gameState.player);
+        if (chosen && (!attacker || attacker !== chosen || now >= (attacker._attackTurnUntil || 0))) {
+            attacker = chosen;
+            for (const member of pack) {
+                member._attackTurn = member === attacker;
+                member._attackState = member === attacker ? 'attacking' : 'waiting';
+            }
+            attacker._attackTurnUntil = now + HYENA_ATTACK_TURN_CD;
+        }
+        return attacker || hyena;
+    }
+
     if (attacker && attacker.hp > 0 && attacker._attackState === 'retreating' && now < (attacker._attackTurnUntil || 0)) {
         return attacker;
     }
     if (!attacker || attacker.hp <= 0 || attacker._attackState !== 'attacking' || now >= (attacker._attackTurnUntil || 0)) {
-        const lastIndex = pack.indexOf(attacker);
-        const nextIndex = lastIndex >= 0 ? (lastIndex + 1) % pack.length : 0;
-        attacker = pack[nextIndex];
+        const lastIndex = turnPack.indexOf(attacker);
+        const nextIndex = lastIndex >= 0 ? (lastIndex + 1) % turnPack.length : 0;
+        attacker = turnPack[nextIndex];
         for (const member of pack) {
             member._attackTurn = member === attacker;
             member._attackState = member === attacker ? 'attacking' : 'waiting';
@@ -944,15 +1130,168 @@ function _syncHyenaAttackTurn(hyena, pack, now) {
     return attacker;
 }
 
+function _angleDiff(a, b) {
+    return Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+}
+
+function _hyenaSurroundAngles(target, count) {
+    const cfg = CREATURE_AI_CONFIG.hyena;
+    const moveDir = target.lastMoveDir || { dx: 0, dy: -1 };
+    const forward = Math.atan2(moveDir.dy || -1, moveDir.dx || 0);
+    const rear = forward + Math.PI;
+    const arc = cfg.surroundArcDeg * Math.PI / 180;
+    const denominator = Math.max(1, count - 1);
+    const angles = [];
+    for (let i = 0; i < count; i++) {
+        angles.push(rear - arc / 2 + arc * (i / denominator));
+    }
+    return { angles, rear };
+}
+
+function _bestHyenaSurroundAttacker(pack, target) {
+    if (!pack.length || !target) return null;
+    const { rear } = _hyenaSurroundAngles(target, pack.length);
+    let best = null;
+    let bestScore = Infinity;
+    for (const member of pack) {
+        if (member.hp <= 0) continue;
+        const { dx, dy } = wrappedDelta(target.x, target.y, member.x, member.y);
+        const angle = Math.atan2(dy, dx);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const idealRange = Math.max(target.radius + (member.attackRange || 0), CREATURE_AI_CONFIG.hyena.surroundOrbit);
+        const angleScore = _angleDiff(angle, rear);
+        const rangeScore = Math.abs(dist - idealRange) / Math.max(1, idealRange);
+        const score = angleScore + rangeScore * 0.35;
+        if (score < bestScore) {
+            bestScore = score;
+            best = member;
+        }
+    }
+    return best;
+}
+
 export function _hyenaWheelPosition(hyena, pack, target, now = Date.now()) {
     const index = Math.max(0, pack.indexOf(hyena));
     const spacing = hyena.radius * 2 + 15;
-    const orbit = Math.max(target.radius + hyena.attackRange + spacing, spacing * pack.length / Math.PI);
+    const cfg = CREATURE_AI_CONFIG.hyena;
+    if (pack.length >= cfg.surroundMinSize && target === gameState.player) {
+        const { angles } = _hyenaSurroundAngles(target, pack.length);
+        const { dx, dy } = wrappedDelta(target.x, target.y, hyena.x, hyena.y);
+        const currentAngle = Math.atan2(dy, dx);
+        let angle = angles[0];
+        let bestDiff = Infinity;
+        for (const candidate of angles) {
+            const diff = _angleDiff(currentAngle, candidate);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                angle = candidate;
+            }
+        }
+        const orbit = Math.max(
+            target.radius + hyena.attackRange + spacing,
+            cfg.surroundOrbit + spacing * Math.min(pack.length, 8) / 3
+        );
+        return {
+            x: target.x + Math.cos(angle) * orbit,
+            y: target.y + Math.sin(angle) * orbit,
+        };
+    }
+    const orbit = Math.max(target.radius + hyena.attackRange + spacing, cfg.probeOrbit, spacing * pack.length / Math.PI);
     const angle = (Math.PI * 2 / Math.max(1, pack.length)) * index + (now / ((hyena.hyenaAttackInterval || 1000) * 0.9));
     return {
         x: target.x + Math.cos(angle) * orbit,
         y: target.y + Math.sin(angle) * orbit,
     };
+}
+
+function _separationMinDistance(a, b) {
+    const cfg = CREATURE_AI_CONFIG.separation;
+    const aHostile = a.diet === 'carnivore' || a.isKiller || gameState.hostileCreatures.includes(a);
+    const bHostile = b.diet === 'carnivore' || b.isKiller || gameState.hostileCreatures.includes(b);
+    const aGiant = a.isGiantized || a.isAlpha;
+    const bGiant = b.isGiantized || b.isAlpha;
+    const bodySum = (a.radius || 8) + (b.radius || 8);
+
+    if (aGiant || bGiant) return bodySum * cfg.giantMinDistRatio;
+    if (a.speciesId === 'hyena' || b.speciesId === 'hyena') return bodySum * cfg.hyenaMinDistRatio;
+    if (aHostile && bHostile) return bodySum * cfg.hostileMinDistRatio;
+    if (aHostile || bHostile) return bodySum * cfg.mixedMinDistRatio;
+    return bodySum * cfg.herbivoreMinDistRatio;
+}
+
+function _applyCreatureSeparation() {
+    const cfg = CREATURE_AI_CONFIG.separation;
+    const all = [
+        ...gameState.neutralCreatures.filter(c => c.hp > 0),
+        ...gameState.hostileCreatures.filter(c => c.hp > 0),
+    ];
+
+    for (let i = 0; i < all.length; i++) {
+        const a = all[i];
+        for (let j = i + 1; j < all.length; j++) {
+            const b = all[j];
+            const minDist = Math.max(4, _separationMinDistance(a, b));
+            const d = wrappedDistance(a.x, a.y, b.x, b.y);
+            if (d <= 0 || d >= minDist) continue;
+
+            const { dx, dy } = wrappedDelta(b.x, b.y, a.x, a.y);
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const overlap = minDist - d;
+            const strength = (a.isGiantized || b.isGiantized || a.isAlpha || b.isAlpha)
+                ? cfg.giantPushStrength
+                : cfg.pushStrength;
+            const push = Math.min(overlap * 0.5, strength);
+            const ax = dx / len * push;
+            const ay = dy / len * push;
+
+            moveCreature(a, a.x + ax, a.y + ay);
+            moveCreature(b, b.x - ax, b.y - ay);
+        }
+    }
+}
+
+function _giantPackCore(leader) {
+    if (!leader) return null;
+    if (leader.isAlpha) return leader;
+    if (gameState.alphaCreature && gameState.alphaCreature.hp > 0) return gameState.alphaCreature;
+    let best = leader;
+    const members = leader.packMembers || [];
+    for (const m of members) {
+        if (m.hp > 0 && (m.hp / Math.max(m.maxHp || m.hp || 1, 1)) > (best.hp / Math.max(best.maxHp || best.hp || 1, 1))) {
+            best = m;
+        }
+    }
+    return best;
+}
+
+function _updateGiantPackRegroup(creature, now) {
+    const cfg = CREATURE_AI_CONFIG.alpha;
+    const leader = creature.packLeader ? creature : creature.packLeaderRef;
+    if (!leader || leader.hp <= 0) return false;
+
+    if (now - (creature._regroupCheckTimer || 0) >= cfg.regroupCheckMs) {
+        creature._regroupCheckTimer = now;
+        creature._regroupTarget = _giantPackCore(leader);
+    }
+
+    const core = creature._regroupTarget;
+    if (!core || core === creature || core.hp <= 0) return false;
+
+    const hpRatio = creature.hp / Math.max(creature.maxHp || creature.hp || 1, 1);
+    const dist = wrappedDistance(creature.x, creature.y, core.x, core.y);
+    if (hpRatio > cfg.regroupHpRatio && dist <= cfg.regroupRange) {
+        creature._regroupTarget = null;
+        return false;
+    }
+
+    const { dx, dy } = wrappedDelta(creature.x, creature.y, core.x, core.y);
+    creature._moveAngle = Math.atan2(dy, dx);
+    moveCreature(
+        creature,
+        creature.x + Math.cos(creature._moveAngle) * _effSpeed(creature) * cfg.regroupMoveMult,
+        creature.y + Math.sin(creature._moveAngle) * _effSpeed(creature) * cfg.regroupMoveMult
+    );
+    return true;
 }
 
 export function updateNeutralCreatures() {
@@ -995,16 +1334,16 @@ export function updateNeutralCreatures() {
                 creature.state = 'chasing';
                 const { dx, dy } = wrappedDelta(creature.x, creature.y, target.x, target.y);
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                const atkRange = creature.radius + (target.radius || 10) + 5;
+                const atkRange = _bodyMeleeRange(creature, target, creature.radius + (target.radius || 10) + 5);
                 if (dist <= atkRange) {
-                    if (now - (creature.attackCooldown || 0) >= 1000) {
-                        creature.attackCooldown = now;
+                    _tryMeleeAttack(creature, target, target === p ? 'player' : 'neutral', dist, atkRange, now, () => {
                         if (target === p) { applyDamageToPlayer(creature.damage || 8, creature); }
                         else {
                             target.hp -= creature.damage || 8;
-                            if (target.hp <= 0) gameState.corpses.push({ x: target.x, y: target.y, radius: target.radius, spawnTime: now });
+                            if (target.hp <= 0) _neutralKilledByCreature(target, now);
                         }
-                    }
+                    });
+                    _trackMeleeTargetDuringWindup(creature, target, now, _effSpeed(creature));
                 } else {
                     creature._moveAngle = Math.atan2(dy, dx);
                     moveCreature(creature, creature.x + Math.cos(Math.atan2(dy, dx)) * _effSpeed(creature), creature.y + Math.sin(Math.atan2(dy, dx)) * _effSpeed(creature));
@@ -1147,23 +1486,27 @@ export function updateNeutralCreatures() {
                     creature.state = 'chasing';
                     const { dx: gadx, dy: gady } = wrappedDelta(creature.x, creature.y, giantTarget.x, giantTarget.y);
                     const gaDist    = Math.sqrt(gadx * gadx + gady * gady);
-                    const gaAtkRange = creature.radius + (giantTarget.radius || 10) + 5;
+                    const gaAtkRange = _bodyMeleeRange(creature, giantTarget, creature.radius + (giantTarget.radius || 10) + 5);
                     if (gaDist <= gaAtkRange) {
-                        if (now - (creature.attackCooldown || 0) >= 1000) {
-                            creature.attackCooldown = now;
+                        _tryMeleeAttack(creature, giantTarget, giantTarget === p ? 'player' : 'neutral', gaDist, gaAtkRange, now, () => {
                             if (giantTarget === p) {
                                 applyDamageToPlayer(creature.damage, creature);
                             } else {
                                 giantTarget.hp -= creature.damage;
                                 if (giantTarget.hp <= 0) handleKill(giantTarget, true);
                             }
-                        }
+                        });
+                        _trackMeleeTargetDuringWindup(creature, giantTarget, now, _effSpeed(creature));
                     } else {
                         const gaAngle = Math.atan2(gady, gadx);
                         creature._moveAngle = gaAngle;
                         moveCreature(creature, creature.x + Math.cos(gaAngle) * _effSpeed(creature),
                                                creature.y + Math.sin(gaAngle) * _effSpeed(creature));
                     }
+                    continue;
+                }
+                if (_updateGiantPackRegroup(creature, now)) {
+                    creature.state = 'regrouping';
                     continue;
                 }
                 creature.state = 'wandering';
@@ -1252,10 +1595,17 @@ export function updateNeutralCreatures() {
             }
 
             if (creature.state === 'fighting') {
-                if (now - (creature.lastDamageTime || 0) >= 1000) {
+                const fightRange = _bodyMeleeRange(creature, p, touchDist);
+                if (distToPlayer > fightRange) {
+                    _resetMeleeAttack(creature);
+                    creature.state = 'wandering';
+                    creature.isResting = false;
+                    continue;
+                }
+                _tryMeleeAttack(creature, p, 'player', distToPlayer, fightRange, now, () => {
                     applyDamageToPlayer(creature.damage || 3, creature);
                     creature.lastDamageTime = now;
-                }
+                });
                 continue;
             }
             if (creature.state === 'fleeing') {
@@ -1381,7 +1731,16 @@ export function updateNeutralCreatures() {
             creature.state = 'idle';
         }
         if (creature.state === 'fighting') {
-            if (now - creature.lastDamageTime >= 1000) { applyDamageToPlayer(3, creature); creature.lastDamageTime = now; }
+            const fightRange = _bodyMeleeRange(creature, p, touchDist);
+            if (distToPlayer > fightRange) {
+                _resetMeleeAttack(creature);
+                creature.state = 'idle';
+                continue;
+            }
+            _tryMeleeAttack(creature, p, 'player', distToPlayer, fightRange, now, () => {
+                applyDamageToPlayer(3, creature);
+                creature.lastDamageTime = now;
+            });
             continue;
         }
         if (creature.state === 'fleeing') {
@@ -1445,6 +1804,8 @@ export function updateNeutralCreatures() {
             }
         }
     }
+
+    _applyCreatureSeparation();
 }
 
 export function drawNeutralCreatures() {
@@ -1784,8 +2145,9 @@ export function updateHostileCreatures() {
                 }
             }
 
-            if (dist <= creature.attackRange) {
-                if (now - creature.attackCooldown >= (creature.hyenaAttackInterval || 1000)) {
+            const meleeRange = _bodyMeleeRange(creature, t, creature.attackRange);
+            if (dist <= meleeRange) {
+                _tryMeleeAttack(creature, t, creature.targetType, dist, meleeRange, now, () => {
                     if (creature.targetType === 'player') {
                         let dmg = creature.damage;
                         if (creature.speciesId === 'lynx') {
@@ -1831,19 +2193,17 @@ export function updateHostileCreatures() {
                                     gameState.topBarFadeTimer = 0;
                                 }
                             }
-                            gameState.corpses.push({
-                                x: deadNeutral.x, y: deadNeutral.y,
-                                radius: deadNeutral.radius, spawnTime: now
-                            });
+                            _neutralKilledByCreature(deadNeutral, now);
                             // 擊殺後回到巡邏狀態
                             creature.state = 'patrolling';
                             creature.target = null;
                             creature.targetType = null;
                         }
                     }
-                    creature.attackCooldown = now;
-                }
+                });
+                _trackMeleeTargetDuringWindup(creature, t, now, creature.speed);
             } else {
+                _tryMeleeAttack(creature, t, creature.targetType, dist, meleeRange, now, () => {});
                 const angle = Math.atan2(dy, dx);
                 creature._moveAngle = angle;
                 // 物種移動速度加成（生態區）
@@ -1971,6 +2331,8 @@ export function updateHostileCreatures() {
             else { moveCreature(creature, creature.x + Math.cos(Math.atan2(wdy, wdx)) * _effSpeed(creature), creature.y + Math.sin(Math.atan2(wdy, wdx)) * _effSpeed(creature)); }
         }
     }
+
+    _applyCreatureSeparation();
 }
 
 export function drawCorpses() {

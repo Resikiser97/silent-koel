@@ -14,6 +14,54 @@ export const CREATURE_CONFIG = {
     }
 };
 
+export const CREATURE_AI_CONFIG = {
+    separation: {
+        herbivoreMinDistRatio: 0.5,
+        hostileMinDistRatio: 1.0,
+        mixedMinDistRatio: 0.75,
+        hyenaMinDistRatio: 1.1,
+        giantMinDistRatio: 1.05,
+        pushStrength: 1.4,
+        giantPushStrength: 2.0,
+    },
+    meleeAttack: {
+        default: { windupMs: 150, activeMs: 100, recoveryMs: 1150 },
+        hyena: { windupMs: 100, activeMs: 100, recoveryMs: 1300 },
+        giant: { windupMs: 350, activeMs: 150, recoveryMs: 1000 },
+        alpha: { windupMs: 200, activeMs: 150, recoveryMs: 1150 },
+        herbivore: { windupMs: 300, activeMs: 200, recoveryMs: 1000 },
+        aggressive: { windupMs: 150, activeMs: 100, recoveryMs: 1150 },
+        eliteDog: {
+            specterDog: { windupMs: 180, activeMs: 100, recoveryMs: 920 },
+            shadowDog: { windupMs: 120, activeMs: 90, recoveryMs: 690 },
+            venomDog: { windupMs: 260, activeMs: 120, recoveryMs: 1120 },
+        },
+        cooldownMs: 1000,
+        rangeBuffer: 8,
+        windupMoveMult: 0.8,
+        hitGraceBuffer: 10,
+        strikeFlashMs: 90,
+    },
+    hyena: {
+        packMergeRange: 300,
+        packKeepRange: 800,
+        packLeaveGraceMs: 3000,
+        packLimit: 20,
+        attackTurnCooldownMs: 600,
+        surroundMinSize: 4,
+        lowHpRatio: 0.3,
+        probeOrbit: 85,
+        surroundOrbit: 95,
+        surroundArcDeg: 240,
+    },
+    alpha: {
+        regroupCheckMs: 1000,
+        regroupHpRatio: 0.35,
+        regroupRange: 1200,
+        regroupMoveMult: 0.75,
+    },
+};
+
 export const ELITE_CONFIG = {
     base: { hp: 50, speed: 1.0, damage: 8, poisonResist: 0.2 },
     nights: [

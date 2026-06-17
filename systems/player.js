@@ -242,6 +242,47 @@ export function _getArcherShootDir() {
     }
 }
 
+export function _archerProjectileRadius(chargeCount = 1) {
+    const char = CHARACTERS[gameState.selectedCharacter];
+    const projectile = char?.projectile || {};
+    const baseRadius = char?.stats?.radius || 10;
+    const baseProjectileRadius = projectile.radius || 5;
+    const sizeScale = (gameState.player?.radius || baseRadius) / Math.max(1, baseRadius);
+    const chargeScale = chargeCount >= (char?.specialSkillConfig?.chargeMax || 3) ? 2 : 1;
+    return Math.max(1, baseProjectileRadius * sizeScale * chargeScale);
+}
+
+export function _fireArcherProjectile(dir, chargeCount = null) {
+    const p = gameState.player;
+    const char = CHARACTERS[gameState.selectedCharacter];
+    if (!p || !char || !dir || p.attack <= 0) return false;
+
+    const charges = Math.max(1, chargeCount ?? p.reloadCharges ?? 1);
+    let dmg = Math.round(p.attack * charges);
+    let isCrit = false;
+    if (p.critChance > 0 && Math.random() < p.critChance) {
+        dmg = Math.round(dmg * p.critMultiplier);
+        isCrit = true;
+    }
+
+    gameState.projectiles.push({
+        x: p.x, y: p.y,
+        vx: dir.dx * ARCHER_BULLET_SPEED,
+        vy: dir.dy * ARCHER_BULLET_SPEED,
+        damage: dmg,
+        maxRange: p.attackRange * (char.projectile?.rangeMultiplier || 1.2),
+        distTraveled: 0,
+        radius: _archerProjectileRadius(charges),
+        ownerId: 'player',
+        hasCrit: isCrit,
+    });
+
+    p.attackVisual = Date.now();
+    const normalKey = char.sfx?.attackNormal ?? 'attackNormal';
+    AudioManager.play(normalKey);
+    return true;
+}
+
 export function _archerAttack() {
     const p = gameState.player;
     const now = Date.now();
@@ -264,8 +305,11 @@ export function _archerAttack() {
 
     // 消耗充能（最少1格）
     const charges  = Math.max(1, p.reloadCharges);
-    const dmgMult  = charges;
-    let dmg        = Math.round(p.attack * dmgMult);
+    p.reloadCharges = Math.max(0, p.reloadCharges - 1);
+    p.reloadTimer   = 0;
+    _fireArcherProjectile(dir, charges);
+    return;
+    /*
 
     // 暴擊判定
     let isCrit = false;
@@ -294,6 +338,7 @@ export function _archerAttack() {
     p.attackVisual = now;
     const normalKey = CHARACTERS[gameState.selectedCharacter]?.sfx?.attackNormal ?? 'attackNormal';
     AudioManager.play(normalKey);
+    */
 }
 
 let _treeProductionTimer = 0;
