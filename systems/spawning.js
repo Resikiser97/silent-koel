@@ -78,6 +78,7 @@ function _makeHerbCreature(x, y, biome, spec, strength, deps = {}) {
         fruitsEaten: 0,
         lastDamageTime: 0,
         attackCooldown: 0,
+        attackRange: 20,
         _moveAngle: random() * Math.PI * 2,
         _nextBehaviorTime: now + 5000 + random() * 10000,
         _seekingFruit: false,

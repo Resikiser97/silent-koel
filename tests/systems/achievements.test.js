@@ -10,6 +10,10 @@ vi.stubGlobal('localStorage', {
     clear:      () => mockStorage.clear(),
 });
 
+vi.mock('../../systems/gameState.js', () => ({
+    gameState: { isMobile: false },
+}));
+
 import {
     unlockAchievement,
     isUnlocked,

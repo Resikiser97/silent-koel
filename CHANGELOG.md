@@ -1,4 +1,13 @@
-﻿## v0.1.26.0 - 2026-06-17
+﻿## v0.1.26.1 - 2026-06-17
+
+### 調整
+- `config/gameConfig.js` / `systems/boss.js`：黑色獵人 Boss 腳步音效拆分為兩個獨立播放節奏，`hunter_footstep_1` 每 2500ms 觸發一次、`hunter_footstep_2` 每 1000ms 觸發一次，取代原本混合隨機腳步聲每 600ms 播放的行為，降低腳步聲過密與吵雜感
+- `systems/creatures.js` / `systems/elite.js` / `systems/spawning.js`：近戰命中距離公式改為「怪物半徑 + max(怪物 attackRange, 目標半徑) + rangeBuffer」，命中寬限沿用額外 `hitGraceBuffer`；草食生物補上 `attackRange: 20`，三犬精英與一般近戰生物統一套用此公式，修正困難三犬與其他近戰生物幾乎貼身才攻擊的問題
+- `tests/systems/achievements.test.js` / `tests/systems/damage.test.js` / `tests/systems/creatures.test.js` / `tests/systems/elite.test.js`：補齊 Node 測試環境 mock 與近戰距離公式回歸測試，避免測試被 DOM/import 副作用或過期 config mock 卡住
+
+---
+
+## v0.1.26.0 - 2026-06-17
 
 ### 新增
 - `config/creatures.js` / `systems/creatures.js`：新增生物 AI 手感第一版設定與共用近戰攻擊節奏，所有近戰生物攻擊改為前搖、命中、後搖三段式，並在 Canvas 上顯示攻擊提示圈（前搖紅圈、命中白圈、後搖灰圈）

@@ -1,4 +1,4 @@
-﻿## v0.1.26.0
+﻿## v0.1.26.1
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.26.0**
+- 版本：**v0.1.26.1**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -79,7 +79,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 ### config/
 | 檔案 | 職責 |
 |------|------|
-| `gameConfig.js` | GAME_INFO（版本號、SAVE_VERSION）、GAME_TIMING、AUDIO_FILES、FIXED_DELTA |
+| `gameConfig.js` | GAME_INFO（版本號、SAVE_VERSION）、GAME_TIMING、AUDIO_FILES（含黑色獵人分離腳步音效 hunterFootstep1/2）、FIXED_DELTA |
 | `characters.js` | CHARACTERS（角色定義常數） |
 | `organs.js` | ORGANS（15種普通）+ HIDDEN_ORGANS（4種）+ poisonSac |
 | `creatures.js` | CREATURE_CONFIG、CREATURE_AI_CONFIG（生物分離、近戰前後搖、鬣狗 pack/隊長焦點數值）、ELITE_CONFIG、BOSS_CONFIG |
@@ -119,7 +119,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `combat.js` | playerAttack / setRangedAttackCallback / updateStatusEffects / 白骨系統 |
 | `organs.js` | showOrganSelection / handleEliteKill / applyOrganEffects |
 | `evolution.js` | buildSkillTreeOverlay / upgradeSkill / applyEvolutionEffects |
-| `creatures.js` | updateNeutralCreatures / updateHostileCreatures / _tryMeleeAttack / _applyCreatureSeparation / notifyCreatureHitByPlayer |
+| `creatures.js` | updateNeutralCreatures / updateHostileCreatures / _tryMeleeAttack / _bodyMeleeRange（半徑 + max(attackRange, 目標半徑) + rangeBuffer） / _applyCreatureSeparation / notifyCreatureHitByPlayer |
 | `elite.js` | spawnEliteCreature / updateEliteCreature |
 | `boss.js` | spawnBoss / updateBoss / showVictory |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |

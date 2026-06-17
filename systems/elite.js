@@ -49,9 +49,11 @@ function _resetEliteMeleeAttack(elite) {
     elite._meleeFlashUntil = 0;
 }
 
-function _eliteDogMeleeRange(elite, target) {
-    const bodyRange = (elite.radius || 8) + (target?.radius || 8) + CREATURE_AI_CONFIG.meleeAttack.rangeBuffer;
-    return Math.max(elite.attackRange || 0, bodyRange);
+export function _eliteDogMeleeRange(elite, target) {
+    const eliteRadius = elite.radius || 8;
+    const targetRadius = target?.radius || 8;
+    const attackRange = elite.attackRange || 0;
+    return eliteRadius + Math.max(attackRange, targetRadius) + CREATURE_AI_CONFIG.meleeAttack.rangeBuffer;
 }
 
 function _trackEliteMeleeTargetDuringWindup(elite, target, now) {

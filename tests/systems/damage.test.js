@@ -79,6 +79,14 @@ vi.mock('../../config/gameConfig.js', () => ({
     CORPSE_BONE_EAT_TICK: 500,
     CORPSE_EXPIRE_MS: 60000,
     BONE_EXPIRE_MS: 180000,
+    HARD_ELITE_CONFIG: {
+        specterDog: { radius: 14, type: 'melee' },
+        shadowDog: { radius: 14, type: 'melee' },
+        venomDog: { radius: 14, type: 'melee', poisonDps: 8, poisonDuration: 3000 },
+        specterFalcon: { radius: 16, type: 'ranged', range: 900 },
+        shadowFalcon: { radius: 16, type: 'ranged', range: 600 },
+        venomFalcon: { radius: 16, type: 'ranged', range: 700 },
+    },
 }));
 vi.mock('../../config/evolution.js', () => ({
     EVOLUTION_PATHS: {
@@ -155,6 +163,27 @@ beforeEach(async () => {
     if (!globalThis.window) {
         globalThis.window = {
             dispatchEvent: () => true,
+            addEventListener: () => {},
+            removeEventListener: () => {},
+        };
+    }
+    if (!globalThis.window.addEventListener) globalThis.window.addEventListener = () => {};
+    if (!globalThis.window.removeEventListener) globalThis.window.removeEventListener = () => {};
+    if (!globalThis.document) {
+        const el = {
+            style: {},
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            appendChild: () => {},
+            remove: () => {},
+            getContext: () => null,
+        };
+        globalThis.document = {
+            getElementById: () => el,
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            createElement: () => ({ ...el, children: [], classList: { add: () => {}, remove: () => {} } }),
+            body: el,
         };
     }
     if (!globalThis.CustomEvent) {

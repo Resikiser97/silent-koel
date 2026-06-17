@@ -1128,9 +1128,15 @@ function _updateHunterBoss(boss, p, now) {
     }
 
     // 腳步音效（低頻）
-    if (!boss._footstepTimer || now - boss._footstepTimer > 600) {
-        boss._footstepTimer = now;
-        if (boss.state === 'chasing' || boss.state === 'strafing') AudioManager.play('hunterFootstep');
+    if (boss.state === 'chasing' || boss.state === 'strafing') {
+        if (!boss._footstep1Timer || now - boss._footstep1Timer > 2500) {
+            boss._footstep1Timer = now;
+            AudioManager.play('hunterFootstep1');
+        }
+        if (!boss._footstep2Timer || now - boss._footstep2Timer > 1000) {
+            boss._footstep2Timer = now;
+            AudioManager.play('hunterFootstep2');
+        }
     }
 
     // 形態 1：Sniper — 維持 1200~1500px，繞圈移動

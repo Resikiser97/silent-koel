@@ -167,9 +167,11 @@ function _tryMeleeAttack(creature, target, targetType, distance, attackRange, no
     return true;
 }
 
-function _bodyMeleeRange(attacker, target, fallbackRange) {
-    const bodyRange = (attacker.radius || 8) + (target?.radius || 8) + CREATURE_AI_CONFIG.meleeAttack.rangeBuffer;
-    return Math.max(fallbackRange || 0, bodyRange);
+export function _bodyMeleeRange(attacker, target, attackRangeOverride) {
+    const attackerRadius = attacker.radius || 8;
+    const targetRadius = target?.radius || 8;
+    const attackRange = attackRangeOverride ?? attacker.attackRange ?? 0;
+    return attackerRadius + Math.max(attackRange, targetRadius) + CREATURE_AI_CONFIG.meleeAttack.rangeBuffer;
 }
 
 function _moveTowardTarget(creature, target, speed) {
@@ -1556,7 +1558,7 @@ export function updateNeutralCreatures() {
                 creature.state = 'chasing';
                 const { dx, dy } = wrappedDelta(creature.x, creature.y, target.x, target.y);
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                const atkRange = _bodyMeleeRange(creature, target, creature.radius + (target.radius || 10) + 5);
+                const atkRange = _bodyMeleeRange(creature, target, creature.attackRange);
                 if (dist <= atkRange) {
                     _tryMeleeAttack(creature, target, target === p ? 'player' : 'neutral', dist, atkRange, now, () => {
                         if (target === p) { applyDamageToPlayer(creature.damage || 8, creature); }
@@ -1711,7 +1713,7 @@ export function updateNeutralCreatures() {
                     creature.state = 'chasing';
                     const { dx: gadx, dy: gady } = wrappedDelta(creature.x, creature.y, giantTarget.x, giantTarget.y);
                     const gaDist    = Math.sqrt(gadx * gadx + gady * gady);
-                    const gaAtkRange = _bodyMeleeRange(creature, giantTarget, creature.radius + (giantTarget.radius || 10) + 5);
+                    const gaAtkRange = _bodyMeleeRange(creature, giantTarget, creature.attackRange);
                     if (gaDist <= gaAtkRange) {
                         _tryMeleeAttack(creature, giantTarget, giantTarget === p ? 'player' : 'neutral', gaDist, gaAtkRange, now, () => {
                             if (giantTarget === p) {
@@ -1820,7 +1822,7 @@ export function updateNeutralCreatures() {
             }
 
             if (creature.state === 'fighting') {
-                const fightRange = _bodyMeleeRange(creature, p, touchDist);
+                const fightRange = _bodyMeleeRange(creature, p, creature.attackRange);
                 if (distToPlayer > fightRange) {
                     _resetMeleeAttack(creature);
                     creature.state = 'wandering';
@@ -1956,7 +1958,7 @@ export function updateNeutralCreatures() {
             creature.state = 'idle';
         }
         if (creature.state === 'fighting') {
-            const fightRange = _bodyMeleeRange(creature, p, touchDist);
+            const fightRange = _bodyMeleeRange(creature, p, creature.attackRange);
             if (distToPlayer > fightRange) {
                 _resetMeleeAttack(creature);
                 creature.state = 'idle';

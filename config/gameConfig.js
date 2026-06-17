@@ -6,7 +6,7 @@ export const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
-    version:      'v0.1.26.0',
+    version:      'v0.1.26.1',
     SAVE_VERSION: '1.1'
 };
 
@@ -57,6 +57,8 @@ export const AUDIO_FILES = {
     // ── 黑色獵人 Boss
     hunterDetect:         'sounds/new/hunter_detect.mp3',
     hunterFootstep:       ['sounds/new/hunter_footstep_1.mp3', 'sounds/new/hunter_footstep_2.mp3'],
+    hunterFootstep1:      'sounds/new/hunter_footstep_1.mp3',
+    hunterFootstep2:      'sounds/new/hunter_footstep_2.mp3',
     hunterSniperAim:      'sounds/new/hunter_sniper_aim.mp3',
     hunterSniperCharge:   'sounds/new/hunter_sniper_charge.mp3',
     hunterSniperFire:     'sounds/new/hunter_sniper_fire.mp3',

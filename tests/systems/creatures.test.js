@@ -39,7 +39,7 @@ vi.mock('../../lang.js', () => ({
     t: (k) => k,
 }));
 
-let gameState, _effSpeed, _shouldFleeFromGiant, _getHyenaPackBonus, _hyenaWheelPosition, _selectHyenaSurroundAttackers, _getHyenaLocalPackCount, notifyCreatureHitByPlayer;
+let gameState, _effSpeed, _shouldFleeFromGiant, _getHyenaPackBonus, _hyenaWheelPosition, _selectHyenaSurroundAttackers, _getHyenaLocalPackCount, notifyCreatureHitByPlayer, _bodyMeleeRange;
 
 beforeAll(async () => {
     ({ gameState } = await import('../../systems/gameState.js'));
@@ -51,6 +51,7 @@ beforeAll(async () => {
     _selectHyenaSurroundAttackers = mod._selectHyenaSurroundAttackers;
     _getHyenaLocalPackCount = mod._getHyenaLocalPackCount;
     notifyCreatureHitByPlayer = mod.notifyCreatureHitByPlayer;
+    _bodyMeleeRange = mod._bodyMeleeRange;
 });
 
 // ── _effSpeed ─────────────────────────────────────────────────
@@ -69,6 +70,22 @@ describe('_effSpeed', () => {
     it('減速過期（now >= _slowUntil）：回傳 c.speed', () => {
         const c = { speed: 4, _slowUntil: 500, _slowMult: 0.5 };
         expect(_effSpeed(c, 1000)).toBe(4);
+    });
+});
+
+describe('_bodyMeleeRange', () => {
+    it('uses radius + max(attackRange, target radius) + rangeBuffer', () => {
+        const attacker = { radius: 10, attackRange: 20 };
+        const target = { radius: 12 };
+
+        expect(_bodyMeleeRange(attacker, target)).toBe(38);
+    });
+
+    it('uses target radius when target is larger than attackRange', () => {
+        const attacker = { radius: 10, attackRange: 8 };
+        const target = { radius: 30 };
+
+        expect(_bodyMeleeRange(attacker, target)).toBe(48);
     });
 });
 

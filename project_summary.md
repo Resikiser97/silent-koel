@@ -1,4 +1,4 @@
-﻿## v0.1.26.0
+﻿## v0.1.26.1
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,9 +12,9 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.26.0
+**現在版本:** v0.1.26.1
 
-**當前狀態：** 主線精英怪數值機制修正已保留；生物戰鬥手感第一版完成：肉食/鬣狗/巨人保持體積分離，近戰攻擊改為前搖、命中、後搖三段式並顯示 Canvas 攻擊提示圈；鬣狗 4+ 隊伍改為本地隊長/雙攻擊者/隊伍焦點，巨人與 Alpha 被玩家攻擊後會短暫激怒轉向玩家。
+**當前狀態：** 主線精英怪數值機制修正已保留；生物戰鬥手感第一版完成；近戰命中距離已統一為「怪物半徑 + max(怪物 attackRange, 目標半徑) + rangeBuffer」，黑色獵人 Boss 腳步音效已拆為 2500ms / 1000ms 雙節奏。
 
 **下一步：**
 1. 實機微調鬣狗包圍圈距離、隊長焦點、Alpha regroup 與三犬精英攻擊手感
@@ -119,6 +119,7 @@
 
 ### 最近完成的工作
 ### 最近完成的工作
+- v0.1.26.1：黑色獵人 Boss 腳步聲節奏與近戰距離公式調整 — `AUDIO_FILES` 新增 `hunterFootstep1` / `hunterFootstep2` 分別對應 `hunter_footstep_1.mp3` 與 `hunter_footstep_2.mp3`；`_updateHunterBoss()` 改用兩個獨立 timer，第一個腳步聲每 2500ms 播放一次、第二個腳步聲每 1000ms 播放一次；`_bodyMeleeRange()` 與 `_eliteDogMeleeRange()` 改為「怪物半徑 + max(怪物 attackRange, 目標半徑) + rangeBuffer」，命中寬限另加 `hitGraceBuffer`；草食生物補上 `attackRange: 20`；補 `achievements/damage` 測試 mock 與近戰距離公式回歸測試
 - v0.1.26.0：生物 AI 手感第一版與隊伍行為第二階段 — `CREATURE_AI_CONFIG` 集中生物分離、近戰前中後搖、鬣狗 pack/包圍、Alpha regroup、三犬精英近戰節奏數值；所有近戰生物攻擊改走 `_tryMeleeAttack()`，前搖可取消、Strike window 結束才做命中判定並閃光、後搖作為攻擊 CD；新增 `_applyCreatureSeparation()` 比例制分離；鬣狗 1~3 隻試探、4+ 隻包圍左右/後方並保留前方缺口，改為 2 隻主攻擊者、本地連通隊伍計數、隊伍人數越多包圍圈越大，玩家攻擊任一鬣狗會觸發本地隊長/pack focus 集火玩家；巨人隊伍低血/離隊成員會往 Alpha 或高血核心 regroup，巨人/Alpha 被玩家攻擊後 5000ms 內會短暫激怒並轉向玩家；三犬精英近戰加入前中後搖與體型命中範圍，傷害沿用主線精英數值公式；草食反擊不追擊離開攻擊距離的玩家
 - v0.1.25.9：精英怪數值機制全面修正 — 困難難度 HP/傷害/速度改用與簡單/普通相同的倍率公式（移除 `isHardMap` 固定數值分支）；速度公式補入地圖 `speedMultiplier`；新增隼族差異化（HP×0.7、傷害×1.3）；`HUNTER_ELITE_REWARDS` 拆分為 easy/normal/hard 三張表；犬族近戰傷害改用公式值
 - v0.1.25.8：圖鑑 ESM import 修復（移除 `typeof` 全域偵測，改為明確 import `BOSS_CONFIG`/`ELITE_CONFIG`/`EVOLUTION_PATHS`/`EASY_MAP`/`NORMAL_MAP`/`HARD_MAP`，修正 Boss/精英怪數值 undefined/NaN）；新增「角色」（噪鵑/阿奇爾）、「成就與永久加成」、「排行榜與名人堂」、「Boss出現機制」條目；補採集範圍、9種技能列表、F鍵中性描述
