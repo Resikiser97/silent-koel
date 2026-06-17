@@ -658,13 +658,22 @@ function _drawHunter(ctx, r, t, boss) {
 // warning=黃色閃爍，charging=紅色；寬度=Boss直徑
 // 長度 = speed×4×0.8×60（實際衝刺距離，世界px轉螢幕px）
 // _chargeArrow = { angle, dist, fromX, fromY }：warning開始瞬間鎖定
+// warning 階段：箭頭長度依經過時間從 0 漸進到滿長（充能視覺）；charging 階段維持滿長（真實衝刺距離）
 function _drawSharkChargeArrow(boss) {
     if (!boss._chargeArrow) return;
     const isWarning  = boss._chargeState === 'warning';
     const isCharging = boss._chargeState === 'charging';
     if (!isWarning && !isCharging) return;
 
-    const { angle, dist, fromX, fromY } = boss._chargeArrow;
+    const { angle, dist: fullDist, fromX, fromY } = boss._chargeArrow;
+    let dist = fullDist;
+    if (isWarning) {
+        const cfg = _chargeConfig(boss);
+        const warningMs = cfg.warningMs || 600;
+        const elapsed   = Date.now() - (boss._chargeWarningStart || Date.now());
+        const progress  = Math.max(0, Math.min(1, elapsed / warningMs));
+        dist = fullDist * progress;
+    }
     const fromS  = worldToScreen(fromX, fromY);
     const fromSx = fromS.x;
     const fromSy = fromS.y;
@@ -853,6 +862,9 @@ export function drawBoss() {
         _drawHunterAimingWarning(boss);
     }
 
+    // 大白鯊衝刺警告箭頭在 cull 前繪製（Boss off-screen 時也要給玩家視覺警告）
+    if (boss.biome === 'ocean') _drawSharkChargeArrow(boss);
+
     const s = worldToScreen(boss.x, boss.y);
     if (s.x < -100 || s.x > VIEW_W + 100 || s.y < -100 || s.y > VIEW_H + 100) return;
 
@@ -870,9 +882,6 @@ export function drawBoss() {
     ctx.arc(s.x, s.y, r + 5, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
-
-    // 衝刺警告箭頭（大白鯊，在形狀前繪製以免被遮蓋）
-    if (boss.biome === 'ocean') _drawSharkChargeArrow(boss);
 
     // Boss 形狀（純 Canvas）
     _drawBossMeleeTelegraph(boss, s.x, s.y);

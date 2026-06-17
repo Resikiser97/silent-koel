@@ -1,4 +1,4 @@
-﻿## v0.1.27.1
+﻿## v0.1.27.2
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,7 +12,7 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.27.1
+**現在版本:** v0.1.27.2
 
 **當前狀態：** 主線精英怪數值機制修正已保留；一般生物、三犬精英與三普通 Boss 已接入近戰前中後搖；三普通 Boss 技能數值已集中到 BOSS_CONFIG，鯊魚衝刺與蠍王毒霧完成新節奏調整。
 
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.27.2：大白鯊衝刺警告箭頭改為 cull 前繪製（Boss 本體不在螢幕內時箭頭仍會顯示，避免看起來像瞬移）；箭頭新增充能視覺，warning 階段長度從 0 漸進到滿長
 - v0.1.27.1：黑熊暴擊浮動文字亂碼修正；大白鯊衝刺箭頭距離同步修正（charging 開始時重新計算距離，確保狂暴後箭頭與衝刺路徑一致）
 - v0.1.27.0：三普通 Boss 攻擊節奏改版 — `BOSS_CONFIG` 新增黑熊/大白鯊/沙漠蠍王 melee 設定，`boss.js` 新增 `_bossMeleeRange()`、`_bossMeleeProfile()`、`_sharkChargeDistance()`，三王普攻改為前搖/命中窗/後搖流程並使用體型命中距離公式；黑熊狂暴後後搖 -500ms；大白鯊衝刺距離 cap 1000px、CD 2500ms、傷害 ×2；蠍王毒霧警告 500ms，tick 命中追加 8 DPS / 3 秒毒 debuff；新增 `tests/systems/boss.test.js` 回歸測試
 - v0.1.26.1：黑色獵人 Boss 腳步聲節奏與近戰距離公式調整 — `AUDIO_FILES` 新增 `hunterFootstep1` / `hunterFootstep2` 分別對應 `hunter_footstep_1.mp3` 與 `hunter_footstep_2.mp3`；`_updateHunterBoss()` 改用兩個獨立 timer，第一個腳步聲每 2500ms 播放一次、第二個腳步聲每 1000ms 播放一次；`_bodyMeleeRange()` 與 `_eliteDogMeleeRange()` 改為「怪物半徑 + max(怪物 attackRange, 目標半徑) + rangeBuffer」，命中寬限另加 `hitGraceBuffer`；草食生物補上 `attackRange: 20`；補 `achievements/damage` 測試 mock 與近戰距離公式回歸測試
