@@ -26,7 +26,7 @@
 import { gameState } from './gameState.js';
 import { VIEW_W, VIEW_H, setViewSize } from './map.js';
 import { _organHitRegions } from './organs.js';
-import { playerDash } from './player.js';
+import { _fireArcherProjectile, playerDash } from './player.js';
 import { playerAttack } from './combat.js';
 import { showTooltip, hideTooltip } from './ui.js';
 import { AudioManager } from './audio.js';
@@ -547,6 +547,7 @@ export function _attachJoystickListeners() {
                 const len = Math.sqrt(ddx * ddx + ddy * ddy);
                 const p   = gameState.player;
                 if (p && p.isRanged && p.reloadCharges > 0) {
+                    const charges = Math.max(1, p.reloadCharges);
                     p.reloadCharges--;
                     p.reloadTimer = 0;
                     // 有滑動方向（> 8px）→ 往滑動方向發射；否則往 lastMoveDir 發射
@@ -560,19 +561,7 @@ export function _attachJoystickListeners() {
                         dx = ld.dx / ll;
                         dy = ld.dy / ll;
                     }
-                    const dmg = Math.max(1, Math.round(p.attack));
-                    gameState.projectiles.push({
-                        x: p.x, y: p.y,
-                        vx: dx * 9, vy: dy * 9,
-                        damage: dmg,
-                        maxRange: p.attackRange * 1.2,
-                        distTraveled: 0,
-                        radius: 5,
-                        ownerId: 'player',
-                        hasCrit: false,
-                    });
-                    p.attackVisual = Date.now();
-                    AudioManager.play('attackNormal');
+                    _fireArcherProjectile({ dx, dy }, charges);
                     // 橫向模式攻擊回饋動畫
                     if (gameState.orientation === 'landscape') {
                         _atkFeedbackTime = Date.now();
