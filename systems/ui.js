@@ -1388,7 +1388,7 @@ export function showCompendium(startTab) {
             sections.forEach(function (section) {
                 var expanded = isExpanded(section.id);
                 var secH = document.createElement('div');
-                secH.style.cssText = 'font-size:12px;font-weight:bold;color:' + section.color + ';' +
+                secH.style.cssText = 'font-size:15px;font-weight:bold;color:' + section.color + ';' +
                     'padding:6px 8px 2px 8px;border-left:3px solid ' + section.color + ';' +
                     'margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;cursor:pointer;' +
                     'display:flex;align-items:center;justify-content:space-between;';

@@ -44,7 +44,7 @@ export const COMPENDIUM_DATA = (function () {
             // ════════════════════════════════════════
             {
                 id: 'mechanics',
-                color: '#4a8a4a',
+                color: '#6bcf6b',
                 label: { 'zh-TW': '遊戲機制', 'en': 'Game Mechanics' },
                 entries: [
                     {
@@ -143,7 +143,7 @@ export const COMPENDIUM_DATA = (function () {
             // ════════════════════════════════════════
             {
                 id: 'biome',
-                color: '#4a7aaa',
+                color: '#7daddd',
                 label: { 'zh-TW': 'Biome', 'en': 'Biome' },
                 entries: [
                     {
@@ -178,7 +178,7 @@ export const COMPENDIUM_DATA = (function () {
             // ════════════════════════════════════════
             {
                 id: 'boss',
-                color: '#aa6a2a',
+                color: '#ec9d4e',
                 label: { 'zh-TW': 'Boss', 'en': 'Boss' },
                 entries: [
                     {
@@ -231,7 +231,7 @@ export const COMPENDIUM_DATA = (function () {
             // ════════════════════════════════════════
             {
                 id: 'bestiary',
-                color: '#8a4a8a',
+                color: '#cf6bcf',
                 label: { 'zh-TW': '生物百科', 'en': 'Bestiary' },
                 entries: [
                     {
