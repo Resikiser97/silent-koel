@@ -1476,9 +1476,12 @@ export function updateBoss() {
                     boss._chargeTarget.y - boss.y,
                     boss._chargeTarget.x - boss.x
                 );
-                const chargeSpeed = _sharkChargeStepSpeed(boss);
-                boss._chargeVx = Math.cos(angle) * chargeSpeed;
-                boss._chargeVy = Math.sin(angle) * chargeSpeed;
+                // 重新算衝刺距離（warning 期間可能因狂暴改變 speed），同步更新箭頭
+                const chargeDist = _sharkChargeDistance(boss);
+                const frames = Math.max(1, (chargeCfg.durationMs || 800) / FIXED_DELTA);
+                if (boss._chargeArrow) boss._chargeArrow.dist = chargeDist;
+                boss._chargeVx = Math.cos(angle) * (chargeDist / frames);
+                boss._chargeVy = Math.sin(angle) * (chargeDist / frames);
             }
             return;
         } else if (boss._chargeState === 'cooldown') {

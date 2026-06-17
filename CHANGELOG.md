@@ -1,4 +1,11 @@
-﻿## v0.1.27.0 - 2026-06-17
+﻿## v0.1.27.1 - 2026-06-18
+
+### 修復
+- `systems/boss.js`：黑熊暴擊浮動文字亂碼修正（Codex 寫入編碼錯誤，`'X?????????'` → `'X熊爪！'`）
+- `systems/boss.js`：大白鯊衝刺箭頭距離同步修正 — charging 開始時重新計算 `_sharkChargeDistance`，確保 `_chargeArrow.dist` 與實際衝刺路徑一致（原本 warning 期間若觸發狂暴，距離會不同步）
+
+---
+## v0.1.27.0 - 2026-06-17
 
 ### 新增
 - `config/creatures.js` / `systems/boss.js`：三個普通 Boss（黑熊、大白鯊、沙漠蠍王）近戰普攻接入前搖、命中窗、後搖三段式流程，命中距離改用「Boss 半徑 + max(Boss attackRange, 玩家半徑) + rangeBuffer」，命中寬限另加 `hitGraceBuffer`；黑熊 120/220/980ms、狂暴後後搖 -500ms，大白鯊 120/220/860ms，沙漠蠍王 100/250/1000ms
