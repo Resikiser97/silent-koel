@@ -1,4 +1,4 @@
-## v0.1.25.3
+## v0.1.26.0
 
 # ARCH — 架構說明（代碼優先文件）
 
@@ -35,7 +35,7 @@
 | `gameConfig.js` | GAME_INFO（版本號）、GAME_TIMING、AUDIO_FILES、FIXED_DELTA |
 | `characters.js` | CHARACTERS 角色定義常數 |
 | `organs.js` | ORGANS（15種）、HIDDEN_ORGANS（4種）、COMBOS、poisonSac |
-| `creatures.js` | CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG |
+| `creatures.js` | CREATURE_CONFIG、CREATURE_AI_CONFIG、ELITE_CONFIG、BOSS_CONFIG |
 | `evolution.js` | EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種） |
 | `patchnotes.js` | PATCH_NOTES 陣列，最新版本置頂；v0.1.25.3 起保留 v0.1.22.1 以上公告 |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
@@ -82,7 +82,7 @@
 | `organs.js` | 器官選擇、handleEliteKill、applyOrganEffects |
 | `evolution.js` | 技能樹、進化效果、buildSkillTreeOverlay |
 | `mutation.js` | 變異系統（跨局永久保留） |
-| `creatures.js` | updateNeutralCreatures、updateHostileCreatures、Alpha/巨人系統 |
+| `creatures.js` | updateNeutralCreatures、updateHostileCreatures、Alpha/巨人系統、通用生物分離與近戰前後搖 |
 | `elite.js` | spawnEliteCreature、updateEliteCreature、毒霧隼雙技能系統 |
 | `boss.js` | spawnBoss、updateBoss、黑色獵人多管血條 |
 | `daynight.js` | getDayNightPhaseIndex、updateDayNightCycle |
@@ -313,4 +313,4 @@ main.js
 - `systems/hud.js`：`console.log && false` dead code 已移除
 - `systems/creatures.js`：`_drawDirectionArrow()` 測試函式已移除
 
-*最後更新：v0.1.25.3，更新公告字級與保留範圍調整；新增 .codex powershell_utf8 設定*
+*最後更新：v0.1.26.0，新增生物分離、近戰前搖/命中/後搖共用流程、鬣狗包圍與巨人/Alpha regroup 行為*

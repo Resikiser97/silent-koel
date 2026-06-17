@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 
 vi.mock('../../systems/gameState.js', () => ({
-    gameState: { cameraZoom: 1, isMobile: false },
+    gameState: { cameraZoom: 1, isMobile: false, player: { x: 100, y: 100, radius: 20, lastMoveDir: { dx: 1, dy: 0 } } },
     ctx: null,
 }));
 vi.mock('../../systems/map.js', () => ({
@@ -10,8 +10,8 @@ vi.mock('../../systems/map.js', () => ({
 }));
 vi.mock('../../systems/camera.js', () => ({
     worldToScreen: vi.fn(() => ({ x: 0, y: 0 })),
-    wrappedDistance: vi.fn(() => 0),
-    wrappedDelta: vi.fn(() => ({ dx: 0, dy: 0 })),
+    wrappedDistance: vi.fn((x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1)),
+    wrappedDelta: vi.fn((x1, y1, x2, y2) => ({ dx: x2 - x1, dy: y2 - y1 })),
 }));
 vi.mock('../../config/gameConfig.js', () => ({
     FIXED_DELTA: 1000 / 60,
@@ -34,9 +34,10 @@ vi.mock('../../lang.js', () => ({
     t: (k) => k,
 }));
 
-let _effSpeed, _shouldFleeFromGiant, _getHyenaPackBonus, _hyenaWheelPosition;
+let gameState, _effSpeed, _shouldFleeFromGiant, _getHyenaPackBonus, _hyenaWheelPosition;
 
 beforeAll(async () => {
+    ({ gameState } = await import('../../systems/gameState.js'));
     const mod = await import('../../systems/creatures.js');
     _effSpeed = mod._effSpeed;
     _shouldFleeFromGiant = mod._shouldFleeFromGiant;
@@ -118,5 +119,26 @@ describe('_hyenaWheelPosition', () => {
         const distB = Math.hypot(posB.x - target.x, posB.y - target.y);
         expect(distA).toBeCloseTo(85, 0);
         expect(distB).toBeCloseTo(85, 0);
+    });
+
+    it('pack 4+ 包圍時選最近外圈角度，不用 pack index 強制換到遠端', () => {
+        const hyenaA = { x: 100, y: 220, radius: 10, attackRange: 30, hyenaAttackInterval: 1000 };
+        const hyenaB = { x: 100, y: -20, radius: 10, attackRange: 30, hyenaAttackInterval: 1000 };
+        const pack = [
+            hyenaA,
+            hyenaB,
+            { x: 220, y: 100, radius: 10, attackRange: 30, hyenaAttackInterval: 1000 },
+            { x: -20, y: 100, radius: 10, attackRange: 30, hyenaAttackInterval: 1000 },
+        ];
+        gameState.player.x = 100;
+        gameState.player.y = 100;
+        gameState.player.radius = 20;
+        gameState.player.lastMoveDir = { dx: 1, dy: 0 };
+
+        const posA = _hyenaWheelPosition(hyenaA, pack, gameState.player, 0);
+        const posB = _hyenaWheelPosition(hyenaB, pack, gameState.player, 0);
+
+        expect(posA.y).toBeGreaterThan(gameState.player.y);
+        expect(posB.y).toBeLessThan(gameState.player.y);
     });
 });

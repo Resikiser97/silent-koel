@@ -8,7 +8,7 @@
 import { gameState, ctx } from './gameState.js';
 import { MAP_WIDTH, MAP_HEIGHT, VIEW_W, VIEW_H } from './map.js';
 import { worldToScreen, wrappedDelta } from './camera.js';
-import { ELITE_CONFIG } from '../config/creatures.js';
+import { CREATURE_AI_CONFIG, ELITE_CONFIG } from '../config/creatures.js';
 import { HARD_ELITE_CONFIG } from '../config/gameConfig.js';
 import { AudioManager } from './audio.js';
 import { moveCreature } from './spawning.js';
@@ -38,6 +38,127 @@ const _HUNTER_ELITE_REWARDS = {
     2: { xp: 350, skillPts: 3, mutPts: 2 },
     3: { xp: 500, skillPts: 4, mutPts: 3 },
 };
+
+function _eliteDogMeleeProfile(elite) {
+    const dogProfiles = CREATURE_AI_CONFIG.meleeAttack.eliteDog || {};
+    return dogProfiles[elite.eliteType] || CREATURE_AI_CONFIG.meleeAttack.default;
+}
+
+function _resetEliteMeleeAttack(elite) {
+    elite._meleeState = null;
+    elite._meleeTarget = null;
+    elite._meleeWindupEnd = 0;
+    elite._meleeActiveEnd = 0;
+    elite._meleeRecoveryEnd = 0;
+    elite._meleeHasHit = false;
+    elite._meleeFlashUntil = 0;
+}
+
+function _eliteDogMeleeRange(elite, target) {
+    const bodyRange = (elite.radius || 8) + (target?.radius || 8) + CREATURE_AI_CONFIG.meleeAttack.rangeBuffer;
+    return Math.max(elite.attackRange || 0, bodyRange);
+}
+
+function _trackEliteMeleeTargetDuringWindup(elite, target, now) {
+    if (elite._meleeState !== 'preparing' || !target) return;
+    const { dx, dy } = wrappedDelta(elite.x, elite.y, target.x, target.y);
+    const angle = Math.atan2(dy, dx);
+    let speed = _effSpeed(elite) * CREATURE_AI_CONFIG.meleeAttack.windupMoveMult;
+    if (elite._slowUntil && now < elite._slowUntil) speed *= (elite._slowMult || 1.0);
+    moveCreature(elite, elite.x + Math.cos(angle) * speed, elite.y + Math.sin(angle) * speed);
+}
+
+function _tryEliteDogMeleeAttack(elite, target, distance, attackRange, now, onHit) {
+    const profile = _eliteDogMeleeProfile(elite);
+    const hitGraceRange = attackRange + CREATURE_AI_CONFIG.meleeAttack.hitGraceBuffer;
+
+    if (distance > hitGraceRange) {
+        if (elite._meleeState === 'preparing' || elite._meleeState === 'striking') {
+            _resetEliteMeleeAttack(elite);
+        }
+        return false;
+    }
+
+    if (!elite._meleeState) {
+        if (distance > attackRange) return false;
+        if (now - (elite.attackCooldown || 0) < (elite.attackCooldownMs || 0)) return true;
+        elite._meleeState = 'preparing';
+        elite._meleeTarget = target;
+        elite._meleeWindupEnd = now + profile.windupMs;
+        elite._meleeActiveEnd = elite._meleeWindupEnd + profile.activeMs;
+        elite._meleeRecoveryEnd = elite._meleeActiveEnd + profile.recoveryMs;
+        elite._meleeHasHit = false;
+        elite.attackCooldown = now;
+        return true;
+    }
+
+    if (elite._meleeState === 'preparing' && now >= elite._meleeWindupEnd) {
+        elite._meleeState = 'striking';
+    }
+
+    if (elite._meleeState === 'striking') {
+        if (now >= elite._meleeActiveEnd) {
+            if (!elite._meleeHasHit && target && distance <= hitGraceRange) {
+                elite._meleeHasHit = true;
+                onHit();
+            }
+            elite._meleeFlashUntil = now + CREATURE_AI_CONFIG.meleeAttack.strikeFlashMs;
+            elite._meleeState = 'recovering';
+        }
+        return true;
+    }
+
+    if (elite._meleeState === 'recovering') {
+        if (now >= elite._meleeRecoveryEnd) {
+            _resetEliteMeleeAttack(elite);
+        }
+        return true;
+    }
+
+    return true;
+}
+
+function _drawEliteMeleeTelegraph(elite, sx, sy) {
+    const now = Date.now();
+    if (elite._meleeState === 'recovering' && now >= (elite._meleeRecoveryEnd || 0)) {
+        _resetEliteMeleeAttack(elite);
+    }
+    if (!elite._meleeState && !(elite._meleeFlashUntil && now < elite._meleeFlashUntil)) return;
+    const zoom = gameState.cameraZoom || 1;
+    const r = (elite.radius + 10) * zoom;
+    let color = 'rgba(255,80,60,0.75)';
+    let lineWidth = 3;
+    let scale = 1;
+
+    if (elite._meleeFlashUntil && now < elite._meleeFlashUntil) {
+        color = 'rgba(255,255,255,0.95)';
+        lineWidth = 5;
+        scale = 1.28;
+    } else if (elite._meleeState === 'preparing') {
+        const total = Math.max(1, elite._meleeWindupEnd - (elite.attackCooldown || 0));
+        const left = Math.max(0, elite._meleeWindupEnd - now);
+        scale = 0.8 + (1 - left / total) * 0.35;
+    } else if (elite._meleeState === 'striking') {
+        const total = Math.max(1, elite._meleeActiveEnd - elite._meleeWindupEnd);
+        const elapsed = Math.max(0, total - Math.max(0, elite._meleeActiveEnd - now));
+        const progress = Math.min(1, elapsed / total);
+        color = 'rgba(255,255,255,0.82)';
+        lineWidth = 3 + progress * 2;
+        scale = 0.9 + progress * 0.3;
+    } else if (elite._meleeState === 'recovering') {
+        color = 'rgba(180,180,180,0.45)';
+        lineWidth = 2;
+        scale = 1.0;
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(sx, sy, r * scale, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+    ctx.restore();
+}
 
 export function initEliteOrder() {
     const seed = gameState.mapSeed || Math.random() * 65536;
@@ -120,6 +241,7 @@ function _spawnHunterElite(nightNum, eliteType) {
                     eliteType === 'venomFalcon'   ? 1050 : 1000,
         attackRange: cfg.type === 'ranged' ? (cfg.range || 900) : 28,
         attackCooldown: 0,
+        attackCooldownMs: cfg.attackCooldown || 1200,
         state: 'patrolling',
         poisonResist: 0,
         wanderTarget: null, lastWanderTime: Date.now(),
@@ -440,10 +562,10 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
 
     // ── 犬族（近戰）
     if (cfg.type === 'melee') {
-        if (dist <= elite.attackRange) {
-            if (now - elite.attackCooldown >= cfg.attackCooldown) {
+        const meleeRange = _eliteDogMeleeRange(elite, p);
+        if (dist <= meleeRange) {
+            _tryEliteDogMeleeAttack(elite, p, dist, meleeRange, now, () => {
                 applyDamageToPlayer(cfg.damage, elite);
-                elite.attackCooldown = now;
                 AudioManager.play('dogAttack');
                 // 毒霧犬附帶毒效果（poisonStacks 疊加）
                 if (elite.eliteType === 'venomDog') {
@@ -452,8 +574,12 @@ function _updateHunterEliteChase(elite, p, now, dist, dx, dy) {
                     if (!player.poisonStacks) player.poisonStacks = [];
                     player.poisonStacks.push({ dmg: cfg.poisonDps || 8, endTime: now + (cfg.poisonDuration || 3000) });
                 }
-            }
+            });
+            _trackEliteMeleeTargetDuringWindup(elite, p, now);
         } else {
+            if (_tryEliteDogMeleeAttack(elite, p, dist, meleeRange, now, () => {})) {
+                return;
+            }
             const angle = Math.atan2(dy, dx);
             moveCreature(elite, elite.x + Math.cos(angle) * _effSpeed(elite), elite.y + Math.sin(angle) * _effSpeed(elite));
         }
@@ -527,6 +653,9 @@ export function drawEliteCreature() {
 
     if (elite.isHunterElite) {
         _drawHunterElite(selx, sely, r, t2, elite);
+        if (elite.eliteType && elite.eliteType.includes('Dog')) {
+            _drawEliteMeleeTelegraph(elite, selx, sely);
+        }
     } else {
         // 標準精英怪
         drawGlowEffect(selx, sely, r, elite.color, '#FFD700', 14);

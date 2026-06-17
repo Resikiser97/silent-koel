@@ -1,4 +1,4 @@
-## v0.1.25.7
+## v0.1.26.0
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,14 +12,15 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.25.7
+**現在版本:** v0.1.26.0
 
-**當前狀態：** 圖鑑（遊戲說明／器官圖鑑／進化系統）桌機版左側目錄、變異器官面板捲動歸零問題修復；圖鑑桌機面板尺寸 isMobile 感知調整；故事書第一章/第二章標題文字修正
+**當前狀態：** 生物戰鬥手感第一版完成：肉食/鬣狗/巨人保持體積分離，近戰攻擊改為前搖、命中、後搖三段式並顯示 Canvas 攻擊提示圈
 
 **下一步：**
-1. Stage F 批次 3b：拆 evolution / organs / ui 循環
-2. 地獄難度地圖
-3. 遊戲說明 / 圖鑑更新
+1. 實機微調鬣狗包圍、Alpha regroup、生物分離距離與三犬精英攻擊手感
+2. Boss 近戰前中後搖評估
+3. Stage F 批次 3b：拆 evolution / organs / ui 循環
+4. 地獄難度地圖
 
 **開發工具：**
 - Claude Chat（規劃、審查、寫 Prompt）
@@ -118,11 +119,11 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.26.0：生物 AI 手感第一版與隊伍行為第二階段 — `CREATURE_AI_CONFIG` 集中生物分離、近戰前中後搖、鬣狗 pack/包圍、Alpha regroup、三犬精英近戰節奏數值；所有近戰生物攻擊改走 `_tryMeleeAttack()`，前搖可取消、Strike window 結束才做命中判定並閃光、後搖作為攻擊 CD；新增 `_applyCreatureSeparation()` 比例制分離；鬣狗 1~3 隻試探、4+ 隻包圍左右/後方並保留前方缺口，依目前位置重新分配 Attacker 並避免穿過玩家中心換位，低血包圍鬣狗優先不當攻擊者；巨人隊伍低血/離隊成員會往 Alpha 或高血核心 regroup；三犬精英近戰加入前中後搖與體型命中範圍，幽靈犬傷害提高、暗影犬傷害降低；草食反擊不追擊離開攻擊距離的玩家
 - v0.1.25.7：圖鑑（遊戲說明／器官圖鑑／進化系統）桌機版左側目錄點擊條目捲動歸零修復（`_captureSidebarScroll`/`_restoreSidebarScroll`）；變異器官面板 `showMutationPanel()` 改為骨架建立一次+`refresh()`就地更新，消除同類捲動歸零問題；圖鑑桌機面板尺寸改 isMobile 感知（`width:82%; max-width:1040px; height:86%; max-height:86vh`）；故事書第一章四分頁誤標一～四章統一修正為「第一章」，第二章三分頁誤標「第三章」修正為「第二章」
 - v0.1.25.6：Boss biome 改由 Seed 決定（Easy/Normal，`initBossBiome()` + `gameState.bossBiome`）；Player Stats XP 區加「採集範圍」欄（體型+器官+技能合計）；特殊技能按鈕加圓角邊框、Ready/CD 視覺區分；聊天稱號 toLowerCase 修復
 - v0.1.25.5：聊天室間距與稱號同步修復 — `chat.js` 時間／lv／【GM】／稱號／暱稱間距統一改用 margin-right:3px，移除手動插入空白字元（_buildMsgHTML、renderChat 展開版置頂、_parseName）；`syncTitleToServer()` 補上 saveChatSettings() 本地同步，稱號選後立即生效
 - v0.1.25.4：手機版 UI 修復 — `achievements.js` 成就面板手機版改直向堆疊（移除 leftCol 寫死 min-width:340px 與 zoom:1.18），修復手機完全無法閱讀的問題；`ui.js` 更新公告手機字級退回 v0.1.25.3 放大前數值；`config/supabase.js` 首頁排行榜側欄 TOP10 改 TOP5（手機桌機一致）
-- v0.1.25.3：Patchnote 與工具設定整理 — 更新公告 popup 字級提高約 20%；`config/patchnotes.js` 刪除 v0.1.22.1 以下舊公告；`.codex/config.toml` 加入 `powershell_utf8 = true`
 
 ### 已知問題（待修）
 - 目前無已確認且仍未解決的條目

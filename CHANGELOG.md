@@ -1,3 +1,26 @@
+## v0.1.26.0 - 2026-06-17
+
+### 新增
+- `config/creatures.js` / `systems/creatures.js`：新增生物 AI 手感第一版設定與共用近戰攻擊節奏，所有近戰生物攻擊改為前搖、命中、後搖三段式，並在 Canvas 上顯示攻擊提示圈（前搖紅圈、命中白圈、後搖灰圈）
+- `systems/creatures.js`：新增通用生物分離邏輯，肉食性敵人與鬣狗會保持體積距離避免重疊，草食性生物允許較近距離抱團，巨人/Alpha 使用更高推開權重
+- `config/creatures.js` / `systems/creatures.js`：新增鬣狗第二階段隊伍行為，1~3 隻維持試探輪流，4 隻以上改以玩家移動方向為基準包圍左右/後方並保留前方缺口；包圍型低血鬣狗優先不當攻擊者
+- `config/creatures.js` / `systems/creatures.js`：新增巨人/Alpha 隊伍 regroup 行為，低血或離隊太遠的巨人隊伍成員會往 Alpha 或隊伍中血量較穩定的核心靠攏
+- `config/creatures.js` / `systems/elite.js`：三犬精英近戰接入前搖、命中窗、後搖三段式提示，並改用體型計算的近戰命中範圍
+
+### 調整
+- `systems/creatures.js`：鬣狗 4 隻以上包圍時改為依目前位置重新分配角色，最適合目前攻擊角度且非低血/退回中的鬣狗會成為 Attacker；非攻擊者選最近的外圈 slot，不再因玩家突然轉向而強制穿過玩家中心換位
+- `config/gameConfig.js`：三犬精英傷害微調，幽靈犬 20→30、暗影犬 30→20、毒霧犬維持 45；幽靈犬/暗影犬/毒霧犬攻擊週期分別維持 1200/900/1500ms
+- `systems/creatures.js`：近戰前搖期間會以慢速追蹤目標，命中瞬間仍重新檢查距離；目標離太遠會取消攻擊，避免紅圈無限維持或隔空命中
+- `systems/creatures.js`：命中階段改為真正的 Strike window，白圈期間不會立刻扣血，時間跑完時才做最終距離判定並閃一下出手光，之後進入後搖 CD
+- `config/creatures.js`：套用新前中後搖數據（普通肉食 150/100/1150ms、鬣狗 100/100/1300ms、草食 300/200/1000ms、巨人 350/150/1000ms、Alpha 200/150/1150ms）
+- `systems/creatures.js`：攻擊提示灰圈到達 recovery 結束時間會立即清除，避免怪物已恢復卻仍顯示後搖圈造成誤導
+- `systems/creatures.js`：草食生物反擊時只在玩家位於攻擊距離內出手；玩家離開攻擊距離後回到原本行為，不再追著玩家打
+- `systems/creatures.js`：生物分離改為比例制，草食可壓到約 50% 體積距離抱團，肉食同類維持約 100% 體積距離避免重疊
+- `systems/creatures.js`：肉食攻擊草食時改用生物擊殺清理流程，會正確移除草食並生成屍體供肉食進食，不會誤發玩家擊殺 XP
+- `systems/creatures.js`：鬣狗 pack range / keep range / leave grace / attack turn cooldown 改讀 `CREATURE_AI_CONFIG.hyena`，不再在系統檔硬寫數值
+
+---
+
 ## v0.1.25.7 - 2026-06-17
 
 ### 修復

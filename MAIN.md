@@ -1,4 +1,4 @@
-## v0.1.25.7
+## v0.1.26.0
 
 # The Silent Koel — 模組架構說明
 
@@ -7,7 +7,7 @@
 ```
 config/gameConfig.js      GAME_INFO, GAME_TIMING, AUDIO_FILES, HARD_ELITE_CONFIG
 config/organs.js          ORGANS, HIDDEN_ORGANS, COMBOS
-config/creatures.js       CREATURE_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人，v0.1.0.0）
+config/creatures.js       CREATURE_CONFIG, CREATURE_AI_CONFIG, ELITE_CONFIG, BOSS_CONFIG（含 hunter 黑色獵人，v0.1.0.0；v0.1.26.0 起生物分離/近戰前後搖/鬣狗 pack 數值集中於 CREATURE_AI_CONFIG）
 config/evolution.js       EVOLUTION_PATHS, SKILLS
 config/patchnotes.js      PATCH_NOTES（v0.1.25.3 起玩家公告保留 v0.1.22.1 以上）
 config/compendium_data.js COMPENDIUM_DATA（四大圖鑑分類，需在 map/normalmap.js 之後載入）
@@ -108,12 +108,15 @@ systems/evolution.js      checkEvolutionUnlock, applyEvolutionLevelEffect, apply
 systems/creatures.js      _PACK_NAMES / _usedPackNames / resetPackNames()（草食巨人隊伍名稱池，v0.0.66.2；v0.0.68.0 改仿製詞）
                           _HYENA_PACK_NAMES / _usedHyenaPackNames / _hyenaPackNameMap（鬣狗三國武將名稱池，v0.0.68.0）
                           drawCreatureShape（物種形狀主分派，含旋轉/翻轉邏輯）
-                          updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯；含Alpha繼承掃描C、巨人推開力G）
+                          _tryMeleeAttack / _drawAttackTelegraph（近戰前搖/命中/後搖共用流程與 Canvas 提示圈，v0.1.26.0）
+                          _applyCreatureSeparation（通用生物分離：肉食防重疊、草食可近距離抱團、巨人高權重推開，v0.1.26.0）
+                          updateNeutralCreatures（三態移動：biome 生物三態 / 非 biome 舊邏輯；含Alpha繼承掃描C、巨人推開力G；近戰改走 _tryMeleeAttack）
                           drawNeutralCreatures
-                          updateHostileCreatures（三態移動 + hostileEatMeat 門控）
+                          updateHostileCreatures（三態移動 + hostileEatMeat 門控；近戰改走 _tryMeleeAttack，鬣狗 pack 常數讀 CREATURE_AI_CONFIG）
                           drawCorpses, drawHostileCreatures
                           _effSpeed（嘴器減速有效速度計算，v0.56.0）
 systems/elite.js          spawnEliteCreature, updateEliteCreature, drawEliteCreature, drawEliteArrow
+                          三犬精英近戰前搖/命中/後搖提示與體型命中範圍（v0.1.26.0）
                           _getHunterEliteType, _spawnHunterElite, _handleHunterEliteKill（靜音獵隊精英怪，v0.1.0.0）
                           _fireEliteFalconProjectile, _fireVenomFalconShot, _updateEliteVenomPuddle
                           _updateHunterEliteChase, _drawHunterElite
@@ -458,7 +461,7 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 - `_nearestHyenaPackMate` / `_moveHyenaTowardPack`：隊員超出 800px 後先以歸隊為優先行動，3 秒內沒回到 800px 才離隊
 - 攻擊加成：每多一隻存活 packMate → 攻擊 +20%，速度 +5%
 - `_alertHyenaPack`：鬣狗鎖定目標瞬間，通知 800px 內同 biome、同 packGroup 成員切換為 chasing 同一目標
-- `_getHyenaAttackPack` / `_syncHyenaAttackTurn` / `_hyenaWheelPosition`：攻擊玩家時同隊鬣狗採車輪戰，同時只有 1 隻進入 attacking，輪替 CD 600ms
+- `_getHyenaAttackPack` / `_syncHyenaAttackTurn` / `_hyenaWheelPosition`：攻擊玩家時同隊鬣狗採車輪戰，同時只有 1 隻進入 attacking，輪替 CD 600ms；1~3 隻維持試探輪流，4 隻以上會嘗試包圍左右/後方並保留玩家前方缺口，並依目前位置重新分配 Attacker，低血/退回中的鬣狗優先不當攻擊者；非攻擊者選最近外圈 slot，避免玩家轉向時穿過玩家中心換位
 
 | 狀態 | 基礎攻擊 | 基礎速度 |
 |------|----------|----------|

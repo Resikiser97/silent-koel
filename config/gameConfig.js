@@ -6,7 +6,7 @@ export const GAME_INFO = {
     title:        '只吃不叫的噪鵑',
     subtitle:     'The Silent Koel',
     author:       'Goblinnest',
-    version:      'v0.1.25.7',
+    version:      'v0.1.26.0',
     SAVE_VERSION: '1.1'
 };
 
@@ -25,8 +25,8 @@ export const ARCHER_BULLET_SPEED  = 9;      // 阿奇爾子彈速度
 
 // 靜音獵隊精英怪數值（困難地圖）
 export const HARD_ELITE_CONFIG = {
-    specterDog:   { hp: 480,  damage: 20, attackCooldown: 1200, radius: 14, type: 'melee' },
-    shadowDog:    { hp: 900,  damage: 30, attackCooldown:  900, radius: 14, type: 'melee' },
+    specterDog:   { hp: 480,  damage: 30, attackCooldown: 1200, radius: 14, type: 'melee' },
+    shadowDog:    { hp: 900,  damage: 20, attackCooldown:  900, radius: 14, type: 'melee' },
     venomDog:     { hp: 1500, damage: 45, attackCooldown: 1500, radius: 14, type: 'melee', poisonDps: 8, poisonDuration: 3000 },
     specterFalcon: { hp: 336,  damage: 26, attackCooldown: 3000, radius: 16, type: 'ranged', range:  900, bulletSpeed: 14, maxRange: 1000, aimDuration:  300 },
     shadowFalcon:  { hp: 630,  damage: 39, attackCooldown: 2000, radius: 16, type: 'ranged', range:  600, bulletSpeed: 10, maxRange:  650, aimDuration:    0, pellets: 4, spreadAngle: 60 },

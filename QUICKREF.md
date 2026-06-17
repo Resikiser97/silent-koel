@@ -1,4 +1,4 @@
-## v0.1.25.7
+## v0.1.26.0
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.25.7**
+- 版本：**v0.1.26.0**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -82,7 +82,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `gameConfig.js` | GAME_INFO（版本號、SAVE_VERSION）、GAME_TIMING、AUDIO_FILES、FIXED_DELTA |
 | `characters.js` | CHARACTERS（角色定義常數） |
 | `organs.js` | ORGANS（15種普通）+ HIDDEN_ORGANS（4種）+ poisonSac |
-| `creatures.js` | CREATURE_CONFIG、ELITE_CONFIG、BOSS_CONFIG |
+| `creatures.js` | CREATURE_CONFIG、CREATURE_AI_CONFIG（生物分離、近戰前後搖、鬣狗 pack 數值）、ELITE_CONFIG、BOSS_CONFIG |
 | `evolution.js` | EVOLUTION_PATHS（各路線 Lv1~5）、SKILLS（9種）、COMBOS（5種） |
 | `patchnotes.js` | PATCH_NOTES（版本更新公告，最新置頂；v0.1.25.3 起保留 v0.1.22.1 以上） |
 | `supabase.js` | Supabase API（排行榜、雲端存檔） |
@@ -119,7 +119,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `combat.js` | playerAttack / setRangedAttackCallback / updateStatusEffects / 白骨系統 |
 | `organs.js` | showOrganSelection / handleEliteKill / applyOrganEffects |
 | `evolution.js` | buildSkillTreeOverlay / upgradeSkill / applyEvolutionEffects |
-| `creatures.js` | updateNeutralCreatures / updateHostileCreatures |
+| `creatures.js` | updateNeutralCreatures / updateHostileCreatures / _tryMeleeAttack / _applyCreatureSeparation |
 | `elite.js` | spawnEliteCreature / updateEliteCreature |
 | `boss.js` | spawnBoss / updateBoss / showVictory |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
