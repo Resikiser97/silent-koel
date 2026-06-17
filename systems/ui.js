@@ -1301,7 +1301,9 @@ export function showCompendium(startTab) {
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:215;pointer-events:all;color:white;font-family:Arial,sans-serif;';
 
     const panel = document.createElement('div');
-    panel.style.cssText = 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:18px 22px;width:92%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;box-sizing:border-box;';
+    panel.style.cssText = gameState.isMobile
+        ? 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:14px 14px;width:94%;max-width:none;height:88%;max-height:88vh;display:flex;flex-direction:column;box-sizing:border-box;'
+        : 'background:#1c1c1c;border:1px solid #555;border-radius:10px;padding:20px 26px;width:82%;max-width:1040px;height:86%;max-height:86vh;display:flex;flex-direction:column;box-sizing:border-box;';
 
     // ── 標題列
     const titleBar = document.createElement('div');
@@ -1355,6 +1357,16 @@ export function showCompendium(startTab) {
     function _h2(t) { return '<div style="font-size:15px;font-weight:bold;color:#FFD700;margin:10px 0 6px;">' + _esc(t) + '</div>'; }
     function _p(t)  { return '<div style="margin-bottom:5px;">' + _esc(t) + '</div>'; }
 
+    // 桌機版左側目錄是可Scroll區域：重繪前記錄捲動位置，重繪後還原，
+    // 避免點擊條目時 innerHTML 整個清空重建導致捲動位置歸零、畫面往上彈
+    function _captureSidebarScroll(container) {
+        var sb = container.querySelector('[data-comp-sidebar="1"]');
+        return sb ? sb.scrollTop : null;
+    }
+    function _restoreSidebarScroll(sidebar, savedTop) {
+        if (savedTop != null) sidebar.scrollTop = savedTop;
+    }
+
     // Guide 分頁：從 COMPENDIUM_DATA 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
     function _renderGuide(container) {
         if (typeof COMPENDIUM_DATA === 'undefined') {
@@ -1362,6 +1374,7 @@ export function showCompendium(startTab) {
             return;
         }
         const lang = (gameState.settings && gameState.settings.language) || 'zh-TW';
+        var _savedSidebarTop = _captureSidebarScroll(container);
         container.innerHTML = '';
 
         // 若尚未選定條目，預設第一個
@@ -1450,6 +1463,7 @@ export function showCompendium(startTab) {
 
             var sidebar = document.createElement('div');
             sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
+            sidebar.setAttribute('data-comp-sidebar', '1');
 
             COMPENDIUM_DATA.sections.forEach(function (section) {
                 var secH = document.createElement('div');
@@ -1474,6 +1488,7 @@ export function showCompendium(startTab) {
                 });
             });
             container.appendChild(sidebar);
+            _restoreSidebarScroll(sidebar, _savedSidebarTop);
 
             var rightPane = document.createElement('div');
             rightPane.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
@@ -1500,6 +1515,7 @@ export function showCompendium(startTab) {
 
     // Organs 分頁：從 ORGANS/HIDDEN_ORGANS/COMBOS 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
     function _renderOrgans(container) {
+        var _savedSidebarTop = _captureSidebarScroll(container);
         container.innerHTML = '';
         var typeColor = { attack: '#FF9999', defense: '#88CCFF', spirit: '#CC99FF' };
         var organSections = [
@@ -1649,6 +1665,7 @@ export function showCompendium(startTab) {
             container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
             var sidebar = document.createElement('div');
             sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
+            sidebar.setAttribute('data-comp-sidebar', '1');
             organSections.forEach(function(sec) {
                 var sh = document.createElement('div');
                 sh.style.cssText = 'font-size:10px;font-weight:bold;color:' + sec.color + ';padding:6px 8px 2px 8px;border-left:3px solid ' + sec.color + ';margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
@@ -1666,6 +1683,7 @@ export function showCompendium(startTab) {
                 });
             });
             container.appendChild(sidebar);
+            _restoreSidebarScroll(sidebar, _savedSidebarTop);
             var rp = document.createElement('div');
             rp.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
             _buildOrganContent(rp, foundEntry, foundSection);
@@ -1675,6 +1693,7 @@ export function showCompendium(startTab) {
 
     // Evo 分頁：從 EVOLUTION_PATHS/SKILLS 動態渲染，桌機版左右雙欄，手機版橫向 Tab + 內容
     function _renderEvo(container) {
+        var _savedSidebarTop = _captureSidebarScroll(container);
         container.innerHTML = '';
         var pathColors = { herbivore: '#88cc88', carnivore: '#FF9999', omnivore: '#CCAAFF' };
         var skillColor = '#FFD700';
@@ -1787,6 +1806,7 @@ export function showCompendium(startTab) {
             container.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;';
             var sidebar = document.createElement('div');
             sidebar.style.cssText = 'width:160px;flex-shrink:0;overflow-y:auto;border-right:1px solid #333;padding:4px 0;';
+            sidebar.setAttribute('data-comp-sidebar', '1');
             evoSections.forEach(function(sec) {
                 var sh = document.createElement('div');
                 sh.style.cssText = 'font-size:10px;font-weight:bold;color:' + sec.color + ';padding:6px 8px 2px 8px;border-left:3px solid ' + sec.color + ';margin:8px 0 2px 0;letter-spacing:0.3px;text-transform:uppercase;';
@@ -1805,6 +1825,7 @@ export function showCompendium(startTab) {
                 });
             });
             container.appendChild(sidebar);
+            _restoreSidebarScroll(sidebar, _savedSidebarTop);
             var rp = document.createElement('div');
             rp.style.cssText = 'flex:1;overflow-y:auto;padding:14px 18px;';
             _buildEvoContent(rp, foundEntry);
@@ -3000,7 +3021,7 @@ function _getGuideStoryPages() {
         },
         {
             icon: '🐦‍⬛',
-            title: '第二章 — 孤兒',
+            title: '第一章 — 孤兒',
             svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="0" width="520" height="180" fill="#1a1005"/>
 <ellipse style="animation:_warmP 3s ease-in-out infinite" cx="260" cy="150" rx="160" ry="45" fill="#c8640a" opacity=".2"/>
@@ -3078,7 +3099,7 @@ function _getGuideStoryPages() {
         },
         {
             icon: '☠️',
-            title: '第三章 — 蛻變',
+            title: '第一章 — 蛻變',
             svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="0" width="520" height="180" fill="#0c0a15"/>
 <ellipse style="animation:_vglow 2s ease-in-out infinite" cx="180" cy="95" rx="75" ry="52" fill="#6030c0" opacity=".2"/>
@@ -3146,7 +3167,7 @@ function _getGuideStoryPages() {
         },
         {
             icon: '⚔️',
-            title: '第四章 — 試煉',
+            title: '第一章 — 試煉',
             svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <radialGradient id="_bg" cx="50%" cy="50%"><stop offset="0%" stop-color="#141810"/><stop offset="100%" stop-color="#060806"/></radialGradient>
@@ -3240,7 +3261,7 @@ function _getGuideStoryPages() {
         // ── 第二章（需通關普通難度解鎖）
         {
             icon: '🥾',
-            title: '第三章 — 獵人的足跡',
+            title: '第二章 — 獵人的足跡',
             svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="0" width="520" height="200" fill="#060d06"/>
 <polygon points="0,200 80,200 0,120" fill="#0a1a0a"/>
@@ -3281,7 +3302,7 @@ function _getGuideStoryPages() {
         },
         {
             icon: '🔫',
-            title: '第三章 — 獵人的足跡',
+            title: '第二章 — 獵人的足跡',
             svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="0" width="520" height="200" fill="#080808"/>
 <g style="animation:_drift 15s ease-in-out infinite alternate" opacity="0.4">
@@ -3318,7 +3339,7 @@ function _getGuideStoryPages() {
         },
         {
             icon: '🎯',
-            title: '第三章 — 獵人的足跡',
+            title: '第二章 — 獵人的足跡',
             svgIllustration: svgStyle + `<svg width="100%" viewBox="0 0 520 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="0" width="520" height="200" fill="#030303"/>
 <path d="M195 10 Q260 0 325 10 L340 200 L180 200Z" fill="#080808"/>
@@ -3426,43 +3447,4 @@ export function buildEndGameOverlay(options) {
     btnRow.appendChild(warnEl);
 
     const rowInner = document.createElement('div');
-    rowInner.style.cssText = options.buttonInnerStyle;
-    (options.secondaryButtons || []).forEach(buttonDef => {
-        const btn = document.createElement('button');
-        btn.style.cssText = buttonDef.style;
-        btn.textContent = buttonDef.text;
-        if (buttonDef.warningText) {
-            let warned = false;
-            btn.onclick = () => {
-                if (!warned) {
-                    warned = true;
-                    warnEl.textContent = buttonDef.warningText;
-                    warnEl.style.display = 'block';
-                    return;
-                }
-                buttonDef.onClick();
-            };
-        } else {
-            btn.onclick = buttonDef.onClick;
-        }
-        rowInner.appendChild(btn);
-    });
-    btnRow.appendChild(rowInner);
-    overlay.appendChild(btnRow);
-
-    if (options.footerText) {
-        const footer = document.createElement('div');
-        footer.style.cssText = options.footerStyle;
-        footer.textContent = options.footerText;
-        overlay.appendChild(footer);
-    }
-
-    if (options.devWarningText) {
-        const devWarn = document.createElement('div');
-        devWarn.style.cssText = options.devWarningStyle;
-        devWarn.textContent = options.devWarningText;
-        overlay.appendChild(devWarn);
-    }
-
-    return overlay;
-}
+    rowInner.style.cssText = options.buttonInnerSt

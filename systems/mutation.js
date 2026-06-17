@@ -288,48 +288,18 @@ export function showMutationPanel() {
     pointsEl.textContent = t('mutationPointsLabel', { n: data.points });
     panel.appendChild(pointsEl);
 
-    // 計算當前實際倍率（確保最新值）
-    applyMutationEffects();
-    const p = gameState.player;
-
-    // 動態生成四個器官描述
-    const fangLv    = data.levels.fang || 0;
-    const fangBonus = Math.round(((p.mutationAttackBonus || 1) - 1) * 100);
-    const fangDesc  = fangLv === 0
-        ? '尚未解鎖，升級後生效（每級 +1% 攻擊力）'
-        : `攻擊力 +${fangBonus}%（Lv.${fangLv}，每級 +1%）`;
-
-    const tailLv    = data.levels.tail || 0;
-    const tailBonus = Math.round(((p.mutationHpBonus || 1) - 1) * 100);
-    const tailDesc  = tailLv === 0
-        ? '尚未解鎖，升級後生效（每級 +1% HP上限）'
-        : `HP上限 +${tailBonus}%（Lv.${tailLv}，每級 +1%）`;
-
-    const wingLv    = data.levels.wing || 0;
-    const wingBonus = Math.round(((p.mutationSpeedBonus || 1) - 1) * 100);
-    const wingDesc  = wingLv === 0
-        ? '尚未解鎖，升級後生效（每級 +1% 移動速度）'
-        : `移動速度 +${wingBonus}%（Lv.${wingLv}，每級 +1%）`;
-
-    const eyeLv    = data.levels.eye || 0;
-    const eyeBonus = Math.round(((p.mutationXpBonus || 1) - 1) * 100);
-    const eyeDesc  = eyeLv === 0
-        ? '尚未解鎖，升級後生效（每級 +1% XP獲得）'
-        : `XP獲得 +${eyeBonus}%（Lv.${eyeLv}，每級 +1%）`;
-
-    // ── 四個器官列表
+    // ── 四個器官列表（骨架只建立一次，數值由 refresh() 原地更新，
+    // 不重建 DOM，避免每次升級都整個重繪導致捲動位置歸零）
     const MUTATION_ORGANS = [
-        { id: 'fang', icon: '🦷', name: '變異-憤怒的獠牙', desc: () => fangDesc },
-        { id: 'tail', icon: '🐾', name: '變異-懦弱的尾巴', desc: () => tailDesc },
-        { id: 'wing', icon: '🪶', name: '變異-勇敢的翅膀', desc: () => wingDesc },
-        { id: 'eye',  icon: '👁️', name: '變異-好奇的眼睛', desc: () => eyeDesc  },
+        { id: 'fang', icon: '🦷', name: '變異-憤怒的獠牙', bonusKey: 'mutationAttackBonus', unit: '攻擊力' },
+        { id: 'tail', icon: '🐾', name: '變異-懦弱的尾巴', bonusKey: 'mutationHpBonus',     unit: 'HP上限' },
+        { id: 'wing', icon: '🪶', name: '變異-勇敢的翅膀', bonusKey: 'mutationSpeedBonus',  unit: '移動速度' },
+        { id: 'eye',  icon: '👁️', name: '變異-好奇的眼睛', bonusKey: 'mutationXpBonus',     unit: 'XP獲得'  },
     ];
 
-    MUTATION_ORGANS.forEach(org => {
-        const lv       = data.levels[org.id] || 0;
-        const cost     = getMutationUpgradeCost(lv);
-        const canAfford = data.points >= cost;
+    const rowRefs = {};
 
+    MUTATION_ORGANS.forEach(org => {
         const row = document.createElement('div');
         row.style.cssText = [
             'display:flex', 'align-items:center', 'gap:10px',
@@ -345,44 +315,28 @@ export function showMutationPanel() {
         info.style.cssText = 'flex:1;min-width:0;';
         const nameEl = document.createElement('div');
         nameEl.style.cssText = 'font-size:13px;font-weight:bold;color:#FFD700;';
-        nameEl.textContent = org.name + '  Lv.' + lv;
         const descEl = document.createElement('div');
         descEl.style.cssText = 'font-size:11px;color:#aaa;margin-top:2px;';
-        descEl.textContent = org.desc();
         info.appendChild(nameEl);
         info.appendChild(descEl);
         row.appendChild(info);
 
         const btn = document.createElement('button');
-        btn.style.cssText = [
-            'font-size:12px', 'padding:6px 10px', 'border-radius:4px',
-            'flex-shrink:0', 'white-space:nowrap',
-            canAfford
-                ? 'background:rgba(255,215,0,0.15);border:1px solid #FFD700;color:#FFD700;cursor:pointer;'
-                : 'background:#1a1a1a;border:1px solid #333;color:#555;cursor:default;'
-        ].join(';');
-        btn.textContent = t('mutationUpgradeBtn', { n: cost });
-        if (canAfford) {
-            btn.onclick = () => {
-                upgradeMutation(org.id);
-                overlay.remove();
-                gameState.mutationPanelOpen = false;
-                showMutationPanel(); // 重新開啟（刷新顯示）
-            };
-        }
+        btn.onclick = () => {
+            upgradeMutation(org.id); // 點數不足時 upgradeMutation 內部會自行擋下
+            refresh();
+        };
         row.appendChild(btn);
         panel.appendChild(row);
+
+        rowRefs[org.id] = { nameEl, descEl, btn };
     });
 
     // 技能點兌換變異點（十一）
     const exchangeHint = document.createElement('div');
     exchangeHint.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-top:12px;';
-    exchangeHint.textContent = t('mutationExchangeHint', { n: gameState.skillPoints || 0 });
     panel.appendChild(exchangeHint);
 
-    const _unlocked = storageGetJSON(STORAGE_KEYS.ACHIEVEMENTS) || {};
-    const _discount = getAchievementBonusTotals(Object.keys(_unlocked)).mutationExchangeDiscountPercent || 0;
-    const _cost = _discount > 0 ? MUTATION_CONFIG.discountedSkillPointCost : MUTATION_CONFIG.skillPointCost;
     const exchangeBtn = document.createElement('button');
     exchangeBtn.style.cssText = [
         'display:block', 'width:100%', 'margin-top:6px',
@@ -390,23 +344,18 @@ export function showMutationPanel() {
         'border:1px solid #8a6a2a', 'background:rgba(180,120,20,0.2)',
         'color:#FFD700', 'border-radius:6px'
     ].join(';');
-    exchangeBtn.textContent = _cost + ' 技能點 → ' + MUTATION_CONFIG.mutationPointGain + ' 變異點';
-    const canExchange = (gameState.skillPoints || 0) >= _cost;
-    exchangeBtn.disabled = !canExchange;
-    exchangeBtn.style.opacity = canExchange ? '1' : '0.5';
-    if (canExchange) {
-        exchangeBtn.onclick = () => {
-            if ((gameState.skillPoints || 0) < _cost) return;
-            gameState.skillPoints -= _cost;
-            gameState.mutationData.points += MUTATION_CONFIG.mutationPointGain;
-            gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + MUTATION_CONFIG.mutationPointGain;
-            storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
-            saveMutationData();
-            overlay.remove();
-            gameState.mutationPanelOpen = false;
-            showMutationPanel();
-        };
-    }
+    exchangeBtn.onclick = () => {
+        const _unlockedNow = storageGetJSON(STORAGE_KEYS.ACHIEVEMENTS) || {};
+        const _discountNow = getAchievementBonusTotals(Object.keys(_unlockedNow)).mutationExchangeDiscountPercent || 0;
+        const _costNow = _discountNow > 0 ? MUTATION_CONFIG.discountedSkillPointCost : MUTATION_CONFIG.skillPointCost;
+        if ((gameState.skillPoints || 0) < _costNow) return;
+        gameState.skillPoints -= _costNow;
+        gameState.mutationData.points += MUTATION_CONFIG.mutationPointGain;
+        gameState.mutationData.totalPointsEarned = (gameState.mutationData.totalPointsEarned || 0) + MUTATION_CONFIG.mutationPointGain;
+        storageSet(STORAGE_KEYS.SKILL_POINTS, String(gameState.skillPoints));
+        saveMutationData();
+        refresh();
+    };
     panel.appendChild(exchangeBtn);
 
     // 關閉按鈕
@@ -423,6 +372,50 @@ export function showMutationPanel() {
         gameState.mutationPanelOpen = false;
     };
     panel.appendChild(closeBtn);
+
+    // ── 原地刷新所有動態數值（點數、各器官描述/按鈕、兌換按鈕），
+    // 不重建 panel/overlay，藉此保留 panel 的捲動位置
+    function refresh() {
+        pointsEl.textContent = t('mutationPointsLabel', { n: data.points });
+
+        // 計算當前實際倍率（確保最新值）
+        applyMutationEffects();
+        const p = gameState.player;
+
+        MUTATION_ORGANS.forEach(org => {
+            const lv = data.levels[org.id] || 0;
+            const cost = getMutationUpgradeCost(lv);
+            const canAfford = data.points >= cost;
+            const bonus = Math.round(((p[org.bonusKey] || 1) - 1) * 100);
+            const desc = lv === 0
+                ? `尚未解鎖，升級後生效（每級 +1% ${org.unit}）`
+                : `${org.unit} +${bonus}%（Lv.${lv}，每級 +1%）`;
+
+            const refs = rowRefs[org.id];
+            refs.nameEl.textContent = org.name + '  Lv.' + lv;
+            refs.descEl.textContent = desc;
+            refs.btn.textContent = t('mutationUpgradeBtn', { n: cost });
+            refs.btn.style.cssText = [
+                'font-size:12px', 'padding:6px 10px', 'border-radius:4px',
+                'flex-shrink:0', 'white-space:nowrap',
+                canAfford
+                    ? 'background:rgba(255,215,0,0.15);border:1px solid #FFD700;color:#FFD700;cursor:pointer;'
+                    : 'background:#1a1a1a;border:1px solid #333;color:#555;cursor:default;'
+            ].join(';');
+        });
+
+        exchangeHint.textContent = t('mutationExchangeHint', { n: gameState.skillPoints || 0 });
+
+        const _unlocked = storageGetJSON(STORAGE_KEYS.ACHIEVEMENTS) || {};
+        const _discount = getAchievementBonusTotals(Object.keys(_unlocked)).mutationExchangeDiscountPercent || 0;
+        const _cost = _discount > 0 ? MUTATION_CONFIG.discountedSkillPointCost : MUTATION_CONFIG.skillPointCost;
+        const canExchange = (gameState.skillPoints || 0) >= _cost;
+        exchangeBtn.textContent = _cost + ' 技能點 → ' + MUTATION_CONFIG.mutationPointGain + ' 變異點';
+        exchangeBtn.disabled = !canExchange;
+        exchangeBtn.style.opacity = canExchange ? '1' : '0.5';
+    }
+
+    refresh();
 
     overlay.appendChild(panel);
     document.getElementById('game-container').appendChild(overlay);
@@ -498,3 +491,4 @@ export function _syncMutationSkillPoints() {
         ? gameState.mutationSkills._points : 0;
     gameState.mutationSkillPoints = Math.max(calculated, savedPoints);
 }
+                                                                  

@@ -1,4 +1,4 @@
-## v0.1.25.4
+## v0.1.25.7
 
 # The Silent Koel — 模組架構說明
 
@@ -795,7 +795,7 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 ### UI
 - `_initTopLeftUI()` 第三行：⚗️ Lv.X 圖標 + 紅點（`#mutation-icon-row`），`pointer-events:all`，click → `showMutationPanel()`
 - `updateUI()` 每幀更新：`#mutation-level-text` 顯示四個器官等級總和，`#mutation-red-dot` 顯示/隱藏
-- `showMutationPanel()`：彈出 z-index 120 面板，遊戲暫停（`mutationPanelOpen=true`）
+- `showMutationPanel()`：彈出 z-index 120 面板，遊戲暫停（`mutationPanelOpen=true`）；面板骨架只建立一次，升級/兌換按鈕呼叫內部 `refresh()` 就地更新數值與按鈕狀態，不會整個摧毀重建（v0.1.25.7 修復捲動歸零問題）
 - `isGamePaused()` 和 `_joyPaused()` 均加入 `mutationPanelOpen` 判斷
 
 ### 初始化流程
@@ -861,6 +861,8 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 - **入口**：首頁「📖 圖鑑」按鈕呼叫 `showCompendium('guide')`；遊戲內右上角 `_drawCompendiumBtn()` 呼叫 `showCompendium('organs')`
 - **三分頁**：遊戲說明（guide） / 器官圖鑑（organs） / 進化系統（evo）
 - **開啟時暫停**：`organSelectionActive = true`，關閉時恢復
+- **桌機面板尺寸**：`width:82%; max-width:1040px; height:86%; max-height:86vh`，isMobile 感知，不沿用手機版尺寸（v0.1.25.7）
+- **桌機左側目錄捲動保留**：`_renderGuide` / `_renderOrgans` / `_renderEvo` 桌機分支重繪前後呼叫 `_captureSidebarScroll(container)` / `_restoreSidebarScroll(sidebar, savedTop)`（標記屬性 `data-comp-sidebar="1"`），避免點擊目錄條目時因 `container.innerHTML=''` 整個重建導致 `scrollTop` 歸零、畫面回彈（v0.1.25.7）
 
 ### 遊戲說明分頁（v0.47.1 擴充至 5 頁）
 
@@ -1046,14 +1048,4 @@ main.js                   isGamePaused, updateGameLogic, gameLoop, initializeGam
 ### handleEliteKill 執行順序（v0.15.2 修復）
 `showHiddenOrganSelection()` **必須在** `addXP()` 之前呼叫，否則器官選擇與升級界面會疊層。
 
-### showHiddenOrganSelection closeOverlay 順序（v0.15.3 修復）
-`gameState.organSelectionActive = false` **必須在** `showOrganSelection()` 之前設定，
-否則選擇隱藏器官後關閉 overlay 時遊戲會短暫恢復。
-
-### 模組載入方式
-專案使用 **ES Modules**，所有檔案透過 `import`/`export` 互相依賴，`main.js` 為主要入口。
-跨檔案呼叫必須透過 `import` 明確引入，不存在全域作用域自動共享。
-
-### script 標籤位置
-`main.js` 以 `<script type="module" src="./main.js">` 單一標籤載入（位於 `index.html` body 末端）。
-其餘所有檔案透過 ESM `import` 引入，不使用獨立 `<script src>` 標籤。
+### sho
