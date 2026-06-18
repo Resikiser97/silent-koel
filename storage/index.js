@@ -19,6 +19,7 @@ export const STORAGE_KEYS = {
     HUNTER_SLAYER_UNLOCKED:  'hunterSlayerUnlocked', // 已寫入但未讀取，保留備用
     CHAT_POSITION:           'chatPosition',
     CHAT_SETTINGS:           'chatSettings',
+    CHAT_DEFAULT_CHANNEL:    'chatDefaultChannel',
     ACHIEVEMENTS:            'achievements',
     READ_ACHIEVEMENTS:       'readAchievements',
     READ_PATCH_NOTES:        'readPatchNotes',

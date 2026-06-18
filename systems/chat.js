@@ -1,5 +1,6 @@
 // =============================================================
 // systems/chat.js — 首頁聊天室系統（Supabase Realtime 即時聊天 + 帳號管理）
+// v0.1.28.0
 // =============================================================
 //
 // 【對外公開函式】（其他檔案可直接呼叫）
@@ -11,11 +12,24 @@
 //   saveChatSettings(obj) — 將帳號設定寫回 localStorage
 //   chatLogout() — 登出並清除本地登入狀態
 //   disconnectChat() — 斷開 Supabase Realtime 連線
-//   renderChat() — 重新渲染聊天訊息列表
+//   renderChat() — 重新渲染聊天訊息列表（含頻道過濾、三格置頂）
 //   isVipPlayer(msg) — 判斷訊息是否來自 VIP 玩家
 //   chatSaveProgress() — 將目前遊戲進度儲存到 Supabase 雲端（已登入才執行）
 //   openChatLogin() — 強制開啟聊天室登入流程（供成就 Overlay 稱號功能呼叫）
 //   syncTitleToServer(title) — 將已選稱號同步至 Supabase chat_users.title（已登入才執行）
+//
+// 【DB 結構（v0.1.28.0 起）】
+//   chat_messages 表：
+//   - channel        (text)        ：'global' / 'zh' / 'en'，前端依此欄位過濾
+//   - pin_slot       (integer)     ：NULL=未置頂；1/2/3=顯示中；4+=排隊等待
+//   - pin_expires_at (timestamptz) ：NULL=永久；有值=到期 ISO 時間（伺服器為唯一真實來源）
+//   - is_pinned 已移除（以 pin_slot 取代）
+//
+// 【GM 指令格式】
+//   /pin <slot> <duration>  例：/pin 2 1H  /pin 1 6H  /pin 3 -（永久）
+//   /unpin <slot>           例：/unpin 2
+//   slot=1/2/3，duration=<N>H 或 - (永久)；GM 專屬，settings.isGM 才生效
+//   排隊補位時 pin_expires_at 隨訊息物件自動帶過來，無需重算
 //
 // 【依賴的跨檔案函式】（修改時注意這些來自外部）
 //   SUPABASE_URL, SUPABASE_KEY  ← 來自 config/supabase.js
@@ -24,8 +38,9 @@
 //   gameState                   ← 來自 systems/gameState.js
 //
 // 【重要規則／陷阱】
-//   ⚠️ 使用 Supabase Realtime 需在 Dashboard 啟用 chat_messages 表的 Realtime，
-//      並設定 RLS 允許 anon SELECT / INSERT；GM UPDATE(pin) / DELETE 需額外 policy
+//   ⚠️ 使用 Supabase Realtime 需啟用 chat_messages 表的 INSERT+UPDATE Realtime，
+//      RLS 允許 anon SELECT / INSERT；GM UPDATE(pin_slot/pin_expires_at) / DELETE 需額外 policy
+//   ⚠️ Polling 模式下 pin_slot/pin_expires_at UPDATE 不會即時反映，需重整頁面才同步
 //   ⚠️ 密碼以 SHA-256 雜湊儲存，絕不明文上傳；帳號一旦建立無法自行重設密碼
 //   ⚠️ _chatExpanded 狀態由 systems/input.js 的 ESC 鍵處理讀取，不可隨意重命名
 // =============================================================
@@ -79,9 +94,12 @@ let _sbClient = null;
 let _chatChannel       = null;   // Supabase Realtime channel
 let _chatPollTimer     = null;   // polling fallback 計時器
 let _chatIdleTimer     = null;   // 閒置自動斷線計時器
-let _chatMessages      = [];     // 目前顯示的訊息（最多 50 筆）
-let _pinnedMessage     = null;   // 置頂訊息 { ...msg, pinUntil }
+let _chatMessages      = [];     // 全頻道訊息（最多 50 筆），render 時依 channel 過濾
+let _pinnedSlots       = [null, null, null]; // 置頂格 slot 1/2/3 當前訊息（含 pin_expires_at 欄位）
 let _chatLastFetchTime = null;   // polling 用：上次拉取時間
+
+let _currentChannel  = 'global'; // 展開面板目前查看的頻道分頁
+let _defaultChannel  = 'global'; // 玩家設定的預設頻道（存 localStorage）
 
 const CHAT_IDLE_MS = 60 * 60 * 1000; // 1 小時閒置斷線
 const CHAT_POLL_MS = 8000;            // polling 間隔（ms）
@@ -354,13 +372,17 @@ export function chatLogout() {
 // ─────────────────────────────────────────────
 
 export async function initChat() {
+    // 讀取預設頻道（buildChatUI 可能已設好，這裡再確認一次）
+    const saved = storageGet(STORAGE_KEYS.CHAT_DEFAULT_CHANNEL);
+    if (saved) { _defaultChannel = saved; _currentChannel = saved; }
+
     // 先確保斷線（重入時重新建立乾淨連線）
     disconnectChat();
 
     // 清除 24 小時前的訊息
     await _deleteOldMessages();
 
-    // 讀取最近 50 筆訊息
+    // 讀取最近 50 筆訊息（含所有頻道）
     try {
         if (_sbClient) {
             const { data } = await _sbClient
@@ -380,9 +402,13 @@ export async function initChat() {
         _chatMessages = [];
     }
 
-    // 從歷史訊息找置頂
-    const pinned = _chatMessages.find(m => m.is_pinned);
-    if (pinned) _pinnedMessage = { ...pinned, pinUntil: null };
+    // 從歷史訊息解析置頂格（pin_slot 1/2/3；到期時間從各訊息的 pin_expires_at 讀取）
+    _pinnedSlots = [null, null, null];
+    for (const m of _chatMessages) {
+        if (m.pin_slot >= 1 && m.pin_slot <= 3) {
+            _pinnedSlots[m.pin_slot - 1] = m;
+        }
+    }
 
     _subscribeChat();
     _resetIdleTimer();
@@ -396,15 +422,25 @@ async function _deleteOldMessages() {
             await _sbClient
                 .from('chat_messages')
                 .delete()
-                .eq('is_pinned', false)
+                .is('pin_slot', null)
                 .lt('created_at', cutoff);
         } else {
             await supabaseQuery(
                 'chat_messages', 'DELETE', null,
-                '?is_pinned=eq.false&created_at=lt.' + encodeURIComponent(cutoff)
+                '?pin_slot=is.null&created_at=lt.' + encodeURIComponent(cutoff)
             );
         }
     } catch(e) {}
+}
+
+// 從 _chatMessages 重建 _pinnedSlots（收到 UPDATE 時呼叫）
+function _refreshPinnedSlots() {
+    _pinnedSlots = [null, null, null];
+    for (const m of _chatMessages) {
+        if (m.pin_slot >= 1 && m.pin_slot <= 3) {
+            _pinnedSlots[m.pin_slot - 1] = m;
+        }
+    }
 }
 
 function _subscribeChat() {
@@ -420,6 +456,17 @@ function _subscribeChat() {
                     if (_chatMessages.length > 50) _chatMessages.shift();
                     renderChat();
                     _resetIdleTimer();
+                }
+            )
+            .on('postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'chat_messages' },
+                (payload) => {
+                    const updated = payload.new;
+                    const idx = _chatMessages.findIndex(m => m.id === updated.id);
+                    if (idx >= 0) _chatMessages[idx] = updated;
+                    else _chatMessages.push(updated);
+                    _refreshPinnedSlots();
+                    renderChat();
                 }
             )
             .subscribe();
@@ -490,8 +537,8 @@ async function sendChatMessage(content) {
         return;
     }
     // /unpin 取消置頂（GM 限定）
-    if (settings.isGM && content.trim().toLowerCase() === '/unpin') {
-        await _handleUnpinCommand();
+    if (settings.isGM && content.trim().toLowerCase().startsWith('/unpin')) {
+        await _handleUnpinCommand(content.trim());
         return;
     }
 
@@ -504,7 +551,7 @@ async function sendChatMessage(content) {
         content:     content.trim(),
         version:     (typeof GAME_INFO !== 'undefined') ? GAME_INFO.version : '?',
         is_gm:       settings.isGM,
-        is_pinned:   false
+        channel:     _currentChannel
     };
 
     try {
@@ -519,65 +566,164 @@ async function sendChatMessage(content) {
 }
 
 async function _handlePinCommand(cmd) {
-    // /pin 1H → 置頂自己最新一條 GM 訊息 1 小時
-    const match = cmd.match(/^\/pin\s+(\d+)H$/i);
+    // 格式：/pin <slot> <duration>  例：/pin 2 1H  或  /pin 1 -
+    const match = cmd.match(/^\/pin\s+([123])\s+(\d+H|-)$/i);
     if (!match) return;
-    const hours       = parseInt(match[1]);
+    const requestedSlot = parseInt(match[1]);
+    const durationStr   = match[2].toUpperCase();
+
     const settings    = loadChatSettings();
     const displayName = settings.playerName.trim() || '匿名者';
 
-    // 找自己最新一條 GM 訊息
+    // 找自己最新一條尚未置頂的 GM 訊息
     const myMsg = [..._chatMessages].reverse().find(m => {
         const parts = (m.player_name || '').split('|');
-        return parts.length >= 2 && parts[1] === displayName && m.is_gm;
+        return parts.length >= 2 && parts[1] === displayName && m.is_gm && !m.pin_slot;
     });
     if (!myMsg) return;
 
-    const pinUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+    // 決定實際使用的 slot
+    let actualSlot = null;
+    if (!_pinnedSlots[requestedSlot - 1]) {
+        actualSlot = requestedSlot;
+    } else {
+        // 找下一個空格（1→2→3）
+        for (let i = 1; i <= 3; i++) {
+            if (!_pinnedSlots[i - 1]) { actualSlot = i; break; }
+        }
+        if (!actualSlot) {
+            // 1/2/3 全滿 → 排隊區（pin_slot 4, 5, 6...）
+            const maxSlot = _chatMessages.reduce((mx, m) => {
+                return (m.pin_slot && m.pin_slot >= 4) ? Math.max(mx, m.pin_slot) : mx;
+            }, 3);
+            actualSlot = maxSlot + 1;
+        }
+    }
+
+    // 計算到期 ISO 字串，寫入 DB（"-" = 永久不過期 → null）
+    const pinExpiresAt = durationStr === '-'
+        ? null
+        : new Date(Date.now() + parseInt(durationStr) * 3600000).toISOString();
+
     try {
         if (_sbClient) {
-            await _sbClient
-                .from('chat_messages')
-                .update({ is_pinned: true })
+            await _sbClient.from('chat_messages')
+                .update({ pin_slot: actualSlot, pin_expires_at: pinExpiresAt })
                 .eq('id', myMsg.id);
         } else {
-            await supabaseQuery(
-                'chat_messages', 'PATCH',
-                { is_pinned: true },
-                '?id=eq.' + myMsg.id
-            );
+            await supabaseQuery('chat_messages', 'PATCH',
+                { pin_slot: actualSlot, pin_expires_at: pinExpiresAt },
+                '?id=eq.' + myMsg.id);
         }
     } catch(e) {}
 
-    _pinnedMessage = { ...myMsg, pinUntil };
-    // 在本地陣列也更新
+    // 更新本地快取（到期時間跟著訊息物件走，不需獨立陣列）
     const idx = _chatMessages.findIndex(m => m.id === myMsg.id);
-    if (idx >= 0) _chatMessages[idx] = { ..._chatMessages[idx], is_pinned: true };
+    if (idx >= 0) _chatMessages[idx] = { ..._chatMessages[idx], pin_slot: actualSlot, pin_expires_at: pinExpiresAt };
+    if (actualSlot <= 3) {
+        _pinnedSlots[actualSlot - 1] = _chatMessages[idx >= 0 ? idx : _chatMessages.length - 1];
+    }
     renderChat();
 }
 
-async function _handleUnpinCommand() {
-    const pinned = _chatMessages.find(m => m.is_pinned);
+async function _handleUnpinCommand(cmd) {
+    // 格式：/unpin <slot>  例：/unpin 2
+    const match = cmd.match(/^\/unpin\s+([123])$/i);
+    if (!match) return;
+    const slot   = parseInt(match[1]);
+    const pinned = _pinnedSlots[slot - 1];
     if (!pinned) return;
 
+    // 清除此格的置頂
     try {
         if (_sbClient) {
-            await _sbClient
-                .from('chat_messages')
-                .update({ is_pinned: false })
-                .eq('id', pinned.id);
+            await _sbClient.from('chat_messages').update({ pin_slot: null }).eq('id', pinned.id);
         } else {
-            await supabaseQuery(
-                'chat_messages', 'PATCH',
-                { is_pinned: false },
-                '?id=eq.' + pinned.id
-            );
+            await supabaseQuery('chat_messages', 'PATCH', { pin_slot: null }, '?id=eq.' + pinned.id);
         }
     } catch(e) {}
 
-    _pinnedMessage = null;
-    const idx = _chatMessages.findIndex(m => m.id === pinned.id);
-    if (idx >= 0) _chatMessages[idx] = { ..._chatMessages[idx], is_pinned: false };
+    const pinnedIdx = _chatMessages.findIndex(m => m.id === pinned.id);
+    if (pinnedIdx >= 0) _chatMessages[pinnedIdx] = { ..._chatMessages[pinnedIdx], pin_slot: null };
+    _pinnedSlots[slot - 1] = null;
+
+    // 從排隊區補位（FIFO：pin_slot 最小的那筆最先加入）
+    const queued = _chatMessages
+        .filter(m => m.pin_slot >= 4)
+        .sort((a, b) => a.pin_slot - b.pin_slot)[0];
+
+    if (queued) {
+        try {
+            if (_sbClient) {
+                await _sbClient.from('chat_messages').update({ pin_slot: slot }).eq('id', queued.id);
+            } else {
+                await supabaseQuery('chat_messages', 'PATCH', { pin_slot: slot }, '?id=eq.' + queued.id);
+            }
+        } catch(e) {}
+        const qIdx = _chatMessages.findIndex(m => m.id === queued.id);
+        if (qIdx >= 0) _chatMessages[qIdx] = { ..._chatMessages[qIdx], pin_slot: slot };
+        _pinnedSlots[slot - 1] = _chatMessages[qIdx >= 0 ? qIdx : 0];
+    }
+    renderChat();
+}
+
+// GM 客端偵測到某 slot 到期時，自動清除並從排隊區補位
+async function _promoteQueueToSlot(slot) {
+    const pinned = _pinnedSlots[slot - 1];
+    if (pinned) {
+        try {
+            if (_sbClient) {
+                await _sbClient.from('chat_messages').update({ pin_slot: null }).eq('id', pinned.id);
+            } else {
+                await supabaseQuery('chat_messages', 'PATCH', { pin_slot: null }, '?id=eq.' + pinned.id);
+            }
+        } catch(e) {}
+        const idx = _chatMessages.findIndex(m => m.id === pinned.id);
+        if (idx >= 0) _chatMessages[idx] = { ..._chatMessages[idx], pin_slot: null };
+    }
+    _pinnedSlots[slot - 1] = null;
+
+    const queued = _chatMessages
+        .filter(m => m.pin_slot >= 4)
+        .sort((a, b) => a.pin_slot - b.pin_slot)[0];
+
+    if (queued) {
+        try {
+            if (_sbClient) {
+                // 僅更新 pin_slot；pin_expires_at 已在 /pin 時寫入，跟著訊息自動帶過來
+                await _sbClient.from('chat_messages').update({ pin_slot: slot }).eq('id', queued.id);
+            } else {
+                await supabaseQuery('chat_messages', 'PATCH', { pin_slot: slot }, '?id=eq.' + queued.id);
+            }
+        } catch(e) {}
+        const qIdx = _chatMessages.findIndex(m => m.id === queued.id);
+        if (qIdx >= 0) _chatMessages[qIdx] = { ..._chatMessages[qIdx], pin_slot: slot };
+        _pinnedSlots[slot - 1] = _chatMessages[qIdx >= 0 ? qIdx : 0];
+    }
+    renderChat();
+}
+
+// 設定預設頻道並存 localStorage，同步更新 ⭐ 高亮
+function _setDefaultChannel(channel) {
+    _defaultChannel = channel;
+    storageSet(STORAGE_KEYS.CHAT_DEFAULT_CHANNEL, channel);
+    ['global', 'zh', 'en'].forEach(ch => {
+        const star = document.getElementById('chat-tab-star-' + ch);
+        if (star) star.style.opacity = ch === channel ? '1' : '0.35';
+    });
+}
+
+// 切換目前查看的頻道分頁，更新 Tab 高亮後重渲染
+function _switchChannel(channel) {
+    _currentChannel = channel;
+    ['global', 'zh', 'en'].forEach(ch => {
+        const tab = document.getElementById('chat-tab-' + ch);
+        if (tab) {
+            tab.style.background    = ch === channel ? 'rgba(255,255,255,0.12)' : 'transparent';
+            tab.style.borderBottom  = ch === channel ? '2px solid rgba(255,255,255,0.6)' : '2px solid transparent';
+            tab.style.color         = ch === channel ? 'white' : 'rgba(255,255,255,0.55)';
+        }
+    });
     renderChat();
 }
 
@@ -716,6 +862,11 @@ window.addEventListener('resize', () => {
 
 function _expandChat() {
     _chatExpanded = true;
+    // 展開時回到預設頻道分頁（但不強制改 _currentChannel 若已與 defaultChannel 一致）
+    if (_currentChannel !== _defaultChannel) {
+        _currentChannel = _defaultChannel;
+        _switchChannel(_currentChannel);
+    }
     const collapsed = document.getElementById('chat-collapsed-panel');
     const fakeInput = document.getElementById('chat-fake-input');
     const expanded  = document.getElementById('chat-expanded-panel');
@@ -933,6 +1084,10 @@ export function buildChatUI() {
     });
     _chatExpanded = false;
 
+    // 讀取預設頻道初始化狀態
+    const savedCh = storageGet(STORAGE_KEYS.CHAT_DEFAULT_CHANNEL);
+    if (savedCh) { _defaultChannel = savedCh; _currentChannel = savedCh; }
+
     const isMob = (typeof gameState !== 'undefined') && gameState.isMobile;
 
     // ════════════════════════════════════════════════════════
@@ -1022,18 +1177,20 @@ export function buildChatUI() {
     gearBtn.onclick = (e) => _openSettings(e, collapsedPanel);
     collapsedPanel.appendChild(gearBtn);
 
-    // 置頂訊息預覽
-    const collapsedPinned = document.createElement('div');
-    collapsedPinned.id = 'chat-collapsed-pinned';
-    collapsedPinned.style.cssText = [
-        'display:none',
-        'padding:1px 0 2px',
-        'border-bottom:1px solid rgba(255,215,0,0.3)',
-        'color:rgba(255,215,0,0.85)', 'font-size:10px',
-        'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
-        'margin-bottom:2px'
-    ].join(';');
-    collapsedPanel.appendChild(collapsedPinned);
+    // 三格置頂預覽（slot 1/2/3）
+    for (let i = 1; i <= 3; i++) {
+        const cp = document.createElement('div');
+        cp.id = 'chat-collapsed-pin-' + i;
+        cp.style.cssText = [
+            'display:none',
+            'padding:1px 0 2px',
+            'border-bottom:1px solid rgba(255,215,0,0.3)',
+            'color:rgba(255,215,0,0.85)', 'font-size:10px',
+            'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
+            'margin-bottom:2px'
+        ].join(';');
+        collapsedPanel.appendChild(cp);
+    }
 
     // 預覽訊息容器
     const previewMessages = document.createElement('div');
@@ -1114,7 +1271,7 @@ export function buildChatUI() {
     ].join(';');
     const titleText = document.createElement('span');
     titleText.style.cssText = 'font-size:13px;font-weight:bold;color:white;';
-    titleText.textContent = '💬 全服聊天';
+    titleText.textContent = '💬 聊天室';
     const titleRight = document.createElement('div');
     titleRight.style.cssText = 'display:flex;gap:8px;align-items:center;';
     const expandedGear = document.createElement('button');
@@ -1132,15 +1289,50 @@ export function buildChatUI() {
     titleBar.appendChild(titleText);
     titleBar.appendChild(titleRight);
 
-    // 展開版置頂
-    const expandedPinned = document.createElement('div');
-    expandedPinned.id = 'chat-expanded-pinned';
-    expandedPinned.style.cssText = [
-        'display:none', 'padding:4px 8px', 'flex-shrink:0',
-        'background:rgba(255,215,0,0.10)',
-        'border-bottom:1px solid rgba(255,215,0,0.3)',
-        'font-size:11px', 'word-break:break-all', 'line-height:1.4'
+    // 頻道分頁列
+    const channelTabs = document.createElement('div');
+    channelTabs.id = 'chat-channel-tabs';
+    channelTabs.style.cssText = [
+        'display:flex', 'align-items:stretch', 'flex-shrink:0',
+        'border-bottom:1px solid rgba(255,255,255,0.1)',
+        'background:rgba(0,0,0,0.25)'
     ].join(';');
+    const _tabDefs = [
+        { ch: 'global', label: '全服' },
+        { ch: 'zh',     label: '中文' },
+        { ch: 'en',     label: 'Eng'  },
+    ];
+    _tabDefs.forEach(({ ch, label }) => {
+        const tab = document.createElement('div');
+        tab.id = 'chat-tab-' + ch;
+        tab.style.cssText = [
+            'display:flex', 'align-items:center', 'gap:3px',
+            'padding:5px 10px', 'cursor:pointer', 'font-size:12px',
+            'user-select:none', 'flex:1', 'justify-content:center',
+            'border-bottom:2px solid transparent',
+            'transition:background 0.1s',
+            ch === _currentChannel
+                ? 'background:rgba(255,255,255,0.12);border-bottom:2px solid rgba(255,255,255,0.6);color:white;'
+                : 'background:transparent;color:rgba(255,255,255,0.55);'
+        ].join(';');
+
+        const starBtn = document.createElement('span');
+        starBtn.id = 'chat-tab-star-' + ch;
+        starBtn.textContent = '⭐';
+        starBtn.title = '設為預設頻道';
+        starBtn.style.cssText = 'font-size:11px;opacity:' + (ch === _defaultChannel ? '1' : '0.35') + ';cursor:pointer;flex-shrink:0;';
+        starBtn.addEventListener('click', (e) => { e.stopPropagation(); _setDefaultChannel(ch); });
+
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = label;
+
+        tab.appendChild(starBtn);
+        tab.appendChild(labelSpan);
+        tab.addEventListener('click', () => _switchChannel(ch));
+        channelTabs.appendChild(tab);
+    });
+
+    // chat-expanded-pin-1/2/3 會在下方 appendChild 序列中依序建立並插入
 
     // 訊息區
     const expandedMessages = document.createElement('div');
@@ -1288,7 +1480,20 @@ export function buildChatUI() {
     input.addEventListener('keypress', (e) => e.stopPropagation());
 
     expandedPanel.appendChild(titleBar);
-    expandedPanel.appendChild(expandedPinned);
+    expandedPanel.appendChild(channelTabs);
+    // 三格置頂列（slot 1/2/3，全頻道共用）
+    const _expandedPinStyle = [
+        'display:none', 'padding:3px 8px', 'flex-shrink:0',
+        'background:rgba(255,215,0,0.08)',
+        'border-bottom:1px solid rgba(255,215,0,0.25)',
+        'font-size:11px', 'word-break:break-all', 'line-height:1.4'
+    ].join(';');
+    for (let _pi = 1; _pi <= 3; _pi++) {
+        const _ep = document.createElement('div');
+        _ep.id = 'chat-expanded-pin-' + _pi;
+        _ep.style.cssText = _expandedPinStyle;
+        expandedPanel.appendChild(_ep);
+    }
     expandedPanel.appendChild(expandedMessages);
     expandedPanel.appendChild(scrollBtn);
     expandedPanel.appendChild(colorPanel);
@@ -1360,49 +1565,65 @@ function _buildMsgText(msg) {
 }
 
 export function renderChat() {
-    // 檢查 pin 是否過期
-    if (_pinnedMessage && _pinnedMessage.pinUntil) {
-        if (new Date(_pinnedMessage.pinUntil).getTime() < Date.now()) {
-            _pinnedMessage = null;
-            _chatMessages.forEach(m => { m.is_pinned = false; });
+    // ── 到期檢查（從 DB 欄位 pin_expires_at 判斷，GM 客端負責補位）
+    const settings = loadChatSettings();
+    for (let _i = 0; _i < 3; _i++) {
+        const _slot = _pinnedSlots[_i];
+        if (_slot && _slot.pin_expires_at &&
+            new Date(_slot.pin_expires_at).getTime() < Date.now()) {
+            if (settings.isGM) {
+                _promoteQueueToSlot(_i + 1).catch(() => {});
+            } else {
+                _pinnedSlots[_i] = null;
+            }
         }
     }
 
-    const nonPinned = _chatMessages.filter(m => !m.is_pinned);
-    const pinnedMsg = _chatMessages.find(m => m.is_pinned);
-
-    // ── 置頂訊息（收合版）
-    const collapsedPinned = document.getElementById('chat-collapsed-pinned');
-    if (collapsedPinned) {
-        if (pinnedMsg) {
-            collapsedPinned.textContent = '📌 ' + _buildMsgText(pinnedMsg);
-            collapsedPinned.style.display = 'block';
-        } else {
-            collapsedPinned.style.display = 'none';
+    // ── 置頂格（收合版，slot 1/2/3 各一行）
+    for (let _i = 1; _i <= 3; _i++) {
+        const msg = _pinnedSlots[_i - 1];
+        const el  = document.getElementById('chat-collapsed-pin-' + _i);
+        if (el) {
+            if (msg) {
+                el.textContent   = '📌' + _i + ' ' + _buildMsgText(msg);
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
         }
     }
 
-    // ── 置頂訊息（展開版）
-    const expandedPinned = document.getElementById('chat-expanded-pinned');
-    if (expandedPinned) {
-        if (pinnedMsg) {
-            const { lvTagHtml, gmLabel, titleHtml, nameHtml } = _parseName(pinnedMsg);
-            expandedPinned.innerHTML =
-                '📌 <span style="color:rgba(255,255,255,0.5);font-size:10px;margin-right:0px;">[' +
-                _formatChatTime(pinnedMsg.created_at) + ']</span>' +
-                lvTagHtml +
-                gmLabel + titleHtml + nameHtml + '：' +
-                (pinnedMsg.is_gm ? '<span style="color:#FFD700;">' + _parseColorTags(_esc(pinnedMsg.content)) + '</span>' : _parseColorTags(_esc(pinnedMsg.content), isVipPlayer(pinnedMsg)));
-            expandedPinned.style.display = 'block';
-        } else {
-            expandedPinned.style.display = 'none';
+    // ── 置頂格（展開版，slot 1/2/3 各一行）
+    for (let _i = 1; _i <= 3; _i++) {
+        const msg = _pinnedSlots[_i - 1];
+        const el  = document.getElementById('chat-expanded-pin-' + _i);
+        if (el) {
+            if (msg) {
+                const { lvTagHtml, gmLabel, titleHtml, nameHtml } = _parseName(msg);
+                el.innerHTML =
+                    '📌<span style="font-size:10px;opacity:0.6;">' + _i + '</span> ' +
+                    '<span style="color:rgba(255,255,255,0.5);font-size:10px;">[' +
+                    _formatChatTime(msg.created_at) + ']</span>' +
+                    lvTagHtml + gmLabel + titleHtml + nameHtml + '：' +
+                    (msg.is_gm
+                        ? '<span style="color:#FFD700;">' + _parseColorTags(_esc(msg.content)) + '</span>'
+                        : _parseColorTags(_esc(msg.content), isVipPlayer(msg)));
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
         }
     }
 
-    // ── 預覽訊息（收合版，最近 7 筆）
+    // 非置頂、非排隊中的訊息（pin_slot 為 null 或 0）
+    const nonPinned = _chatMessages.filter(m => !m.pin_slot);
+
+    // ── 預覽訊息（收合版，最近 7 筆，只顯示預設頻道）
     const previewMessages = document.getElementById('chat-preview-messages');
     if (previewMessages) {
-        const recent = nonPinned.slice(-7);
+        const recent = nonPinned
+            .filter(m => (m.channel || 'global') === _defaultChannel)
+            .slice(-7);
         previewMessages.innerHTML = recent.map(msg => {
             const { gmLabel, nameHtml } = _parseName(msg);
             return '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;margin:1px 0;">' +
@@ -1410,12 +1631,13 @@ export function renderChat() {
         }).join('');
     }
 
-    // ── 展開版訊息
+    // ── 展開版訊息（依當前分頁頻道過濾）
     const expandedMessages = document.getElementById('chat-expanded-messages');
     if (!expandedMessages) return;
     const scrollBtn   = document.getElementById('chat-expanded-scroll-btn');
     const wasAtBottom = _isAtBottom();
-    expandedMessages.innerHTML = nonPinned.map(_buildMsgHTML).join('');
+    const filtered = nonPinned.filter(m => (m.channel || 'global') === _currentChannel);
+    expandedMessages.innerHTML = filtered.map(_buildMsgHTML).join('');
     if (wasAtBottom) {
         expandedMessages.scrollTop = expandedMessages.scrollHeight;
         if (scrollBtn) scrollBtn.style.display = 'none';

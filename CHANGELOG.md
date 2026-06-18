@@ -1,4 +1,12 @@
-﻿## v0.1.27.2 - 2026-06-18
+﻿## v0.1.28.0 - 2026-06-18
+
+### 新增
+- `systems/chat.js` / `storage/index.js`：聊天室三語言頻道分頁（全服 / 中文 / Eng）— `channel` 欄位分流訊息，展開面板新增分頁 Tab，收合面板只顯示玩家預設頻道（⭐ 點選設定），預設頻道存 localStorage `chatDefaultChannel` key
+- `systems/chat.js`：GM 多重置頂 + 排隊機制 — `pin_slot` 1/2/3 為顯示格（同時最多 3 則），4+ 為排隊等待（FIFO 補位）；指令 `/pin <slot> <duration>`（`<N>H` 或 `-` 永久）、`/unpin <slot>`（解除並自動補位）
+- `systems/chat.js`：pin 到期時間改存 DB 欄位 `pin_expires_at`（timestamptz）— 重整頁面後到期時間正確保留；排隊訊息補位時到期時間隨訊息物件帶入，不需重算
+
+---
+## v0.1.27.2 - 2026-06-18
 
 ### 修復
 - `systems/boss.js`：大白鯊衝刺警告箭頭改為 cull 檢查前繪製，避免 Boss 本體不在螢幕範圍內時（±100px 外）警告箭頭被一併隱藏，造成衝刺看起來像「瞬移」
