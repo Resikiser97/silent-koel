@@ -1,4 +1,4 @@
-﻿## v0.1.28.0
+﻿## v0.1.28.1
 
 # The Silent Koel — 模組架構說明
 
@@ -149,6 +149,7 @@ systems/chat.js           _sha256, loadChatSettings, saveChatSettings
                           _saveChatPosition, _loadChatPosition, _makeDraggable
                           _handlePinCommand, _handleUnpinCommand（GM 置頂/取消置頂）
                           _refreshPinnedSlots, _promoteQueueToSlot（多重置頂輔助：重建顯示格 / FIFO 排隊補位，v0.1.28.0）
+                          _handleMovePinCommand（/movepin <from> <to>：to 空→移動+補位；to 有 pin→兩格互換，v0.1.28.1）
                           _setDefaultChannel, _switchChannel（預設頻道 ⭐ 設定 / 分頻道 Tab 切換，v0.1.28.0）
                           _lvColor（等級數字 → 顏色 CSS 字串，v0.0.66.0）
                           _COLOR_MAP（顏色代碼→CSS 色碼對照，v0.0.68.0）

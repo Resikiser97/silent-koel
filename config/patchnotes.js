@@ -7,6 +7,13 @@
 
 export const PATCH_NOTES = [
     {
+        version: 'v0.1.28.1',
+        date: '2026-06-18',
+        added: [
+            'GM 新增 /movepin 指令，可調整置頂公告的顯示格順序（例：/movepin 1 2 將第 1 格公告移到第 2 格）',
+        ],
+    },
+    {
         version: 'v0.1.28.0',
         date: '2026-06-18',
         added: [

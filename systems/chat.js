@@ -1,6 +1,6 @@
 // =============================================================
 // systems/chat.js — 首頁聊天室系統（Supabase Realtime 即時聊天 + 帳號管理）
-// v0.1.28.0
+// v0.1.28.1
 // =============================================================
 //
 // 【對外公開函式】（其他檔案可直接呼叫）
@@ -28,8 +28,10 @@
 // 【GM 指令格式】
 //   /pin <slot> <duration>  例：/pin 2 1H  /pin 1 6H  /pin 3 -（永久）
 //   /unpin <slot>           例：/unpin 2
+//   /movepin <from> <to>    例：/movepin 1 2（調換顯示格順序）
 //   slot=1/2/3，duration=<N>H 或 - (永久)；GM 專屬，settings.isGM 才生效
 //   排隊補位時 pin_expires_at 隨訊息物件自動帶過來，無需重算
+//   /movepin：to 空格 → 移動後 from 格 FIFO 補位；to 有 pin → 兩格對調（不動排隊區）
 //
 // 【依賴的跨檔案函式】（修改時注意這些來自外部）
 //   SUPABASE_URL, SUPABASE_KEY  ← 來自 config/supabase.js
@@ -541,6 +543,11 @@ async function sendChatMessage(content) {
         await _handleUnpinCommand(content.trim());
         return;
     }
+    // /movepin 調整顯示格順序（GM 限定）
+    if (settings.isGM && content.trim().toLowerCase().startsWith('/movepin')) {
+        await _handleMovePinCommand(content.trim());
+        return;
+    }
 
     const displayName = settings.playerName.trim() || '匿名者';
     const titlePart   = settings.title ? '|' + settings.title : '';
@@ -699,6 +706,79 @@ async function _promoteQueueToSlot(slot) {
         const qIdx = _chatMessages.findIndex(m => m.id === queued.id);
         if (qIdx >= 0) _chatMessages[qIdx] = { ..._chatMessages[qIdx], pin_slot: slot };
         _pinnedSlots[slot - 1] = _chatMessages[qIdx >= 0 ? qIdx : 0];
+    }
+    renderChat();
+}
+
+// 調整已置頂訊息的顯示格順序
+// - from 空：無效，直接返回
+// - to 空：msgFrom 移到 to，from 格 FIFO 補位
+// - to 有 pin：兩格 pin_slot 互換，pin_expires_at 各跟自己的訊息，不動排隊區
+async function _handleMovePinCommand(cmd) {
+    const match = cmd.match(/^\/movepin\s+([123])\s+([123])$/i);
+    if (!match) return;
+    const from = parseInt(match[1]);
+    const to   = parseInt(match[2]);
+    if (from === to) return;
+
+    const msgFrom = _pinnedSlots[from - 1];
+    if (!msgFrom) return; // from 格是空的，指令無效
+
+    const msgTo = _pinnedSlots[to - 1];
+
+    if (!msgTo) {
+        // to 格是空的 → 直接移動，from 格空出來後 FIFO 補位
+        try {
+            if (_sbClient) {
+                await _sbClient.from('chat_messages').update({ pin_slot: to }).eq('id', msgFrom.id);
+            } else {
+                await supabaseQuery('chat_messages', 'PATCH', { pin_slot: to }, '?id=eq.' + msgFrom.id);
+            }
+        } catch(e) {}
+
+        const fromIdx = _chatMessages.findIndex(m => m.id === msgFrom.id);
+        if (fromIdx >= 0) _chatMessages[fromIdx] = { ..._chatMessages[fromIdx], pin_slot: to };
+        _pinnedSlots[to - 1]   = fromIdx >= 0 ? _chatMessages[fromIdx] : { ...msgFrom, pin_slot: to };
+        _pinnedSlots[from - 1] = null;
+
+        // FIFO 補位 from 格
+        const queued = _chatMessages
+            .filter(m => m.pin_slot >= 4)
+            .sort((a, b) => a.pin_slot - b.pin_slot)[0];
+        if (queued) {
+            try {
+                if (_sbClient) {
+                    await _sbClient.from('chat_messages').update({ pin_slot: from }).eq('id', queued.id);
+                } else {
+                    await supabaseQuery('chat_messages', 'PATCH', { pin_slot: from }, '?id=eq.' + queued.id);
+                }
+            } catch(e) {}
+            const qIdx = _chatMessages.findIndex(m => m.id === queued.id);
+            if (qIdx >= 0) _chatMessages[qIdx] = { ..._chatMessages[qIdx], pin_slot: from };
+            _pinnedSlots[from - 1] = _chatMessages[qIdx >= 0 ? qIdx : 0];
+        }
+    } else {
+        // to 格已有 pin → 兩格 pin_slot 互換，pin_expires_at 各跟自己的訊息不變
+        try {
+            if (_sbClient) {
+                await Promise.all([
+                    _sbClient.from('chat_messages').update({ pin_slot: to }).eq('id', msgFrom.id),
+                    _sbClient.from('chat_messages').update({ pin_slot: from }).eq('id', msgTo.id),
+                ]);
+            } else {
+                await Promise.all([
+                    supabaseQuery('chat_messages', 'PATCH', { pin_slot: to },   '?id=eq.' + msgFrom.id),
+                    supabaseQuery('chat_messages', 'PATCH', { pin_slot: from }, '?id=eq.' + msgTo.id),
+                ]);
+            }
+        } catch(e) {}
+
+        const fromIdx = _chatMessages.findIndex(m => m.id === msgFrom.id);
+        const toIdx   = _chatMessages.findIndex(m => m.id === msgTo.id);
+        if (fromIdx >= 0) _chatMessages[fromIdx] = { ..._chatMessages[fromIdx], pin_slot: to };
+        if (toIdx   >= 0) _chatMessages[toIdx]   = { ..._chatMessages[toIdx],   pin_slot: from };
+        _pinnedSlots[to - 1]   = fromIdx >= 0 ? _chatMessages[fromIdx] : { ...msgFrom, pin_slot: to };
+        _pinnedSlots[from - 1] = toIdx   >= 0 ? _chatMessages[toIdx]   : { ...msgTo,   pin_slot: from };
     }
     renderChat();
 }

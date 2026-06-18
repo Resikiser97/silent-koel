@@ -1,4 +1,4 @@
-﻿## v0.1.28.0
+﻿## v0.1.28.1
 
 # 只吃不叫的噪鵑（The Silent Koel）— 專案核心背景與進度文檔
 
@@ -12,7 +12,7 @@
 
 **這是什麼：** 單人獨立開發的瀏覽器 Roguelike，HTML + JavaScript，由 Goblinnest 開發，AI（CC + Codex）輔助。
 
-**現在版本:** v0.1.28.0
+**現在版本:** v0.1.28.1
 
 **當前狀態：** 聊天室多頻道 + GM 多重置頂系統完成（三語言分頻道、pin_slot 1~3 顯示格 + 4+ FIFO 排隊、pin_expires_at 伺服器端到期時間）；三普通 Boss 攻擊節奏、鯊魚衝刺與蠍王毒霧已完成新節奏調整。
 
@@ -118,6 +118,7 @@
 ## 三、當前開發狀態
 
 ### 最近完成的工作
+- v0.1.28.1：GM 新增 `/movepin <from> <to>` 指令 — to 格空白時移動並 FIFO 補位 from 格；to 格有 pin 時兩格 pin_slot 互換（pin_expires_at 各跟自己訊息，不動排隊區）
 - v0.1.28.0：聊天室多頻道 + GM 多重置頂系統 — 三語言分頻道分頁 Tab（全服/中文/Eng，⭐ 設定預設頻道存 localStorage）；pin_slot 1/2/3 同時最多 3 則置頂公告、4+ 為 FIFO 排隊補位；pin_expires_at（timestamptz）伺服器端存期限，解決重整後到期時間重置問題；新增 `_refreshPinnedSlots` / `_promoteQueueToSlot` / `_setDefaultChannel` / `_switchChannel` 輔助函式；UPDATE Realtime 訂閱同步 pin 狀態變更
 - v0.1.27.2：大白鯊衝刺警告箭頭改為 cull 前繪製（Boss 本體不在螢幕內時箭頭仍會顯示，避免看起來像瞬移）；箭頭新增充能視覺，warning 階段長度從 0 漸進到滿長
 - v0.1.27.1：黑熊暴擊浮動文字亂碼修正；大白鯊衝刺箭頭距離同步修正（charging 開始時重新計算距離，確保狂暴後箭頭與衝刺路徑一致）

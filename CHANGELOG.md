@@ -1,4 +1,10 @@
-﻿## v0.1.28.0 - 2026-06-18
+﻿## v0.1.28.1 - 2026-06-18
+
+### 新增
+- `systems/chat.js`：GM 新增 `/movepin <from> <to>` 指令 — 調整已置頂訊息的顯示格順序；to 格空白時移動後 from 格自動 FIFO 補位；to 格有 pin 時兩格 pin_slot 互換，pin_expires_at 各跟自己的訊息不變，不影響排隊區
+
+---
+## v0.1.28.0 - 2026-06-18
 
 ### 新增
 - `systems/chat.js` / `storage/index.js`：聊天室三語言頻道分頁（全服 / 中文 / Eng）— `channel` 欄位分流訊息，展開面板新增分頁 Tab，收合面板只顯示玩家預設頻道（⭐ 點選設定），預設頻道存 localStorage `chatDefaultChannel` key

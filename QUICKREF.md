@@ -1,4 +1,4 @@
-﻿## v0.1.28.0
+﻿## v0.1.28.1
 
 # QUICKREF — Claude Code 快速參考索引
 
@@ -8,7 +8,7 @@
 ---
 
 ## 當前狀態
-- 版本：**v0.1.28.0**
+- 版本：**v0.1.28.1**
 - SAVE_VERSION：`"1.1"`
 
 ---
@@ -124,7 +124,7 @@ FPS：Fixed Timestep 60FPS（FIXED_DELTA = 1000/60）
 | `boss.js` | spawnBoss / updateBoss / showVictory / _bossMeleeRange / _bossMeleeProfile / _sharkChargeDistance |
 | `mutation.js` | initMutationData / applyMutationEffects / showMutationPanel |
 | `daynight.js` | getDayNightPhaseIndex(timeRemaining) / updateDayNightCycle |
-| `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 三語言頻道分頁 global/zh/en / 多重置頂 pin_slot 1~3 顯示格 + 4+ 排隊 FIFO / pin_expires_at DB 存期限 / username 小寫正規化+GOBLINNEST 過濾） |
+| `chat.js` | 聊天室系統（帳號登入 / Realtime / GM指令 / 彩色字 / 三語言頻道分頁 global/zh/en / 多重置頂 pin_slot 1~3 顯示格 + 4+ 排隊 FIFO / pin_expires_at DB 存期限 / GM `/movepin <from> <to>` 調整顯示格順序 / username 小寫正規化+GOBLINNEST 過濾） |
 | `achievements.js` | unlockAchievement(id) / isUnlocked(id) / getUnlockedAchievements() / getActiveTitle() / setActiveTitle(title) / showAchievements(opts) |
 | `achievementTriggers.js` | initAchievementTriggers()（Phase D：監聽 CustomEvent 觸發成就，不 import SCC 模組） |
 | `achievementBonus.js` | getAchievementBonusTotals(unlockedIds) / applyAchievementStatBonuses()（成就永久加成套用，v0.1.25.0） |
